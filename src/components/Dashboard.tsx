@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Plus, Sliders, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, FileExport, Users } from 'lucide-react';
+import { Plus, Sliders, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('recent-activities');
@@ -115,7 +114,7 @@ const Dashboard: React.FC = () => {
                 <div className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition">
                   <div className="mt-1">
                     <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                      <FileExport size={16} />
+                      <Download size={16} />
                     </div>
                   </div>
                   <div className="flex-1">
