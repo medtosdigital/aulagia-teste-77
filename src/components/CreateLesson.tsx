@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { materialService } from '@/services/materialService';
+import { toast } from 'sonner';
 
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
 
@@ -22,6 +24,7 @@ interface MaterialTypeOption {
 }
 
 const CreateLesson: React.FC = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState<'selection' | 'form' | 'generating'>('selection');
   const [selectedType, setSelectedType] = useState<MaterialType | null>(null);
   const [formData, setFormData] = useState({
@@ -107,21 +110,38 @@ const CreateLesson: React.FC = () => {
     // Simulate progress
     const progressInterval = setInterval(() => {
       setGenerationProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setIsGenerating(false);
-          return 100;
+        if (prev >= 90) {
+          return prev;
         }
         return prev + Math.random() * 15;
       });
     }, 300);
 
-    // Simulate API call (replace with actual OpenAI integration)
-    setTimeout(() => {
+    try {
+      // Generate material using the service
+      const material = await materialService.generateMaterial(
+        selectedType!,
+        formData.topic,
+        formData.subject,
+        formData.grade
+      );
+
       clearInterval(progressInterval);
       setGenerationProgress(100);
+      
+      setTimeout(() => {
+        setIsGenerating(false);
+        toast.success(`${getCurrentTypeInfo()?.title} criado com sucesso!`);
+        navigate(`/material/${material.id}`);
+      }, 1000);
+
+    } catch (error) {
+      clearInterval(progressInterval);
       setIsGenerating(false);
-    }, 5000);
+      setStep('form');
+      toast.error('Erro ao gerar material. Tente novamente.');
+      console.error('Generation error:', error);
+    }
   };
 
   const getCurrentTypeInfo = () => {

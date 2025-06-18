@@ -1,9 +1,12 @@
 
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import Dashboard from '@/components/Dashboard';
 import CreateLesson from '@/components/CreateLesson';
+import MaterialsList from '@/components/MaterialsList';
+import MaterialViewer from '@/components/MaterialViewer';
 
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
@@ -13,9 +16,9 @@ const Index = () => {
       case 'dashboard':
         return 'Dashboard';
       case 'create':
-        return 'Criar Aula';
+        return 'Criar Material';
       case 'lessons':
-        return 'Minhas Aulas';
+        return 'Meus Materiais';
       case 'calendar':
         return 'Calendário';
       case 'subscription':
@@ -38,7 +41,7 @@ const Index = () => {
       case 'create':
         return <CreateLesson />;
       case 'lessons':
-        return <div className="p-4"><h2>Minhas Aulas - Em desenvolvimento</h2></div>;
+        return <MaterialsList />;
       case 'calendar':
         return <div className="p-4"><h2>Calendário - Em desenvolvimento</h2></div>;
       case 'subscription':
@@ -55,14 +58,24 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 w-full">
-      <Sidebar activeItem={activeItem} onItemClick={setActiveItem} />
-      
-      <div className="md:ml-64 min-h-screen">
-        <Header title={getPageTitle()} />
-        {renderContent()}
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        {/* Rota para visualização de material específico */}
+        <Route path="/material/:id" element={<MaterialViewer />} />
+        
+        {/* Rota principal com sidebar */}
+        <Route path="*" element={
+          <div className="min-h-screen bg-gray-50 w-full">
+            <Sidebar activeItem={activeItem} onItemClick={setActiveItem} />
+            
+            <div className="md:ml-64 min-h-screen">
+              <Header title={getPageTitle()} />
+              {renderContent()}
+            </div>
+          </div>
+        } />
+      </Routes>
+    </Router>
   );
 };
 
