@@ -125,15 +125,17 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
               PDF
             </Button>
             
-            <Button
-              variant="outline"
-              size="default"
-              onClick={() => handleExport('word')}
-              className="w-full justify-start"
-            >
-              <Download className="h-4 w-4 mr-3" />
-              Microsoft Word
-            </Button>
+            {material.type !== 'slides' && (
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => handleExport('word')}
+                className="w-full justify-start"
+              >
+                <Download className="h-4 w-4 mr-3" />
+                Microsoft Word
+              </Button>
+            )}
             
             {material.type === 'slides' && (
               <Button
