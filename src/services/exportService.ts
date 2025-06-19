@@ -26,7 +26,7 @@ class ExportService {
           <style>
             @page {
               size: A4;
-              margin: 0;
+              margin: 15mm 0 15mm 0;
             }
             
             body { 
