@@ -7,6 +7,7 @@ import Dashboard from '@/components/Dashboard';
 import CreateLesson from '@/components/CreateLesson';
 import MaterialsList from '@/components/MaterialsList';
 import MaterialViewer from '@/components/MaterialViewer';
+import TemplateAdmin from '@/components/TemplateAdmin';
 
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
@@ -51,7 +52,7 @@ const Index = () => {
       case 'api-keys':
         return <div className="p-4"><h2>Chaves de API - Em desenvolvimento</h2></div>;
       case 'templates':
-        return <div className="p-4"><h2>Templates - Em desenvolvimento</h2></div>;
+        return <TemplateAdmin />;
       default:
         return <Dashboard />;
     }

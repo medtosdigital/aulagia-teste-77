@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { materialService } from '@/services/materialService';
+import { materialService, GeneratedMaterial } from '@/services/materialService';
+import MaterialModal from './MaterialModal';
 import { toast } from 'sonner';
 
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
@@ -34,6 +35,8 @@ const CreateLesson: React.FC = () => {
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
+  const [generatedMaterial, setGeneratedMaterial] = useState<GeneratedMaterial | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   const materialTypes: MaterialTypeOption[] = [
     {
@@ -131,8 +134,10 @@ const CreateLesson: React.FC = () => {
       
       setTimeout(() => {
         setIsGenerating(false);
+        setGeneratedMaterial(material);
+        setShowModal(true);
+        setStep('selection'); // Reset to selection for next material
         toast.success(`${getCurrentTypeInfo()?.title} criado com sucesso!`);
-        navigate(`/material/${material.id}`);
       }, 1000);
 
     } catch (error) {
@@ -148,70 +153,86 @@ const CreateLesson: React.FC = () => {
     return materialTypes.find(type => type.id === selectedType);
   };
 
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setGeneratedMaterial(null);
+    // Reset form
+    setFormData({ topic: '', subject: '', grade: '' });
+    setSelectedType(null);
+  };
+
   if (step === 'selection') {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="relative mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Sparkles className="w-10 h-10 text-white" />
+      <>
+        <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="relative mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <Sparkles className="w-10 h-10 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-bounce"></div>
               </div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-bounce"></div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
+                Preparar Material
+              </h1>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Crie conteúdos pedagógicos incríveis com inteligência artificial. 
+                Escolha o tipo de material e deixe a magia acontecer! ✨
+              </p>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
-              Preparar Material
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Crie conteúdos pedagógicos incríveis com inteligência artificial. 
-              Escolha o tipo de material e deixe a magia acontecer! ✨
-            </p>
-          </div>
 
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-              Selecione o tipo de conteúdo que você deseja criar:
-            </h2>
-          </div>
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+                Selecione o tipo de conteúdo que você deseja criar:
+              </h2>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {materialTypes.map((type) => {
-              const Icon = type.icon;
-              return (
-                <Card
-                  key={type.id}
-                  className={`cursor-pointer border-2 border-transparent transition-all duration-300 ${type.bgGradient} ${type.hoverEffect} shadow-lg hover:shadow-xl`}
-                  onClick={() => handleTypeSelection(type.id)}
-                >
-                  <CardContent className="p-8">
-                    <div className="flex items-start space-x-6">
-                      <div className={`w-16 h-16 ${type.iconBg} rounded-xl flex items-center justify-center shadow-md transform transition-transform hover:scale-110`}>
-                        <Icon className="w-8 h-8 text-white" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {materialTypes.map((type) => {
+                const Icon = type.icon;
+                return (
+                  <Card
+                    key={type.id}
+                    className={`cursor-pointer border-2 border-transparent transition-all duration-300 ${type.bgGradient} ${type.hoverEffect} shadow-lg hover:shadow-xl`}
+                    onClick={() => handleTypeSelection(type.id)}
+                  >
+                    <CardContent className="p-8">
+                      <div className="flex items-start space-x-6">
+                        <div className={`w-16 h-16 ${type.iconBg} rounded-xl flex items-center justify-center shadow-md transform transition-transform hover:scale-110`}>
+                          <Icon className="w-8 h-8 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className={`text-xl font-bold ${type.color} mb-3`}>{type.title}</h3>
+                          <p className="text-gray-600 leading-relaxed">{type.description}</p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className={`text-xl font-bold ${type.color} mb-3`}>{type.title}</h3>
-                        <p className="text-gray-600 leading-relaxed">{type.description}</p>
+                      <div className="mt-6 flex justify-end">
+                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
+                          <ArrowLeft className="w-4 h-4 text-gray-400 rotate-180" />
+                        </div>
                       </div>
-                    </div>
-                    <div className="mt-6 flex justify-end">
-                      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
-                        <ArrowLeft className="w-4 h-4 text-gray-400 rotate-180" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
 
-          <div className="mt-12 text-center">
-            <div className="inline-flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-md">
-              <Brain className="w-5 h-5 text-blue-500" />
-              <span className="text-gray-600 font-medium">Powered by AI</span>
+            <div className="mt-12 text-center">
+              <div className="inline-flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-md">
+                <Brain className="w-5 h-5 text-blue-500" />
+                <span className="text-gray-600 font-medium">Powered by AI</span>
+              </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
+        
+        <MaterialModal
+          material={generatedMaterial}
+          open={showModal}
+          onClose={handleCloseModal}
+        />
+      </>
     );
   }
 
