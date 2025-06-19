@@ -56,7 +56,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           justify-content: center;
           align-items: flex-start;
           min-height: 100vh;
-          padding: 20px 0;
+          padding: 0;
+          margin: 0;
         }
         
         .material-preview-container .a4-page {
@@ -64,7 +65,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           min-height: 297mm;
           max-width: 210mm;
           background: white;
-          margin: 0 auto;
+          margin: 0;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           font-size: 12pt;
           line-height: 1.5;
@@ -72,10 +73,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           position: relative;
           padding: 0;
           box-sizing: border-box;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-          border-radius: 12px;
-          border: 1px solid rgba(0, 0, 0, 0.05);
-          overflow: hidden;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+          overflow: visible;
           page-break-after: always;
         }
 
@@ -87,23 +86,21 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         /* Responsividade para mobile */
         @media (max-width: 768px) {
           .material-preview-container {
-            padding: 0.5rem;
+            padding: 0;
           }
           
           .material-preview-container .a4-page {
             width: 100%;
             max-width: 100%;
             min-height: auto;
-            margin: 0 0 1rem 0;
-            border-radius: 8px;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+            margin: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
           }
         }
         
         @media (max-width: 480px) {
           .material-preview-container .a4-page {
-            border-radius: 6px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
           }
         }
         
