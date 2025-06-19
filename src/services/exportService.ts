@@ -24,164 +24,29 @@ class ExportService {
           <title>${material.title}</title>
           <meta charset="utf-8">
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-            
             @page {
               size: A4;
               margin: 0;
             }
             
-            * {
-              box-sizing: border-box;
-            }
-            
             body { 
               margin: 0; 
               padding: 0; 
-              font-family: 'Inter', sans-serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               background: white;
               width: 100%;
               height: 100vh;
             }
             
             .page {
-              position: relative;
-              width: 210mm;
-              min-height: 297mm;
-              background: white;
-              overflow: hidden;
-              margin: 0 auto;
-              page-break-after: always;
-              display: flex;
-              flex-direction: column;
-            }
-            
-            .page:last-child {
-              page-break-after: avoid;
-            }
-            
-            /* Formas decorativas */
-            .shape-circle {
-              position: absolute;
-              border-radius: 50%;
-              opacity: 0.25;
-              pointer-events: none;
-              z-index: 0;
-            }
-            
-            .shape-circle.purple {
-              width: 180px; 
-              height: 180px;
-              background: #a78bfa;
-              top: -60px; 
-              left: -40px;
-            }
-            
-            .shape-circle.blue {
-              width: 240px; 
-              height: 240px;
-              background: #60a5fa;
-              bottom: -80px; 
-              right: -60px;
-            }
-            
-            /* Container do conteúdo */
-            .container {
-              position: relative;
               width: 100%;
-              height: 100%;
-              padding: 20mm 15mm 25mm 15mm;
-              box-sizing: border-box;
-              z-index: 1;
-              flex: 1;
-              display: flex;
-              flex-direction: column;
-            }
-            
-            /* Cabeçalho */
-            .header {
-              position: fixed;
-              top: 8mm;
-              left: 15mm;
-              right: 15mm;
-              display: flex;
-              align-items: center;
-              z-index: 10;
-              height: 12mm;
+              height: 100vh;
               background: white;
-            }
-            
-            .header .logo-container {
-              display: flex;
-              align-items: center;
-              gap: 8px;
-            }
-            
-            .header .logo {
-              width: 32px;
-              height: 32px;
-              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: white;
-              flex-shrink: 0;
-              box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
-            }
-            
-            .header .logo svg {
-              width: 18px;
-              height: 18px;
-              stroke: white;
-              fill: none;
-              stroke-width: 2;
-            }
-            
-            .header .brand-text h1 {
-              font-size: 20px;
-              color: #0ea5e9;
               margin: 0;
-              font-family: 'Inter', sans-serif;
-              line-height: 1;
-              font-weight: 700;
-              letter-spacing: -0.3px;
-            }
-            
-            .header .brand-text p {
-              font-size: 9px;
-              color: #6b7280;
-              margin: 1px 0 0 0;
-              font-family: 'Inter', sans-serif;
-              line-height: 1;
-              font-weight: 400;
-            }
-            
-            /* Rodapé */
-            .footer {
-              position: fixed;
-              bottom: 8mm;
-              left: 15mm;
-              right: 15mm;
-              text-align: center;
-              font-size: 8px;
-              color: #9ca3af;
-              z-index: 10;
-              height: 8mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: white;
-              border-top: 1px solid #e5e7eb;
-              font-family: 'Inter', sans-serif;
-            }
-            
-            .content {
-              margin-top: 15mm;
-              margin-bottom: 5mm;
+              padding: 0;
+              box-sizing: border-box;
               position: relative;
-              z-index: 2;
-              flex: 1;
+              overflow: hidden;
             }
 
             @media print {
@@ -201,22 +66,18 @@ class ExportService {
                 width: 100% !important;
                 height: 100vh !important;
                 page-break-after: always;
-                border-radius: 0 !important;
               }
               
               .page:last-child {
                 page-break-after: avoid;
               }
-              
-              .shape-circle {
-                print-color-adjust: exact !important;
-                -webkit-print-color-adjust: exact !important;
-              }
             }
           </style>
         </head>
         <body>
-          ${renderedHtml}
+          <div class="page">
+            ${renderedHtml}
+          </div>
         </body>
         </html>
       `);
@@ -313,10 +174,10 @@ class ExportService {
         properties: {
           page: {
             margin: {
-              top: 567,
-              right: 1134,
-              bottom: 567,
-              left: 1134,
+              top: 567, // 0.5cm em twips
+              right: 1134, // 1cm em twips  
+              bottom: 567, // 0.5cm em twips
+              left: 1134, // 1cm em twips
             },
           },
         },

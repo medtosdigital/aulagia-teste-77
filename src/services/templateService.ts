@@ -20,7 +20,7 @@ class TemplateService {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-          <title>Plano de Aula – aulagIA</title>
+          <title>Plano de Aula – AulagIA</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
             
@@ -29,20 +29,13 @@ class TemplateService {
               size: A4;
               margin: 0;
             }
-            
-            * {
-              box-sizing: border-box;
-            }
-            
             body {
               margin: 0;
               padding: 0;
               background: white;
               font-family: 'Inter', sans-serif;
-              color: #000;
             }
-            
-            /* Container principal da página */
+            /* Container no tamanho A4 */
             .page {
               position: relative;
               width: 210mm;
@@ -51,74 +44,36 @@ class TemplateService {
               overflow: hidden;
               margin: 0 auto;
               page-break-after: always;
+              box-sizing: border-box;
+              padding: 0;
               display: flex;
               flex-direction: column;
             }
-            
             .page:last-child {
               page-break-after: avoid;
             }
-            
-            /* Formas decorativas dentro da página */
-            .shape-circle {
-              position: absolute;
-              border-radius: 50%;
-              opacity: 0.25;
-              pointer-events: none;
-              z-index: 0;
-            }
-            
-            .shape-circle.purple {
-              width: 180px; 
-              height: 180px;
-              background: #a78bfa;
-              top: -60px; 
-              left: -40px;
-            }
-            
-            .shape-circle.blue {
-              width: 240px; 
-              height: 240px;
-              background: #60a5fa;
-              bottom: -80px; 
-              right: -60px;
-            }
-            
-            /* Container do conteúdo com z-index maior */
-            .container {
-              position: relative;
-              width: 100%;
-              height: 100%;
-              padding: 20mm 15mm 25mm 15mm;
-              box-sizing: border-box;
-              z-index: 1;
-              flex: 1;
-              display: flex;
-              flex-direction: column;
-            }
-            
-            /* Cabeçalho fixo em todas as páginas */
+            /* Cabeçalho que aparece em todas as páginas */
             .header {
               position: absolute;
               top: 8mm;
-              left: 15mm;
-              right: 15mm;
+              left: 0;
+              right: 0;
               display: flex;
               align-items: center;
-              z-index: 10;
-              height: 12mm;
+              z-index: 999;
+              height: 15mm;
               background: white;
+              padding: 0 15mm;
+              flex-shrink: 0;
             }
-            
             .header .logo-container {
               display: flex;
               align-items: center;
-              gap: 8px;
+              gap: 10px;
             }
-            
             .header .logo {
-              width: 32px;
-              height: 32px;
+              width: 40px;
+              height: 40px;
               background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
               border-radius: 50%;
               display: flex;
@@ -128,23 +83,20 @@ class TemplateService {
               flex-shrink: 0;
               box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
             }
-            
             .header .logo svg {
-              width: 18px;
-              height: 18px;
+              width: 22px;
+              height: 22px;
               stroke: white;
               fill: none;
               stroke-width: 2;
             }
-            
             .header .brand-text {
               display: flex;
               flex-direction: column;
               justify-content: center;
             }
-            
             .header .brand-text h1 {
-              font-size: 20px;
+              font-size: 24px;
               color: #0ea5e9;
               margin: 0;
               font-family: 'Inter', sans-serif;
@@ -152,56 +104,35 @@ class TemplateService {
               font-weight: 700;
               letter-spacing: -0.3px;
             }
-            
+            .header .brand-text h1 .ia-text {
+              text-transform: uppercase;
+            }
             .header .brand-text p {
-              font-size: 9px;
+              font-size: 11px;
               color: #6b7280;
-              margin: 1px 0 0 0;
+              margin: 2px 0 0 0;
               font-family: 'Inter', sans-serif;
               line-height: 1;
               font-weight: 400;
             }
-            
-            /* Rodapé fixo em todas as páginas */
-            .footer {
-              position: absolute;
-              bottom: 8mm;
-              left: 15mm;
-              right: 15mm;
-              text-align: center;
-              font-size: 8px;
-              color: #9ca3af;
-              z-index: 10;
-              height: 8mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: white;
-              border-top: 1px solid #e5e7eb;
-              font-family: 'Inter', sans-serif;
-            }
-            
-            /* Conteúdo principal com margem para não sobrepor cabeçalho e rodapé */
+            /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
-              margin-top: 15mm;
-              margin-bottom: 5mm;
+              margin-top: 25mm;
+              margin-bottom: 20mm;
+              padding: 0 15mm;
               position: relative;
-              z-index: 2;
               flex: 1;
-              min-height: 0;
+              overflow: visible;
             }
-            
             /* Título principal */
             h2 {
               text-align: center;
-              margin: 0 0 20px 0;
+              margin: 0 0 15px 0;
               font-size: 1.4rem;
               color: #1e40af;
               position: relative;
               font-family: 'Inter', sans-serif;
-              font-weight: 700;
             }
-            
             h2::after {
               content: '';
               width: 50px;
@@ -211,146 +142,147 @@ class TemplateService {
               margin: 5px auto 0;
               border-radius: 2px;
             }
-            
             /* Tabelas */
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 15px;
+              margin-bottom: 12px;
               page-break-inside: avoid;
             }
-            
             th, td {
-              padding: 8px 12px;
+              padding: 6px 10px;
               font-size: 0.85rem;
               border: 1px solid #e5e7eb;
               font-family: 'Inter', sans-serif;
             }
-            
             th {
               background: #f3f4f6;
               color: #1f2937;
               font-weight: 600;
             }
-            
             td {
               background: #ffffff;
             }
-            
             /* Seções e listas */
             .section-title {
               font-weight: 600;
-              margin-top: 20px;
-              margin-bottom: 10px;
+              margin-top: 15px;
+              margin-bottom: 8px;
               font-size: 1.05rem;
               color: #1e40af;
               font-family: 'Inter', sans-serif;
               page-break-after: avoid;
             }
-            
             ul {
               list-style: disc inside;
-              margin-bottom: 15px;
-              line-height: 1.5;
+              margin-bottom: 12px;
+              line-height: 1.4;
               font-size: 0.9rem;
               font-family: 'Inter', sans-serif;
               page-break-inside: avoid;
             }
-            
             li {
-              margin-bottom: 5px;
+              margin-bottom: 4px;
               page-break-inside: avoid;
             }
-            
             p {
               font-size: 0.9rem;
-              line-height: 1.5;
-              margin-bottom: 12px;
+              line-height: 1.4;
+              margin-bottom: 10px;
               font-family: 'Inter', sans-serif;
             }
-            
+            /* Rodapé que aparece em todas as páginas */
+            .footer {
+              position: absolute;
+              bottom: 8mm;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 0.6rem;
+              color: #9ca3af;
+              z-index: 999;
+              height: 8mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: white;
+              padding: 0 15mm;
+              border-top: 1px solid #e5e7eb;
+              font-family: 'Inter', sans-serif;
+              flex-shrink: 0;
+            }
             /* Quebras de página controladas */
             .page-break {
               page-break-before: always;
+              margin-top: 25mm;
             }
-            
             .avoid-break {
               page-break-inside: avoid;
             }
-            
-            /* Seção de desenvolvimento com controle de quebra */
+            /* Força quebra de página para seções grandes apenas se necessário */
             .development-section {
               page-break-inside: auto;
             }
-            
             .development-section table {
               page-break-inside: auto;
             }
-            
             .development-section tr {
               page-break-inside: avoid;
             }
-            
-            /* Ajustes específicos para impressão */
+            /* Conteúdo que pode quebrar para próxima página */
+            .content-section {
+              page-break-inside: auto;
+            }
+            .content-section.large {
+              page-break-before: always;
+              margin-top: 25mm;
+            }
+            /* Ajustes para impressão */
             @media print {
               body { 
-                margin: 0 !important; 
-                padding: 0 !important; 
-                background: white !important;
+                margin: 0; 
+                padding: 0; 
+                background: white;
               }
-              
               .page { 
-                box-shadow: none !important; 
-                margin: 0 !important; 
-                border-radius: 0 !important;
-                width: 100% !important;
-                min-height: 100vh !important;
+                box-shadow: none; 
+                margin: 0; 
+                border-radius: 0;
+                width: 100%;
+                min-height: 100vh;
                 page-break-after: always;
+                display: flex;
+                flex-direction: column;
               }
-              
               .page:last-child {
                 page-break-after: avoid;
               }
-              
               .header {
-                position: fixed !important;
-                top: 8mm !important;
-                left: 15mm !important;
-                right: 15mm !important;
+                position: absolute;
+                top: 8mm;
+                left: 0;
+                right: 0;
+                padding: 0 15mm;
+                flex-shrink: 0;
               }
-              
               .footer {
-                position: fixed !important;
-                bottom: 8mm !important;
-                left: 15mm !important;
-                right: 15mm !important;
+                position: absolute;
+                bottom: 8mm;
+                left: 0;
+                right: 0;
+                flex-shrink: 0;
               }
-              
               .content {
-                margin-top: 25mm !important;
-                margin-bottom: 20mm !important;
-              }
-              
-              .shape-circle {
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-              }
-            }
-            
-            /* Ajustes para visualização */
-            @media screen {
-              .footer {
-                display: none;
+                margin-top: 25mm;
+                margin-bottom: 20mm;
+                padding: 0 15mm;
+                flex: 1;
               }
             }
           </style>
         </head>
         <body>
           <div class="page">
-            <!-- Formas decorativas -->
-            <div class="shape-circle purple"></div>
-            <div class="shape-circle blue"></div>
-            
             <!-- Cabeçalho que aparece em todas as páginas -->
             <div class="header">
               <div class="logo-container">
@@ -361,7 +293,7 @@ class TemplateService {
                   </svg>
                 </div>
                 <div class="brand-text">
-                  <h1>aulagIA</h1>
+                  <h1>aulag<span class="ia-text">IA</span></h1>
                   <p>Sua aula com toque mágico</p>
                 </div>
               </div>
@@ -369,93 +301,117 @@ class TemplateService {
 
             <!-- Rodapé que aparece em todas as páginas -->
             <div class="footer">
-              Plano de aula gerado pela aulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
             </div>
 
-            <div class="container">
-              <div class="content">
-                <!-- Título do Plano de Aula -->
-                <h2>PLANO DE AULA</h2>
+            <div class="content">
+              <!-- Título do Plano de Aula -->
+              <h2>PLANO DE AULA</h2>
 
-                <!-- Informações básicas -->
-                <table class="avoid-break">
-                  <tr>
-                    <th>Professor(a):</th>
-                    <td>{{professor}}</td>
-                    <th>Data:</th>
-                    <td>{{data}}</td>
-                  </tr>
-                  <tr>
-                    <th>Disciplina:</th>
-                    <td>{{disciplina}}</td>
-                    <th>Série/Ano:</th>
-                    <td>{{serie}}</td>
-                  </tr>
-                  <tr>
-                    <th>Tema:</th>
-                    <td colspan="3">{{tema}}</td>
-                  </tr>
-                  <tr>
-                    <th>Duração:</th>
-                    <td>{{duracao}}</td>
-                    <th>BNCC:</th>
-                    <td>{{bncc}}</td>
-                  </tr>
+              <!-- Informações básicas -->
+              <table class="avoid-break">
+                <tr>
+                  <th>Professor(a):</th>
+                  <td>{{professor}}</td>
+                  <th>Data:</th>
+                  <td>{{data}}</td>
+                </tr>
+                <tr>
+                  <th>Disciplina:</th>
+                  <td>{{disciplina}}</td>
+                  <th>Série/Ano:</th>
+                  <td>{{serie}}</td>
+                </tr>
+                <tr>
+                  <th>Tema:</th>
+                  <td colspan="3">{{tema}}</td>
+                </tr>
+                <tr>
+                  <th>Duração:</th>
+                  <td>{{duracao}}</td>
+                  <th>BNCC:</th>
+                  <td>{{bncc}}</td>
+                </tr>
+              </table>
+
+              <!-- Objetivos de Aprendizagem -->
+              <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
+              <ul class="avoid-break">
+                {{#each objetivos}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
+
+              <!-- Habilidades BNCC -->
+              <div class="section-title">HABILIDADES BNCC</div>
+              <ul class="avoid-break">
+                {{#each habilidades}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
+
+              <!-- Desenvolvimento Metodológico -->
+              <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
+              <div class="development-section">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Etapa</th>
+                      <th>Atividade</th>
+                      <th>Tempo</th>
+                      <th>Recursos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each desenvolvimento}}
+                    <tr>
+                      <td>{{etapa}}</td>
+                      <td>{{atividade}}</td>
+                      <td>{{tempo}}</td>
+                      <td>{{recursos}}</td>
+                    </tr>
+                    {{/each}}
+                  </tbody>
                 </table>
-
-                <!-- Objetivos de Aprendizagem -->
-                <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
-                <ul class="avoid-break">
-                  {{#each objetivos}}
-                  <li>{{this}}</li>
-                  {{/each}}
-                </ul>
-
-                <!-- Habilidades BNCC -->
-                <div class="section-title">HABILIDADES BNCC</div>
-                <ul class="avoid-break">
-                  {{#each habilidades}}
-                  <li>{{this}}</li>
-                  {{/each}}
-                </ul>
-
-                <!-- Desenvolvimento Metodológico -->
-                <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
-                <div class="development-section">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Etapa</th>
-                        <th>Atividade</th>
-                        <th>Tempo</th>
-                        <th>Recursos</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {{#each desenvolvimento}}
-                      <tr>
-                        <td>{{etapa}}</td>
-                        <td>{{atividade}}</td>
-                        <td>{{tempo}}</td>
-                        <td>{{recursos}}</td>
-                      </tr>
-                      {{/each}}
-                    </tbody>
-                  </table>
-                </div>
-
-                <!-- Recursos Didáticos -->
-                <div class="section-title">RECURSOS DIDÁTICOS</div>
-                <ul class="avoid-break">
-                  {{#each recursos}}
-                  <li>{{this}}</li>
-                  {{/each}}
-                </ul>
-
-                <!-- Avaliação -->
-                <div class="section-title">AVALIAÇÃO</div>
-                <p class="avoid-break">{{avaliacao}}</p>
               </div>
+            </div>
+          </div>
+
+          <!-- Segunda página se necessário -->
+          <div class="page">
+            <!-- Cabeçalho que aparece em todas as páginas -->
+            <div class="header">
+              <div class="logo-container">
+                <div class="logo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                  </svg>
+                </div>
+                <div class="brand-text">
+                  <h1>aulag<span class="ia-text">IA</span></h1>
+                  <p>Sua aula com toque mágico</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rodapé que aparece em todas as páginas -->
+            <div class="footer">
+              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
+
+            <div class="content">
+              <!-- Recursos Didáticos -->
+              <div class="section-title">RECURSOS DIDÁTICOS</div>
+              <ul class="avoid-break">
+                {{#each recursos}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
+
+              <!-- Avaliação -->
+              <div class="section-title">AVALIAÇÃO</div>
+              <p class="avoid-break">{{avaliacao}}</p>
             </div>
           </div>
         </body>
