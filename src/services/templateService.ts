@@ -1,4 +1,3 @@
-
 export interface Template {
   id: string;
   name: string;
@@ -60,30 +59,30 @@ class TemplateService {
               display: flex;
               align-items: center;
               z-index: 999;
-              height: 15mm;
+              height: 12mm;
               background: white;
               padding: 0 15mm;
             }
             .header .logo-container {
               display: flex;
               align-items: center;
-              gap: 10px;
+              gap: 8px;
             }
             .header .logo {
-              width: 40px;
-              height: 40px;
+              width: 32px;
+              height: 32px;
               background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-              border-radius: 8px;
+              border-radius: 50%;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               flex-shrink: 0;
-              box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
+              box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
             }
             .header .logo svg {
-              width: 20px;
-              height: 20px;
+              width: 18px;
+              height: 18px;
               stroke: white;
               fill: none;
               stroke-width: 2;
@@ -94,34 +93,34 @@ class TemplateService {
               justify-content: center;
             }
             .header .brand-text h1 {
-              font-size: 24px;
+              font-size: 20px;
               color: #0ea5e9;
               margin: 0;
               font-family: 'Inter', sans-serif;
               line-height: 1;
               font-weight: 700;
-              letter-spacing: -0.5px;
+              letter-spacing: -0.3px;
             }
             .header .brand-text p {
-              font-size: 11px;
+              font-size: 9px;
               color: #6b7280;
-              margin: 2px 0 0 0;
+              margin: 1px 0 0 0;
               font-family: 'Inter', sans-serif;
               line-height: 1;
               font-weight: 400;
             }
             /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
-              margin-top: 28mm;
-              margin-bottom: 20mm;
+              margin-top: 22mm;
+              margin-bottom: 15mm;
               padding: 0 15mm;
               position: relative;
             }
             /* Título principal */
             h2 {
               text-align: center;
-              margin: 0 0 18px 0;
-              font-size: 1.5rem;
+              margin: 0 0 15px 0;
+              font-size: 1.4rem;
               color: #1e40af;
               position: relative;
               font-family: 'Inter', sans-serif;
@@ -132,19 +131,19 @@ class TemplateService {
               height: 3px;
               background: #60a5fa;
               display: block;
-              margin: 6px auto 0;
+              margin: 5px auto 0;
               border-radius: 2px;
             }
             /* Tabelas */
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 18px;
+              margin-bottom: 12px;
               page-break-inside: avoid;
             }
             th, td {
-              padding: 8px 12px;
-              font-size: 0.9rem;
+              padding: 6px 10px;
+              font-size: 0.85rem;
               border: 1px solid #e5e7eb;
               font-family: 'Inter', sans-serif;
             }
@@ -159,59 +158,44 @@ class TemplateService {
             /* Seções e listas */
             .section-title {
               font-weight: 600;
-              margin-top: 20px;
-              margin-bottom: 10px;
-              font-size: 1.1rem;
+              margin-top: 15px;
+              margin-bottom: 8px;
+              font-size: 1.05rem;
               color: #1e40af;
               font-family: 'Inter', sans-serif;
               page-break-after: avoid;
             }
             ul {
               list-style: disc inside;
-              margin-bottom: 18px;
-              line-height: 1.5;
-              font-size: 0.95rem;
+              margin-bottom: 12px;
+              line-height: 1.4;
+              font-size: 0.9rem;
               font-family: 'Inter', sans-serif;
               page-break-inside: avoid;
             }
             li {
-              margin-bottom: 6px;
+              margin-bottom: 4px;
               page-break-inside: avoid;
             }
             p {
-              font-size: 0.95rem;
-              line-height: 1.5;
-              margin-bottom: 14px;
+              font-size: 0.9rem;
+              line-height: 1.4;
+              margin-bottom: 10px;
               font-family: 'Inter', sans-serif;
             }
-            /* Rodapé que aparece no final de cada página */
+            /* Rodapé que aparece apenas na impressão */
             .footer {
-              position: absolute;
-              bottom: 8mm;
-              left: 0;
-              right: 0;
-              text-align: center;
-              font-size: 0.55rem;
-              color: #9ca3af;
-              z-index: 999;
-              height: 8mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: white;
-              padding: 0 15mm;
-              border-top: 1px solid #e5e7eb;
-              font-family: 'Inter', sans-serif;
+              display: none;
             }
             /* Quebras de página controladas */
             .page-break {
               page-break-before: always;
-              margin-top: 28mm;
+              margin-top: 22mm;
             }
             .avoid-break {
               page-break-inside: avoid;
             }
-            /* Força quebra de página para seções grandes */
+            /* Força quebra de página para seções grandes apenas se necessário */
             .development-section {
               page-break-inside: auto;
             }
@@ -246,15 +230,27 @@ class TemplateService {
                 right: 0;
                 padding: 0 15mm;
               }
+              /* Mostrar rodapé apenas na impressão */
               .footer {
+                display: flex !important;
                 position: absolute;
                 bottom: 8mm;
                 left: 0;
                 right: 0;
+                text-align: center;
+                font-size: 0.55rem;
+                color: #9ca3af;
+                z-index: 999;
+                height: 8mm;
+                align-items: center;
+                justify-content: center;
+                background: white;
                 padding: 0 15mm;
+                border-top: 1px solid #e5e7eb;
+                font-family: 'Inter', sans-serif;
               }
               .content {
-                margin-top: 28mm;
+                margin-top: 22mm;
                 margin-bottom: 20mm;
                 padding: 0 15mm;
               }
@@ -278,7 +274,7 @@ class TemplateService {
             </div>
           </div>
 
-          <!-- Rodapé que aparece em todas as páginas -->
+          <!-- Rodapé que aparece apenas na impressão -->
           <div class="footer">
             Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
           </div>
@@ -330,8 +326,8 @@ class TemplateService {
                 {{/each}}
               </ul>
 
-              <!-- Desenvolvimento Metodológico -->
-              <div class="section-title page-break">DESENVOLVIMENTO METODOLÓGICO</div>
+              <!-- Desenvolvimento Metodológico na primeira página -->
+              <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
               <div class="development-section">
                 <table>
                   <thead>
