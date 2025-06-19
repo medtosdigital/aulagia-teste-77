@@ -160,9 +160,9 @@ const CreateLesson: React.FC = () => {
     return <>
         <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-6 sm:mb-8">
-              <div className="relative mb-4">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+            <div className="text-center mb-4 sm:mb-6">
+              <div className="relative mb-3">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg">
                   <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                 </div>
                 <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-yellow-400 rounded-full animate-bounce"></div>
@@ -176,29 +176,29 @@ const CreateLesson: React.FC = () => {
               </p>
             </div>
 
-            <div className="mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-4 text-center px-4">
+            <div className="mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-3 text-center px-4">
                 Selecione o tipo de conteúdo que você deseja criar:
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 px-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 px-2">
               {materialTypes.map(type => {
               const Icon = type.icon;
               return <Card key={type.id} className={`cursor-pointer border-2 border-transparent transition-all duration-300 ${type.bgGradient} ${type.hoverEffect} shadow-lg hover:shadow-xl`} onClick={() => handleTypeSelection(type.id)}>
-                    <CardContent className="p-4 sm:p-6">
-                      <div className="flex items-start space-x-4 sm:space-x-6">
-                        <div className={`w-12 h-12 sm:w-16 sm:h-16 ${type.iconBg} rounded-xl flex items-center justify-center shadow-md transform transition-transform hover:scale-110`}>
-                          <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex items-start space-x-3 sm:space-x-4">
+                        <div className={`w-10 h-10 sm:w-12 sm:h-12 ${type.iconBg} rounded-xl flex items-center justify-center shadow-md transform transition-transform hover:scale-110`}>
+                          <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className={`text-lg sm:text-xl font-bold ${type.color} mb-2`}>{type.title}</h3>
-                          <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{type.description}</p>
+                          <h3 className={`text-base sm:text-lg font-bold ${type.color} mb-1`}>{type.title}</h3>
+                          <p className="text-sm text-gray-600 leading-relaxed">{type.description}</p>
                         </div>
                       </div>
-                      <div className="mt-4 flex justify-end">
-                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
-                          <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 rotate-180" />
+                      <div className="mt-3 flex justify-end">
+                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm">
+                          <ArrowLeft className="w-3 h-3 text-gray-400 rotate-180" />
                         </div>
                       </div>
                     </CardContent>
@@ -206,7 +206,7 @@ const CreateLesson: React.FC = () => {
             })}
             </div>
 
-            <div className="mt-6 sm:mt-8 text-center">
+            <div className="mt-4 sm:mt-6 text-center">
               <div className="inline-flex items-center space-x-2 bg-white px-4 py-2 sm:px-6 sm:py-3 rounded-full shadow-md">
                 <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                 <span className="text-sm sm:text-base text-gray-600 font-medium">AulagIA - Prepare suas Aulas em Minutos</span>
