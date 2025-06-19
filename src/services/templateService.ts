@@ -272,6 +272,7 @@ class TemplateService {
 
             .image img {
               width: 300px;
+              max-width: 100%;
             }
 
             .table {
@@ -351,33 +352,18 @@ class TemplateService {
               border-radius: 16px;
               margin-top: 20px;
             }
+
+            .box img {
+              width: 80px;
+              margin-bottom: 10px;
+            }
           </style>
         </head>
         <body>
           {{#each slides}}
           <div class="slide {{slideClass}}">
-            {{#if isIntroSlide}}
             <div class="title">{{titulo}}</div>
-            <div class="content">{{conteudo}}</div>
-            {{#if imagem}}
-            <div class="image">
-              <img src="{{imagem}}" alt="{{altImagem}}">
-            </div>
-            {{/if}}
-            {{/if}}
-
-            {{#if isConclusionSlide}}
-            <div class="title">{{titulo}}</div>
-            <div class="content">{{conteudo}}</div>
-            {{#if imagem}}
-            <div class="image">
-              <img src="{{imagem}}" alt="{{altImagem}}">
-            </div>
-            {{/if}}
-            {{/if}}
-
-            {{#if isRegularSlide}}
-            <div class="title">{{titulo}}</div>
+            
             {{#if conteudo}}
             <div class="content">{{conteudo}}</div>
             {{/if}}
@@ -406,7 +392,7 @@ class TemplateService {
               {{#each grade}}
               <div class="box">
                 {{#if imagem}}
-                <img src="{{imagem}}" alt="{{altImagem}}" width="80"><br>
+                <img src="{{imagem}}" alt="{{altImagem}}"><br>
                 {{/if}}
                 {{conteudo}}
               </div>
@@ -438,7 +424,6 @@ class TemplateService {
             <div class="image">
               <img src="{{imagem}}" alt="{{altImagem}}">
             </div>
-            {{/if}}
             {{/if}}
           </div>
           {{/each}}
