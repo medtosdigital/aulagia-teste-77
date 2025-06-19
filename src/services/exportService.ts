@@ -52,7 +52,6 @@ class ExportService {
               font-size: 12pt;
               line-height: 1.5;
               color: #000;
-              min-height: 100vh;
             }
 
             .shape-circle {
@@ -60,61 +59,21 @@ class ExportService {
               border-radius: 50%;
               opacity: 0.15;
               pointer-events: none;
-              z-index: 0;
             }
             .shape-circle.purple {
-              width: 200px; 
-              height: 200px;
+              width: 120px; height: 120px;
               background: #a78bfa;
-              top: 50px; 
-              left: -50px;
+              top: 20px; left: 20px;
             }
             .shape-circle.blue {
-              width: 250px; 
-              height: 250px;
+              width: 150px; height: 150px;
               background: #60a5fa;
-              bottom: 200px; 
-              right: -80px;
-            }
-            .shape-circle.pink {
-              width: 150px; 
-              height: 150px;
-              background: #f472b6;
-              top: 300px; 
-              right: 50px;
-            }
-            .shape-circle.yellow {
-              width: 180px; 
-              height: 180px;
-              background: #fbbf24;
-              bottom: 400px; 
-              left: -30px;
+              bottom: 20px; right: 20px;
             }
             .shape-circle.green {
-              width: 200px; 
-              height: 200px;
+              width: 120px; height: 120px;
               background: #10b981;
-              top: 50px; 
-              left: -50px;
-            }
-            .shape-circle.red {
-              width: 200px; 
-              height: 200px;
-              background: #ef4444;
-              top: 50px; 
-              left: -50px;
-            }
-            .shape-circle.orange {
-              width: 180px; 
-              height: 180px;
-              background: #f97316;
-              top: 280px; 
-              right: -40px;
-            }
-
-            .content-wrapper {
-              position: relative;
-              z-index: 1;
+              top: 20px; left: 20px;
             }
             
             h1 {
@@ -243,20 +202,6 @@ class ExportService {
               font-size: 10pt;
             }
 
-            .footer {
-              position: fixed;
-              bottom: 1.5cm;
-              left: 1.5cm;
-              right: 1.5cm;
-              text-align: center;
-              font-size: 10pt;
-              color: #666;
-              border-top: 1px solid #ddd;
-              padding-top: 10px;
-              background: white;
-              z-index: 2;
-            }
-
             @media print {
               body { 
                 margin: 0; 
@@ -270,12 +215,6 @@ class ExportService {
                 padding: 1.5cm;
                 max-width: none;
                 width: 100%;
-              }
-              .footer {
-                position: fixed;
-                bottom: 1cm;
-                left: 1.5cm;
-                right: 1.5cm;
               }
             }
           </style>
