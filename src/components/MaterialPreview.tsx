@@ -49,14 +49,15 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
   };
 
   return (
-    <div className="material-preview-container w-full h-full overflow-auto bg-gray-50 flex justify-center items-start">
+    <div className="material-preview-container w-full h-full overflow-auto bg-gray-50">
       <style>{`
         .material-preview-container {
           display: flex;
           justify-content: center;
           align-items: flex-start;
           min-height: 100vh;
-          padding: 0;
+          padding: 10px;
+          background: #f9fafb;
         }
         
         .material-preview-container .a4-page {
@@ -75,7 +76,16 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
           border-radius: 12px;
           border: 1px solid rgba(0, 0, 0, 0.05);
-          overflow: hidden;
+          overflow: visible;
+        }
+        
+        /* Garantir que o rodapé fique no template e não acompanhe a rolagem */
+        .material-preview-container .footer {
+          position: absolute !important;
+          bottom: 10mm !important;
+          left: 15mm !important;
+          right: 15mm !important;
+          background: white !important;
         }
         
         /* Responsividade para mobile */
@@ -117,6 +127,13 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             width: 100% !important;
             max-width: none !important;
             min-height: 100vh !important;
+          }
+          
+          .material-preview-container .footer {
+            position: fixed !important;
+            bottom: 10mm !important;
+            left: 15mm !important;
+            right: 15mm !important;
           }
         }
       `}</style>
