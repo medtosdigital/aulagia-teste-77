@@ -56,7 +56,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           justify-content: center;
           align-items: flex-start;
           min-height: 100vh;
-          padding: 20px 0;
+          padding: 20px 10px;
         }
         
         .material-preview-container .a4-page {
@@ -81,7 +81,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         /* Responsividade para mobile */
         @media (max-width: 768px) {
           .material-preview-container {
-            padding: 0.5rem 0;
+            padding: 0.5rem;
           }
           
           .material-preview-container .a4-page {
@@ -117,11 +117,6 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             width: 100% !important;
             max-width: none !important;
             min-height: 100vh !important;
-            page-break-after: always;
-          }
-          
-          .material-preview-container .a4-page:last-child {
-            page-break-after: avoid;
           }
         }
       `}</style>

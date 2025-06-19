@@ -3,7 +3,7 @@ export interface Template {
   name: string;
   type: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
   htmlContent: string;
-  variables: string[];
+  variables: string[]; // variáveis que podem ser preenchidas no template
   createdAt: string;
   updatedAt: string;
 }
@@ -20,11 +20,12 @@ class TemplateService {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-          <title>Plano de Aula – AulagIA</title>
+          <title>Plano de Aula – Aula Mágica</title>
           <style>
+            /* Define página A4 para impressão e visualização */
             @page {
               size: A4;
-              margin: 20mm 0 20mm 0;
+              margin: 0;
             }
             body {
               margin: 0;
@@ -36,6 +37,7 @@ class TemplateService {
               min-height: 100vh;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
+            /* Container no tamanho A4 */
             .page {
               position: relative;
               width: 210mm;
@@ -44,8 +46,9 @@ class TemplateService {
               border-radius: 6px;
               overflow: hidden;
               box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-              margin: 20mm 0;
+              margin: 20px 0;
             }
+            /* Formas decorativas dentro da página */
             .shape-circle {
               position: absolute;
               border-radius: 50%;
@@ -70,12 +73,11 @@ class TemplateService {
               box-sizing: border-box;
               z-index: 1;
             }
+            /* Cabeçalho */
             .header {
               display: flex;
               align-items: center;
               margin-bottom: 15px;
-              position: relative;
-              z-index: 10;
             }
             .header .logo {
               width: 40px;
@@ -100,6 +102,7 @@ class TemplateService {
               color: #374151;
               margin: 0;
             }
+            /* Título principal */
             h2 {
               text-align: center;
               margin: 10px 0 18px;
@@ -116,6 +119,7 @@ class TemplateService {
               margin: 6px auto 0;
               border-radius: 2px;
             }
+            /* Tabelas */
             table {
               width: 100%;
               border-collapse: collapse;
@@ -134,6 +138,7 @@ class TemplateService {
             td {
               background: #ffffff;
             }
+            /* Seções e listas */
             .section-title {
               font-weight: 600;
               margin-top: 18px;
@@ -155,6 +160,7 @@ class TemplateService {
               line-height: 1.4;
               margin-bottom: 12px;
             }
+            /* Rodapé */
             footer {
               position: absolute;
               bottom: 15mm;
@@ -179,11 +185,6 @@ class TemplateService {
                 border-radius: 0;
                 width: 100%;
                 min-height: 100vh;
-                page-break-after: always;
-                page-break-inside: avoid;
-              }
-              .page:last-child {
-                page-break-after: avoid;
               }
               footer {
                 position: fixed;
@@ -196,10 +197,12 @@ class TemplateService {
         </head>
         <body>
           <div class="page">
+            <!-- Formas decorativas -->
             <div class="shape-circle purple"></div>
             <div class="shape-circle blue"></div>
 
             <div class="container">
+              <!-- Cabeçalho com logo -->
               <div class="header">
                 <div class="logo">A</div>
                 <div class="texts">
@@ -208,8 +211,10 @@ class TemplateService {
                 </div>
               </div>
 
+              <!-- Título do Plano de Aula -->
               <h2>PLANO DE AULA</h2>
 
+              <!-- Informações básicas -->
               <table>
                 <tr>
                   <th>Professor(a):</th>
@@ -235,6 +240,7 @@ class TemplateService {
                 </tr>
               </table>
 
+              <!-- Objetivos de Aprendizagem -->
               <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
               <ul>
                 {{#each objetivos}}
@@ -242,6 +248,7 @@ class TemplateService {
                 {{/each}}
               </ul>
 
+              <!-- Habilidades BNCC -->
               <div class="section-title">HABILIDADES BNCC</div>
               <ul>
                 {{#each habilidades}}
@@ -249,6 +256,7 @@ class TemplateService {
                 {{/each}}
               </ul>
 
+              <!-- Desenvolvimento Metodológico -->
               <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
               <table>
                 <thead>
@@ -271,6 +279,7 @@ class TemplateService {
                 </tbody>
               </table>
 
+              <!-- Recursos Didáticos -->
               <div class="section-title">RECURSOS DIDÁTICOS</div>
               <ul>
                 {{#each recursos}}
@@ -278,10 +287,12 @@ class TemplateService {
                 {{/each}}
               </ul>
 
+              <!-- Avaliação -->
               <div class="section-title">AVALIAÇÃO</div>
               <p>{{avaliacao}}</p>
             </div>
 
+            <!-- Rodapé -->
             <footer>
               Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
             </footer>
@@ -904,13 +915,16 @@ class TemplateService {
       throw new Error('Template não encontrado');
     }
 
+    // Simple template engine (substitui {{variavel}} pelo valor)
     let html = template.htmlContent;
     
+    // Handle simple variables
     Object.keys(data).forEach(key => {
       const regex = new RegExp(`{{${key}}}`, 'g');
       html = html.replace(regex, data[key] || '');
     });
 
+    // Handle arrays with #each
     const eachRegex = /{{#each (\w+)}}([\s\S]*?){{\/each}}/g;
     html = html.replace(eachRegex, (match, arrayName, template) => {
       const array = data[arrayName];
@@ -919,8 +933,10 @@ class TemplateService {
       return array.map((item, index) => {
         let itemHtml = template;
         
+        // Handle {{this}} for simple arrays
         itemHtml = itemHtml.replace(/{{this}}/g, typeof item === 'string' ? item : '');
         
+        // Handle object properties
         if (typeof item === 'object') {
           Object.keys(item).forEach(prop => {
             const propRegex = new RegExp(`{{${prop}}}`, 'g');
@@ -928,12 +944,15 @@ class TemplateService {
           });
         }
         
+        // Handle @letter for options (A, B, C, D)
         itemHtml = itemHtml.replace(/{{@letter}}/g, String.fromCharCode(65 + index) + ')');
         
+        // Handle @last for conditional rendering
         itemHtml = itemHtml.replace(/{{#unless @last}}([\s\S]*?){{\/unless}}/g, (match, content) => {
           return index < array.length - 1 ? content : '';
         });
         
+        // Handle conditional blocks
         const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
         itemHtml = itemHtml.replace(ifRegex, (match, condition, content) => {
           return item[condition] ? content : '';
@@ -943,6 +962,7 @@ class TemplateService {
       }).join('');
     });
 
+    // Handle top-level conditional blocks
     const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
     html = html.replace(ifRegex, (match, condition, content) => {
       return data[condition] ? content : '';
@@ -951,6 +971,7 @@ class TemplateService {
     return html;
   }
 
+  // Novo método para gerar dados de slides baseados em keywords
   generateSlidesData(formData: any): any {
     const keywords = this.extractKeywords(formData);
     

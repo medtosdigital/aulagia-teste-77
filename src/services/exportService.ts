@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
@@ -27,7 +26,7 @@ class ExportService {
           <style>
             @page {
               size: A4;
-              margin: 15mm 0 15mm 0;
+              margin: 0;
             }
             
             body { 
@@ -41,13 +40,13 @@ class ExportService {
             
             .page {
               width: 100%;
-              height: auto;
+              height: 100vh;
               background: white;
               margin: 0;
               padding: 0;
               box-sizing: border-box;
               position: relative;
-              overflow: visible;
+              overflow: hidden;
             }
 
             @media print {
@@ -56,7 +55,7 @@ class ExportService {
                 padding: 0 !important; 
                 background: white !important;
                 width: 100% !important;
-                height: auto !important;
+                height: 100vh !important;
               }
               
               .page { 
@@ -65,9 +64,8 @@ class ExportService {
                 padding: 0 !important;
                 max-width: none !important;
                 width: 100% !important;
-                height: auto !important;
+                height: 100vh !important;
                 page-break-after: always;
-                page-break-inside: avoid;
               }
               
               .page:last-child {
@@ -176,10 +174,10 @@ class ExportService {
         properties: {
           page: {
             margin: {
-              top: 1134,
-              right: 1134,
-              bottom: 1134,
-              left: 1134,
+              top: 1134, // 1cm em twips
+              right: 1134, // 1cm em twips  
+              bottom: 1134, // 1cm em twips
+              left: 1134, // 1cm em twips
             },
           },
         },
