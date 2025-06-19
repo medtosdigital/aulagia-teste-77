@@ -23,30 +23,121 @@ class ExportService {
         <head>
           <title>${material.title}</title>
           <meta charset="utf-8">
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
           <style>
             @page {
               size: A4;
+              margin: 20mm 15mm 25mm 15mm;
+            }
+            
+            * {
               margin: 0;
+              padding: 0;
+              box-sizing: border-box;
             }
             
             body { 
               margin: 0; 
               padding: 0; 
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               background: white;
               width: 100%;
               height: 100vh;
+              font-size: 11pt;
+              line-height: 1.4;
+              color: #1f2937;
             }
             
-            .page {
-              width: 100%;
-              height: 100vh;
-              background: white;
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
+            .page-container {
               position: relative;
+              width: 100%;
+              min-height: 100vh;
+              background: white;
               overflow: hidden;
+            }
+
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.1;
+              pointer-events: none;
+              z-index: 1;
+            }
+            
+            .shape-circle.top {
+              width: 180px; 
+              height: 180px;
+              background: #3b82f6;
+              top: -60px; 
+              left: -40px;
+            }
+            
+            .shape-circle.bottom {
+              width: 240px; 
+              height: 240px;
+              background: #60a5fa;
+              bottom: -80px; 
+              right: -60px;
+            }
+
+            .header {
+              position: fixed;
+              top: 15mm;
+              left: 15mm;
+              right: 15mm;
+              display: flex;
+              align-items: center;
+              z-index: 10;
+              background: transparent;
+            }
+            
+            .header .logo {
+              width: 42px;
+              height: 42px;
+              background: #3b82f6;
+              border-radius: 8px;
+              margin-right: 12px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-weight: 600;
+              font-size: 16px;
+            }
+            
+            .header .texts h1 {
+              font-size: 1.5rem;
+              color: #3b82f6;
+              margin: 0;
+              font-weight: 600;
+            }
+            
+            .header .texts p {
+              font-size: 0.8rem;
+              color: #6b7280;
+              margin: 0;
+            }
+
+            .content {
+              position: relative;
+              z-index: 5;
+              margin-top: 80px;
+              margin-bottom: 60px;
+              padding: 0 15mm;
+            }
+
+            .footer {
+              position: fixed;
+              bottom: 15mm;
+              left: 15mm;
+              right: 15mm;
+              text-align: center;
+              font-size: 0.7rem;
+              color: #9ca3af;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 8px;
+              background: white;
+              z-index: 10;
             }
 
             @media print {
@@ -58,7 +149,7 @@ class ExportService {
                 height: 100vh !important;
               }
               
-              .page { 
+              .page-container { 
                 box-shadow: none !important; 
                 margin: 0 !important; 
                 padding: 0 !important;
@@ -68,15 +159,53 @@ class ExportService {
                 page-break-after: always;
               }
               
-              .page:last-child {
+              .page-container:last-child {
                 page-break-after: avoid;
+              }
+
+              .header {
+                position: fixed !important;
+                top: 15mm !important;
+                left: 15mm !important;
+                right: 15mm !important;
+              }
+
+              .footer {
+                position: fixed !important;
+                bottom: 15mm !important;
+                left: 15mm !important;
+                right: 15mm !important;
+                display: block !important;
+              }
+
+              .content {
+                margin-top: 80px !important;
+                margin-bottom: 60px !important;
+                padding: 0 15mm !important;
               }
             }
           </style>
         </head>
         <body>
-          <div class="page">
-            ${renderedHtml}
+          <div class="page-container">
+            <div class="shape-circle top"></div>
+            <div class="shape-circle bottom"></div>
+            
+            <div class="header">
+              <div class="logo">📖</div>
+              <div class="texts">
+                <h1>aulagIA</h1>
+                <p>Sua aula com toque mágico</p>
+              </div>
+            </div>
+            
+            <div class="content">
+              ${renderedHtml.replace(/<body[^>]*>|<\/body>|<html[^>]*>|<\/html>|<head[^>]*>[\s\S]*?<\/head>/gi, '')}
+            </div>
+            
+            <div class="footer">
+              Plano de aula gerado pela aulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
           </div>
         </body>
         </html>
@@ -86,7 +215,7 @@ class ExportService {
       setTimeout(() => {
         printWindow.print();
         printWindow.close();
-      }, 500);
+      }, 1000);
     }
   }
 
@@ -154,6 +283,14 @@ class ExportService {
       })
     );
 
+    // Adicionar rodapé com logo aulagIA
+    children.push(
+      new Paragraph({
+        children: [new TextRun('')],
+        spacing: { after: 200 }
+      })
+    );
+
     switch (material.type) {
       case 'plano-de-aula':
         children = [...children, ...this.getLessonPlanWordContent(material.content as LessonPlan)];
@@ -169,17 +306,58 @@ class ExportService {
         break;
     }
 
+    // Adicionar rodapé
+    children.push(
+      new Paragraph({
+        children: [new TextRun('')],
+        spacing: { before: 400 }
+      })
+    );
+
+    children.push(
+      new Paragraph({
+        children: [new TextRun({ text: `Documento gerado pela aulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')}`, size: 16, color: '9CA3AF' })],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 200 }
+      })
+    );
+
     const doc = new Document({
       sections: [{
         properties: {
           page: {
             margin: {
-              top: 567, // 0.5cm em twips
-              right: 1134, // 1cm em twips  
-              bottom: 567, // 0.5cm em twips
-              left: 1134, // 1cm em twips
+              top: 851, // 1.5cm em twips
+              right: 851, // 1.5cm em twips  
+              bottom: 851, // 1.5cm em twips
+              left: 851, // 1.5cm em twips
             },
           },
+        },
+        headers: {
+          default: new Header({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: 'aulagIA', bold: true, size: 24, color: '3B82F6' }),
+                  new TextRun({ text: ' - Sua aula com toque mágico', size: 16, color: '6B7280' })
+                ],
+                alignment: AlignmentType.LEFT,
+              })
+            ]
+          })
+        },
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Documento gerado pela aulagIA em ${new Date().toLocaleDateString('pt-BR')}`, size: 16, color: '9CA3AF' })
+                ],
+                alignment: AlignmentType.CENTER,
+              })
+            ]
+          })
         },
         children: children
       }]

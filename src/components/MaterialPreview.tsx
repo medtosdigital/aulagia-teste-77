@@ -83,6 +83,11 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           margin-bottom: 0;
           page-break-after: avoid;
         }
+
+        /* Remover rodapé da visualização modal */
+        .material-preview-container footer {
+          display: none !important;
+        }
         
         /* Responsividade para mobile */
         @media (max-width: 768px) {
@@ -104,30 +109,6 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           .material-preview-container .a4-page {
             border-radius: 6px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-          }
-        }
-        
-        @media print {
-          .material-preview-container {
-            background: white !important;
-            padding: 0 !important;
-            margin: 0 !important;
-          }
-          
-          .material-preview-container .a4-page {
-            box-shadow: none !important;
-            border: none !important;
-            border-radius: 0 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-            max-width: none !important;
-            min-height: 100vh !important;
-            page-break-after: always;
-          }
-
-          .material-preview-container .a4-page:last-child {
-            page-break-after: avoid;
           }
         }
       `}</style>
