@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { templateService } from '@/services/templateService';
 import { GeneratedMaterial } from '@/services/materialService';
@@ -63,8 +62,9 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           color: #333;
           position: relative;
           padding: 2rem;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-          border-radius: 8px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+          border-radius: 12px;
+          border: 1px solid rgba(0, 0, 0, 0.05);
         }
         
         .material-preview-container .a4-page h1 {
@@ -140,6 +140,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             font-size: 11pt;
             padding: 1.5rem;
             margin: 0;
+            border-radius: 8px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
           }
           
           .material-preview-container .a4-page h1 {
@@ -171,6 +173,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           .material-preview-container .a4-page {
             font-size: 10pt;
             padding: 1rem;
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
           }
           
           .material-preview-container .a4-page h1 {
