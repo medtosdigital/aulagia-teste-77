@@ -1,3 +1,4 @@
+
 export interface Template {
   id: string;
   name: string;
@@ -25,7 +26,7 @@ class TemplateService {
             /* Define página A4 para impressão e visualização */
             @page {
               size: A4;
-              margin: 20mm 15mm 15mm 15mm;
+              margin: 0;
             }
             body {
               margin: 0;
@@ -48,35 +49,38 @@ class TemplateService {
             .page:last-child {
               page-break-after: avoid;
             }
-            /* Cabeçalho que aparece em todas as páginas */
+            /* Cabeçalho que aparece em todas as páginas - NÃO FIXO */
             .header {
-              position: fixed;
-              top: 5mm;
-              left: 15mm;
-              right: 15mm;
+              position: absolute;
+              top: 10mm;
+              left: 0;
+              right: 0;
               display: flex;
               align-items: center;
               z-index: 999;
-              height: 12mm;
+              height: 15mm;
               background: white;
+              padding: 0 20mm;
             }
             .header .logo {
-              width: 32px;
-              height: 32px;
-              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-              border-radius: 6px;
-              margin-right: 12px;
+              width: 40px;
+              height: 40px;
+              background: #0ea5e9;
+              border-radius: 8px;
+              margin-right: 15px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
-              font-weight: bold;
-              font-size: 18px;
               flex-shrink: 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
+            .header .logo svg {
+              width: 24px;
+              height: 24px;
+            }
             .header .texts h1 {
-              font-size: 1.2rem;
+              font-size: 1.4rem;
               color: #0ea5e9;
               margin: 0 0 2px 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -84,7 +88,7 @@ class TemplateService {
               font-weight: 600;
             }
             .header .texts p {
-              font-size: 0.7rem;
+              font-size: 0.8rem;
               color: #6b7280;
               margin: 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -92,9 +96,9 @@ class TemplateService {
             }
             /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
-              margin-top: 25mm;
+              margin-top: 30mm;
               margin-bottom: 20mm;
-              padding: 0 15mm;
+              padding: 0 20mm;
               position: relative;
             }
             /* Título principal */
@@ -164,12 +168,12 @@ class TemplateService {
               margin-bottom: 14px;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            /* Rodapé que aparece em todas as páginas */
+            /* Rodapé que aparece em todas as páginas - NÃO FIXO */
             .footer {
-              position: fixed;
-              bottom: 5mm;
-              left: 15mm;
-              right: 15mm;
+              position: absolute;
+              bottom: 10mm;
+              left: 0;
+              right: 0;
               text-align: center;
               font-size: 0.6rem;
               color: #9ca3af;
@@ -179,11 +183,12 @@ class TemplateService {
               align-items: center;
               justify-content: center;
               background: white;
+              padding: 0 20mm;
             }
             /* Quebras de página controladas */
             .page-break {
               page-break-before: always;
-              margin-top: 25mm;
+              margin-top: 30mm;
             }
             .avoid-break {
               page-break-inside: avoid;
@@ -217,36 +222,43 @@ class TemplateService {
                 page-break-after: avoid;
               }
               .header {
-                position: fixed;
-                top: 5mm;
-                left: 15mm;
-                right: 15mm;
+                position: absolute;
+                top: 10mm;
+                left: 0;
+                right: 0;
+                padding: 0 20mm;
               }
               .footer {
-                position: fixed;
-                bottom: 5mm;
-                left: 15mm;
-                right: 15mm;
+                position: absolute;
+                bottom: 10mm;
+                left: 0;
+                right: 0;
+                padding: 0 20mm;
               }
               .content {
-                margin-top: 25mm;
+                margin-top: 30mm;
                 margin-bottom: 20mm;
-                padding: 0 15mm;
+                padding: 0 20mm;
               }
             }
           </style>
         </head>
         <body>
-          <!-- Cabeçalho fixo que aparece em todas as páginas -->
+          <!-- Cabeçalho que aparece em todas as páginas -->
           <div class="header">
-            <div class="logo">A</div>
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+            </div>
             <div class="texts">
               <h1>AulagIA</h1>
               <p>Sua aula com toque mágico</p>
             </div>
           </div>
 
-          <!-- Rodapé fixo que aparece em todas as páginas -->
+          <!-- Rodapé que aparece em todas as páginas -->
           <div class="footer">
             Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
           </div>
