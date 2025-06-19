@@ -1,4 +1,5 @@
 import { templateService } from './templateService';
+import { GrammarService } from './grammarService';
 
 export interface GeneratedMaterial {
   id: string;
@@ -70,20 +71,30 @@ class MaterialService {
     // Simula chamada para API de IA
     await new Promise(resolve => setTimeout(resolve, 2000));
 
+    // Corrigir automaticamente o tema antes de gerar o material
+    const correctedTopic = await GrammarService.correctText(formData.tema || formData.topic);
+
+    // Atualizar formData com o tema corrigido
+    const correctedFormData = {
+      ...formData,
+      tema: correctedTopic,
+      topic: correctedTopic
+    };
+
     let content: any;
 
     switch (type) {
       case 'plano-de-aula':
-        content = this.generateLessonPlan(formData);
+        content = this.generateLessonPlan(correctedFormData);
         break;
       case 'slides':
-        content = this.generateSlides(formData);
+        content = this.generateSlides(correctedFormData);
         break;
       case 'atividade':
-        content = this.generateActivity(formData);
+        content = this.generateActivity(correctedFormData);
         break;
       case 'avaliacao':
-        content = this.generateEvaluation(formData);
+        content = this.generateEvaluation(correctedFormData);
         break;
       default:
         throw new Error('Tipo de material não suportado');
@@ -92,12 +103,12 @@ class MaterialService {
     const material: GeneratedMaterial = {
       id: Date.now().toString(),
       type: type as any,
-      title: `${type.charAt(0).toUpperCase() + type.slice(1)} - ${formData.tema || formData.topic}`,
+      title: `${type.charAt(0).toUpperCase() + type.slice(1)} - ${correctedFormData.tema || correctedFormData.topic}`,
       content,
       createdAt: new Date().toISOString(),
-      formData,
-      subject: formData.disciplina || formData.subject,
-      grade: formData.serie || formData.grade
+      formData: correctedFormData,
+      subject: correctedFormData.disciplina || correctedFormData.subject,
+      grade: correctedFormData.serie || correctedFormData.grade
     };
 
     this.materials.push(material);

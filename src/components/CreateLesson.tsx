@@ -10,7 +10,6 @@ import { Progress } from '@/components/ui/progress';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import MaterialModal from './MaterialModal';
 import BNCCValidationModal from './BNCCValidationModal';
-import GrammarCorrection from './GrammarCorrection';
 import { toast } from 'sonner';
 
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
@@ -304,15 +303,6 @@ const CreateLesson: React.FC = () => {
                       <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                     </button>
                   </div>
-                  
-                  {/* Componente de correção gramatical */}
-                  {formData.topic && (
-                    <GrammarCorrection
-                      text={formData.topic}
-                      onTextChange={(newText) => setFormData({ ...formData, topic: newText })}
-                      className="mt-3"
-                    />
-                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -405,7 +395,7 @@ const CreateLesson: React.FC = () => {
           onAccept={handleBNCCValidationAccept}
         />
 
-        {/* ... keep existing code (MaterialModal) */}
+        <MaterialModal material={generatedMaterial} open={showModal} onClose={handleCloseModal} />
       </>
     );
   }
