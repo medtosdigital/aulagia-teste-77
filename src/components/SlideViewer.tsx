@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
@@ -89,15 +90,15 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent }) => {
       </div>
 
       {/* Slide Content */}
-      <div className="relative">
+      <div className="relative flex justify-center items-center p-4" style={{ minHeight: '576px' }}>
         <div 
-          className="slide bg-white mx-auto flex items-center justify-between p-10 box-border"
+          className="slide bg-white flex items-center justify-between p-10 box-border shadow-lg rounded-lg"
           style={{
             width: '960px',
             height: '720px',
             maxWidth: '100%',
             transform: 'scale(0.8)',
-            transformOrigin: 'center top'
+            transformOrigin: 'center center'
           }}
         >
           <div className="text-content w-[55%]">

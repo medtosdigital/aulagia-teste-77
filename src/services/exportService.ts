@@ -1,11 +1,16 @@
-
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import { GeneratedMaterial, LessonPlan, Activity, Slide, Assessment } from './materialService';
+import { templateService } from './templateService';
 
 class ExportService {
   async exportToPDF(material: GeneratedMaterial): Promise<void> {
+    if (material.type === 'slides') {
+      await this.exportSlidesToPDF(material);
+      return;
+    }
+
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
@@ -28,9 +33,6 @@ class ExportService {
       case 'plano-de-aula':
         this.addLessonPlanToPDF(doc, material.content as LessonPlan, yPosition);
         break;
-      case 'slides':
-        this.addSlidesToPDF(doc, material.content as Slide[], yPosition);
-        break;
       case 'atividade':
         this.addActivityToPDF(doc, material.content as Activity, yPosition);
         break;
@@ -40,6 +42,108 @@ class ExportService {
     }
 
     doc.save(`${material.title}.pdf`);
+  }
+
+  private async exportSlidesToPDF(material: GeneratedMaterial): Promise<void> {
+    const doc = new jsPDF('landscape', 'mm', [254, 190.5]); // 4:3 ratio
+    const slides = material.content as Slide[];
+    
+    // Renderizar HTML completo usando o template
+    const renderedHtml = templateService.renderTemplate('2', slides);
+    
+    // Extrair slides do HTML renderizado
+    const parser = new DOMParser();
+    const htmlDoc = parser.parseFromString(renderedHtml, 'text/html');
+    const slideElements = htmlDoc.querySelectorAll('.slide');
+    
+    slideElements.forEach((slideElement, index) => {
+      if (index > 0) doc.addPage();
+      
+      const textContent = slideElement.querySelector('.text-content');
+      const imageContent = slideElement.querySelector('.image-side');
+      
+      const title = textContent?.querySelector('.title')?.textContent || `Slide ${index + 1}`;
+      const content = textContent?.querySelector('.content')?.textContent || '';
+      const table = textContent?.querySelector('.table');
+      const grid = textContent?.querySelector('.grid');
+      
+      // Fundo azul claro
+      doc.setFillColor(224, 242, 254);
+      doc.rect(0, 0, 254, 190.5, 'F');
+      
+      // Fundo branco do slide
+      doc.setFillColor(255, 255, 255);
+      doc.rect(20, 20, 214, 150.5, 'F');
+      
+      // Título - usando cor #0f172a
+      doc.setTextColor(15, 23, 42);
+      doc.setFontSize(20);
+      doc.setFont(undefined, 'bold');
+      doc.text(title, 30, 40);
+      
+      // Conteúdo - usando cor #1e293b
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      
+      let y = 60;
+      if (content) {
+        const lines = doc.splitTextToSize(content, 120);
+        lines.forEach((line: string) => {
+          doc.text(line, 30, y);
+          y += 8;
+        });
+      }
+      
+      // Tabela
+      if (table) {
+        const rows = table.querySelectorAll('tr');
+        y += 10;
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll('th, td');
+          let x = 30;
+          cells.forEach((cell) => {
+            // Fundo cinza para headers
+            if (cell.tagName === 'TH') {
+              doc.setFillColor(243, 244, 246);
+              doc.rect(x, y - 5, 30, 10, 'F');
+            }
+            doc.text(cell.textContent || '', x + 2, y);
+            x += 32;
+          });
+          y += 12;
+        });
+      }
+      
+      // Grid
+      if (grid) {
+        const boxes = grid.querySelectorAll('.box');
+        let x = 30;
+        let gridY = y + 10;
+        boxes.forEach((box, boxIndex) => {
+          // Fundo amarelo claro (#fef9c3)
+          doc.setFillColor(254, 249, 195);
+          doc.rect(x, gridY, 50, 20, 'F');
+          
+          const boxText = box.textContent || '';
+          const boxLines = doc.splitTextToSize(boxText, 45);
+          let boxTextY = gridY + 8;
+          boxLines.forEach((line: string) => {
+            doc.text(line, x + 2, boxTextY);
+            boxTextY += 6;
+          });
+          
+          if (boxIndex % 2 === 1) {
+            x = 30;
+            gridY += 25;
+          } else {
+            x += 55;
+          }
+        });
+      }
+    });
+
+    doc.save(`${material.title}-slides.pdf`);
   }
 
   async exportToWord(material: GeneratedMaterial): Promise<void> {
@@ -95,34 +199,8 @@ class ExportService {
       throw new Error('Exportação PPT disponível apenas para slides');
     }
 
-    // Para uma implementação completa de PPT, seria necessário usar uma biblioteca como PptxGenJS
-    // Por agora, vou criar um PDF otimizado para slides
-    const doc = new jsPDF('landscape');
-    const slides = material.content as Slide[];
-    
-    slides.forEach((slide, index) => {
-      if (index > 0) doc.addPage();
-      
-      // Título do slide
-      doc.setFontSize(24);
-      doc.setFont(undefined, 'bold');
-      doc.text(slide.titulo, 30, 40);
-      
-      // Conteúdo do slide
-      doc.setFontSize(16);
-      doc.setFont(undefined, 'normal');
-      let yPos = 70;
-      slide.conteudo.forEach((item) => {
-        doc.text(item, 30, yPos);
-        yPos += 20;
-      });
-      
-      // Número do slide
-      doc.setFontSize(10);
-      doc.text(`${slide.numero}`, doc.internal.pageSize.getWidth() - 30, doc.internal.pageSize.getHeight() - 20);
-    });
-
-    doc.save(`${material.title}-slides.pdf`);
+    // Para slides, usar o PDF otimizado para apresentação
+    await this.exportSlidesToPDF(material);
   }
 
   private addLessonPlanToPDF(doc: jsPDF, content: LessonPlan, startY: number): void {
@@ -198,24 +276,6 @@ class ExportService {
         y += 10;
       });
       y += 5;
-    });
-  }
-
-  private addSlidesToPDF(doc: jsPDF, slides: Slide[], startY: number): void {
-    slides.forEach((slide, index) => {
-      if (index > 0) doc.addPage();
-      
-      doc.setFontSize(18);
-      doc.setFont(undefined, 'bold');
-      doc.text(`Slide ${slide.numero}: ${slide.titulo}`, 20, 40);
-      
-      doc.setFontSize(12);
-      doc.setFont(undefined, 'normal');
-      let y = 70;
-      slide.conteudo.forEach((item) => {
-        doc.text(item, 20, y);
-        y += 15;
-      });
     });
   }
 
