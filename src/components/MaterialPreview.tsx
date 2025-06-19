@@ -49,28 +49,31 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
   };
 
   return (
-    <div className="material-preview-container w-full h-full overflow-auto">
+    <div className="material-preview-container w-full h-full overflow-auto flex justify-center">
       <style>{`
         .material-preview-container {
           padding: 1rem;
+          background-color: #f8f9fa;
         }
         
         .a4-page {
           width: 100%;
-          max-width: 180mm; /* Escala reduzida de 210mm para 180mm */
+          max-width: 210mm;
           min-height: auto;
-          background: transparent;
-          margin: 0 auto;
+          background: white;
+          margin: 0;
           font-family: 'Times New Roman', serif;
-          font-size: 11pt; /* Reduzido de 12pt */
-          line-height: 1.4; /* Reduzido de 1.5 */
+          font-size: 11pt;
+          line-height: 1.4;
           color: #333;
           position: relative;
-          padding: 1.5rem; /* Reduzido das margens originais */
+          padding: 1.5rem;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+          border-radius: 8px;
         }
         
         .a4-page h1 {
-          font-size: 14pt; /* Reduzido de 16pt */
+          font-size: 14pt;
           font-weight: bold;
           text-align: center;
           margin-bottom: 1.5rem;
@@ -79,7 +82,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         }
         
         .a4-page h2 {
-          font-size: 12pt; /* Reduzido de 14pt */
+          font-size: 12pt;
           font-weight: bold;
           margin-top: 1.25rem;
           margin-bottom: 0.75rem;
@@ -88,7 +91,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         }
         
         .a4-page h3 {
-          font-size: 11pt; /* Reduzido de 12pt */
+          font-size: 11pt;
           font-weight: bold;
           margin-top: 0.75rem;
           margin-bottom: 0.5rem;
@@ -98,7 +101,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         .a4-page p {
           margin-bottom: 0.75rem;
           text-align: justify;
-          text-indent: 1rem; /* Reduzido de 1.25cm */
+          text-indent: 1rem;
         }
         
         .a4-page ul, .a4-page ol {
@@ -115,12 +118,12 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           width: 100%;
           border-collapse: collapse;
           margin: 0.75rem 0;
-          font-size: 10pt; /* Reduzido de 11pt */
+          font-size: 10pt;
         }
         
         .a4-page th, .a4-page td {
           border: 1px solid #d1d5db;
-          padding: 6px 10px; /* Reduzido */
+          padding: 6px 10px;
           text-align: left;
         }
         
@@ -140,6 +143,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             max-width: 100%;
             font-size: 10pt;
             padding: 1rem;
+            margin: 0;
           }
           
           .a4-page h1 {
@@ -244,6 +248,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         @media print {
           .material-preview-container {
             padding: 0 !important;
+            background-color: white !important;
+            justify-content: flex-start !important;
           }
           
           .a4-page {
@@ -251,10 +257,15 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             font-size: 12pt !important;
             padding: 2.5cm 3cm 2cm 3cm !important;
             page-break-after: always;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
           }
         }
       `}</style>
-      {renderMaterial()}
+      <div className="w-full max-w-4xl">
+        {renderMaterial()}
+      </div>
     </div>
   );
 };
