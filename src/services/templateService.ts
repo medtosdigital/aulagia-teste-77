@@ -1,4 +1,3 @@
-
 export interface Template {
   id: string;
   name: string;
@@ -16,76 +15,236 @@ class TemplateService {
       name: 'Plano de Aula Padrão',
       type: 'plano-de-aula',
       htmlContent: `
-        <div class="a4-page">
-          <div class="header">
-            <h1>{{tema}}</h1>
-            <div class="info-grid">
-              <div class="info-item">
-                <strong>Professor(a):</strong> {{professor}}
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Plano de Aula</title>
+          <style>
+            @page {
+              size: A4;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              background: #f0f4f8;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+            .page {
+              position: relative;
+              width: 210mm;
+              height: 297mm;
+              background: white;
+              border-radius: 6px;
+              overflow: hidden;
+              box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+              margin: 20px 0;
+            }
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.25;
+              pointer-events: none;
+            }
+            .shape-circle.purple {
+              width: 180px; height: 180px;
+              background: #a78bfa;
+              top: -60px; left: -40px;
+            }
+            .shape-circle.blue {
+              width: 240px; height: 240px;
+              background: #60a5fa;
+              bottom: -80px; right: -60px;
+            }
+            .container {
+              position: relative;
+              width: 100%;
+              height: 100%;
+              padding: 20mm 15mm;
+              box-sizing: border-box;
+              z-index: 1;
+            }
+            .header {
+              margin-bottom: 15px;
+            }
+            .header .texts h1 {
+              font-size: 1.4rem;
+              color: #6b21a8;
+            }
+            .header .texts p {
+              font-size: 0.8rem;
+              color: #374151;
+            }
+            h2 {
+              text-align: center;
+              margin: 10px 0 18px;
+              font-size: 1.5rem;
+              color: #4f46e5;
+              position: relative;
+            }
+            h2::after {
+              content: '';
+              width: 50px;
+              height: 3px;
+              background: #a78bfa;
+              display: block;
+              margin: 6px auto 0;
+              border-radius: 2px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 18px;
+            }
+            th, td {
+              padding: 6px 10px;
+              font-size: 0.85rem;
+            }
+            th {
+              background: #f3f4f6;
+              color: #1f2937;
+              font-weight: 600;
+            }
+            td {
+              background: #ffffff;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            .section-title {
+              font-weight: 600;
+              margin-top: 18px;
+              margin-bottom: 8px;
+              font-size: 1.0rem;
+              color: #4338ca;
+            }
+            ul {
+              list-style: disc inside;
+              margin-bottom: 16px;
+              line-height: 1.4;
+              font-size: 0.9rem;
+            }
+            .section-content {
+              margin-bottom: 16px;
+              line-height: 1.4;
+              font-size: 0.9rem;
+            }
+            footer {
+              position: absolute;
+              bottom: 15mm;
+              left: 15mm;
+              right: 15mm;
+              text-align: center;
+              font-size: 0.7rem;
+              color: #6b7280;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 4px;
+            }
+            @media print {
+              body {
+                background: white;
+              }
+              .page {
+                box-shadow: none;
+                border-radius: 0;
+                margin: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="page">
+            <div class="shape-circle purple"></div>
+            <div class="shape-circle blue"></div>
+
+            <div class="container">
+              <!-- Cabeçalho -->
+              <div class="header">
+                <div class="texts">
+                  <h1>Aula Mágica</h1>
+                  <p>Desenvolvido por Ditadinho KIDS</p>
+                </div>
               </div>
-              <div class="info-item">
-                <strong>Disciplina:</strong> {{disciplina}}
+
+              <h2>PLANO DE AULA</h2>
+
+              <table>
+                <tr>
+                  <th>Professor(a):</th>
+                  <td>{{professor}}</td>
+                  <th>Data:</th>
+                  <td>{{data}}</td>
+                </tr>
+                <tr>
+                  <th>Disciplina:</th>
+                  <td>{{disciplina}}</td>
+                  <th>Série/Ano:</th>
+                  <td>{{serie}}</td>
+                </tr>
+                <tr>
+                  <th>Tema:</th>
+                  <td colspan="3">{{tema}}</td>
+                </tr>
+                <tr>
+                  <th>Duração:</th>
+                  <td>{{duracao}}</td>
+                  <th>BNCC:</th>
+                  <td>{{bncc}}</td>
+                </tr>
+              </table>
+
+              <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
+              <ul>
+                {{#each objetivos}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
+
+              <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Etapa</th>
+                    <th>Atividade</th>
+                    <th>Tempo</th>
+                    <th>Recursos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each desenvolvimento}}
+                  <tr>
+                    <td>{{etapa}}</td>
+                    <td>{{atividade}}</td>
+                    <td>{{tempo}}</td>
+                    <td>{{recursos}}</td>
+                  </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+
+              <div class="section-title">RECURSOS DIDÁTICOS</div>
+              <div class="section-content">
+                {{#each recursos}}
+                • {{this}}<br>
+                {{/each}}
               </div>
-              <div class="info-item">
-                <strong>Série/Ano:</strong> {{serie}}
-              </div>
-              <div class="info-item">
-                <strong>Data:</strong> {{data}}
-              </div>
-              <div class="info-item">
-                <strong>Duração:</strong> {{duracao}}
-              </div>
-              <div class="info-item">
-                <strong>BNCC:</strong> {{bncc}}
-              </div>
+
+              <div class="section-title">AVALIAÇÃO</div>
+              <div class="section-content">{{avaliacao}}</div>
             </div>
+
+            <footer>
+              Plano de aula gerado pela AulagIA em {{dataGeracao}}
+            </footer>
           </div>
-          
-          <div class="section">
-            <h2>Objetivos de Aprendizagem</h2>
-            <ul>
-              {{#each objetivos}}
-              <li>{{this}}</li>
-              {{/each}}
-            </ul>
-          </div>
-          
-          <div class="section">
-            <h2>Habilidades BNCC</h2>
-            <ul>
-              {{#each habilidades}}
-              <li>{{this}}</li>
-              {{/each}}
-            </ul>
-          </div>
-          
-          <div class="section">
-            <h2>Desenvolvimento da Aula</h2>
-            {{#each desenvolvimento}}
-            <div class="etapa">
-              <h3>{{etapa}} ({{tempo}})</h3>
-              <p>{{atividade}}</p>
-              <p><strong>Recursos:</strong> {{recursos}}</p>
-            </div>
-            {{/each}}
-          </div>
-          
-          <div class="section">
-            <h2>Recursos Necessários</h2>
-            <ul>
-              {{#each recursos}}
-              <li>{{this}}</li>
-              {{/each}}
-            </ul>
-          </div>
-          
-          <div class="section">
-            <h2>Avaliação</h2>
-            <p>{{avaliacao}}</p>
-          </div>
-        </div>
+        </body>
+        </html>
       `,
-      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'bncc', 'objetivos', 'habilidades', 'desenvolvimento', 'recursos', 'avaliacao'],
+      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'bncc', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao', 'dataGeracao'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
