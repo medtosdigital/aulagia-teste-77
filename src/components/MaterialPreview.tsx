@@ -31,104 +31,96 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         return <SlideViewer htmlContent={renderedHtml} />;
       }
       
-      // Para outros tipos, usar a renderização padrão com formato A4
+      // Para outros tipos, renderizar diretamente no contêiner
       return (
-        <div className="a4-document-container">
-          <div 
-            className="a4-page"
-            dangerouslySetInnerHTML={{ __html: renderedHtml }}
-          />
-        </div>
+        <div 
+          className="a4-page"
+          dangerouslySetInnerHTML={{ __html: renderedHtml }}
+        />
       );
     } catch (error) {
       console.error('Erro ao renderizar template:', error);
       return (
-        <div className="error-message p-8 text-center">
-          <p className="text-red-600">Erro ao carregar o template do material.</p>
+        <div className="error-message p-4 text-center">
+          <p className="text-red-600 text-sm">Erro ao carregar o template do material.</p>
         </div>
       );
     }
   };
 
   return (
-    <div className="material-preview-container w-full h-full overflow-auto bg-gray-200 p-8">
+    <div className="material-preview-container w-full h-full overflow-auto">
       <style>{`
-        .a4-document-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 2rem;
-          padding: 2rem 0;
+        .material-preview-container {
+          padding: 1rem;
         }
         
         .a4-page {
-          width: 210mm;
-          min-height: 297mm;
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-          padding: 2.5cm 3cm 2cm 3cm; /* Margens ABNT: Superior 3cm, Direita 2cm, Inferior 2cm, Esquerda 3cm */
+          width: 100%;
+          max-width: 180mm; /* Escala reduzida de 210mm para 180mm */
+          min-height: auto;
+          background: transparent;
           margin: 0 auto;
           font-family: 'Times New Roman', serif;
-          font-size: 12pt;
-          line-height: 1.5;
+          font-size: 11pt; /* Reduzido de 12pt */
+          line-height: 1.4; /* Reduzido de 1.5 */
           color: #333;
-          page-break-after: always;
           position: relative;
+          padding: 1.5rem; /* Reduzido das margens originais */
         }
         
         .a4-page h1 {
-          font-size: 16pt;
+          font-size: 14pt; /* Reduzido de 16pt */
           font-weight: bold;
           text-align: center;
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
           text-transform: uppercase;
           color: #1e40af;
         }
         
         .a4-page h2 {
-          font-size: 14pt;
+          font-size: 12pt; /* Reduzido de 14pt */
           font-weight: bold;
-          margin-top: 1.5rem;
-          margin-bottom: 1rem;
+          margin-top: 1.25rem;
+          margin-bottom: 0.75rem;
           color: #1e40af;
           text-transform: uppercase;
         }
         
         .a4-page h3 {
-          font-size: 12pt;
+          font-size: 11pt; /* Reduzido de 12pt */
           font-weight: bold;
-          margin-top: 1rem;
+          margin-top: 0.75rem;
           margin-bottom: 0.5rem;
           color: #374151;
         }
         
         .a4-page p {
-          margin-bottom: 1rem;
+          margin-bottom: 0.75rem;
           text-align: justify;
-          text-indent: 1.25cm; /* Parágrafo com recuo ABNT */
+          text-indent: 1rem; /* Reduzido de 1.25cm */
         }
         
         .a4-page ul, .a4-page ol {
-          margin-bottom: 1rem;
-          padding-left: 1.5rem;
+          margin-bottom: 0.75rem;
+          padding-left: 1.25rem;
         }
         
         .a4-page li {
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.375rem;
           text-align: justify;
         }
         
         .a4-page table {
           width: 100%;
           border-collapse: collapse;
-          margin: 1rem 0;
-          font-size: 11pt;
+          margin: 0.75rem 0;
+          font-size: 10pt; /* Reduzido de 11pt */
         }
         
         .a4-page th, .a4-page td {
           border: 1px solid #d1d5db;
-          padding: 8px 12px;
+          padding: 6px 10px; /* Reduzido */
           text-align: left;
         }
         
@@ -138,38 +130,65 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           text-align: center;
         }
         
-        /* Quebra de página automática */
-        .a4-page .page-break {
-          page-break-before: always;
-        }
-        
-        /* Estilo para impressão */
-        @media print {
+        /* Responsividade para mobile */
+        @media (max-width: 768px) {
           .material-preview-container {
-            background: white !important;
-            padding: 0 !important;
+            padding: 0.5rem;
           }
           
           .a4-page {
-            width: 100% !important;
-            min-height: auto !important;
-            margin: 0 !important;
-            padding: 2.5cm 3cm 2cm 3cm !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            page-break-after: always;
+            max-width: 100%;
+            font-size: 10pt;
+            padding: 1rem;
           }
           
-          .a4-document-container {
-            padding: 0 !important;
-            gap: 0 !important;
+          .a4-page h1 {
+            font-size: 12pt;
+            margin-bottom: 1rem;
+          }
+          
+          .a4-page h2 {
+            font-size: 11pt;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+          }
+          
+          .a4-page h3 {
+            font-size: 10pt;
+          }
+          
+          .a4-page table {
+            font-size: 9pt;
+          }
+          
+          .a4-page th, .a4-page td {
+            padding: 4px 6px;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .a4-page {
+            font-size: 9pt;
+            padding: 0.75rem;
+          }
+          
+          .a4-page h1 {
+            font-size: 11pt;
+          }
+          
+          .a4-page h2 {
+            font-size: 10pt;
+          }
+          
+          .a4-page table {
+            font-size: 8pt;
           }
         }
         
         /* Estilos específicos para diferentes tipos de conteúdo */
         .lesson-info-table {
           border: 2px solid #1e40af;
-          margin: 2rem 0;
+          margin: 1.5rem 0;
         }
         
         .lesson-info-table th {
@@ -185,7 +204,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         .objectives-list li {
           counter-increment: objective-counter;
           position: relative;
-          padding-left: 2rem;
+          padding-left: 1.5rem;
         }
         
         .objectives-list li::before {
@@ -198,22 +217,22 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         
         /* Estilo para atividades e avaliações */
         .question-block {
-          margin: 1.5rem 0;
-          padding: 1rem;
+          margin: 1rem 0;
+          padding: 0.75rem;
           border-left: 4px solid #1e40af;
           background-color: #f8fafc;
-          border-radius: 0 8px 8px 0;
+          border-radius: 0 6px 6px 0;
         }
         
         .question-number {
           font-weight: bold;
           color: #1e40af;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.375rem;
         }
         
         .question-options {
-          margin-left: 1rem;
-          margin-top: 0.5rem;
+          margin-left: 0.75rem;
+          margin-top: 0.375rem;
         }
         
         .question-options li {
@@ -221,14 +240,18 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           margin-bottom: 0.25rem;
         }
         
-        /* Rodapé com numeração de página */
-        .a4-page::after {
-          content: counter(page);
-          position: absolute;
-          bottom: 1.5cm;
-          right: 3cm;
-          font-size: 10pt;
-          color: #666;
+        /* Estilo para impressão */
+        @media print {
+          .material-preview-container {
+            padding: 0 !important;
+          }
+          
+          .a4-page {
+            max-width: 100% !important;
+            font-size: 12pt !important;
+            padding: 2.5cm 3cm 2cm 3cm !important;
+            page-break-after: always;
+          }
         }
       `}</style>
       {renderMaterial()}
