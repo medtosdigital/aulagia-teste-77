@@ -1,4 +1,3 @@
-
 export interface Template {
   id: string;
   name: string;
@@ -48,22 +47,46 @@ class TemplateService {
               box-sizing: border-box;
               position: relative;
               margin: 0 auto;
+              min-height: 100vh;
             }
             .shape-circle {
               position: absolute;
               border-radius: 50%;
               opacity: 0.15;
               pointer-events: none;
+              z-index: 0;
             }
             .shape-circle.purple {
-              width: 120px; height: 120px;
+              width: 200px; 
+              height: 200px;
               background: #a78bfa;
-              top: 20px; left: 20px;
+              top: 50px; 
+              left: -50px;
             }
             .shape-circle.blue {
-              width: 150px; height: 150px;
+              width: 250px; 
+              height: 250px;
               background: #60a5fa;
-              bottom: 20px; right: 20px;
+              bottom: 200px; 
+              right: -80px;
+            }
+            .shape-circle.pink {
+              width: 150px; 
+              height: 150px;
+              background: #f472b6;
+              top: 300px; 
+              right: 50px;
+            }
+            .shape-circle.yellow {
+              width: 180px; 
+              height: 180px;
+              background: #fbbf24;
+              bottom: 400px; 
+              left: -30px;
+            }
+            .content-wrapper {
+              position: relative;
+              z-index: 1;
             }
             h1 {
               text-align: center;
@@ -118,6 +141,19 @@ class TemplateService {
               text-align: justify;
               margin-bottom: 12px;
             }
+            .footer {
+              position: fixed;
+              bottom: 1.5cm;
+              left: 1.5cm;
+              right: 1.5cm;
+              text-align: center;
+              font-size: 10pt;
+              color: #666;
+              border-top: 1px solid #ddd;
+              padding-top: 10px;
+              background: white;
+              z-index: 2;
+            }
             .page-break {
               page-break-before: always;
             }
@@ -136,6 +172,12 @@ class TemplateService {
                 width: 100%;
               }
               .page-break { page-break-before: always; }
+              .footer {
+                position: fixed;
+                bottom: 1cm;
+                left: 1.5cm;
+                right: 1.5cm;
+              }
             }
           </style>
         </head>
@@ -143,79 +185,87 @@ class TemplateService {
           <div class="page">
             <div class="shape-circle purple"></div>
             <div class="shape-circle blue"></div>
+            <div class="shape-circle pink"></div>
+            <div class="shape-circle yellow"></div>
 
-            <h1>Plano de Aula</h1>
+            <div class="content-wrapper">
+              <h1>Plano de Aula</h1>
 
-            <table>
-              <tr>
-                <th style="width: 15%;">Professor(a):</th>
-                <td style="width: 35%;">{{professor}}</td>
-                <th style="width: 15%;">Data:</th>
-                <td style="width: 35%;">{{data}}</td>
-              </tr>
-              <tr>
-                <th>Disciplina:</th>
-                <td>{{disciplina}}</td>
-                <th>Série/Ano:</th>
-                <td>{{serie}}</td>
-              </tr>
-              <tr>
-                <th>Tema:</th>
-                <td colspan="3">{{tema}}</td>
-              </tr>
-              <tr>
-                <th>Duração:</th>
-                <td>{{duracao}}</td>
-                <th>BNCC:</th>
-                <td>{{bncc}}</td>
-              </tr>
-            </table>
-
-            <div class="section-title">Objetivos de Aprendizagem</div>
-            <ul>
-              {{#each objetivos}}
-              <li>{{this}}</li>
-              {{/each}}
-            </ul>
-
-            <div class="section-title">Habilidades BNCC</div>
-            <ul>
-              {{#each habilidades}}
-              <li>{{this}}</li>
-              {{/each}}
-            </ul>
-
-            <div class="section-title">Desenvolvimento Metodológico</div>
-            <table>
-              <thead>
+              <table>
                 <tr>
-                  <th style="width: 20%;">Etapa</th>
-                  <th style="width: 45%;">Atividade</th>
-                  <th style="width: 15%;">Tempo</th>
-                  <th style="width: 20%;">Recursos</th>
+                  <th style="width: 15%;">Professor(a):</th>
+                  <td style="width: 35%;">{{professor}}</td>
+                  <th style="width: 15%;">Data:</th>
+                  <td style="width: 35%;">{{data}}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {{#each desenvolvimento}}
                 <tr>
-                  <td>{{etapa}}</td>
-                  <td>{{atividade}}</td>
-                  <td>{{tempo}}</td>
-                  <td>{{recursos}}</td>
+                  <th>Disciplina:</th>
+                  <td>{{disciplina}}</td>
+                  <th>Série/Ano:</th>
+                  <td>{{serie}}</td>
                 </tr>
+                <tr>
+                  <th>Tema:</th>
+                  <td colspan="3">{{tema}}</td>
+                </tr>
+                <tr>
+                  <th>Duração:</th>
+                  <td>{{duracao}}</td>
+                  <th>BNCC:</th>
+                  <td>{{bncc}}</td>
+                </tr>
+              </table>
+
+              <div class="section-title">Objetivos de Aprendizagem</div>
+              <ul>
+                {{#each objetivos}}
+                <li>{{this}}</li>
                 {{/each}}
-              </tbody>
-            </table>
+              </ul>
 
-            <div class="section-title">Recursos Didáticos</div>
-            <ul>
-              {{#each recursos}}
-              <li>{{this}}</li>
-              {{/each}}
-            </ul>
+              <div class="section-title">Habilidades BNCC</div>
+              <ul>
+                {{#each habilidades}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
 
-            <div class="section-title">Avaliação</div>
-            <p>{{avaliacao}}</p>
+              <div class="section-title">Desenvolvimento Metodológico</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Etapa</th>
+                    <th style="width: 45%;">Atividade</th>
+                    <th style="width: 15%;">Tempo</th>
+                    <th style="width: 20%;">Recursos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each desenvolvimento}}
+                  <tr>
+                    <td>{{etapa}}</td>
+                    <td>{{atividade}}</td>
+                    <td>{{tempo}}</td>
+                    <td>{{recursos}}</td>
+                  </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+
+              <div class="section-title">Recursos Didáticos</div>
+              <ul>
+                {{#each recursos}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
+
+              <div class="section-title">Avaliação</div>
+              <p>{{avaliacao}}</p>
+            </div>
+
+            <div class="footer">
+              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em {{data}} • Template Padrão
+            </div>
           </div>
         </body>
         </html>
@@ -401,17 +451,46 @@ class TemplateService {
               box-sizing: border-box;
               position: relative;
               margin: 0 auto;
+              min-height: 100vh;
             }
             .shape-circle {
               position: absolute;
               border-radius: 50%;
               opacity: 0.15;
               pointer-events: none;
+              z-index: 0;
             }
             .shape-circle.green {
-              width: 120px; height: 120px;
+              width: 200px; 
+              height: 200px;
               background: #10b981;
-              top: 20px; left: 20px;
+              top: 50px; 
+              left: -50px;
+            }
+            .shape-circle.blue {
+              width: 180px; 
+              height: 180px;
+              background: #3b82f6;
+              top: 250px; 
+              right: -40px;
+            }
+            .shape-circle.yellow {
+              width: 220px; 
+              height: 220px;
+              background: #fbbf24;
+              bottom: 300px; 
+              left: -60px;
+            }
+            .shape-circle.purple {
+              width: 160px; 
+              height: 160px;
+              background: #8b5cf6;
+              bottom: 150px; 
+              right: 30px;
+            }
+            .content-wrapper {
+              position: relative;
+              z-index: 1;
             }
             h1 {
               text-align: center;
@@ -482,6 +561,19 @@ class TemplateService {
               height: 40px;
               margin: 10px 0;
             }
+            .footer {
+              position: fixed;
+              bottom: 1.5cm;
+              left: 1.5cm;
+              right: 1.5cm;
+              text-align: center;
+              font-size: 10pt;
+              color: #666;
+              border-top: 1px solid #ddd;
+              padding-top: 10px;
+              background: white;
+              z-index: 2;
+            }
             @media print {
               body { 
                 margin: 0; 
@@ -496,62 +588,77 @@ class TemplateService {
                 max-width: none;
                 width: 100%;
               }
+              .footer {
+                position: fixed;
+                bottom: 1cm;
+                left: 1.5cm;
+                right: 1.5cm;
+              }
             }
           </style>
         </head>
         <body>
           <div class="page">
             <div class="shape-circle green"></div>
+            <div class="shape-circle blue"></div>
+            <div class="shape-circle yellow"></div>
+            <div class="shape-circle purple"></div>
 
-            <h1>Atividade</h1>
+            <div class="content-wrapper">
+              <h1>Atividade</h1>
 
-            <table class="header-table">
-              <tr>
-                <th>Escola</th>
-                <th>Disciplina</th>
-                <th>Série/Ano</th>
-              </tr>
-              <tr>
-                <td>_________________________________</td>
-                <td style="text-align: center;">{{disciplina}}</td>
-                <td style="text-align: center;">{{serie}}</td>
-              </tr>
-            </table>
+              <table class="header-table">
+                <tr>
+                  <th>Escola</th>
+                  <th>Disciplina</th>
+                  <th>Série/Ano</th>
+                </tr>
+                <tr>
+                  <td>_________________________________</td>
+                  <td style="text-align: center;">{{disciplina}}</td>
+                  <td style="text-align: center;">{{serie}}</td>
+                </tr>
+              </table>
 
-            <div style="margin-bottom: 20px;">
-              <p><strong>Nome do Aluno(a):</strong> ____________________________________________</p>
-            </div>
-
-            <div class="instructions">
-              <strong>{{titulo}}</strong><br>
-              {{instrucoes}}
-            </div>
-
-            {{#each questoes}}
-            <div class="question">
-              <div class="question-header">Questão {{numero}}</div>
-              <div class="question-text">{{pergunta}}</div>
-              
-              {{#if opcoes}}
-              <div class="options">
-                {{#each opcoes}}
-                <div class="option">
-                  <span class="option-letter">{{@letter}}</span>
-                  <span>{{this}}</span>
-                </div>
-                {{/each}}
+              <div style="margin-bottom: 20px;">
+                <p><strong>Nome do Aluno(a):</strong> ____________________________________________</p>
               </div>
-              {{else}}
-              <div class="answer-space"></div>
-              <div class="answer-space"></div>
-              {{/if}}
+
+              <div class="instructions">
+                <strong>{{titulo}}</strong><br>
+                {{instrucoes}}
+              </div>
+
+              {{#each questoes}}
+              <div class="question">
+                <div class="question-header">Questão {{numero}}</div>
+                <div class="question-text">{{pergunta}}</div>
+                
+                {{#if opcoes}}
+                <div class="options">
+                  {{#each opcoes}}
+                  <div class="option">
+                    <span class="option-letter">{{@letter}}</span>
+                    <span>{{this}}</span>
+                  </div>
+                  {{/each}}
+                </div>
+                {{else}}
+                <div class="answer-space"></div>
+                <div class="answer-space"></div>
+                {{/if}}
+              </div>
+              {{/each}}
             </div>
-            {{/each}}
+
+            <div class="footer">
+              Atividade gerada pela AulagIA - Sua aula com toque mágico em {{data}} • Template Padrão
+            </div>
           </div>
         </body>
         </html>
       `,
-      variables: ['titulo', 'disciplina', 'serie', 'instrucoes', 'questoes'],
+      variables: ['titulo', 'disciplina', 'serie', 'instrucoes', 'questoes', 'data'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
@@ -592,6 +699,46 @@ class TemplateService {
               box-sizing: border-box;
               position: relative;
               margin: 0 auto;
+              min-height: 100vh;
+            }
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.15;
+              pointer-events: none;
+              z-index: 0;
+            }
+            .shape-circle.red {
+              width: 200px; 
+              height: 200px;
+              background: #ef4444;
+              top: 50px; 
+              left: -50px;
+            }
+            .shape-circle.orange {
+              width: 180px; 
+              height: 180px;
+              background: #f97316;
+              top: 280px; 
+              right: -40px;
+            }
+            .shape-circle.pink {
+              width: 220px; 
+              height: 220px;
+              background: #ec4899;
+              bottom: 250px; 
+              left: -60px;
+            }
+            .shape-circle.purple {
+              width: 160px; 
+              height: 160px;
+              background: #8b5cf6;
+              bottom: 120px; 
+              right: 30px;
+            }
+            .content-wrapper {
+              position: relative;
+              z-index: 1;
             }
             h1 {
               text-align: center;
@@ -668,6 +815,19 @@ class TemplateService {
               margin: 10px 0;
               padding: 10px;
             }
+            .footer {
+              position: fixed;
+              bottom: 1.5cm;
+              left: 1.5cm;
+              right: 1.5cm;
+              text-align: center;
+              font-size: 10pt;
+              color: #666;
+              border-top: 1px solid #ddd;
+              padding-top: 10px;
+              background: white;
+              z-index: 2;
+            }
             @media print {
               body { 
                 margin: 0; 
@@ -682,56 +842,73 @@ class TemplateService {
                 max-width: none;
                 width: 100%;
               }
+              .footer {
+                position: fixed;
+                bottom: 1cm;
+                left: 1.5cm;
+                right: 1.5cm;
+              }
             }
           </style>
         </head>
         <body>
           <div class="page">
-            <h1>Avaliação</h1>
+            <div class="shape-circle red"></div>
+            <div class="shape-circle orange"></div>
+            <div class="shape-circle pink"></div>
+            <div class="shape-circle purple"></div>
 
-            <table class="header-table">
-              <tr>
-                <th colspan="3">{{titulo}}</th>
-              </tr>
-              <tr>
-                <td><strong>Nome:</strong> _________________________________</td>
-                <td><strong>Turma:</strong> _____________</td>
-                <td><strong>Data:</strong> _____________</td>
-              </tr>
-            </table>
+            <div class="content-wrapper">
+              <h1>Avaliação</h1>
 
-            <div class="evaluation-info">
-              <p><strong>Instruções:</strong> {{instrucoes}}</p>
-              <p><strong>Tempo Limite:</strong> {{tempoLimite}}</p>
-            </div>
+              <table class="header-table">
+                <tr>
+                  <th colspan="3">{{titulo}}</th>
+                </tr>
+                <tr>
+                  <td><strong>Nome:</strong> _________________________________</td>
+                  <td><strong>Turma:</strong> _____________</td>
+                  <td><strong>Data:</strong> _____________</td>
+                </tr>
+              </table>
 
-            {{#each questoes}}
-            <div class="question">
-              <div class="question-header">
-                <span>Questão {{numero}}</span>
-                <span class="points">({{pontuacao}} pontos)</span>
+              <div class="evaluation-info">
+                <p><strong>Instruções:</strong> {{instrucoes}}</p>
+                <p><strong>Tempo Limite:</strong> {{tempoLimite}}</p>
               </div>
-              <div class="question-text">{{pergunta}}</div>
-              
-              {{#if opcoes}}
-              <div class="options">
-                {{#each opcoes}}
-                <div class="option">
-                  <span class="option-letter">{{@letter}}</span>
-                  <span>{{this}}</span>
+
+              {{#each questoes}}
+              <div class="question">
+                <div class="question-header">
+                  <span>Questão {{numero}}</span>
+                  <span class="points">({{pontuacao}} pontos)</span>
                 </div>
-                {{/each}}
+                <div class="question-text">{{pergunta}}</div>
+                
+                {{#if opcoes}}
+                <div class="options">
+                  {{#each opcoes}}
+                  <div class="option">
+                    <span class="option-letter">{{@letter}}</span>
+                    <span>{{this}}</span>
+                  </div>
+                  {{/each}}
+                </div>
+                {{else}}
+                <div class="answer-space"></div>
+                {{/if}}
               </div>
-              {{else}}
-              <div class="answer-space"></div>
-              {{/if}}
+              {{/each}}
             </div>
-            {{/each}}
+
+            <div class="footer">
+              Avaliação gerada pela AulagIA - Sua aula com toque mágico em {{data}} • Template Padrão
+            </div>
           </div>
         </body>
         </html>
       `,
-      variables: ['titulo', 'instrucoes', 'tempoLimite', 'questoes'],
+      variables: ['titulo', 'instrucoes', 'tempoLimite', 'questoes', 'data'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
