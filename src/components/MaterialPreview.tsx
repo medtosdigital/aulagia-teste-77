@@ -263,9 +263,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           }
         }
       `}</style>
-      <div className="w-full max-w-4xl">
-        {renderMaterial()}
-      </div>
+      {renderMaterial()}
     </div>
   );
 };
