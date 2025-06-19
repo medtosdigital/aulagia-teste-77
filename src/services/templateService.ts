@@ -1,4 +1,3 @@
-
 export interface Template {
   id: string;
   name: string;
@@ -23,281 +22,224 @@ class TemplateService {
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
           <title>Plano de Aula – AulagIA</title>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-            
             /* Define página A4 para impressão e visualização */
             @page {
               size: A4;
-              margin: 0;
+              margin: 15mm;
             }
-            
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
             body {
               margin: 0;
               padding: 0;
               background: white;
-              font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              font-size: 11pt;
-              line-height: 1.4;
-              color: #1f2937;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            
-            /* Container principal da página */
-            .page-container {
+            /* Container no tamanho A4 */
+            .page {
               position: relative;
               width: 210mm;
               min-height: 297mm;
               background: white;
-              margin: 0 auto;
               overflow: hidden;
+              margin: 0;
               page-break-after: always;
             }
-            
-            .page-container:last-child {
-              page-break-after: avoid;
-            }
-            
-            /* Formas decorativas */
+            /* Formas decorativas dentro da página */
             .shape-circle {
               position: absolute;
               border-radius: 50%;
-              opacity: 0.15;
+              opacity: 0.25;
               pointer-events: none;
+            }
+            .shape-circle.blue {
+              width: 180px; height: 180px;
+              background: #3b82f6;
+              top: -60px; left: -40px;
+            }
+            .shape-circle.light-blue {
+              width: 240px; height: 240px;
+              background: #60a5fa;
+              bottom: -80px; right: -60px;
+            }
+            .container {
+              position: relative;
+              width: 100%;
+              min-height: 297mm;
+              padding: 15mm;
+              box-sizing: border-box;
               z-index: 1;
             }
-            
-            .shape-circle.top {
-              width: 180px; 
-              height: 180px;
-              background: #3b82f6;
-              top: -60px; 
-              left: -40px;
-            }
-            
-            .shape-circle.bottom {
-              width: 240px; 
-              height: 240px;
-              background: #60a5fa;
-              bottom: -80px; 
-              right: -60px;
-            }
-            
-            /* Cabeçalho fixo */
+            /* Cabeçalho */
             .header {
-              position: fixed;
-              top: 20mm;
-              left: 20mm;
-              right: 20mm;
+              position: absolute;
+              top: 15mm;
+              left: 15mm;
               display: flex;
               align-items: center;
               z-index: 10;
-              background: transparent;
-              height: 50px;
             }
-            
             .header .logo {
-              width: 44px;
-              height: 44px;
+              width: 40px;
+              height: 40px;
               background: #3b82f6;
-              border-radius: 10px;
-              margin-right: 14px;
+              border-radius: 8px;
+              margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
-              font-weight: 600;
-              font-size: 16px;
+              font-weight: bold;
+              font-size: 14px;
             }
-            
             .header .texts h1 {
-              font-size: 1.6rem;
+              font-size: 1.4rem;
               color: #3b82f6;
               margin: 0;
-              font-weight: 600;
-              font-family: 'Inter', sans-serif;
-              line-height: 1.2;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            
             .header .texts p {
-              font-size: 0.85rem;
-              color: #6b7280;
+              font-size: 0.75rem;
+              color: #374151;
               margin: 0;
-              font-family: 'Inter', sans-serif;
-              line-height: 1.2;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            
             /* Conteúdo principal */
             .content {
-              position: relative;
-              z-index: 5;
-              margin-top: 90mm;
-              margin-bottom: 70mm;
-              padding: 0 20mm;
+              margin-top: 60px;
+              padding-bottom: 40mm;
             }
-            
             /* Título principal */
             h2 {
               text-align: center;
-              margin: 0 0 25px 0;
-              font-size: 1.6rem;
+              margin: 10px 0 18px;
+              font-size: 1.5rem;
               color: #1e40af;
-              font-weight: 600;
               position: relative;
-              font-family: 'Inter', sans-serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            
             h2::after {
               content: '';
-              width: 60px;
+              width: 50px;
               height: 3px;
               background: #60a5fa;
               display: block;
-              margin: 8px auto 0;
+              margin: 6px auto 0;
               border-radius: 2px;
             }
-            
             /* Tabelas */
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 20px;
+              margin-bottom: 18px;
               page-break-inside: avoid;
-              font-family: 'Inter', sans-serif;
             }
-            
             th, td {
-              padding: 10px 12px;
+              padding: 8px 12px;
               font-size: 0.9rem;
               border: 1px solid #e5e7eb;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            
             th {
-              background: #f8fafc;
-              color: #374151;
+              background: #f3f4f6;
+              color: #1f2937;
               font-weight: 600;
-              font-family: 'Inter', sans-serif;
             }
-            
             td {
               background: #ffffff;
-              font-family: 'Inter', sans-serif;
             }
-            
             /* Seções e listas */
             .section-title {
               font-weight: 600;
-              margin: 25px 0 12px 0;
+              margin-top: 20px;
+              margin-bottom: 10px;
               font-size: 1.1rem;
               color: #1e40af;
-              font-family: 'Inter', sans-serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               page-break-after: avoid;
             }
-            
             ul {
               list-style: disc inside;
-              margin-bottom: 20px;
+              margin-bottom: 18px;
               line-height: 1.5;
               font-size: 0.95rem;
-              font-family: 'Inter', sans-serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               page-break-inside: avoid;
             }
-            
             li {
-              margin-bottom: 8px;
+              margin-bottom: 6px;
               page-break-inside: avoid;
             }
-            
             p {
               font-size: 0.95rem;
               line-height: 1.5;
-              margin-bottom: 16px;
-              font-family: 'Inter', sans-serif;
+              margin-bottom: 14px;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            
-            /* Rodapé fixo */
-            .footer {
+            /* Rodapé */
+            footer {
               position: fixed;
-              bottom: 20mm;
-              left: 20mm;
-              right: 20mm;
+              bottom: 15mm;
+              left: 15mm;
+              right: 15mm;
               text-align: center;
               font-size: 0.7rem;
-              color: #9ca3af;
+              color: #6b7280;
               border-top: 1px solid #e5e7eb;
               padding-top: 8px;
               background: white;
-              font-family: 'Inter', sans-serif;
-              z-index: 10;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            
             /* Quebras de página */
             .page-break {
               page-break-before: always;
             }
-            
             .avoid-break {
               page-break-inside: avoid;
             }
-            
-            /* Estilos para impressão */
             @media print {
               body { 
                 margin: 0; 
                 padding: 0; 
                 background: white;
-                font-family: 'Inter', sans-serif;
+                display: block;
               }
-              
-              .page-container { 
+              .page { 
                 box-shadow: none; 
                 margin: 0; 
                 border-radius: 0;
                 width: 100%;
                 min-height: 100vh;
+                padding: 0;
                 page-break-after: always;
               }
-              
-              .page-container:last-child {
-                page-break-after: avoid;
+              .container {
+                padding: 15mm;
               }
-              
               .header {
                 position: fixed;
-                top: 20mm;
-                left: 20mm;
-                right: 20mm;
+                top: 15mm;
+                left: 15mm;
               }
-              
-              .footer {
+              footer {
                 position: fixed;
-                bottom: 20mm;
-                left: 20mm;
-                right: 20mm;
-                display: block !important;
+                bottom: 15mm;
+                left: 15mm;
+                right: 15mm;
               }
-              
               .content {
-                margin-top: 90mm;
-                margin-bottom: 70mm;
-                padding: 0 20mm;
-              }
-              
-              .shape-circle {
-                opacity: 0.1;
+                padding-bottom: 30mm;
               }
             }
           </style>
         </head>
         <body>
-          <div class="page-container">
+          <div class="page">
             <!-- Formas decorativas -->
-            <div class="shape-circle top"></div>
-            <div class="shape-circle bottom"></div>
+            <div class="shape-circle blue"></div>
+            <div class="shape-circle light-blue"></div>
 
             <!-- Cabeçalho com logo fixo -->
             <div class="header">
@@ -308,93 +250,94 @@ class TemplateService {
               </div>
             </div>
 
-            <!-- Conteúdo principal -->
-            <div class="content">
-              <!-- Título do Plano de Aula -->
-              <h2>PLANO DE AULA</h2>
+            <div class="container">
+              <div class="content">
+                <!-- Título do Plano de Aula -->
+                <h2>PLANO DE AULA</h2>
 
-              <!-- Informações básicas -->
-              <table class="avoid-break">
-                <tr>
-                  <th>Professor(a):</th>
-                  <td>{{professor}}</td>
-                  <th>Data:</th>
-                  <td>{{data}}</td>
-                </tr>
-                <tr>
-                  <th>Disciplina:</th>
-                  <td>{{disciplina}}</td>
-                  <th>Série/Ano:</th>
-                  <td>{{serie}}</td>
-                </tr>
-                <tr>
-                  <th>Tema:</th>
-                  <td colspan="3">{{tema}}</td>
-                </tr>
-                <tr>
-                  <th>Duração:</th>
-                  <td>{{duracao}}</td>
-                  <th>BNCC:</th>
-                  <td>{{bncc}}</td>
-                </tr>
-              </table>
-
-              <!-- Objetivos de Aprendizagem -->
-              <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
-              <ul class="avoid-break">
-                {{#each objetivos}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
-
-              <!-- Habilidades BNCC -->
-              <div class="section-title">HABILIDADES BNCC</div>
-              <ul class="avoid-break">
-                {{#each habilidades}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
-
-              <!-- Desenvolvimento Metodológico -->
-              <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
-              <table class="avoid-break">
-                <thead>
+                <!-- Informações básicas -->
+                <table class="avoid-break">
                   <tr>
-                    <th>Etapa</th>
-                    <th>Atividade</th>
-                    <th>Tempo</th>
-                    <th>Recursos</th>
+                    <th>Professor(a):</th>
+                    <td>{{professor}}</td>
+                    <th>Data:</th>
+                    <td>{{data}}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {{#each desenvolvimento}}
                   <tr>
-                    <td>{{etapa}}</td>
-                    <td>{{atividade}}</td>
-                    <td>{{tempo}}</td>
-                    <td>{{recursos}}</td>
+                    <th>Disciplina:</th>
+                    <td>{{disciplina}}</td>
+                    <th>Série/Ano:</th>
+                    <td>{{serie}}</td>
                   </tr>
+                  <tr>
+                    <th>Tema:</th>
+                    <td colspan="3">{{tema}}</td>
+                  </tr>
+                  <tr>
+                    <th>Duração:</th>
+                    <td>{{duracao}}</td>
+                    <th>BNCC:</th>
+                    <td>{{bncc}}</td>
+                  </tr>
+                </table>
+
+                <!-- Objetivos de Aprendizagem -->
+                <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
+                <ul class="avoid-break">
+                  {{#each objetivos}}
+                  <li>{{this}}</li>
                   {{/each}}
-                </tbody>
-              </table>
+                </ul>
 
-              <!-- Recursos Didáticos -->
-              <div class="section-title">RECURSOS DIDÁTICOS</div>
-              <ul class="avoid-break">
-                {{#each recursos}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
+                <!-- Habilidades BNCC -->
+                <div class="section-title">HABILIDADES BNCC</div>
+                <ul class="avoid-break">
+                  {{#each habilidades}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
 
-              <!-- Avaliação -->
-              <div class="section-title">AVALIAÇÃO</div>
-              <p class="avoid-break">{{avaliacao}}</p>
+                <!-- Desenvolvimento Metodológico -->
+                <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
+                <table class="avoid-break">
+                  <thead>
+                    <tr>
+                      <th>Etapa</th>
+                      <th>Atividade</th>
+                      <th>Tempo</th>
+                      <th>Recursos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each desenvolvimento}}
+                    <tr>
+                      <td>{{etapa}}</td>
+                      <td>{{atividade}}</td>
+                      <td>{{tempo}}</td>
+                      <td>{{recursos}}</td>
+                    </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+
+                <!-- Recursos Didáticos -->
+                <div class="section-title">RECURSOS DIDÁTICOS</div>
+                <ul class="avoid-break">
+                  {{#each recursos}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+
+                <!-- Avaliação -->
+                <div class="section-title">AVALIAÇÃO</div>
+                <p class="avoid-break">{{avaliacao}}</p>
+              </div>
             </div>
 
             <!-- Rodapé -->
-            <div class="footer">
+            <footer>
               Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
-            </div>
+            </footer>
           </div>
         </body>
         </html>

@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { templateService } from '@/services/templateService';
 import { GeneratedMaterial } from '@/services/materialService';
@@ -66,7 +65,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           max-width: 210mm;
           background: white;
           margin: 0 auto 20mm auto;
-          font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           font-size: 12pt;
           line-height: 1.5;
           color: #333;
@@ -84,26 +83,6 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           margin-bottom: 0;
           page-break-after: avoid;
         }
-
-        /* Remover rodapé da visualização modal */
-        .material-preview-container .footer {
-          display: none !important;
-        }
-
-        /* Ajustar altura do header na visualização modal */
-        .material-preview-container .header {
-          position: absolute !important;
-          top: 20mm !important;
-          left: 20mm !important;
-          right: 20mm !important;
-        }
-
-        /* Ajustar conteúdo na visualização modal */
-        .material-preview-container .content {
-          margin-top: 90mm !important;
-          margin-bottom: 20mm !important;
-          padding: 0 20mm !important;
-        }
         
         /* Responsividade para mobile */
         @media (max-width: 768px) {
@@ -119,25 +98,36 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             border-radius: 8px;
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
           }
-
-          .material-preview-container .header {
-            position: absolute !important;
-            top: 1rem !important;
-            left: 1rem !important;
-            right: 1rem !important;
-          }
-
-          .material-preview-container .content {
-            margin-top: 5rem !important;
-            margin-bottom: 1rem !important;
-            padding: 0 1rem !important;
-          }
         }
         
         @media (max-width: 480px) {
           .material-preview-container .a4-page {
             border-radius: 6px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+          }
+        }
+        
+        @media print {
+          .material-preview-container {
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          
+          .material-preview-container .a4-page {
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            min-height: 100vh !important;
+            page-break-after: always;
+          }
+
+          .material-preview-container .a4-page:last-child {
+            page-break-after: avoid;
           }
         }
       `}</style>
@@ -147,4 +137,3 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
 };
 
 export default MaterialPreview;
-
