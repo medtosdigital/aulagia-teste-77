@@ -34,7 +34,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       // Para outros tipos, renderizar diretamente no contêiner
       return (
         <div 
-          className="material-content"
+          className="a4-page"
           dangerouslySetInnerHTML={{ __html: renderedHtml }}
         />
       );
@@ -49,7 +49,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
   };
 
   return (
-    <div className="material-preview-container w-full h-full overflow-auto bg-gray-50">
+    <div className="material-preview-container w-full h-full overflow-auto bg-gray-50 flex justify-center items-start">
       <style>{`
         .material-preview-container {
           display: flex;
@@ -59,8 +59,9 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           padding: 0;
         }
         
-        .material-preview-container .material-content {
-          width: 100%;
+        .material-preview-container .a4-page {
+          width: 210mm;
+          min-height: 297mm;
           max-width: 210mm;
           background: white;
           margin: 0 auto;
@@ -69,6 +70,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           line-height: 1.5;
           color: #333;
           position: relative;
+          padding: 0;
           box-sizing: border-box;
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
           border-radius: 12px;
@@ -82,9 +84,10 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             padding: 0.5rem;
           }
           
-          .material-preview-container .material-content {
+          .material-preview-container .a4-page {
             width: 100%;
             max-width: 100%;
+            min-height: auto;
             margin: 0;
             border-radius: 8px;
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
@@ -92,7 +95,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         }
         
         @media (max-width: 480px) {
-          .material-preview-container .material-content {
+          .material-preview-container .a4-page {
             border-radius: 6px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
           }
@@ -105,7 +108,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             margin: 0 !important;
           }
           
-          .material-preview-container .material-content {
+          .material-preview-container .a4-page {
             box-shadow: none !important;
             border: none !important;
             border-radius: 0 !important;
@@ -113,6 +116,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             padding: 0 !important;
             width: 100% !important;
             max-width: none !important;
+            min-height: 100vh !important;
           }
         }
       `}</style>
