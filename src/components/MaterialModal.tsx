@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import MaterialPreview from './MaterialPreview';
 import { GeneratedMaterial } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
+import { templateService } from '@/services/templateService';
 import { toast } from 'sonner';
 
 interface MaterialModalProps {
@@ -25,14 +26,25 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
     return labels[type as keyof typeof labels] || type;
   };
 
+  const getTemplateId = (type: string): string => {
+    const typeMap = {
+      'plano-de-aula': '1',
+      'slides': '2',
+      'atividade': '3',
+      'avaliacao': '4'
+    };
+    return typeMap[type as keyof typeof typeMap] || '1';
+  };
+
   const handlePrint = () => {
+    if (!material) return;
+
     const printWindow = window.open('', '_blank');
-    if (printWindow && material) {
-      // Capturar todo o conteúdo da visualização A4
-      const materialContent = document.querySelector('.a4-document-container')?.outerHTML || 
-                            document.querySelector('.material-preview-content')?.innerHTML;
-      
-      if (materialContent) {
+    if (printWindow) {
+      try {
+        const templateId = getTemplateId(material.type);
+        const renderedHtml = templateService.renderTemplate(templateId, material.content);
+        
         printWindow.document.write(`
           <!DOCTYPE html>
           <html>
@@ -52,138 +64,186 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                 background: white;
               }
               
-              .a4-document-container {
-                display: block;
-                padding: 0;
-                gap: 0;
-              }
-              
-              .a4-page {
+              .page {
                 width: 210mm;
                 min-height: 297mm;
                 background: white;
-                padding: 2.5cm 3cm 2cm 3cm;
-                margin: 0;
+                padding: 3cm 2cm 2cm 3cm;
+                box-sizing: border-box;
+                position: relative;
                 font-family: 'Times New Roman', serif;
                 font-size: 12pt;
                 line-height: 1.5;
-                color: #333;
+                color: #000;
                 page-break-after: always;
-                box-shadow: none;
-                border-radius: 0;
               }
               
-              .a4-page:last-child {
+              .page:last-child {
                 page-break-after: avoid;
+              }
+
+              .shape-circle {
+                position: absolute;
+                border-radius: 50%;
+                opacity: 0.15;
+                pointer-events: none;
+              }
+              .shape-circle.purple {
+                width: 120px; height: 120px;
+                background: #a78bfa;
+                top: 20px; left: 20px;
+              }
+              .shape-circle.blue {
+                width: 150px; height: 150px;
+                background: #60a5fa;
+                bottom: 20px; right: 20px;
+              }
+              .shape-circle.green {
+                width: 120px; height: 120px;
+                background: #10b981;
+                top: 20px; left: 20px;
               }
               
               h1 {
-                font-size: 16pt;
-                font-weight: bold;
                 text-align: center;
-                margin-bottom: 2rem;
+                margin: 0 0 30px 0;
+                font-size: 18pt;
+                font-weight: bold;
                 text-transform: uppercase;
-                color: #1e40af;
               }
               
-              h2 {
+              h1::after {
+                content: '';
+                width: 80px;
+                height: 3px;
+                display: block;
+                margin: 10px auto 0;
+                border-radius: 2px;
+              }
+              
+              .section-title {
+                font-weight: bold;
+                margin: 25px 0 15px 0;
                 font-size: 14pt;
-                font-weight: bold;
-                margin-top: 1.5rem;
-                margin-bottom: 1rem;
-                color: #1e40af;
                 text-transform: uppercase;
-              }
-              
-              h3 {
-                font-size: 12pt;
-                font-weight: bold;
-                margin-top: 1rem;
-                margin-bottom: 0.5rem;
-                color: #374151;
-              }
-              
-              p {
-                margin-bottom: 1rem;
-                text-align: justify;
-                text-indent: 1.25cm;
-              }
-              
-              ul, ol {
-                margin-bottom: 1rem;
-                padding-left: 1.5rem;
-              }
-              
-              li {
-                margin-bottom: 0.5rem;
-                text-align: justify;
               }
               
               table {
                 width: 100%;
                 border-collapse: collapse;
-                margin: 1rem 0;
+                margin-bottom: 20px;
                 font-size: 11pt;
               }
               
               th, td {
-                border: 1px solid #d1d5db;
                 padding: 8px 12px;
+                border: 1px solid #333;
                 text-align: left;
+                vertical-align: top;
               }
               
               th {
-                background-color: #f3f4f6;
+                background-color: #f8f9fa;
+                font-weight: bold;
+                color: #1f2937;
+              }
+              
+              .header-table th {
+                color: white;
+                padding: 10px;
                 font-weight: bold;
                 text-align: center;
               }
               
-              .lesson-info-table {
-                border: 2px solid #1e40af;
-                margin: 2rem 0;
+              ul {
+                margin: 0 0 20px 20px;
+                padding: 0;
               }
               
-              .lesson-info-table th {
-                background-color: #dbeafe;
-                color: #1e40af;
+              li {
+                margin-bottom: 8px;
+                text-align: justify;
+              }
+              
+              p {
+                text-align: justify;
+                margin-bottom: 12px;
+              }
+
+              .instructions {
+                padding: 15px;
+                border-left: 4px solid;
+                margin-bottom: 30px;
+                font-style: italic;
+              }
+
+              .question {
+                margin-bottom: 30px;
+                page-break-inside: avoid;
+              }
+
+              .question-header {
                 font-weight: bold;
+                margin-bottom: 10px;
+                font-size: 13pt;
               }
-              
-              .question-block {
-                margin: 1.5rem 0;
-                padding: 1rem;
-                border-left: 4px solid #1e40af;
-                background-color: #f8fafc;
+
+              .question-text {
+                margin-bottom: 15px;
+                text-align: justify;
               }
-              
-              .question-number {
+
+              .options {
+                margin-left: 20px;
+              }
+
+              .option {
+                margin-bottom: 8px;
+                display: flex;
+                align-items: flex-start;
+              }
+
+              .option-letter {
                 font-weight: bold;
-                color: #1e40af;
-                margin-bottom: 0.5rem;
+                margin-right: 10px;
+                min-width: 25px;
               }
-              
-              .question-options {
-                margin-left: 1rem;
-                margin-top: 0.5rem;
+
+              .answer-space {
+                border-bottom: 1px solid #333;
+                height: 40px;
+                margin: 10px 0;
               }
-              
-              .question-options li {
-                list-style-type: lower-alpha;
-                margin-bottom: 0.25rem;
+
+              .evaluation-info {
+                padding: 15px;
+                border-left: 4px solid #dc2626;
+                margin-bottom: 30px;
+              }
+
+              .points {
+                background: #fef2f2;
+                color: #dc2626;
+                padding: 4px 8px;
+                border: 1px solid #dc2626;
+                border-radius: 4px;
+                font-size: 10pt;
               }
             </style>
           </head>
           <body>
-            ${materialContent}
+            ${renderedHtml}
           </body>
           </html>
         `);
         printWindow.document.close();
         
-        // Aguardar um pouco para garantir que o conteúdo foi carregado antes de imprimir
         setTimeout(() => {
           printWindow.print();
         }, 500);
+      } catch (error) {
+        console.error('Erro ao preparar impressão:', error);
+        toast.error('Erro ao preparar a impressão');
       }
     }
   };
