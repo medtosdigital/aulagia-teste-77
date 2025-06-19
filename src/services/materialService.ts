@@ -1,4 +1,3 @@
-
 export interface GeneratedMaterial {
   id: string;
   title: string;
@@ -213,6 +212,8 @@ class MaterialService {
   private generateActivity(topic: string, subject: string, grade: string): Activity {
     return {
       titulo: `Atividade - ${topic}`,
+      disciplina: subject,
+      serie: grade,
       instrucoes: `Nesta atividade, vamos praticar ${topic.toLowerCase()} usando situações do dia a dia.\nResponda às perguntas abaixo e divirta-se aprendendo!`,
       questoes: [
         {

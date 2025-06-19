@@ -16,7 +16,32 @@ interface MaterialModalProps {
 
 const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }) => {
   const handlePrint = () => {
-    window.print();
+    const printWindow = window.open('', '_blank');
+    if (printWindow && material) {
+      const materialContent = document.querySelector('.material-preview-content')?.innerHTML;
+      if (materialContent) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>${material.title}</title>
+            <style>
+              body { margin: 0; padding: 0; font-family: 'Times New Roman', serif; }
+              @media print {
+                body { margin: 0; padding: 0; }
+                .page { margin: 0; padding: 0; }
+              }
+            </style>
+          </head>
+          <body>
+            ${materialContent}
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    }
   };
 
   const handleExport = async (format: 'pdf' | 'word' | 'ppt') => {
@@ -47,47 +72,18 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0">
-        <DialogHeader className="p-6 pb-4 border-b">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-bold">
-              {material.title}
-            </DialogTitle>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePrint}
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                Imprimir
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleExport('pdf')}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                PDF
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleExport('word')}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Word
-              </Button>
-              {material.type === 'slides' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleExport('ppt')}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  PPT
-                </Button>
-              )}
+      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex">
+        <div className="flex-1 overflow-hidden">
+          <MaterialPreview material={material} />
+        </div>
+        
+        {/* Sidebar com botões */}
+        <div className="w-80 bg-gray-50 border-l flex flex-col">
+          <DialogHeader className="p-6 pb-4 border-b bg-white">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-lg font-bold">
+                Exportar Material
+              </DialogTitle>
               <Button
                 variant="outline"
                 size="sm"
@@ -96,15 +92,91 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                 <X className="h-4 w-4" />
               </Button>
             </div>
+          </DialogHeader>
+          
+          <div className="p-6 space-y-4">
+            <Button
+              variant="outline"
+              size="default"
+              onClick={handlePrint}
+              className="w-full justify-start"
+            >
+              <Printer className="h-4 w-4 mr-3" />
+              Imprimir
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => handleExport('pdf')}
+              className="w-full justify-start"
+            >
+              <Download className="h-4 w-4 mr-3" />
+              PDF
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => handleExport('word')}
+              className="w-full justify-start"
+            >
+              <Download className="h-4 w-4 mr-3" />
+              Microsoft Word
+            </Button>
+            
+            {material.type === 'slides' && (
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => handleExport('ppt')}
+                className="w-full justify-start"
+              >
+                <Download className="h-4 w-4 mr-3" />
+                PPT
+              </Button>
+            )}
           </div>
-        </DialogHeader>
-        
-        <div className="flex-1 overflow-hidden">
-          <MaterialPreview material={material} />
+          
+          <div className="p-6 border-t mt-auto">
+            <div className="text-sm text-gray-600 space-y-2">
+              <h3 className="font-semibold">Detalhes</h3>
+              <div>
+                <span className="font-medium">Disciplina:</span> {material.subject}
+              </div>
+              <div>
+                <span className="font-medium">Turma:</span> {material.grade}
+              </div>
+              <div>
+                <span className="font-medium">Tipo:</span> {this.getTypeLabel(material.type)}
+              </div>
+              <div>
+                <span className="font-medium">Criado:</span> {new Date(material.createdAt).toLocaleDateString('pt-BR')}
+              </div>
+            </div>
+            
+            <Button
+              variant="default"
+              onClick={onClose}
+              className="w-full mt-6 bg-gray-800 hover:bg-gray-900"
+            >
+              Fechar
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
+
+  private getTypeLabel(type: string): string {
+    const labels = {
+      'plano-de-aula': 'Plano de Aula',
+      'slides': 'Slides',
+      'atividade': 'Atividade',
+      'avaliacao': 'Avaliação'
+    };
+    return labels[type as keyof typeof labels] || type;
+  }
 };
 
 export default MaterialModal;
