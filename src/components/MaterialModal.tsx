@@ -15,6 +15,16 @@ interface MaterialModalProps {
 }
 
 const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }) => {
+  const getTypeLabel = (type: string): string => {
+    const labels = {
+      'plano-de-aula': 'Plano de Aula',
+      'slides': 'Slides',
+      'atividade': 'Atividade',
+      'avaliacao': 'Avaliação'
+    };
+    return labels[type as keyof typeof labels] || type;
+  };
+
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow && material) {
@@ -148,7 +158,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                 <span className="font-medium">Turma:</span> {material.grade}
               </div>
               <div>
-                <span className="font-medium">Tipo:</span> {this.getTypeLabel(material.type)}
+                <span className="font-medium">Tipo:</span> {getTypeLabel(material.type)}
               </div>
               <div>
                 <span className="font-medium">Criado:</span> {new Date(material.createdAt).toLocaleDateString('pt-BR')}
@@ -167,16 +177,6 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
       </DialogContent>
     </Dialog>
   );
-
-  private getTypeLabel(type: string): string {
-    const labels = {
-      'plano-de-aula': 'Plano de Aula',
-      'slides': 'Slides',
-      'atividade': 'Atividade',
-      'avaliacao': 'Avaliação'
-    };
-    return labels[type as keyof typeof labels] || type;
-  }
 };
 
 export default MaterialModal;
