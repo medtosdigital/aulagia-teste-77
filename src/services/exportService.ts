@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
@@ -27,7 +26,7 @@ class ExportService {
           <style>
             @page {
               size: A4;
-              margin: 20mm 0 20mm 0;
+              margin: 1.5cm;
             }
             
             body { 
@@ -35,51 +34,193 @@ class ExportService {
               padding: 0; 
               font-family: 'Times New Roman', serif;
               background: white;
-              width: 100%;
-              height: 100vh;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
             }
             
             .page {
               width: 100%;
-              height: auto;
+              max-width: 800px;
               background: white;
-              margin: 0;
-              padding: 0;
+              padding: 2rem;
               box-sizing: border-box;
               position: relative;
-              overflow: visible;
+              margin: 0 auto;
+              font-family: 'Times New Roman', serif;
+              font-size: 12pt;
+              line-height: 1.5;
+              color: #000;
+            }
+
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.15;
+              pointer-events: none;
+            }
+            .shape-circle.purple {
+              width: 120px; height: 120px;
+              background: #a78bfa;
+              top: 20px; left: 20px;
+            }
+            .shape-circle.blue {
+              width: 150px; height: 150px;
+              background: #60a5fa;
+              bottom: 20px; right: 20px;
+            }
+            .shape-circle.green {
+              width: 120px; height: 120px;
+              background: #10b981;
+              top: 20px; left: 20px;
+            }
+            
+            h1 {
+              text-align: center;
+              margin: 0 0 30px 0;
+              font-size: 18pt;
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+            
+            h1::after {
+              content: '';
+              width: 80px;
+              height: 3px;
+              display: block;
+              margin: 10px auto 0;
+              border-radius: 2px;
+            }
+            
+            .section-title {
+              font-weight: bold;
+              margin: 25px 0 15px 0;
+              font-size: 14pt;
+              text-transform: uppercase;
+            }
+            
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+              font-size: 11pt;
+            }
+            
+            th, td {
+              padding: 8px 12px;
+              border: 1px solid #333;
+              text-align: left;
+              vertical-align: top;
+            }
+            
+            th {
+              background-color: #f8f9fa;
+              font-weight: bold;
+              color: #1f2937;
+            }
+            
+            .header-table th {
+              color: white;
+              padding: 10px;
+              font-weight: bold;
+              text-align: center;
+            }
+            
+            ul {
+              margin: 0 0 20px 20px;
+              padding: 0;
+            }
+            
+            li {
+              margin-bottom: 8px;
+              text-align: justify;
+            }
+            
+            p {
+              text-align: justify;
+              margin-bottom: 12px;
+            }
+
+            .instructions {
+              padding: 15px;
+              border-left: 4px solid;
+              margin-bottom: 30px;
+              font-style: italic;
+            }
+
+            .question {
+              margin-bottom: 30px;
+              page-break-inside: avoid;
+            }
+
+            .question-header {
+              font-weight: bold;
+              margin-bottom: 10px;
+              font-size: 13pt;
+            }
+
+            .question-text {
+              margin-bottom: 15px;
+              text-align: justify;
+            }
+
+            .options {
+              margin-left: 20px;
+            }
+
+            .option {
+              margin-bottom: 8px;
+              display: flex;
+              align-items: flex-start;
+            }
+
+            .option-letter {
+              font-weight: bold;
+              margin-right: 10px;
+              min-width: 25px;
+            }
+
+            .answer-space {
+              border-bottom: 1px solid #333;
+              height: 40px;
+              margin: 10px 0;
+            }
+
+            .evaluation-info {
+              padding: 15px;
+              border-left: 4px solid #dc2626;
+              margin-bottom: 30px;
+            }
+
+            .points {
+              background: #fef2f2;
+              color: #dc2626;
+              padding: 4px 8px;
+              border: 1px solid #dc2626;
+              border-radius: 4px;
+              font-size: 10pt;
             }
 
             @media print {
               body { 
-                margin: 0 !important; 
-                padding: 0 !important; 
-                background: white !important;
-                width: 100% !important;
-                height: auto !important;
+                margin: 0; 
+                padding: 0; 
+                background: white;
+                display: block;
               }
-              
               .page { 
-                box-shadow: none !important; 
-                margin: 0 !important; 
-                padding: 0 !important;
-                max-width: none !important;
-                width: 100% !important;
-                height: auto !important;
-                page-break-after: always;
-                page-break-inside: avoid;
-              }
-              
-              .page:last-child {
-                page-break-after: avoid;
+                box-shadow: none; 
+                margin: 0; 
+                padding: 1.5cm;
+                max-width: none;
+                width: 100%;
               }
             }
           </style>
         </head>
         <body>
-          <div class="page">
-            ${renderedHtml}
-          </div>
+          ${renderedHtml}
         </body>
         </html>
       `);
@@ -176,10 +317,10 @@ class ExportService {
         properties: {
           page: {
             margin: {
-              top: 1134, // 1cm em twips
-              right: 1134, // 1cm em twips  
-              bottom: 1134, // 1cm em twips
-              left: 1134, // 1cm em twips
+              top: 1701, // 1.5cm em twips
+              right: 1701, // 1.5cm em twips  
+              bottom: 1701, // 1.5cm em twips
+              left: 1701, // 1.5cm em twips
             },
           },
         },
@@ -367,68 +508,6 @@ class ExportService {
       'avaliacao': 'Avaliação'
     };
     return labels[type as keyof typeof labels] || type;
-  }
-
-  async exportToWord(material: GeneratedMaterial): Promise<void> {
-    let children: any[] = [];
-
-    children.push(
-      new Paragraph({
-        children: [new TextRun({ text: material.title, bold: true, size: 32 })],
-        heading: HeadingLevel.TITLE,
-        alignment: AlignmentType.CENTER,
-      })
-    );
-
-    children.push(
-      new Paragraph({
-        children: [new TextRun(`${this.getTypeLabel(material.type)} • ${material.subject} • ${material.grade}`)],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 400 }
-      })
-    );
-
-    switch (material.type) {
-      case 'plano-de-aula':
-        children = [...children, ...this.getLessonPlanWordContent(material.content as LessonPlan)];
-        break;
-      case 'slides':
-        children = [...children, ...this.getSlidesWordContent(material.content as Slide[])];
-        break;
-      case 'atividade':
-        children = [...children, ...this.getActivityWordContent(material.content as Activity)];
-        break;
-      case 'avaliacao':
-        children = [...children, ...this.getAssessmentWordContent(material.content as Assessment)];
-        break;
-    }
-
-    const doc = new Document({
-      sections: [{
-        properties: {
-          page: {
-            margin: {
-              top: 1134,
-              right: 1134,
-              bottom: 1134,
-              left: 1134,
-            },
-          },
-        },
-        children: children
-      }]
-    });
-
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${material.title}.docx`);
-  }
-
-  async exportToPPT(material: GeneratedMaterial): Promise<void> {
-    if (material.type !== 'slides') {
-      throw new Error('Exportação PPT disponível apenas para slides');
-    }
-
-    await this.exportSlidesToPDF(material);
   }
 }
 
