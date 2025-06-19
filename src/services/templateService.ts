@@ -25,7 +25,7 @@ class TemplateService {
             /* Define página A4 para impressão e visualização */
             @page {
               size: A4;
-              margin: 0;
+              margin: 20mm 15mm 15mm 15mm;
             }
             body {
               margin: 0;
@@ -40,61 +40,62 @@ class TemplateService {
               min-height: 297mm;
               background: white;
               overflow: visible;
-              margin: 0;
+              margin: 0 auto;
               page-break-after: always;
-              padding-top: 15mm;
-              padding-bottom: 10mm;
-              padding-left: 15mm;
-              padding-right: 15mm;
               box-sizing: border-box;
+              padding: 0;
             }
             .page:last-child {
               page-break-after: avoid;
             }
-            /* Cabeçalho no topo da página */
+            /* Cabeçalho que aparece em todas as páginas */
             .header {
-              position: absolute;
+              position: fixed;
               top: 5mm;
               left: 15mm;
               right: 15mm;
               display: flex;
               align-items: center;
-              z-index: 10;
-              height: 8mm;
+              z-index: 999;
+              height: 12mm;
+              background: white;
             }
             .header .logo {
-              width: 20px;
-              height: 20px;
-              background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-              border-radius: 4px;
-              margin-right: 8px;
+              width: 32px;
+              height: 32px;
+              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+              border-radius: 6px;
+              margin-right: 12px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 10px;
+              font-size: 18px;
               flex-shrink: 0;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             .header .texts h1 {
-              font-size: 0.8rem;
-              color: #3b82f6;
-              margin: 0 0 1px 0;
+              font-size: 1.2rem;
+              color: #0ea5e9;
+              margin: 0 0 2px 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               line-height: 1.1;
               font-weight: 600;
             }
             .header .texts p {
-              font-size: 0.45rem;
+              font-size: 0.7rem;
               color: #6b7280;
               margin: 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               line-height: 1.1;
             }
-            /* Conteúdo principal */
+            /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
-              margin-top: 5mm;
-              padding-bottom: 5mm;
+              margin-top: 25mm;
+              margin-bottom: 20mm;
+              padding: 0 15mm;
+              position: relative;
             }
             /* Título principal */
             h2 {
@@ -163,28 +164,41 @@ class TemplateService {
               margin-bottom: 14px;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            /* Rodapé no final da página */
+            /* Rodapé que aparece em todas as páginas */
             .footer {
-              position: absolute;
-              bottom: 3mm;
+              position: fixed;
+              bottom: 5mm;
               left: 15mm;
               right: 15mm;
               text-align: center;
-              font-size: 0.5rem;
+              font-size: 0.6rem;
               color: #9ca3af;
-              z-index: 10;
-              height: 4mm;
+              z-index: 999;
+              height: 8mm;
               display: flex;
               align-items: center;
               justify-content: center;
+              background: white;
             }
-            /* Quebras de página */
+            /* Quebras de página controladas */
             .page-break {
               page-break-before: always;
+              margin-top: 25mm;
             }
             .avoid-break {
               page-break-inside: avoid;
             }
+            /* Força quebra de página para seções grandes */
+            .development-section {
+              page-break-inside: auto;
+            }
+            .development-section table {
+              page-break-inside: auto;
+            }
+            .development-section tr {
+              page-break-inside: avoid;
+            }
+            /* Ajustes para impressão */
             @media print {
               body { 
                 margin: 0; 
@@ -203,31 +217,41 @@ class TemplateService {
                 page-break-after: avoid;
               }
               .header {
-                position: absolute;
+                position: fixed;
                 top: 5mm;
                 left: 15mm;
                 right: 15mm;
               }
               .footer {
-                position: absolute;
-                bottom: 3mm;
+                position: fixed;
+                bottom: 5mm;
                 left: 15mm;
                 right: 15mm;
+              }
+              .content {
+                margin-top: 25mm;
+                margin-bottom: 20mm;
+                padding: 0 15mm;
               }
             }
           </style>
         </head>
         <body>
-          <div class="page">
-            <!-- Cabeçalho -->
-            <div class="header">
-              <div class="logo">A</div>
-              <div class="texts">
-                <h1>AulagIA</h1>
-                <p>Sua aula com toque mágico</p>
-              </div>
+          <!-- Cabeçalho fixo que aparece em todas as páginas -->
+          <div class="header">
+            <div class="logo">A</div>
+            <div class="texts">
+              <h1>AulagIA</h1>
+              <p>Sua aula com toque mágico</p>
             </div>
+          </div>
 
+          <!-- Rodapé fixo que aparece em todas as páginas -->
+          <div class="footer">
+            Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+          </div>
+
+          <div class="page">
             <div class="content">
               <!-- Título do Plano de Aula -->
               <h2>PLANO DE AULA</h2>
@@ -275,27 +299,29 @@ class TemplateService {
               </ul>
 
               <!-- Desenvolvimento Metodológico -->
-              <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
-              <table class="avoid-break">
-                <thead>
-                  <tr>
-                    <th>Etapa</th>
-                    <th>Atividade</th>
-                    <th>Tempo</th>
-                    <th>Recursos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {{#each desenvolvimento}}
-                  <tr>
-                    <td>{{etapa}}</td>
-                    <td>{{atividade}}</td>
-                    <td>{{tempo}}</td>
-                    <td>{{recursos}}</td>
-                  </tr>
-                  {{/each}}
-                </tbody>
-              </table>
+              <div class="section-title page-break">DESENVOLVIMENTO METODOLÓGICO</div>
+              <div class="development-section">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Etapa</th>
+                      <th>Atividade</th>
+                      <th>Tempo</th>
+                      <th>Recursos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each desenvolvimento}}
+                    <tr>
+                      <td>{{etapa}}</td>
+                      <td>{{atividade}}</td>
+                      <td>{{tempo}}</td>
+                      <td>{{recursos}}</td>
+                    </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+              </div>
 
               <!-- Recursos Didáticos -->
               <div class="section-title">RECURSOS DIDÁTICOS</div>
@@ -308,11 +334,6 @@ class TemplateService {
               <!-- Avaliação -->
               <div class="section-title">AVALIAÇÃO</div>
               <p class="avoid-break">{{avaliacao}}</p>
-            </div>
-
-            <!-- Rodapé -->
-            <div class="footer">
-              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
             </div>
           </div>
         </body>
