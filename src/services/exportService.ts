@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
@@ -27,7 +26,7 @@ class ExportService {
           <style>
             @page {
               size: A4;
-              margin: 0;
+              margin: 15mm 0 15mm 0;
             }
             
             body { 
