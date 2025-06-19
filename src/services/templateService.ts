@@ -22,18 +22,20 @@ class TemplateService {
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
           <title>Plano de Aula – AulagIA</title>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-            
             /* Define página A4 para impressão e visualização */
             @page {
               size: A4;
-              margin: 0;
+              margin: 15mm;
             }
             body {
               margin: 0;
               padding: 0;
               background: white;
-              font-family: 'Inter', sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             /* Container no tamanho A4 */
             .page {
@@ -41,89 +43,82 @@ class TemplateService {
               width: 210mm;
               min-height: 297mm;
               background: white;
-              overflow: visible;
-              margin: 0 auto;
+              overflow: hidden;
+              margin: 0;
               page-break-after: always;
+            }
+            /* Formas decorativas dentro da página */
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.25;
+              pointer-events: none;
+            }
+            .shape-circle.blue {
+              width: 180px; height: 180px;
+              background: #3b82f6;
+              top: -60px; left: -40px;
+            }
+            .shape-circle.light-blue {
+              width: 240px; height: 240px;
+              background: #60a5fa;
+              bottom: -80px; right: -60px;
+            }
+            .container {
+              position: relative;
+              width: 100%;
+              min-height: 297mm;
+              padding: 15mm;
               box-sizing: border-box;
-              padding: 0;
+              z-index: 1;
             }
-            .page:last-child {
-              page-break-after: avoid;
-            }
-            /* Cabeçalho que aparece em todas as páginas */
+            /* Cabeçalho */
             .header {
               position: absolute;
-              top: 8mm;
-              left: 0;
-              right: 0;
+              top: 15mm;
+              left: 15mm;
               display: flex;
               align-items: center;
-              z-index: 999;
-              height: 12mm;
-              background: white;
-              padding: 0 15mm;
-            }
-            .header .logo-container {
-              display: flex;
-              align-items: center;
-              gap: 8px;
+              z-index: 10;
             }
             .header .logo {
-              width: 32px;
-              height: 32px;
-              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-              border-radius: 50%;
+              width: 40px;
+              height: 40px;
+              background: #3b82f6;
+              border-radius: 8px;
+              margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
-              flex-shrink: 0;
-              box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+              font-weight: bold;
+              font-size: 14px;
             }
-            .header .logo svg {
-              width: 18px;
-              height: 18px;
-              stroke: white;
-              fill: none;
-              stroke-width: 2;
-            }
-            .header .brand-text {
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-            }
-            .header .brand-text h1 {
-              font-size: 20px;
-              color: #0ea5e9;
+            .header .texts h1 {
+              font-size: 1.4rem;
+              color: #3b82f6;
               margin: 0;
-              font-family: 'Inter', sans-serif;
-              line-height: 1;
-              font-weight: 700;
-              letter-spacing: -0.3px;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            .header .brand-text p {
-              font-size: 9px;
-              color: #6b7280;
-              margin: 1px 0 0 0;
-              font-family: 'Inter', sans-serif;
-              line-height: 1;
-              font-weight: 400;
+            .header .texts p {
+              font-size: 0.75rem;
+              color: #374151;
+              margin: 0;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            /* Conteúdo principal com margem para não sobrepor o cabeçalho */
+            /* Conteúdo principal */
             .content {
-              margin-top: 22mm;
-              margin-bottom: 15mm;
-              padding: 0 15mm;
-              position: relative;
+              margin-top: 60px;
+              padding-bottom: 40mm;
             }
             /* Título principal */
             h2 {
               text-align: center;
-              margin: 0 0 15px 0;
-              font-size: 1.4rem;
+              margin: 10px 0 18px;
+              font-size: 1.5rem;
               color: #1e40af;
               position: relative;
-              font-family: 'Inter', sans-serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             h2::after {
               content: '';
@@ -131,21 +126,21 @@ class TemplateService {
               height: 3px;
               background: #60a5fa;
               display: block;
-              margin: 5px auto 0;
+              margin: 6px auto 0;
               border-radius: 2px;
             }
             /* Tabelas */
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 12px;
+              margin-bottom: 18px;
               page-break-inside: avoid;
             }
             th, td {
-              padding: 6px 10px;
-              font-size: 0.85rem;
+              padding: 8px 12px;
+              font-size: 0.9rem;
               border: 1px solid #e5e7eb;
-              font-family: 'Inter', sans-serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             th {
               background: #f3f4f6;
@@ -158,59 +153,58 @@ class TemplateService {
             /* Seções e listas */
             .section-title {
               font-weight: 600;
-              margin-top: 15px;
-              margin-bottom: 8px;
-              font-size: 1.05rem;
+              margin-top: 20px;
+              margin-bottom: 10px;
+              font-size: 1.1rem;
               color: #1e40af;
-              font-family: 'Inter', sans-serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               page-break-after: avoid;
             }
             ul {
               list-style: disc inside;
-              margin-bottom: 12px;
-              line-height: 1.4;
-              font-size: 0.9rem;
-              font-family: 'Inter', sans-serif;
+              margin-bottom: 18px;
+              line-height: 1.5;
+              font-size: 0.95rem;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               page-break-inside: avoid;
             }
             li {
-              margin-bottom: 4px;
+              margin-bottom: 6px;
               page-break-inside: avoid;
             }
             p {
-              font-size: 0.9rem;
-              line-height: 1.4;
-              margin-bottom: 10px;
-              font-family: 'Inter', sans-serif;
+              font-size: 0.95rem;
+              line-height: 1.5;
+              margin-bottom: 14px;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            /* Rodapé que aparece apenas na impressão */
-            .footer {
-              display: none;
+            /* Rodapé */
+            footer {
+              position: fixed;
+              bottom: 15mm;
+              left: 15mm;
+              right: 15mm;
+              text-align: center;
+              font-size: 0.7rem;
+              color: #6b7280;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 8px;
+              background: white;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            /* Quebras de página controladas */
+            /* Quebras de página */
             .page-break {
               page-break-before: always;
-              margin-top: 22mm;
             }
             .avoid-break {
               page-break-inside: avoid;
             }
-            /* Força quebra de página para seções grandes apenas se necessário */
-            .development-section {
-              page-break-inside: auto;
-            }
-            .development-section table {
-              page-break-inside: auto;
-            }
-            .development-section tr {
-              page-break-inside: avoid;
-            }
-            /* Ajustes para impressão */
             @media print {
               body { 
                 margin: 0; 
                 padding: 0; 
                 background: white;
+                display: block;
               }
               .page { 
                 box-shadow: none; 
@@ -218,118 +212,94 @@ class TemplateService {
                 border-radius: 0;
                 width: 100%;
                 min-height: 100vh;
+                padding: 0;
                 page-break-after: always;
               }
-              .page:last-child {
-                page-break-after: avoid;
+              .container {
+                padding: 15mm;
               }
               .header {
-                position: absolute;
-                top: 8mm;
-                left: 0;
-                right: 0;
-                padding: 0 15mm;
+                position: fixed;
+                top: 15mm;
+                left: 15mm;
               }
-              /* Mostrar rodapé apenas na impressão */
-              .footer {
-                display: flex !important;
-                position: absolute;
-                bottom: 8mm;
-                left: 0;
-                right: 0;
-                text-align: center;
-                font-size: 0.55rem;
-                color: #9ca3af;
-                z-index: 999;
-                height: 8mm;
-                align-items: center;
-                justify-content: center;
-                background: white;
-                padding: 0 15mm;
-                border-top: 1px solid #e5e7eb;
-                font-family: 'Inter', sans-serif;
+              footer {
+                position: fixed;
+                bottom: 15mm;
+                left: 15mm;
+                right: 15mm;
               }
               .content {
-                margin-top: 22mm;
-                margin-bottom: 20mm;
-                padding: 0 15mm;
+                padding-bottom: 30mm;
               }
             }
           </style>
         </head>
         <body>
-          <!-- Cabeçalho que aparece em todas as páginas -->
-          <div class="header">
-            <div class="logo-container">
-              <div class="logo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                </svg>
-              </div>
-              <div class="brand-text">
+          <div class="page">
+            <!-- Formas decorativas -->
+            <div class="shape-circle blue"></div>
+            <div class="shape-circle light-blue"></div>
+
+            <!-- Cabeçalho com logo fixo -->
+            <div class="header">
+              <div class="logo">📖</div>
+              <div class="texts">
                 <h1>AulagIA</h1>
                 <p>Sua aula com toque mágico</p>
               </div>
             </div>
-          </div>
 
-          <!-- Rodapé que aparece apenas na impressão -->
-          <div class="footer">
-            Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
-          </div>
+            <div class="container">
+              <div class="content">
+                <!-- Título do Plano de Aula -->
+                <h2>PLANO DE AULA</h2>
 
-          <div class="page">
-            <div class="content">
-              <!-- Título do Plano de Aula -->
-              <h2>PLANO DE AULA</h2>
+                <!-- Informações básicas -->
+                <table class="avoid-break">
+                  <tr>
+                    <th>Professor(a):</th>
+                    <td>{{professor}}</td>
+                    <th>Data:</th>
+                    <td>{{data}}</td>
+                  </tr>
+                  <tr>
+                    <th>Disciplina:</th>
+                    <td>{{disciplina}}</td>
+                    <th>Série/Ano:</th>
+                    <td>{{serie}}</td>
+                  </tr>
+                  <tr>
+                    <th>Tema:</th>
+                    <td colspan="3">{{tema}}</td>
+                  </tr>
+                  <tr>
+                    <th>Duração:</th>
+                    <td>{{duracao}}</td>
+                    <th>BNCC:</th>
+                    <td>{{bncc}}</td>
+                  </tr>
+                </table>
 
-              <!-- Informações básicas -->
-              <table class="avoid-break">
-                <tr>
-                  <th>Professor(a):</th>
-                  <td>{{professor}}</td>
-                  <th>Data:</th>
-                  <td>{{data}}</td>
-                </tr>
-                <tr>
-                  <th>Disciplina:</th>
-                  <td>{{disciplina}}</td>
-                  <th>Série/Ano:</th>
-                  <td>{{serie}}</td>
-                </tr>
-                <tr>
-                  <th>Tema:</th>
-                  <td colspan="3">{{tema}}</td>
-                </tr>
-                <tr>
-                  <th>Duração:</th>
-                  <td>{{duracao}}</td>
-                  <th>BNCC:</th>
-                  <td>{{bncc}}</td>
-                </tr>
-              </table>
+                <!-- Objetivos de Aprendizagem -->
+                <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
+                <ul class="avoid-break">
+                  {{#each objetivos}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
 
-              <!-- Objetivos de Aprendizagem -->
-              <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
-              <ul class="avoid-break">
-                {{#each objetivos}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
+                <!-- Habilidades BNCC -->
+                <div class="section-title">HABILIDADES BNCC</div>
+                <ul class="avoid-break">
+                  {{#each habilidades}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
 
-              <!-- Habilidades BNCC -->
-              <div class="section-title">HABILIDADES BNCC</div>
-              <ul class="avoid-break">
-                {{#each habilidades}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
-
-              <!-- Desenvolvimento Metodológico na primeira página -->
-              <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
-              <div class="development-section">
-                <table>
+                <!-- Desenvolvimento Metodológico -->
+                <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
+                <table class="avoid-break">
                   <thead>
                     <tr>
                       <th>Etapa</th>
@@ -349,20 +319,25 @@ class TemplateService {
                     {{/each}}
                   </tbody>
                 </table>
+
+                <!-- Recursos Didáticos -->
+                <div class="section-title">RECURSOS DIDÁTICOS</div>
+                <ul class="avoid-break">
+                  {{#each recursos}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+
+                <!-- Avaliação -->
+                <div class="section-title">AVALIAÇÃO</div>
+                <p class="avoid-break">{{avaliacao}}</p>
               </div>
-
-              <!-- Recursos Didáticos -->
-              <div class="section-title">RECURSOS DIDÁTICOS</div>
-              <ul class="avoid-break">
-                {{#each recursos}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
-
-              <!-- Avaliação -->
-              <div class="section-title">AVALIAÇÃO</div>
-              <p class="avoid-break">{{avaliacao}}</p>
             </div>
+
+            <!-- Rodapé -->
+            <footer>
+              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </footer>
           </div>
         </body>
         </html>
@@ -525,7 +500,7 @@ class TemplateService {
           <style>
             @page {
               size: A4;
-              margin: 0;
+              margin: 15mm;
             }
             body {
               margin: 0;
@@ -535,64 +510,66 @@ class TemplateService {
               line-height: 1.5;
               color: #000;
               background: white;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
             }
             .page {
-              width: 210mm;
-              min-height: 297mm;
+              width: 100%;
+              max-width: 800px;
               background: white;
-              margin: 0;
+              padding: 15mm;
               box-sizing: border-box;
               position: relative;
-              page-break-after: always;
-              padding-top: 15mm;
-              padding-bottom: 10mm;
-              padding-left: 15mm;
-              padding-right: 15mm;
+              margin: 0 auto;
             }
-            .page:last-child {
-              page-break-after: avoid;
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.15;
+              pointer-events: none;
             }
-            /* Cabeçalho no topo da página */
+            .shape-circle.green {
+              width: 120px; height: 120px;
+              background: #10b981;
+              top: 20px; left: 20px;
+            }
+            /* Cabeçalho */
             .header {
               position: absolute;
-              top: 5mm;
+              top: 15mm;
               left: 15mm;
-              right: 15mm;
               display: flex;
               align-items: center;
               z-index: 10;
-              height: 8mm;
             }
             .header .logo {
-              width: 20px;
-              height: 20px;
-              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-              border-radius: 4px;
+              width: 40px;
+              height: 40px;
+              background: #10b981;
+              border-radius: 8px;
               margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 10px;
-              flex-shrink: 0;
+              font-size: 14px;
             }
             .header .texts h1 {
-              font-size: 0.8rem;
+              font-size: 1.4rem;
               color: #10b981;
-              margin: 0 0 1px 0;
-              line-height: 1.1;
-              font-weight: 600;
+              margin: 0;
             }
             .header .texts p {
-              font-size: 0.45rem;
-              color: #6b7280;
+              font-size: 0.75rem;
+              color: #374151;
               margin: 0;
-              line-height: 1.1;
             }
             .content {
-              margin-top: 5mm;
-              padding-bottom: 5mm;
+              margin-top: 60px;
+              padding-bottom: 30mm;
             }
             h1 {
               text-align: center;
@@ -618,6 +595,11 @@ class TemplateService {
             .header-table td {
               padding: 8px 12px;
               border: 1px solid #333;
+            }
+            .student-info {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 20px;
             }
             .instructions {
               background: #f0fdf4;
@@ -661,59 +643,55 @@ class TemplateService {
               margin: 10px 0;
             }
             .footer {
-              position: absolute;
-              bottom: 3mm;
+              position: fixed;
+              bottom: 15mm;
               left: 15mm;
               right: 15mm;
               text-align: center;
-              font-size: 0.5rem;
-              color: #9ca3af;
-              z-index: 10;
-              height: 4mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
+              font-size: 10pt;
+              color: #6b7280;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 8px;
+              background: white;
             }
             @media print {
               body { 
                 margin: 0; 
                 padding: 0; 
                 background: white;
+                display: block;
               }
               .page { 
                 box-shadow: none; 
                 margin: 0; 
-                padding-top: 15mm;
-                padding-bottom: 10mm;
-                padding-left: 15mm;
-                padding-right: 15mm;
+                padding: 15mm;
                 max-width: none;
                 width: 100%;
-                border-radius: 0;
-              }
-              .page:last-child {
-                page-break-after: avoid;
               }
               .header {
-                position: absolute;
-                top: 5mm;
+                position: fixed;
+                top: 15mm;
+                left: 15mm;
+              }
+              .footer {
+                position: fixed;
+                bottom: 15mm;
                 left: 15mm;
                 right: 15mm;
               }
-              .footer {
-                position: absolute;
-                bottom: 3mm;
-                left: 15mm;
-                right: 15mm;
+              .content {
+                padding-bottom: 25mm;
               }
             }
           </style>
         </head>
         <body>
           <div class="page">
-            <!-- Cabeçalho -->
+            <div class="shape-circle green"></div>
+
+            <!-- Cabeçalho com logo fixo -->
             <div class="header">
-              <div class="logo">A</div>
+              <div class="logo">📖</div>
               <div class="texts">
                 <h1>AulagIA</h1>
                 <p>Sua aula com toque mágico</p>
@@ -792,7 +770,7 @@ class TemplateService {
           <style>
             @page {
               size: A4;
-              margin: 0;
+              margin: 15mm;
             }
             body {
               margin: 0;
@@ -802,64 +780,55 @@ class TemplateService {
               line-height: 1.5;
               color: #000;
               background: white;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
             }
             .page {
-              width: 210mm;
-              min-height: 297mm;
+              width: 100%;
+              max-width: 800px;
               background: white;
-              margin: 0;
+              padding: 15mm;
               box-sizing: border-box;
               position: relative;
-              page-break-after: always;
-              padding-top: 15mm;
-              padding-bottom: 10mm;
-              padding-left: 15mm;
-              padding-right: 15mm;
+              margin: 0 auto;
             }
-            .page:last-child {
-              page-break-after: avoid;
-            }
-            /* Cabeçalho no topo da página */
+            /* Cabeçalho */
             .header {
               position: absolute;
-              top: 5mm;
+              top: 15mm;
               left: 15mm;
-              right: 15mm;
               display: flex;
               align-items: center;
               z-index: 10;
-              height: 8mm;
             }
             .header .logo {
-              width: 20px;
-              height: 20px;
-              background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-              border-radius: 4px;
+              width: 40px;
+              height: 40px;
+              background: #dc2626;
+              border-radius: 8px;
               margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 10px;
-              flex-shrink: 0;
+              font-size: 14px;
             }
             .header .texts h1 {
-              font-size: 0.8rem;
+              font-size: 1.4rem;
               color: #dc2626;
-              margin: 0 0 1px 0;
-              line-height: 1.1;
-              font-weight: 600;
+              margin: 0;
             }
             .header .texts p {
-              font-size: 0.45rem;
-              color: #6b7280;
+              font-size: 0.75rem;
+              color: #374151;
               margin: 0;
-              line-height: 1.1;
             }
             .content {
-              margin-top: 5mm;
-              padding-bottom: 5mm;
+              margin-top: 60px;
+              padding-bottom: 30mm;
             }
             h1 {
               text-align: center;
@@ -939,60 +908,54 @@ class TemplateService {
               padding: 10px;
             }
             .footer {
-              position: absolute;
-              bottom: 3mm;
+              position: fixed;
+              bottom: 15mm;
               left: 15mm;
               right: 15mm;
               text-align: center;
-              font-size: 0.5rem;
-              color: #9ca3af;
-              z-index: 10;
-              height: 4mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
+              font-size: 10pt;
+              color: #6b7280;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 8px;
+              background: white;
             }
             @media print {
               body { 
                 margin: 0; 
                 padding: 0; 
                 background: white;
+                display: block;
               }
               .page { 
                 box-shadow: none; 
                 margin: 0; 
-                padding-top: 15mm;
-                padding-bottom: 10mm;
-                padding-left: 15mm;
-                padding-right: 15mm;
+                padding: 15mm;
                 max-width: none;
                 width: 100%;
-                border-radius: 0;
-              }
-              .page:last-child {
-                page-break-after: avoid;
               }
               .header {
-                position: absolute;
-                top: 5mm;
+                position: fixed;
+                top: 15mm;
                 left: 15mm;
-                right: 15mm;
               }
               .page-break { page-break-before: always; }
               .footer {
-                position: absolute;
-                bottom: 3mm;
+                position: fixed;
+                bottom: 15mm;
                 left: 15mm;
                 right: 15mm;
+              }
+              .content {
+                padding-bottom: 25mm;
               }
             }
           </style>
         </head>
         <body>
           <div class="page">
-            <!-- Cabeçalho -->
+            <!-- Cabeçalho com logo fixo -->
             <div class="header">
-              <div class="logo">A</div>
+              <div class="logo">📖</div>
               <div class="texts">
                 <h1>AulagIA</h1>
                 <p>Sua aula com toque mágico</p>
