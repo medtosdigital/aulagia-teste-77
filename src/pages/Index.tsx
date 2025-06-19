@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import Dashboard from '@/components/Dashboard';
@@ -58,24 +58,22 @@ const Index = () => {
   };
 
   return (
-    <Router>
-      <Routes>
-        {/* Rota para visualização de material específico */}
-        <Route path="/material/:id" element={<MaterialViewer />} />
-        
-        {/* Rota principal com sidebar */}
-        <Route path="*" element={
-          <div className="min-h-screen bg-gray-50 w-full">
-            <Sidebar activeItem={activeItem} onItemClick={setActiveItem} />
-            
-            <div className="md:ml-64 min-h-screen">
-              <Header title={getPageTitle()} />
-              {renderContent()}
-            </div>
+    <Routes>
+      {/* Rota para visualização de material específico */}
+      <Route path="/material/:id" element={<MaterialViewer />} />
+      
+      {/* Rota principal com sidebar */}
+      <Route path="*" element={
+        <div className="min-h-screen bg-gray-50 w-full">
+          <Sidebar activeItem={activeItem} onItemClick={setActiveItem} />
+          
+          <div className="md:ml-64 min-h-screen">
+            <Header title={getPageTitle()} />
+            {renderContent()}
           </div>
-        } />
-      </Routes>
-    </Router>
+        </div>
+      } />
+    </Routes>
   );
 };
 
