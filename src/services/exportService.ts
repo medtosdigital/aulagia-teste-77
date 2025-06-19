@@ -1,4 +1,5 @@
 
+
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Header, Footer } from 'docx';
 import { saveAs } from 'file-saver';
@@ -28,7 +29,7 @@ class ExportService {
           <style>
             @page {
               size: A4;
-              margin: 20mm 15mm 25mm 15mm;
+              margin: 0;
             }
             
             * {
@@ -51,10 +52,15 @@ class ExportService {
             
             .page-container {
               position: relative;
-              width: 100%;
-              min-height: 100vh;
+              width: 210mm;
+              min-height: 297mm;
               background: white;
               overflow: hidden;
+              page-break-after: always;
+            }
+
+            .page-container:last-child {
+              page-break-after: avoid;
             }
 
             .shape-circle {
@@ -83,21 +89,22 @@ class ExportService {
 
             .header {
               position: fixed;
-              top: 15mm;
-              left: 15mm;
-              right: 15mm;
+              top: 20mm;
+              left: 20mm;
+              right: 20mm;
               display: flex;
               align-items: center;
               z-index: 10;
               background: transparent;
+              height: 50px;
             }
             
             .header .logo {
-              width: 42px;
-              height: 42px;
+              width: 44px;
+              height: 44px;
               background: #3b82f6;
-              border-radius: 8px;
-              margin-right: 12px;
+              border-radius: 10px;
+              margin-right: 14px;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -107,31 +114,33 @@ class ExportService {
             }
             
             .header .texts h1 {
-              font-size: 1.5rem;
+              font-size: 1.6rem;
               color: #3b82f6;
               margin: 0;
               font-weight: 600;
+              line-height: 1.2;
             }
             
             .header .texts p {
-              font-size: 0.8rem;
+              font-size: 0.85rem;
               color: #6b7280;
               margin: 0;
+              line-height: 1.2;
             }
 
             .content {
               position: relative;
               z-index: 5;
-              margin-top: 80px;
-              margin-bottom: 60px;
-              padding: 0 15mm;
+              margin-top: 90mm;
+              margin-bottom: 70mm;
+              padding: 0 20mm;
             }
 
             .footer {
               position: fixed;
-              bottom: 15mm;
-              left: 15mm;
-              right: 15mm;
+              bottom: 20mm;
+              left: 20mm;
+              right: 20mm;
               text-align: center;
               font-size: 0.7rem;
               color: #9ca3af;
@@ -166,23 +175,23 @@ class ExportService {
 
               .header {
                 position: fixed !important;
-                top: 15mm !important;
-                left: 15mm !important;
-                right: 15mm !important;
+                top: 20mm !important;
+                left: 20mm !important;
+                right: 20mm !important;
               }
 
               .footer {
                 position: fixed !important;
-                bottom: 15mm !important;
-                left: 15mm !important;
-                right: 15mm !important;
+                bottom: 20mm !important;
+                left: 20mm !important;
+                right: 20mm !important;
                 display: block !important;
               }
 
               .content {
-                margin-top: 80px !important;
-                margin-bottom: 60px !important;
-                padding: 0 15mm !important;
+                margin-top: 90mm !important;
+                margin-bottom: 70mm !important;
+                padding: 0 20mm !important;
               }
             }
           </style>
@@ -195,7 +204,7 @@ class ExportService {
             <div class="header">
               <div class="logo">📖</div>
               <div class="texts">
-                <h1>aulagIA</h1>
+                <h1>AulagIA</h1>
                 <p>Sua aula com toque mágico</p>
               </div>
             </div>
@@ -205,7 +214,7 @@ class ExportService {
             </div>
             
             <div class="footer">
-              Plano de aula gerado pela aulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
             </div>
           </div>
         </body>
@@ -340,7 +349,7 @@ class ExportService {
             children: [
               new Paragraph({
                 children: [
-                  new TextRun({ text: 'aulagIA', bold: true, size: 24, color: '3B82F6' }),
+                  new TextRun({ text: 'AulagIA', bold: true, size: 24, color: '3B82F6' }),
                   new TextRun({ text: ' - Sua aula com toque mágico', size: 16, color: '6B7280' })
                 ],
                 alignment: AlignmentType.LEFT,
@@ -353,7 +362,7 @@ class ExportService {
             children: [
               new Paragraph({
                 children: [
-                  new TextRun({ text: `Documento gerado pela aulagIA em ${new Date().toLocaleDateString('pt-BR')}`, size: 16, color: '9CA3AF' })
+                  new TextRun({ text: `Documento gerado pela AulagIA em ${new Date().toLocaleDateString('pt-BR')}`, size: 16, color: '9CA3AF' })
                 ],
                 alignment: AlignmentType.CENTER,
               })

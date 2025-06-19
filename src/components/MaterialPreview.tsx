@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { templateService } from '@/services/templateService';
 import { GeneratedMaterial } from '@/services/materialService';
@@ -65,7 +66,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           max-width: 210mm;
           background: white;
           margin: 0 auto 20mm auto;
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           font-size: 12pt;
           line-height: 1.5;
           color: #333;
@@ -85,8 +86,23 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         }
 
         /* Remover rodapé da visualização modal */
-        .material-preview-container footer {
+        .material-preview-container .footer {
           display: none !important;
+        }
+
+        /* Ajustar altura do header na visualização modal */
+        .material-preview-container .header {
+          position: absolute !important;
+          top: 20mm !important;
+          left: 20mm !important;
+          right: 20mm !important;
+        }
+
+        /* Ajustar conteúdo na visualização modal */
+        .material-preview-container .content {
+          margin-top: 90mm !important;
+          margin-bottom: 20mm !important;
+          padding: 0 20mm !important;
         }
         
         /* Responsividade para mobile */
@@ -103,6 +119,19 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             border-radius: 8px;
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
           }
+
+          .material-preview-container .header {
+            position: absolute !important;
+            top: 1rem !important;
+            left: 1rem !important;
+            right: 1rem !important;
+          }
+
+          .material-preview-container .content {
+            margin-top: 5rem !important;
+            margin-bottom: 1rem !important;
+            padding: 0 1rem !important;
+          }
         }
         
         @media (max-width: 480px) {
@@ -118,3 +147,4 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
 };
 
 export default MaterialPreview;
+

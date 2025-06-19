@@ -1,3 +1,4 @@
+
 export interface Template {
   id: string;
   name: string;
@@ -20,14 +21,14 @@ class TemplateService {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-          <title>Plano de Aula – aulagIA</title>
+          <title>Plano de Aula – AulagIA</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
             
             /* Define página A4 para impressão e visualização */
             @page {
               size: A4;
-              margin: 20mm 15mm 25mm 15mm;
+              margin: 0;
             }
             
             * {
@@ -54,6 +55,11 @@ class TemplateService {
               background: white;
               margin: 0 auto;
               overflow: hidden;
+              page-break-after: always;
+            }
+            
+            .page-container:last-child {
+              page-break-after: avoid;
             }
             
             /* Formas decorativas */
@@ -84,21 +90,22 @@ class TemplateService {
             /* Cabeçalho fixo */
             .header {
               position: fixed;
-              top: 15mm;
-              left: 15mm;
-              right: 15mm;
+              top: 20mm;
+              left: 20mm;
+              right: 20mm;
               display: flex;
               align-items: center;
               z-index: 10;
               background: transparent;
+              height: 50px;
             }
             
             .header .logo {
-              width: 42px;
-              height: 42px;
+              width: 44px;
+              height: 44px;
               background: #3b82f6;
-              border-radius: 8px;
-              margin-right: 12px;
+              border-radius: 10px;
+              margin-right: 14px;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -108,27 +115,29 @@ class TemplateService {
             }
             
             .header .texts h1 {
-              font-size: 1.5rem;
+              font-size: 1.6rem;
               color: #3b82f6;
               margin: 0;
               font-weight: 600;
               font-family: 'Inter', sans-serif;
+              line-height: 1.2;
             }
             
             .header .texts p {
-              font-size: 0.8rem;
+              font-size: 0.85rem;
               color: #6b7280;
               margin: 0;
               font-family: 'Inter', sans-serif;
+              line-height: 1.2;
             }
             
             /* Conteúdo principal */
             .content {
               position: relative;
               z-index: 5;
-              margin-top: 80px;
-              margin-bottom: 60px;
-              padding: 0 15mm;
+              margin-top: 90mm;
+              margin-bottom: 70mm;
+              padding: 0 20mm;
             }
             
             /* Título principal */
@@ -213,9 +222,9 @@ class TemplateService {
             /* Rodapé fixo */
             .footer {
               position: fixed;
-              bottom: 15mm;
-              left: 15mm;
-              right: 15mm;
+              bottom: 20mm;
+              left: 20mm;
+              right: 20mm;
               text-align: center;
               font-size: 0.7rem;
               color: #9ca3af;
@@ -259,23 +268,23 @@ class TemplateService {
               
               .header {
                 position: fixed;
-                top: 15mm;
-                left: 15mm;
-                right: 15mm;
+                top: 20mm;
+                left: 20mm;
+                right: 20mm;
               }
               
               .footer {
                 position: fixed;
-                bottom: 15mm;
-                left: 15mm;
-                right: 15mm;
+                bottom: 20mm;
+                left: 20mm;
+                right: 20mm;
                 display: block !important;
               }
               
               .content {
-                margin-top: 80px;
-                margin-bottom: 60px;
-                padding: 0 15mm;
+                margin-top: 90mm;
+                margin-bottom: 70mm;
+                padding: 0 20mm;
               }
               
               .shape-circle {
@@ -294,7 +303,7 @@ class TemplateService {
             <div class="header">
               <div class="logo">📖</div>
               <div class="texts">
-                <h1>aulagIA</h1>
+                <h1>AulagIA</h1>
                 <p>Sua aula com toque mágico</p>
               </div>
             </div>
@@ -384,7 +393,7 @@ class TemplateService {
 
             <!-- Rodapé -->
             <div class="footer">
-              Plano de aula gerado pela aulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
             </div>
           </div>
         </body>
