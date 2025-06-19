@@ -1,4 +1,3 @@
-
 export interface Template {
   id: string;
   name: string;
@@ -210,114 +209,243 @@ class TemplateService {
     },
     {
       id: '2',
-      name: 'Slides ABNT',
+      name: 'Slides Educativos Interativos',
       type: 'slides',
       htmlContent: `
         <!DOCTYPE html>
         <html lang="pt-BR">
         <head>
           <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-          <title>Slides</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>{{titulo}} - {{serie}}</title>
           <style>
-            @page {
-              size: A4 landscape;
-              margin: 2cm;
-            }
+            @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Patrick+Hand&display=swap');
+
             body {
               margin: 0;
-              padding: 0;
-              font-family: 'Times New Roman', serif;
-              background: white;
-            }
-            .slides-container {
+              padding: 40px;
+              background-color: #1e293b;
+              font-family: 'Fredoka', sans-serif;
               display: flex;
               flex-direction: column;
-              gap: 0;
-            }
-            .slide {
-              width: 25.4cm;
-              height: 17cm;
-              background: white;
-              padding: 2cm;
-              box-sizing: border-box;
-              display: flex;
-              flex-direction: column;
-              page-break-after: always;
-              position: relative;
-              border: 1px solid #ddd;
-            }
-            .slide:last-child {
-              page-break-after: avoid;
-            }
-            .slide-header {
-              display: flex;
-              justify-content: space-between;
               align-items: center;
-              margin-bottom: 40px;
-              padding-bottom: 20px;
-              border-bottom: 3px solid #4f46e5;
+              gap: 80px;
             }
-            .slide-header h1 {
-              font-size: 28pt;
-              font-weight: bold;
-              color: #1e40af;
-              margin: 0;
-            }
-            .slide-number {
-              background: #4f46e5;
-              color: white;
-              padding: 8px 16px;
-              border-radius: 20px;
-              font-size: 14pt;
-              font-weight: bold;
-            }
-            .slide-content {
-              flex: 1;
+
+            .slide {
+              width: 960px;
+              height: 720px;
               display: flex;
               flex-direction: column;
               justify-content: center;
-              font-size: 16pt;
-              line-height: 1.6;
+              align-items: center;
+              padding: 40px;
+              box-sizing: border-box;
+              background-color: #ffffff;
+              border-radius: 16px;
+              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
             }
-            .slide-item {
+
+            .title {
+              font-family: 'Patrick Hand', cursive;
+              font-size: 3rem;
+              color: #1e293b;
               margin-bottom: 20px;
-              padding-left: 20px;
-              position: relative;
+              text-align: center;
             }
-            .slide-item::before {
-              content: '•';
-              color: #4f46e5;
-              font-weight: bold;
-              position: absolute;
-              left: 0;
+
+            .highlight {
+              color: #ef4444;
             }
-            @media print {
-              body { margin: 0; padding: 0; }
-              .slide { border: none; margin: 0; }
+
+            .content {
+              font-size: 1.5rem;
+              color: #374151;
+              line-height: 1.6;
+              text-align: center;
+              max-width: 800px;
+            }
+
+            .image {
+              margin-top: 30px;
+            }
+
+            .image img {
+              width: 300px;
+            }
+
+            .table {
+              margin: 30px 0;
+              border-collapse: collapse;
+            }
+
+            .table th, .table td {
+              border: 1px solid #ddd;
+              padding: 12px 20px;
+              font-size: 1.2rem;
+            }
+
+            .table th {
+              background-color: #f3f4f6;
+            }
+
+            .grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 40px;
+              margin-top: 40px;
+              width: 100%;
+              max-width: 800px;
+            }
+
+            .box {
+              background: #fef3c7;
+              padding: 30px;
+              border-radius: 12px;
+              box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+              font-size: 1.3rem;
+              text-align: center;
+            }
+
+            .intro-slide {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+            }
+
+            .intro-slide .title {
+              color: white;
+              font-size: 4rem;
+            }
+
+            .conclusion-slide {
+              background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+              color: white;
+            }
+
+            .conclusion-slide .title {
+              color: white;
+            }
+
+            .list {
+              text-align: left;
+              font-size: 1.3rem;
+              line-height: 2;
+            }
+
+            .list li {
+              margin-bottom: 15px;
+            }
+
+            .challenge-box {
+              background: #fef2f2;
+              border: 2px solid #ef4444;
+              padding: 30px;
+              border-radius: 16px;
+              margin-top: 20px;
+            }
+
+            .answer-box {
+              background: #f0fdf4;
+              border: 2px solid #10b981;
+              padding: 30px;
+              border-radius: 16px;
+              margin-top: 20px;
             }
           </style>
         </head>
         <body>
-          <div class="slides-container">
-            {{#each slides}}
-            <div class="slide">
-              <div class="slide-header">
-                <h1>{{titulo}}</h1>
-                <span class="slide-number">{{numero}}</span>
-              </div>
-              <div class="slide-content">
-                {{#each conteudo}}
-                <div class="slide-item">{{this}}</div>
-                {{/each}}
-              </div>
+          {{#each slides}}
+          <div class="slide {{slideClass}}">
+            {{#if isIntroSlide}}
+            <div class="title">{{titulo}}</div>
+            <div class="content">{{conteudo}}</div>
+            {{#if imagem}}
+            <div class="image">
+              <img src="{{imagem}}" alt="{{altImagem}}">
             </div>
-            {{/each}}
+            {{/if}}
+            {{/if}}
+
+            {{#if isConclusionSlide}}
+            <div class="title">{{titulo}}</div>
+            <div class="content">{{conteudo}}</div>
+            {{#if imagem}}
+            <div class="image">
+              <img src="{{imagem}}" alt="{{altImagem}}">
+            </div>
+            {{/if}}
+            {{/if}}
+
+            {{#if isRegularSlide}}
+            <div class="title">{{titulo}}</div>
+            {{#if conteudo}}
+            <div class="content">{{conteudo}}</div>
+            {{/if}}
+
+            {{#if tabela}}
+            <table class="table">
+              {{#if tabela.cabecalho}}
+              <tr>
+                {{#each tabela.cabecalho}}
+                <th>{{this}}</th>
+                {{/each}}
+              </tr>
+              {{/if}}
+              {{#each tabela.linhas}}
+              <tr>
+                {{#each this}}
+                <td>{{this}}</td>
+                {{/each}}
+              </tr>
+              {{/each}}
+            </table>
+            {{/if}}
+
+            {{#if grade}}
+            <div class="grid">
+              {{#each grade}}
+              <div class="box">
+                {{#if imagem}}
+                <img src="{{imagem}}" alt="{{altImagem}}" width="80"><br>
+                {{/if}}
+                {{conteudo}}
+              </div>
+              {{/each}}
+            </div>
+            {{/if}}
+
+            {{#if lista}}
+            <ul class="list">
+              {{#each lista}}
+              <li>{{this}}</li>
+              {{/each}}
+            </ul>
+            {{/if}}
+
+            {{#if desafio}}
+            <div class="challenge-box">
+              <strong>Desafio:</strong><br>{{desafio}}
+            </div>
+            {{/if}}
+
+            {{#if resposta}}
+            <div class="answer-box">
+              <strong>Resposta:</strong><br>{{resposta}}
+            </div>
+            {{/if}}
+
+            {{#if imagem}}
+            <div class="image">
+              <img src="{{imagem}}" alt="{{altImagem}}">
+            </div>
+            {{/if}}
+            {{/if}}
           </div>
+          {{/each}}
         </body>
         </html>
       `,
-      variables: ['slides'],
+      variables: ['titulo', 'serie', 'slides'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
@@ -745,11 +873,124 @@ class TemplateService {
         // Handle @letter for options (A, B, C, D)
         itemHtml = itemHtml.replace(/{{@letter}}/g, String.fromCharCode(65 + index) + ')');
         
+        // Handle conditional blocks
+        const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
+        itemHtml = itemHtml.replace(ifRegex, (match, condition, content) => {
+          return item[condition] ? content : '';
+        });
+        
         return itemHtml;
       }).join('');
     });
 
+    // Handle top-level conditional blocks
+    const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
+    html = html.replace(ifRegex, (match, condition, content) => {
+      return data[condition] ? content : '';
+    });
+
     return html;
+  }
+
+  // Novo método para gerar dados de slides baseados em keywords
+  generateSlidesData(formData: any): any {
+    const keywords = this.extractKeywords(formData);
+    
+    return {
+      titulo: `Slides sobre ${formData.tema}`,
+      serie: formData.serie || '3º Ano',
+      slides: this.createSlidesFromKeywords(keywords, formData)
+    };
+  }
+
+  private extractKeywords(formData: any): string[] {
+    const text = `${formData.tema} ${formData.disciplina} ${formData.objetivos?.join(' ') || ''}`;
+    
+    // Keywords educacionais por disciplina
+    const keywordsBySubject = {
+      matematica: ['números', 'operações', 'geometria', 'medidas', 'gráficos', 'problemas', 'cálculos', 'tabuada'],
+      portugues: ['leitura', 'escrita', 'gramática', 'interpretação', 'texto', 'palavras', 'frases'],
+      ciencias: ['experimentos', 'natureza', 'animais', 'plantas', 'corpo humano', 'meio ambiente'],
+      historia: ['tempo', 'passado', 'presente', 'cultura', 'sociedade', 'civilizações'],
+      geografia: ['mapas', 'lugares', 'paisagens', 'clima', 'relevo', 'população']
+    };
+
+    const disciplina = formData.disciplina?.toLowerCase() || '';
+    const baseKeywords = keywordsBySubject[disciplina] || [];
+    
+    // Extrai keywords do tema
+    const themeKeywords = text.toLowerCase().split(' ').filter(word => word.length > 3);
+    
+    return [...baseKeywords, ...themeKeywords].slice(0, 10);
+  }
+
+  private createSlidesFromKeywords(keywords: string[], formData: any): any[] {
+    const slides = [];
+    
+    // Slide de introdução
+    slides.push({
+      titulo: `Vamos aprender sobre ${formData.tema}!`,
+      conteudo: `Hoje vamos descobrir coisas incríveis sobre ${formData.tema}. Preparem-se para uma aula divertida!`,
+      isIntroSlide: true,
+      slideClass: 'intro-slide',
+      imagem: 'https://cdn-icons-png.flaticon.com/512/4149/4149673.png',
+      altImagem: 'celebração'
+    });
+
+    // Slides de conteúdo baseados em keywords
+    keywords.slice(0, 6).forEach((keyword, index) => {
+      slides.push({
+        titulo: `${keyword.charAt(0).toUpperCase() + keyword.slice(1)}`,
+        conteudo: `Vamos explorar ${keyword} de forma prática e divertida!`,
+        isRegularSlide: true,
+        tabela: index % 3 === 0 ? {
+          cabecalho: ['Conceito', 'Exemplo'],
+          linhas: [
+            [keyword, `Exemplo prático de ${keyword}`],
+            ['Aplicação', `Como usar ${keyword} no dia a dia`]
+          ]
+        } : null,
+        grade: index % 2 === 0 ? [
+          {
+            conteudo: `${keyword} na teoria`,
+            imagem: 'https://cdn-icons-png.flaticon.com/512/2403/2403361.png',
+            altImagem: keyword
+          },
+          {
+            conteudo: `${keyword} na prática`,
+            imagem: 'https://cdn-icons-png.flaticon.com/512/2917/2917999.png',
+            altImagem: 'prática'
+          }
+        ] : null
+      });
+    });
+
+    // Slide de desafio
+    slides.push({
+      titulo: 'Desafio!',
+      conteudo: `Agora é sua vez! Vamos testar o que aprendemos sobre ${formData.tema}.`,
+      desafio: `Como você aplicaria ${formData.tema} em uma situação do seu dia a dia?`,
+      isRegularSlide: true
+    });
+
+    // Slide de resposta
+    slides.push({
+      titulo: 'Excelente!',
+      resposta: `Existem muitas formas de aplicar ${formData.tema}. O importante é praticar e explorar!`,
+      isRegularSlide: true
+    });
+
+    // Slide de conclusão
+    slides.push({
+      titulo: 'Parabéns!',
+      conteudo: `Você aprendeu muito sobre ${formData.tema}! Continue praticando e explorando esse tema fascinante.`,
+      isConclusionSlide: true,
+      slideClass: 'conclusion-slide',
+      imagem: 'https://cdn-icons-png.flaticon.com/512/4149/4149673.png',
+      altImagem: 'celebração'
+    });
+
+    return slides;
   }
 }
 
