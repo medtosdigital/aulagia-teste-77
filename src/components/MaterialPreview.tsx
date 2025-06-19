@@ -55,8 +55,10 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
   };
 
   return (
-    <div className="material-preview-container w-full h-full overflow-auto bg-gray-50 flex justify-center items-start p-4">
-      {renderMaterial()}
+    <div className="material-preview-container w-full h-full overflow-hidden bg-gray-50">
+      <div className="w-full h-full">
+        {renderMaterial()}
+      </div>
     </div>
   );
 };

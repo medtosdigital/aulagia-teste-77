@@ -49,25 +49,25 @@ class TemplateService {
             .page:last-child {
               page-break-after: avoid;
             }
-            /* Cabeçalho que aparece em todas as páginas - NÃO FIXO */
+            /* Cabeçalho que aparece em todas as páginas */
             .header {
               position: absolute;
-              top: 10mm;
+              top: 8mm;
               left: 0;
               right: 0;
               display: flex;
               align-items: center;
               z-index: 999;
-              height: 15mm;
+              height: 12mm;
               background: white;
-              padding: 0 20mm;
+              padding: 0 15mm;
             }
             .header .logo {
-              width: 40px;
-              height: 40px;
-              background: #0ea5e9;
-              border-radius: 8px;
-              margin-right: 15px;
+              width: 32px;
+              height: 32px;
+              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+              border-radius: 6px;
+              margin-right: 12px;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -76,11 +76,14 @@ class TemplateService {
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             .header .logo svg {
-              width: 24px;
-              height: 24px;
+              width: 18px;
+              height: 18px;
+              stroke: white;
+              fill: none;
+              stroke-width: 2;
             }
             .header .texts h1 {
-              font-size: 1.4rem;
+              font-size: 1.2rem;
               color: #0ea5e9;
               margin: 0 0 2px 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -88,7 +91,7 @@ class TemplateService {
               font-weight: 600;
             }
             .header .texts p {
-              font-size: 0.8rem;
+              font-size: 0.7rem;
               color: #6b7280;
               margin: 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -96,9 +99,9 @@ class TemplateService {
             }
             /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
-              margin-top: 30mm;
-              margin-bottom: 20mm;
-              padding: 0 20mm;
+              margin-top: 25mm;
+              margin-bottom: 15mm;
+              padding: 0 15mm;
               position: relative;
             }
             /* Título principal */
@@ -168,27 +171,28 @@ class TemplateService {
               margin-bottom: 14px;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            /* Rodapé que aparece em todas as páginas - NÃO FIXO */
+            /* Rodapé que aparece no final de cada página */
             .footer {
               position: absolute;
-              bottom: 10mm;
+              bottom: 8mm;
               left: 0;
               right: 0;
               text-align: center;
-              font-size: 0.6rem;
+              font-size: 0.55rem;
               color: #9ca3af;
               z-index: 999;
-              height: 8mm;
+              height: 6mm;
               display: flex;
               align-items: center;
               justify-content: center;
               background: white;
-              padding: 0 20mm;
+              padding: 0 15mm;
+              border-top: 1px solid #e5e7eb;
             }
             /* Quebras de página controladas */
             .page-break {
               page-break-before: always;
-              margin-top: 30mm;
+              margin-top: 25mm;
             }
             .avoid-break {
               page-break-inside: avoid;
@@ -223,22 +227,22 @@ class TemplateService {
               }
               .header {
                 position: absolute;
-                top: 10mm;
+                top: 8mm;
                 left: 0;
                 right: 0;
-                padding: 0 20mm;
+                padding: 0 15mm;
               }
               .footer {
                 position: absolute;
-                bottom: 10mm;
+                bottom: 8mm;
                 left: 0;
                 right: 0;
-                padding: 0 20mm;
+                padding: 0 15mm;
               }
               .content {
-                margin-top: 30mm;
-                margin-bottom: 20mm;
-                padding: 0 20mm;
+                margin-top: 25mm;
+                margin-bottom: 15mm;
+                padding: 0 15mm;
               }
             }
           </style>
