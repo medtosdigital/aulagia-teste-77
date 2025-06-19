@@ -68,7 +68,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                 width: 210mm;
                 min-height: 297mm;
                 background: white;
-                padding: 3cm 2cm 2cm 3cm;
+                padding: 10mm 20mm 15mm 20mm;
                 box-sizing: border-box;
                 position: relative;
                 font-family: 'Times New Roman', serif;
@@ -82,26 +82,26 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                 page-break-after: avoid;
               }
 
-              .shape-circle {
-                position: absolute;
-                border-radius: 50%;
-                opacity: 0.15;
-                pointer-events: none;
+              .header {
+                position: fixed;
+                top: 10mm;
+                left: 20mm;
+                display: flex;
+                align-items: center;
+                z-index: 10;
               }
-              .shape-circle.purple {
-                width: 120px; height: 120px;
-                background: #a78bfa;
-                top: 20px; left: 20px;
-              }
-              .shape-circle.blue {
-                width: 150px; height: 150px;
-                background: #60a5fa;
-                bottom: 20px; right: 20px;
-              }
-              .shape-circle.green {
-                width: 120px; height: 120px;
-                background: #10b981;
-                top: 20px; left: 20px;
+              
+              .header .logo {
+                width: 40px;
+                height: 40px;
+                border-radius: 8px;
+                margin-right: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 16px;
               }
               
               h1 {
@@ -228,6 +228,18 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                 border: 1px solid #dc2626;
                 border-radius: 4px;
                 font-size: 10pt;
+              }
+
+              .footer {
+                position: fixed;
+                bottom: 10mm;
+                left: 20mm;
+                right: 20mm;
+                text-align: center;
+                font-size: 10pt;
+                color: #6b7280;
+                border-top: 1px solid #e5e7eb;
+                padding-top: 8px;
               }
             </style>
           </head>
