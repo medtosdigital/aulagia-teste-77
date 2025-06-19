@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
@@ -27,7 +26,7 @@ class ExportService {
           <style>
             @page {
               size: A4;
-              margin: 0;
+              margin: 1.5cm;
             }
             
             body { 
@@ -35,24 +34,24 @@ class ExportService {
               padding: 0; 
               font-family: 'Times New Roman', serif;
               background: white;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
             }
             
             .page {
-              width: 210mm;
-              min-height: 297mm;
+              width: 100%;
+              max-width: 800px;
               background: white;
-              padding: 3cm 2cm 2cm 3cm;
+              padding: 2rem;
               box-sizing: border-box;
               position: relative;
+              margin: 0 auto;
               font-family: 'Times New Roman', serif;
               font-size: 12pt;
               line-height: 1.5;
               color: #000;
-              page-break-after: always;
-            }
-            
-            .page:last-child {
-              page-break-after: avoid;
             }
 
             .shape-circle {
@@ -202,6 +201,22 @@ class ExportService {
               border-radius: 4px;
               font-size: 10pt;
             }
+
+            @media print {
+              body { 
+                margin: 0; 
+                padding: 0; 
+                background: white;
+                display: block;
+              }
+              .page { 
+                box-shadow: none; 
+                margin: 0; 
+                padding: 1.5cm;
+                max-width: none;
+                width: 100%;
+              }
+            }
           </style>
         </head>
         <body>
@@ -302,10 +317,10 @@ class ExportService {
         properties: {
           page: {
             margin: {
-              top: 2834, // 3cm em twips
-              right: 1701, // 2cm em twips  
-              bottom: 1701, // 2cm em twips
-              left: 2834, // 3cm em twips
+              top: 1701, // 1.5cm em twips
+              right: 1701, // 1.5cm em twips  
+              bottom: 1701, // 1.5cm em twips
+              left: 1701, // 1.5cm em twips
             },
           },
         },

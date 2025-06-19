@@ -49,31 +49,26 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
   };
 
   return (
-    <div className="material-preview-container w-full h-full overflow-auto flex justify-center">
+    <div className="material-preview-container w-full h-full overflow-auto bg-gray-50 flex justify-center py-4">
       <style>{`
-        .material-preview-container {
-          padding: 1rem;
-          background-color: #f8f9fa;
-        }
-        
-        .a4-page {
+        .material-preview-container .a4-page {
           width: 100%;
-          max-width: 210mm;
+          max-width: 800px;
           min-height: auto;
           background: white;
-          margin: 0;
+          margin: 0 auto;
           font-family: 'Times New Roman', serif;
-          font-size: 11pt;
-          line-height: 1.4;
+          font-size: 12pt;
+          line-height: 1.5;
           color: #333;
           position: relative;
-          padding: 1.5rem;
-          box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+          padding: 2rem;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
           border-radius: 8px;
         }
         
-        .a4-page h1 {
-          font-size: 14pt;
+        .material-preview-container .a4-page h1 {
+          font-size: 18pt;
           font-weight: bold;
           text-align: center;
           margin-bottom: 1.5rem;
@@ -81,8 +76,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           color: #1e40af;
         }
         
-        .a4-page h2 {
-          font-size: 12pt;
+        .material-preview-container .a4-page h2 {
+          font-size: 14pt;
           font-weight: bold;
           margin-top: 1.25rem;
           margin-bottom: 0.75rem;
@@ -90,44 +85,45 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           text-transform: uppercase;
         }
         
-        .a4-page h3 {
-          font-size: 11pt;
+        .material-preview-container .a4-page h3 {
+          font-size: 12pt;
           font-weight: bold;
           margin-top: 0.75rem;
           margin-bottom: 0.5rem;
           color: #374151;
         }
         
-        .a4-page p {
+        .material-preview-container .a4-page p {
           margin-bottom: 0.75rem;
           text-align: justify;
-          text-indent: 1rem;
         }
         
-        .a4-page ul, .a4-page ol {
+        .material-preview-container .a4-page ul, 
+        .material-preview-container .a4-page ol {
           margin-bottom: 0.75rem;
           padding-left: 1.25rem;
         }
         
-        .a4-page li {
+        .material-preview-container .a4-page li {
           margin-bottom: 0.375rem;
           text-align: justify;
         }
         
-        .a4-page table {
+        .material-preview-container .a4-page table {
           width: 100%;
           border-collapse: collapse;
           margin: 0.75rem 0;
-          font-size: 10pt;
+          font-size: 11pt;
         }
         
-        .a4-page th, .a4-page td {
+        .material-preview-container .a4-page th, 
+        .material-preview-container .a4-page td {
           border: 1px solid #d1d5db;
-          padding: 6px 10px;
+          padding: 8px 12px;
           text-align: left;
         }
         
-        .a4-page th {
+        .material-preview-container .a4-page th {
           background-color: #f3f4f6;
           font-weight: bold;
           text-align: center;
@@ -139,79 +135,80 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             padding: 0.5rem;
           }
           
-          .a4-page {
+          .material-preview-container .a4-page {
             max-width: 100%;
-            font-size: 10pt;
-            padding: 1rem;
+            font-size: 11pt;
+            padding: 1.5rem;
             margin: 0;
           }
           
-          .a4-page h1 {
-            font-size: 12pt;
+          .material-preview-container .a4-page h1 {
+            font-size: 16pt;
             margin-bottom: 1rem;
           }
           
-          .a4-page h2 {
-            font-size: 11pt;
+          .material-preview-container .a4-page h2 {
+            font-size: 13pt;
             margin-top: 1rem;
             margin-bottom: 0.5rem;
           }
           
-          .a4-page h3 {
+          .material-preview-container .a4-page h3 {
+            font-size: 11pt;
+          }
+          
+          .material-preview-container .a4-page table {
             font-size: 10pt;
           }
           
-          .a4-page table {
-            font-size: 9pt;
-          }
-          
-          .a4-page th, .a4-page td {
-            padding: 4px 6px;
+          .material-preview-container .a4-page th, 
+          .material-preview-container .a4-page td {
+            padding: 6px 8px;
           }
         }
         
         @media (max-width: 480px) {
-          .a4-page {
-            font-size: 9pt;
-            padding: 0.75rem;
-          }
-          
-          .a4-page h1 {
-            font-size: 11pt;
-          }
-          
-          .a4-page h2 {
+          .material-preview-container .a4-page {
             font-size: 10pt;
+            padding: 1rem;
           }
           
-          .a4-page table {
-            font-size: 8pt;
+          .material-preview-container .a4-page h1 {
+            font-size: 14pt;
+          }
+          
+          .material-preview-container .a4-page h2 {
+            font-size: 12pt;
+          }
+          
+          .material-preview-container .a4-page table {
+            font-size: 9pt;
           }
         }
         
         /* Estilos específicos para diferentes tipos de conteúdo */
-        .lesson-info-table {
+        .material-preview-container .lesson-info-table {
           border: 2px solid #1e40af;
           margin: 1.5rem 0;
         }
         
-        .lesson-info-table th {
+        .material-preview-container .lesson-info-table th {
           background-color: #dbeafe;
           color: #1e40af;
           font-weight: bold;
         }
         
-        .objectives-list {
+        .material-preview-container .objectives-list {
           counter-reset: objective-counter;
         }
         
-        .objectives-list li {
+        .material-preview-container .objectives-list li {
           counter-increment: objective-counter;
           position: relative;
           padding-left: 1.5rem;
         }
         
-        .objectives-list li::before {
+        .material-preview-container .objectives-list li::before {
           content: counter(objective-counter) ".";
           position: absolute;
           left: 0;
@@ -220,7 +217,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         }
         
         /* Estilo para atividades e avaliações */
-        .question-block {
+        .material-preview-container .question-block {
           margin: 1rem 0;
           padding: 0.75rem;
           border-left: 4px solid #1e40af;
@@ -228,39 +225,20 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           border-radius: 0 6px 6px 0;
         }
         
-        .question-number {
+        .material-preview-container .question-number {
           font-weight: bold;
           color: #1e40af;
           margin-bottom: 0.375rem;
         }
         
-        .question-options {
+        .material-preview-container .question-options {
           margin-left: 0.75rem;
           margin-top: 0.375rem;
         }
         
-        .question-options li {
+        .material-preview-container .question-options li {
           list-style-type: lower-alpha;
           margin-bottom: 0.25rem;
-        }
-        
-        /* Estilo para impressão */
-        @media print {
-          .material-preview-container {
-            padding: 0 !important;
-            background-color: white !important;
-            justify-content: flex-start !important;
-          }
-          
-          .a4-page {
-            max-width: 100% !important;
-            font-size: 12pt !important;
-            padding: 2.5cm 3cm 2cm 3cm !important;
-            page-break-after: always;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            margin: 0 !important;
-          }
         }
       `}</style>
       {renderMaterial()}

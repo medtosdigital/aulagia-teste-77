@@ -1,3 +1,4 @@
+
 export interface Template {
   id: string;
   name: string;
@@ -24,7 +25,7 @@ class TemplateService {
           <style>
             @page {
               size: A4;
-              margin: 3cm 2cm 2cm 3cm;
+              margin: 1.5cm;
             }
             body {
               margin: 0;
@@ -34,14 +35,19 @@ class TemplateService {
               line-height: 1.5;
               color: #000;
               background: white;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
             }
             .page {
-              width: 210mm;
-              min-height: 297mm;
+              width: 100%;
+              max-width: 800px;
               background: white;
-              padding: 3cm 2cm 2cm 3cm;
+              padding: 2rem;
               box-sizing: border-box;
               position: relative;
+              margin: 0 auto;
             }
             .shape-circle {
               position: absolute;
@@ -116,8 +122,19 @@ class TemplateService {
               page-break-before: always;
             }
             @media print {
-              body { margin: 0; padding: 0; background: white; }
-              .page { box-shadow: none; margin: 0; padding: 3cm 2cm 2cm 3cm; }
+              body { 
+                margin: 0; 
+                padding: 0; 
+                background: white;
+                display: block;
+              }
+              .page { 
+                box-shadow: none; 
+                margin: 0; 
+                padding: 1.5cm;
+                max-width: none;
+                width: 100%;
+              }
               .page-break { page-break-before: always; }
             }
           </style>
@@ -361,7 +378,7 @@ class TemplateService {
           <style>
             @page {
               size: A4;
-              margin: 3cm 2cm 2cm 3cm;
+              margin: 1.5cm;
             }
             body {
               margin: 0;
@@ -371,14 +388,19 @@ class TemplateService {
               line-height: 1.5;
               color: #000;
               background: white;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
             }
             .page {
-              width: 210mm;
-              min-height: 297mm;
+              width: 100%;
+              max-width: 800px;
               background: white;
-              padding: 3cm 2cm 2cm 3cm;
+              padding: 2rem;
               box-sizing: border-box;
               position: relative;
+              margin: 0 auto;
             }
             .shape-circle {
               position: absolute;
@@ -461,8 +483,19 @@ class TemplateService {
               margin: 10px 0;
             }
             @media print {
-              body { margin: 0; padding: 0; background: white; }
-              .page { box-shadow: none; margin: 0; padding: 3cm 2cm 2cm 3cm; }
+              body { 
+                margin: 0; 
+                padding: 0; 
+                background: white;
+                display: block;
+              }
+              .page { 
+                box-shadow: none; 
+                margin: 0; 
+                padding: 1.5cm;
+                max-width: none;
+                width: 100%;
+              }
             }
           </style>
         </head>
@@ -536,7 +569,7 @@ class TemplateService {
           <style>
             @page {
               size: A4;
-              margin: 3cm 2cm 2cm 3cm;
+              margin: 1.5cm;
             }
             body {
               margin: 0;
@@ -546,14 +579,19 @@ class TemplateService {
               line-height: 1.5;
               color: #000;
               background: white;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
             }
             .page {
-              width: 210mm;
-              min-height: 297mm;
+              width: 100%;
+              max-width: 800px;
               background: white;
-              padding: 3cm 2cm 2cm 3cm;
+              padding: 2rem;
               box-sizing: border-box;
               position: relative;
+              margin: 0 auto;
             }
             h1 {
               text-align: center;
@@ -631,8 +669,19 @@ class TemplateService {
               padding: 10px;
             }
             @media print {
-              body { margin: 0; padding: 0; background: white; }
-              .page { box-shadow: none; margin: 0; padding: 3cm 2cm 2cm 3cm; }
+              body { 
+                margin: 0; 
+                padding: 0; 
+                background: white;
+                display: block;
+              }
+              .page { 
+                box-shadow: none; 
+                margin: 0; 
+                padding: 1.5cm;
+                max-width: none;
+                width: 100%;
+              }
             }
           </style>
         </head>
