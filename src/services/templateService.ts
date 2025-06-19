@@ -41,13 +41,11 @@ class TemplateService {
               width: 210mm;
               min-height: 297mm;
               background: white;
-              overflow: hidden;
+              overflow: visible;
               margin: 0 auto;
               page-break-after: always;
               box-sizing: border-box;
               padding: 0;
-              display: flex;
-              flex-direction: column;
             }
             .page:last-child {
               page-break-after: avoid;
@@ -61,19 +59,18 @@ class TemplateService {
               display: flex;
               align-items: center;
               z-index: 999;
-              height: 15mm;
+              height: 12mm;
               background: white;
               padding: 0 15mm;
-              flex-shrink: 0;
             }
             .header .logo-container {
               display: flex;
               align-items: center;
-              gap: 10px;
+              gap: 8px;
             }
             .header .logo {
-              width: 40px;
-              height: 40px;
+              width: 32px;
+              height: 32px;
               background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
               border-radius: 50%;
               display: flex;
@@ -84,8 +81,8 @@ class TemplateService {
               box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
             }
             .header .logo svg {
-              width: 22px;
-              height: 22px;
+              width: 18px;
+              height: 18px;
               stroke: white;
               fill: none;
               stroke-width: 2;
@@ -96,7 +93,7 @@ class TemplateService {
               justify-content: center;
             }
             .header .brand-text h1 {
-              font-size: 24px;
+              font-size: 20px;
               color: #0ea5e9;
               margin: 0;
               font-family: 'Inter', sans-serif;
@@ -104,25 +101,20 @@ class TemplateService {
               font-weight: 700;
               letter-spacing: -0.3px;
             }
-            .header .brand-text h1 .ia-text {
-              text-transform: uppercase;
-            }
             .header .brand-text p {
-              font-size: 11px;
+              font-size: 9px;
               color: #6b7280;
-              margin: 2px 0 0 0;
+              margin: 1px 0 0 0;
               font-family: 'Inter', sans-serif;
               line-height: 1;
               font-weight: 400;
             }
             /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
-              margin-top: 25mm;
-              margin-bottom: 20mm;
+              margin-top: 22mm;
+              margin-bottom: 15mm;
               padding: 0 15mm;
               position: relative;
-              flex: 1;
-              overflow: visible;
             }
             /* Título principal */
             h2 {
@@ -191,30 +183,14 @@ class TemplateService {
               margin-bottom: 10px;
               font-family: 'Inter', sans-serif;
             }
-            /* Rodapé que aparece em todas as páginas */
+            /* Rodapé que aparece apenas na impressão */
             .footer {
-              position: absolute;
-              bottom: 8mm;
-              left: 0;
-              right: 0;
-              text-align: center;
-              font-size: 0.6rem;
-              color: #9ca3af;
-              z-index: 999;
-              height: 8mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: white;
-              padding: 0 15mm;
-              border-top: 1px solid #e5e7eb;
-              font-family: 'Inter', sans-serif;
-              flex-shrink: 0;
+              display: none;
             }
             /* Quebras de página controladas */
             .page-break {
               page-break-before: always;
-              margin-top: 25mm;
+              margin-top: 22mm;
             }
             .avoid-break {
               page-break-inside: avoid;
@@ -228,14 +204,6 @@ class TemplateService {
             }
             .development-section tr {
               page-break-inside: avoid;
-            }
-            /* Conteúdo que pode quebrar para próxima página */
-            .content-section {
-              page-break-inside: auto;
-            }
-            .content-section.large {
-              page-break-before: always;
-              margin-top: 25mm;
             }
             /* Ajustes para impressão */
             @media print {
@@ -251,8 +219,6 @@ class TemplateService {
                 width: 100%;
                 min-height: 100vh;
                 page-break-after: always;
-                display: flex;
-                flex-direction: column;
               }
               .page:last-child {
                 page-break-after: avoid;
@@ -263,47 +229,57 @@ class TemplateService {
                 left: 0;
                 right: 0;
                 padding: 0 15mm;
-                flex-shrink: 0;
               }
+              /* Mostrar rodapé apenas na impressão */
               .footer {
+                display: flex !important;
                 position: absolute;
                 bottom: 8mm;
                 left: 0;
                 right: 0;
-                flex-shrink: 0;
+                text-align: center;
+                font-size: 0.55rem;
+                color: #9ca3af;
+                z-index: 999;
+                height: 8mm;
+                align-items: center;
+                justify-content: center;
+                background: white;
+                padding: 0 15mm;
+                border-top: 1px solid #e5e7eb;
+                font-family: 'Inter', sans-serif;
               }
               .content {
-                margin-top: 25mm;
+                margin-top: 22mm;
                 margin-bottom: 20mm;
                 padding: 0 15mm;
-                flex: 1;
               }
             }
           </style>
         </head>
         <body>
-          <div class="page">
-            <!-- Cabeçalho que aparece em todas as páginas -->
-            <div class="header">
-              <div class="logo-container">
-                <div class="logo">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                  </svg>
-                </div>
-                <div class="brand-text">
-                  <h1>aulag<span class="ia-text">IA</span></h1>
-                  <p>Sua aula com toque mágico</p>
-                </div>
+          <!-- Cabeçalho que aparece em todas as páginas -->
+          <div class="header">
+            <div class="logo-container">
+              <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="brand-text">
+                <h1>AulagIA</h1>
+                <p>Sua aula com toque mágico</p>
               </div>
             </div>
+          </div>
 
-            <!-- Rodapé que aparece em todas as páginas -->
-            <div class="footer">
-              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
-            </div>
+          <!-- Rodapé que aparece apenas na impressão -->
+          <div class="footer">
+            Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+          </div>
 
+          <div class="page">
             <div class="content">
               <!-- Título do Plano de Aula -->
               <h2>PLANO DE AULA</h2>
@@ -350,7 +326,7 @@ class TemplateService {
                 {{/each}}
               </ul>
 
-              <!-- Desenvolvimento Metodológico -->
+              <!-- Desenvolvimento Metodológico na primeira página -->
               <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
               <div class="development-section">
                 <table>
@@ -374,33 +350,7 @@ class TemplateService {
                   </tbody>
                 </table>
               </div>
-            </div>
-          </div>
 
-          <!-- Segunda página se necessário -->
-          <div class="page">
-            <!-- Cabeçalho que aparece em todas as páginas -->
-            <div class="header">
-              <div class="logo-container">
-                <div class="logo">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                  </svg>
-                </div>
-                <div class="brand-text">
-                  <h1>aulag<span class="ia-text">IA</span></h1>
-                  <p>Sua aula com toque mágico</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Rodapé que aparece em todas as páginas -->
-            <div class="footer">
-              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
-            </div>
-
-            <div class="content">
               <!-- Recursos Didáticos -->
               <div class="section-title">RECURSOS DIDÁTICOS</div>
               <ul class="avoid-break">
