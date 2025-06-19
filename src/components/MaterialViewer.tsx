@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Edit, Trash2, FileText, Presentation, ClipboardList, GraduationCap } from 'lucide-react';
@@ -180,30 +179,40 @@ const MaterialViewer = () => {
     </div>
   );
 
-  const renderSlides = (slides: Slide[]) => (
-    <div className="space-y-6">
-      {slides.map((slide, index) => (
-        <Card key={index} className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Slide {slide.numero}: {slide.titulo}</CardTitle>
-              <Badge variant="secondary">Slide {slide.numero}</Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {slide.conteudo.map((item, itemIndex) => (
-                <li key={itemIndex} className="flex items-start">
-                  <span className="text-blue-500 font-bold mr-2">•</span>
-                  <span className="text-sm">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
+  const renderSlides = (slidesContent: any) => {
+    // Extract the slides array from the content structure
+    const slides = slidesContent.slides || [];
+    
+    if (!Array.isArray(slides)) {
+      console.error('Slides content is not an array:', slides);
+      return <div>Erro: Conteúdo de slides inválido</div>;
+    }
+
+    return (
+      <div className="space-y-6">
+        {slides.map((slide, index) => (
+          <Card key={index} className="border-l-4 border-l-blue-500">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Slide {slide.numero}: {slide.titulo}</CardTitle>
+                <Badge variant="secondary">Slide {slide.numero}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {slide.conteudo.map((item, itemIndex) => (
+                  <li key={itemIndex} className="flex items-start">
+                    <span className="text-blue-500 font-bold mr-2">•</span>
+                    <span className="text-sm">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
 
   const renderActivity = (activity: Activity) => (
     <div className="space-y-6">
@@ -312,7 +321,7 @@ const MaterialViewer = () => {
       case 'plano-de-aula':
         return renderLessonPlan(material.content as LessonPlan);
       case 'slides':
-        return renderSlides(material.content as Slide[]);
+        return renderSlides(material.content);
       case 'atividade':
         return renderActivity(material.content as Activity);
       case 'avaliacao':
