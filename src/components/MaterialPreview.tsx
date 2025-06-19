@@ -2,6 +2,7 @@
 import React from 'react';
 import { templateService } from '@/services/templateService';
 import { GeneratedMaterial } from '@/services/materialService';
+import SlideViewer from './SlideViewer';
 
 interface MaterialPreviewProps {
   material: GeneratedMaterial;
@@ -25,6 +26,12 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     try {
       const renderedHtml = templateService.renderTemplate(selectedTemplateId, material.content);
       
+      // Se for slides, usar o SlideViewer
+      if (material.type === 'slides') {
+        return <SlideViewer htmlContent={renderedHtml} />;
+      }
+      
+      // Para outros tipos, usar a renderização padrão
       return (
         <div 
           className="material-preview-content"

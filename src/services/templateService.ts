@@ -219,213 +219,126 @@ class TemplateService {
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>{{titulo}} - {{serie}}</title>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Patrick+Hand&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Fredoka:wght@400;600&display=swap');
 
             body {
               margin: 0;
-              padding: 40px;
-              background-color: #1e293b;
+              padding: 0;
+              background-color: #e0f2fe;
               font-family: 'Fredoka', sans-serif;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 80px;
+            }
+
+            .page-separator {
+              height: 40px;
+              background-color: #1e3a8a;
             }
 
             .slide {
               width: 960px;
               height: 720px;
+              margin: auto;
               display: flex;
-              flex-direction: column;
-              justify-content: center;
+              flex-direction: row;
               align-items: center;
+              justify-content: space-between;
               padding: 40px;
-              box-sizing: border-box;
               background-color: #ffffff;
-              border-radius: 16px;
-              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+              box-sizing: border-box;
+            }
+
+            .text-content {
+              width: 55%;
             }
 
             .title {
               font-family: 'Patrick Hand', cursive;
-              font-size: 3rem;
-              color: #1e293b;
+              font-size: 2.8rem;
+              color: #0f172a;
               margin-bottom: 20px;
-              text-align: center;
-            }
-
-            .highlight {
-              color: #ef4444;
             }
 
             .content {
-              font-size: 1.5rem;
-              color: #374151;
+              font-size: 1.4rem;
+              color: #1e293b;
               line-height: 1.6;
-              text-align: center;
-              max-width: 800px;
             }
 
-            .image {
-              margin-top: 30px;
-            }
-
-            .image img {
-              width: 300px;
-              max-width: 100%;
+            .image-side img {
+              width: 280px;
             }
 
             .table {
-              margin: 30px 0;
+              width: 100%;
+              margin-top: 20px;
               border-collapse: collapse;
             }
 
             .table th, .table td {
-              border: 1px solid #ddd;
-              padding: 12px 20px;
-              font-size: 1.2rem;
-            }
-
-            .table th {
-              background-color: #f3f4f6;
+              border: 1px solid #ccc;
+              padding: 10px 14px;
+              font-size: 1.1rem;
+              text-align: center;
             }
 
             .grid {
               display: grid;
               grid-template-columns: repeat(2, 1fr);
-              gap: 40px;
-              margin-top: 40px;
-              width: 100%;
-              max-width: 800px;
+              gap: 16px;
+              margin-top: 20px;
             }
 
             .box {
-              background: #fef3c7;
-              padding: 30px;
-              border-radius: 12px;
-              box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-              font-size: 1.3rem;
-              text-align: center;
-            }
-
-            .intro-slide {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-            }
-
-            .intro-slide .title {
-              color: white;
-              font-size: 4rem;
-            }
-
-            .conclusion-slide {
-              background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-              color: white;
-            }
-
-            .conclusion-slide .title {
-              color: white;
-            }
-
-            .list {
-              text-align: left;
-              font-size: 1.3rem;
-              line-height: 2;
-            }
-
-            .list li {
-              margin-bottom: 15px;
-            }
-
-            .challenge-box {
-              background: #fef2f2;
-              border: 2px solid #ef4444;
-              padding: 30px;
-              border-radius: 16px;
-              margin-top: 20px;
-            }
-
-            .answer-box {
-              background: #f0fdf4;
-              border: 2px solid #10b981;
-              padding: 30px;
-              border-radius: 16px;
-              margin-top: 20px;
-            }
-
-            .box img {
-              width: 80px;
-              margin-bottom: 10px;
+              background-color: #fef9c3;
+              padding: 16px;
+              border-radius: 10px;
+              font-size: 1.2rem;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             }
           </style>
         </head>
         <body>
           {{#each slides}}
-          <div class="slide {{slideClass}}">
-            <div class="title">{{titulo}}</div>
-            
-            {{#if conteudo}}
-            <div class="content">{{conteudo}}</div>
-            {{/if}}
-
-            {{#if tabela}}
-            <table class="table">
-              {{#if tabela.cabecalho}}
-              <tr>
-                {{#each tabela.cabecalho}}
-                <th>{{this}}</th>
-                {{/each}}
-              </tr>
+          <div class="slide">
+            <div class="text-content">
+              <div class="title">{{titulo}}</div>
+              {{#if conteudo}}
+              <div class="content">{{conteudo}}</div>
               {{/if}}
-              {{#each tabela.linhas}}
-              <tr>
-                {{#each this}}
-                <td>{{this}}</td>
-                {{/each}}
-              </tr>
-              {{/each}}
-            </table>
-            {{/if}}
-
-            {{#if grade}}
-            <div class="grid">
-              {{#each grade}}
-              <div class="box">
-                {{#if imagem}}
-                <img src="{{imagem}}" alt="{{altImagem}}"><br>
+              {{#if tabela}}
+              <table class="table">
+                {{#if tabela.cabecalho}}
+                <tr>
+                  {{#each tabela.cabecalho}}
+                  <th>{{this}}</th>
+                  {{/each}}
+                </tr>
                 {{/if}}
-                {{conteudo}}
+                {{#each tabela.linhas}}
+                <tr>
+                  {{#each this}}
+                  <td>{{this}}</td>
+                  {{/each}}
+                </tr>
+                {{/each}}
+              </table>
+              {{/if}}
+              {{#if grade}}
+              <div class="grid">
+                {{#each grade}}
+                <div class="box">{{this}}</div>
+                {{/each}}
               </div>
-              {{/each}}
+              {{/if}}
             </div>
-            {{/if}}
-
-            {{#if lista}}
-            <ul class="list">
-              {{#each lista}}
-              <li>{{this}}</li>
-              {{/each}}
-            </ul>
-            {{/if}}
-
-            {{#if desafio}}
-            <div class="challenge-box">
-              <strong>Desafio:</strong><br>{{desafio}}
-            </div>
-            {{/if}}
-
-            {{#if resposta}}
-            <div class="answer-box">
-              <strong>Resposta:</strong><br>{{resposta}}
-            </div>
-            {{/if}}
-
             {{#if imagem}}
-            <div class="image">
+            <div class="image-side">
               <img src="{{imagem}}" alt="{{altImagem}}">
             </div>
             {{/if}}
           </div>
+          {{#unless @last}}
+          <div class="page-separator"></div>
+          {{/unless}}
           {{/each}}
         </body>
         </html>
@@ -858,6 +771,11 @@ class TemplateService {
         // Handle @letter for options (A, B, C, D)
         itemHtml = itemHtml.replace(/{{@letter}}/g, String.fromCharCode(65 + index) + ')');
         
+        // Handle @last for conditional rendering
+        itemHtml = itemHtml.replace(/{{#unless @last}}([\s\S]*?){{\/unless}}/g, (match, content) => {
+          return index < array.length - 1 ? content : '';
+        });
+        
         // Handle conditional blocks
         const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
         itemHtml = itemHtml.replace(ifRegex, (match, condition, content) => {
@@ -914,63 +832,63 @@ class TemplateService {
     
     // Slide de introdução
     slides.push({
-      titulo: `Vamos aprender sobre ${formData.tema}!`,
+      titulo: `Vamos aprender ${formData.tema}!`,
       conteudo: `Hoje vamos descobrir coisas incríveis sobre ${formData.tema}. Preparem-se para uma aula divertida!`,
-      isIntroSlide: true,
-      slideClass: 'intro-slide',
-      imagem: 'https://cdn-icons-png.flaticon.com/512/4149/4149673.png',
-      altImagem: 'celebração'
+      imagem: 'https://cdn-icons-png.flaticon.com/512/1687/1687603.png',
+      altImagem: 'aprendizado'
     });
 
     // Slides de conteúdo baseados em keywords
     keywords.slice(0, 6).forEach((keyword, index) => {
-      slides.push({
+      const slide: any = {
         titulo: `${keyword.charAt(0).toUpperCase() + keyword.slice(1)}`,
         conteudo: `Vamos explorar ${keyword} de forma prática e divertida!`,
-        isRegularSlide: true,
-        tabela: index % 3 === 0 ? {
+        imagem: index % 2 === 0 ? 'https://cdn-icons-png.flaticon.com/512/2403/2403361.png' : 'https://cdn-icons-png.flaticon.com/512/2917/2917999.png',
+        altImagem: keyword
+      };
+
+      if (index % 3 === 0) {
+        slide.tabela = {
           cabecalho: ['Conceito', 'Exemplo'],
           linhas: [
             [keyword, `Exemplo prático de ${keyword}`],
             ['Aplicação', `Como usar ${keyword} no dia a dia`]
           ]
-        } : null,
-        grade: index % 2 === 0 ? [
-          {
-            conteudo: `${keyword} na teoria`,
-            imagem: 'https://cdn-icons-png.flaticon.com/512/2403/2403361.png',
-            altImagem: keyword
-          },
-          {
-            conteudo: `${keyword} na prática`,
-            imagem: 'https://cdn-icons-png.flaticon.com/512/2917/2917999.png',
-            altImagem: 'prática'
-          }
-        ] : null
-      });
+        };
+      }
+
+      if (index % 2 === 0) {
+        slide.grade = [
+          `${keyword} na teoria`,
+          `${keyword} na prática`,
+          `Exemplo de ${keyword}`,
+          `Aplicação de ${keyword}`
+        ];
+      }
+
+      slides.push(slide);
     });
 
     // Slide de desafio
     slides.push({
       titulo: 'Desafio!',
-      conteudo: `Agora é sua vez! Vamos testar o que aprendemos sobre ${formData.tema}.`,
-      desafio: `Como você aplicaria ${formData.tema} em uma situação do seu dia a dia?`,
-      isRegularSlide: true
+      conteudo: `Agora é sua vez! Vamos testar o que aprendemos sobre ${formData.tema}. Como você aplicaria ${formData.tema} em uma situação do seu dia a dia?`,
+      imagem: 'https://cdn-icons-png.flaticon.com/512/1732/1732602.png',
+      altImagem: 'desafio'
     });
 
     // Slide de resposta
     slides.push({
       titulo: 'Excelente!',
-      resposta: `Existem muitas formas de aplicar ${formData.tema}. O importante é praticar e explorar!`,
-      isRegularSlide: true
+      conteudo: `Existem muitas formas de aplicar ${formData.tema}. O importante é praticar e explorar!`,
+      imagem: 'https://cdn-icons-png.flaticon.com/512/2601/2601717.png',
+      altImagem: 'resposta'
     });
 
     // Slide de conclusão
     slides.push({
       titulo: 'Parabéns!',
       conteudo: `Você aprendeu muito sobre ${formData.tema}! Continue praticando e explorando esse tema fascinante.`,
-      isConclusionSlide: true,
-      slideClass: 'conclusion-slide',
       imagem: 'https://cdn-icons-png.flaticon.com/512/4149/4149673.png',
       altImagem: 'celebração'
     });
