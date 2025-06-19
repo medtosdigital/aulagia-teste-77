@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
@@ -26,7 +27,7 @@ class ExportService {
           <style>
             @page {
               size: A4;
-              margin: 0;
+              margin: 20mm 0 20mm 0;
             }
             
             body { 
@@ -40,13 +41,13 @@ class ExportService {
             
             .page {
               width: 100%;
-              height: 100vh;
+              height: auto;
               background: white;
               margin: 0;
               padding: 0;
               box-sizing: border-box;
               position: relative;
-              overflow: hidden;
+              overflow: visible;
             }
 
             @media print {
@@ -55,7 +56,7 @@ class ExportService {
                 padding: 0 !important; 
                 background: white !important;
                 width: 100% !important;
-                height: 100vh !important;
+                height: auto !important;
               }
               
               .page { 
@@ -64,8 +65,9 @@ class ExportService {
                 padding: 0 !important;
                 max-width: none !important;
                 width: 100% !important;
-                height: 100vh !important;
+                height: auto !important;
                 page-break-after: always;
+                page-break-inside: avoid;
               }
               
               .page:last-child {
@@ -365,6 +367,68 @@ class ExportService {
       'avaliacao': 'Avaliação'
     };
     return labels[type as keyof typeof labels] || type;
+  }
+
+  async exportToWord(material: GeneratedMaterial): Promise<void> {
+    let children: any[] = [];
+
+    children.push(
+      new Paragraph({
+        children: [new TextRun({ text: material.title, bold: true, size: 32 })],
+        heading: HeadingLevel.TITLE,
+        alignment: AlignmentType.CENTER,
+      })
+    );
+
+    children.push(
+      new Paragraph({
+        children: [new TextRun(`${this.getTypeLabel(material.type)} • ${material.subject} • ${material.grade}`)],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 400 }
+      })
+    );
+
+    switch (material.type) {
+      case 'plano-de-aula':
+        children = [...children, ...this.getLessonPlanWordContent(material.content as LessonPlan)];
+        break;
+      case 'slides':
+        children = [...children, ...this.getSlidesWordContent(material.content as Slide[])];
+        break;
+      case 'atividade':
+        children = [...children, ...this.getActivityWordContent(material.content as Activity)];
+        break;
+      case 'avaliacao':
+        children = [...children, ...this.getAssessmentWordContent(material.content as Assessment)];
+        break;
+    }
+
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: {
+            margin: {
+              top: 1134,
+              right: 1134,
+              bottom: 1134,
+              left: 1134,
+            },
+          },
+        },
+        children: children
+      }]
+    });
+
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `${material.title}.docx`);
+  }
+
+  async exportToPPT(material: GeneratedMaterial): Promise<void> {
+    if (material.type !== 'slides') {
+      throw new Error('Exportação PPT disponível apenas para slides');
+    }
+
+    await this.exportSlidesToPDF(material);
   }
 }
 
