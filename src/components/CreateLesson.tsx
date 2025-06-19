@@ -166,6 +166,18 @@ const CreateLesson: React.FC = () => {
     setSelectedType(null);
   };
 
+  // Helper function to get display name for selected grade
+  const getGradeDisplayName = (value: string) => {
+    for (const category of grades) {
+      for (const option of category.options) {
+        if (`${category.category}-${option}` === value) {
+          return `${option} (${category.category})`;
+        }
+      }
+    }
+    return value;
+  };
+
   if (step === 'selection') {
     return <>
         <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
@@ -314,7 +326,7 @@ const CreateLesson: React.FC = () => {
                           <div className="px-3 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg mx-2 mt-2">
                             {category.category}
                           </div>
-                          {category.options.map(option => <SelectItem key={`${category.category}-${option}`} value={option.toLowerCase()}>
+                          {category.options.map(option => <SelectItem key={`${category.category}-${option}`} value={`${category.category}-${option}`}>
                               {option}
                             </SelectItem>)}
                         </div>)}
