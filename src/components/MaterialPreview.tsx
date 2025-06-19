@@ -56,29 +56,6 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
 
   return (
     <div className="material-preview-container w-full h-full overflow-auto bg-gray-50 flex justify-center items-start p-4">
-      <style>{`
-        .material-preview-container {
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
-          min-height: 100vh;
-          padding: 20px 0;
-          margin: 0;
-        }
-        
-        /* Responsividade para mobile */
-        @media (max-width: 768px) {
-          .material-preview-container {
-            padding: 10px;
-          }
-        }
-        
-        @media (max-width: 480px) {
-          .material-preview-container {
-            padding: 5px;
-          }
-        }
-      `}</style>
       {renderMaterial()}
     </div>
   );

@@ -42,80 +42,59 @@ class TemplateService {
               overflow: visible;
               margin: 0;
               page-break-after: always;
+              padding-top: 15mm;
+              padding-bottom: 10mm;
+              padding-left: 15mm;
+              padding-right: 15mm;
+              box-sizing: border-box;
             }
             .page:last-child {
               page-break-after: avoid;
             }
-            /* Formas decorativas dentro da página */
-            .shape-circle {
-              position: fixed;
-              border-radius: 50%;
-              opacity: 0.25;
-              pointer-events: none;
-              z-index: 0;
-            }
-            .shape-circle.blue {
-              width: 180px; height: 180px;
-              background: #3b82f6;
-              top: -60px; left: -40px;
-            }
-            .shape-circle.light-blue {
-              width: 240px; height: 240px;
-              background: #60a5fa;
-              bottom: -80px; right: -60px;
-            }
-            .container {
-              position: relative;
-              width: 100%;
-              min-height: 297mm;
-              padding: 25mm 15mm 25mm 15mm;
-              box-sizing: border-box;
-              z-index: 1;
-            }
-            /* Cabeçalho fixo */
+            /* Cabeçalho no topo da página */
             .header {
-              position: fixed;
-              top: 0;
-              left: 0;
-              right: 0;
+              position: absolute;
+              top: 5mm;
+              left: 15mm;
+              right: 15mm;
               display: flex;
               align-items: center;
               z-index: 10;
-              padding: 5mm 15mm;
-              background: transparent;
+              height: 8mm;
             }
             .header .logo {
-              width: 25px;
-              height: 25px;
-              background: #3b82f6;
-              border-radius: 6px;
+              width: 20px;
+              height: 20px;
+              background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+              border-radius: 4px;
               margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 12px;
+              font-size: 10px;
               flex-shrink: 0;
             }
             .header .texts h1 {
-              font-size: 0.9rem;
+              font-size: 0.8rem;
               color: #3b82f6;
               margin: 0 0 1px 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               line-height: 1.1;
+              font-weight: 600;
             }
             .header .texts p {
-              font-size: 0.5rem;
-              color: #374151;
+              font-size: 0.45rem;
+              color: #6b7280;
               margin: 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               line-height: 1.1;
             }
             /* Conteúdo principal */
             .content {
-              margin-top: 0;
-              padding-bottom: 0;
+              margin-top: 5mm;
+              padding-bottom: 5mm;
             }
             /* Título principal */
             h2 {
@@ -184,18 +163,20 @@ class TemplateService {
               margin-bottom: 14px;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
-            /* Rodapé fixo */
+            /* Rodapé no final da página */
             .footer {
-              position: fixed;
-              bottom: 0;
-              left: 0;
-              right: 0;
+              position: absolute;
+              bottom: 3mm;
+              left: 15mm;
+              right: 15mm;
               text-align: center;
-              font-size: 0.6rem;
-              color: #6b7280;
-              padding: 3mm 15mm;
+              font-size: 0.5rem;
+              color: #9ca3af;
               z-index: 10;
-              background: transparent;
+              height: 4mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             }
             /* Quebras de página */
             .page-break {
@@ -216,143 +197,123 @@ class TemplateService {
                 border-radius: 0;
                 width: 100%;
                 min-height: 100vh;
-                padding: 0;
                 page-break-after: always;
               }
               .page:last-child {
                 page-break-after: avoid;
               }
-              .container {
-                padding: 25mm 15mm 25mm 15mm;
-              }
               .header {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                background: transparent;
+                position: absolute;
+                top: 5mm;
+                left: 15mm;
+                right: 15mm;
               }
               .footer {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: transparent;
-              }
-              .content {
-                padding-bottom: 0;
-              }
-              .shape-circle {
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-                position: fixed;
+                position: absolute;
+                bottom: 3mm;
+                left: 15mm;
+                right: 15mm;
               }
             }
           </style>
         </head>
         <body>
-          <!-- Formas decorativas -->
-          <div class="shape-circle blue"></div>
-          <div class="shape-circle light-blue"></div>
-
-          <!-- Cabeçalho fixo -->
-          <div class="header">
-            <div class="logo">📖</div>
-            <div class="texts">
-              <h1>AulagIA</h1>
-              <p>Sua aula com toque mágico</p>
-            </div>
-          </div>
-
           <div class="page">
-            <div class="container">
-              <div class="content">
-                <!-- Título do Plano de Aula -->
-                <h2>PLANO DE AULA</h2>
-
-                <!-- Informações básicas -->
-                <table class="avoid-break">
-                  <tr>
-                    <th>Professor(a):</th>
-                    <td>{{professor}}</td>
-                    <th>Data:</th>
-                    <td>{{data}}</td>
-                  </tr>
-                  <tr>
-                    <th>Disciplina:</th>
-                    <td>{{disciplina}}</td>
-                    <th>Série/Ano:</th>
-                    <td>{{serie}}</td>
-                  </tr>
-                  <tr>
-                    <th>Tema:</th>
-                    <td colspan="3">{{tema}}</td>
-                  </tr>
-                  <tr>
-                    <th>Duração:</th>
-                    <td>{{duracao}}</td>
-                    <th>BNCC:</th>
-                    <td>{{bncc}}</td>
-                  </tr>
-                </table>
-
-                <!-- Objetivos de Aprendizagem -->
-                <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
-                <ul class="avoid-break">
-                  {{#each objetivos}}
-                  <li>{{this}}</li>
-                  {{/each}}
-                </ul>
-
-                <!-- Habilidades BNCC -->
-                <div class="section-title">HABILIDADES BNCC</div>
-                <ul class="avoid-break">
-                  {{#each habilidades}}
-                  <li>{{this}}</li>
-                  {{/each}}
-                </ul>
-
-                <!-- Desenvolvimento Metodológico -->
-                <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
-                <table class="avoid-break">
-                  <thead>
-                    <tr>
-                      <th>Etapa</th>
-                      <th>Atividade</th>
-                      <th>Tempo</th>
-                      <th>Recursos</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {{#each desenvolvimento}}
-                    <tr>
-                      <td>{{etapa}}</td>
-                      <td>{{atividade}}</td>
-                      <td>{{tempo}}</td>
-                      <td>{{recursos}}</td>
-                    </tr>
-                    {{/each}}
-                  </tbody>
-                </table>
-
-                <!-- Recursos Didáticos -->
-                <div class="section-title">RECURSOS DIDÁTICOS</div>
-                <ul class="avoid-break">
-                  {{#each recursos}}
-                  <li>{{this}}</li>
-                  {{/each}}
-                </ul>
-
-                <!-- Avaliação -->
-                <div class="section-title">AVALIAÇÃO</div>
-                <p class="avoid-break">{{avaliacao}}</p>
+            <!-- Cabeçalho -->
+            <div class="header">
+              <div class="logo">A</div>
+              <div class="texts">
+                <h1>AulagIA</h1>
+                <p>Sua aula com toque mágico</p>
               </div>
             </div>
-          </div>
 
-          <!-- Rodapé fixo -->
-          <div class="footer">
-            Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            <div class="content">
+              <!-- Título do Plano de Aula -->
+              <h2>PLANO DE AULA</h2>
+
+              <!-- Informações básicas -->
+              <table class="avoid-break">
+                <tr>
+                  <th>Professor(a):</th>
+                  <td>{{professor}}</td>
+                  <th>Data:</th>
+                  <td>{{data}}</td>
+                </tr>
+                <tr>
+                  <th>Disciplina:</th>
+                  <td>{{disciplina}}</td>
+                  <th>Série/Ano:</th>
+                  <td>{{serie}}</td>
+                </tr>
+                <tr>
+                  <th>Tema:</th>
+                  <td colspan="3">{{tema}}</td>
+                </tr>
+                <tr>
+                  <th>Duração:</th>
+                  <td>{{duracao}}</td>
+                  <th>BNCC:</th>
+                  <td>{{bncc}}</td>
+                </tr>
+              </table>
+
+              <!-- Objetivos de Aprendizagem -->
+              <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
+              <ul class="avoid-break">
+                {{#each objetivos}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
+
+              <!-- Habilidades BNCC -->
+              <div class="section-title">HABILIDADES BNCC</div>
+              <ul class="avoid-break">
+                {{#each habilidades}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
+
+              <!-- Desenvolvimento Metodológico -->
+              <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
+              <table class="avoid-break">
+                <thead>
+                  <tr>
+                    <th>Etapa</th>
+                    <th>Atividade</th>
+                    <th>Tempo</th>
+                    <th>Recursos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each desenvolvimento}}
+                  <tr>
+                    <td>{{etapa}}</td>
+                    <td>{{atividade}}</td>
+                    <td>{{tempo}}</td>
+                    <td>{{recursos}}</td>
+                  </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+
+              <!-- Recursos Didáticos -->
+              <div class="section-title">RECURSOS DIDÁTICOS</div>
+              <ul class="avoid-break">
+                {{#each recursos}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
+
+              <!-- Avaliação -->
+              <div class="section-title">AVALIAÇÃO</div>
+              <p class="avoid-break">{{avaliacao}}</p>
+            </div>
+
+            <!-- Rodapé -->
+            <div class="footer">
+              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
           </div>
         </body>
         </html>
@@ -534,71 +495,55 @@ class TemplateService {
               box-sizing: border-box;
               position: relative;
               page-break-after: always;
+              padding-top: 15mm;
+              padding-bottom: 10mm;
+              padding-left: 15mm;
+              padding-right: 15mm;
             }
             .page:last-child {
               page-break-after: avoid;
             }
-            .shape-circle {
-              position: fixed;
-              border-radius: 50%;
-              opacity: 0.15;
-              pointer-events: none;
-              z-index: 0;
-            }
-            .shape-circle.green {
-              width: 120px; height: 120px;
-              background: #10b981;
-              top: 20px; left: 20px;
-            }
-            .container {
-              position: relative;
-              width: 100%;
-              min-height: 297mm;
-              padding: 25mm 15mm 25mm 15mm;
-              box-sizing: border-box;
-              z-index: 1;
-            }
-            /* Cabeçalho fixo */
+            /* Cabeçalho no topo da página */
             .header {
-              position: fixed;
-              top: 0;
-              left: 0;
-              right: 0;
+              position: absolute;
+              top: 5mm;
+              left: 15mm;
+              right: 15mm;
               display: flex;
               align-items: center;
               z-index: 10;
-              padding: 5mm 15mm;
-              background: transparent;
+              height: 8mm;
             }
             .header .logo {
-              width: 25px;
-              height: 25px;
-              background: #10b981;
-              border-radius: 6px;
+              width: 20px;
+              height: 20px;
+              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+              border-radius: 4px;
               margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 12px;
+              font-size: 10px;
               flex-shrink: 0;
             }
             .header .texts h1 {
-              font-size: 0.9rem;
+              font-size: 0.8rem;
               color: #10b981;
               margin: 0 0 1px 0;
               line-height: 1.1;
+              font-weight: 600;
             }
             .header .texts p {
-              font-size: 0.5rem;
-              color: #374151;
+              font-size: 0.45rem;
+              color: #6b7280;
               margin: 0;
               line-height: 1.1;
             }
             .content {
-              margin-top: 0;
-              padding-bottom: 0;
+              margin-top: 5mm;
+              padding-bottom: 5mm;
             }
             h1 {
               text-align: center;
@@ -667,16 +612,18 @@ class TemplateService {
               margin: 10px 0;
             }
             .footer {
-              position: fixed;
-              bottom: 0;
-              left: 0;
-              right: 0;
+              position: absolute;
+              bottom: 3mm;
+              left: 15mm;
+              right: 15mm;
               text-align: center;
-              font-size: 0.6rem;
-              color: #6b7280;
-              padding: 3mm 15mm;
+              font-size: 0.5rem;
+              color: #9ca3af;
               z-index: 10;
-              background: transparent;
+              height: 4mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             }
             @media print {
               body { 
@@ -687,7 +634,10 @@ class TemplateService {
               .page { 
                 box-shadow: none; 
                 margin: 0; 
-                padding: 0;
+                padding-top: 15mm;
+                padding-bottom: 10mm;
+                padding-left: 15mm;
+                padding-right: 15mm;
                 max-width: none;
                 width: 100%;
                 border-radius: 0;
@@ -695,99 +645,82 @@ class TemplateService {
               .page:last-child {
                 page-break-after: avoid;
               }
-              .container {
-                padding: 25mm 15mm 25mm 15mm;
-              }
               .header {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                background: transparent;
+                position: absolute;
+                top: 5mm;
+                left: 15mm;
+                right: 15mm;
               }
               .footer {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: transparent;
-              }
-              .content {
-                padding-bottom: 0;
-              }
-              .shape-circle {
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-                position: fixed;
+                position: absolute;
+                bottom: 3mm;
+                left: 15mm;
+                right: 15mm;
               }
             }
           </style>
         </head>
         <body>
-          <div class="shape-circle green"></div>
-
-          <!-- Cabeçalho fixo -->
-          <div class="header">
-            <div class="logo">📖</div>
-            <div class="texts">
-              <h1>AulagIA</h1>
-              <p>Sua aula com toque mágico</p>
-            </div>
-          </div>
-
           <div class="page">
-            <div class="container">
-              <div class="content">
-                <h1>Atividade</h1>
-
-                <table class="header-table">
-                  <tr>
-                    <th>Escola</th>
-                    <th>Disciplina</th>
-                    <th>Série/Ano</th>
-                  </tr>
-                  <tr>
-                    <td>_________________________________</td>
-                    <td style="text-align: center;">{{disciplina}}</td>
-                    <td style="text-align: center;">{{serie}}</td>
-                  </tr>
-                </table>
-
-                <div style="margin-bottom: 20px;">
-                  <p><strong>Nome do Aluno(a):</strong> ____________________________________________</p>
-                </div>
-
-                <div class="instructions">
-                  <strong>{{titulo}}</strong><br>
-                  {{instrucoes}}
-                </div>
-
-                {{#each questoes}}
-                <div class="question">
-                  <div class="question-header">Questão {{numero}}</div>
-                  <div class="question-text">{{pergunta}}</div>
-                  
-                  {{#if opcoes}}
-                  <div class="options">
-                    {{#each opcoes}}
-                    <div class="option">
-                      <span class="option-letter">{{@letter}}</span>
-                      <span>{{this}}</span>
-                    </div>
-                    {{/each}}
-                  </div>
-                  {{else}}
-                  <div class="answer-space"></div>
-                  <div class="answer-space"></div>
-                  {{/if}}
-                </div>
-                {{/each}}
+            <!-- Cabeçalho -->
+            <div class="header">
+              <div class="logo">A</div>
+              <div class="texts">
+                <h1>AulagIA</h1>
+                <p>Sua aula com toque mágico</p>
               </div>
             </div>
-          </div>
 
-          <div class="footer">
-            Atividade gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            <div class="content">
+              <h1>Atividade</h1>
+
+              <table class="header-table">
+                <tr>
+                  <th>Escola</th>
+                  <th>Disciplina</th>
+                  <th>Série/Ano</th>
+                </tr>
+                <tr>
+                  <td>_________________________________</td>
+                  <td style="text-align: center;">{{disciplina}}</td>
+                  <td style="text-align: center;">{{serie}}</td>
+                </tr>
+              </table>
+
+              <div style="margin-bottom: 20px;">
+                <p><strong>Nome do Aluno(a):</strong> ____________________________________________</p>
+              </div>
+
+              <div class="instructions">
+                <strong>{{titulo}}</strong><br>
+                {{instrucoes}}
+              </div>
+
+              {{#each questoes}}
+              <div class="question">
+                <div class="question-header">Questão {{numero}}</div>
+                <div class="question-text">{{pergunta}}</div>
+                
+                {{#if opcoes}}
+                <div class="options">
+                  {{#each opcoes}}
+                  <div class="option">
+                    <span class="option-letter">{{@letter}}</span>
+                    <span>{{this}}</span>
+                  </div>
+                  {{/each}}
+                </div>
+                {{else}}
+                <div class="answer-space"></div>
+                <div class="answer-space"></div>
+                {{/if}}
+              </div>
+              {{/each}}
+            </div>
+
+            <div class="footer">
+              Atividade gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
           </div>
         </body>
         </html>
@@ -829,59 +762,55 @@ class TemplateService {
               box-sizing: border-box;
               position: relative;
               page-break-after: always;
+              padding-top: 15mm;
+              padding-bottom: 10mm;
+              padding-left: 15mm;
+              padding-right: 15mm;
             }
             .page:last-child {
               page-break-after: avoid;
             }
-            .container {
-              position: relative;
-              width: 100%;
-              min-height: 297mm;
-              padding: 25mm 15mm 25mm 15mm;
-              box-sizing: border-box;
-              z-index: 1;
-            }
-            /* Cabeçalho fixo */
+            /* Cabeçalho no topo da página */
             .header {
-              position: fixed;
-              top: 0;
-              left: 0;
-              right: 0;
+              position: absolute;
+              top: 5mm;
+              left: 15mm;
+              right: 15mm;
               display: flex;
               align-items: center;
               z-index: 10;
-              padding: 5mm 15mm;
-              background: transparent;
+              height: 8mm;
             }
             .header .logo {
-              width: 25px;
-              height: 25px;
-              background: #dc2626;
-              border-radius: 6px;
+              width: 20px;
+              height: 20px;
+              background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+              border-radius: 4px;
               margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 12px;
+              font-size: 10px;
               flex-shrink: 0;
             }
             .header .texts h1 {
-              font-size: 0.9rem;
+              font-size: 0.8rem;
               color: #dc2626;
               margin: 0 0 1px 0;
               line-height: 1.1;
+              font-weight: 600;
             }
             .header .texts p {
-              font-size: 0.5rem;
-              color: #374151;
+              font-size: 0.45rem;
+              color: #6b7280;
               margin: 0;
               line-height: 1.1;
             }
             .content {
-              margin-top: 0;
-              padding-bottom: 0;
+              margin-top: 5mm;
+              padding-bottom: 5mm;
             }
             h1 {
               text-align: center;
@@ -961,16 +890,18 @@ class TemplateService {
               padding: 10px;
             }
             .footer {
-              position: fixed;
-              bottom: 0;
-              left: 0;
-              right: 0;
+              position: absolute;
+              bottom: 3mm;
+              left: 15mm;
+              right: 15mm;
               text-align: center;
-              font-size: 0.6rem;
-              color: #6b7280;
-              padding: 3mm 15mm;
+              font-size: 0.5rem;
+              color: #9ca3af;
               z-index: 10;
-              background: transparent;
+              height: 4mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             }
             @media print {
               body { 
@@ -981,7 +912,10 @@ class TemplateService {
               .page { 
                 box-shadow: none; 
                 margin: 0; 
-                padding: 0;
+                padding-top: 15mm;
+                padding-bottom: 10mm;
+                padding-left: 15mm;
+                padding-right: 15mm;
                 max-width: none;
                 width: 100%;
                 border-radius: 0;
@@ -989,89 +923,79 @@ class TemplateService {
               .page:last-child {
                 page-break-after: avoid;
               }
-              .container {
-                padding: 25mm 15mm 25mm 15mm;
-              }
               .header {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                background: transparent;
+                position: absolute;
+                top: 5mm;
+                left: 15mm;
+                right: 15mm;
               }
               .page-break { page-break-before: always; }
               .footer {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: transparent;
-              }
-              .content {
-                padding-bottom: 0;
+                position: absolute;
+                bottom: 3mm;
+                left: 15mm;
+                right: 15mm;
               }
             }
           </style>
         </head>
         <body>
-          <!-- Cabeçalho fixo -->
-          <div class="header">
-            <div class="logo">📖</div>
-            <div class="texts">
-              <h1>AulagIA</h1>
-              <p>Sua aula com toque mágico</p>
-            </div>
-          </div>
-
           <div class="page">
-            <div class="container">
-              <div class="content">
-                <h1>Avaliação</h1>
-
-                <table class="header-table">
-                  <tr>
-                    <th colspan="3">{{titulo}}</th>
-                  </tr>
-                  <tr>
-                    <td><strong>Nome:</strong> _________________________________</td>
-                    <td><strong>Turma:</strong> _____________</td>
-                    <td><strong>Data:</strong> _____________</td>
-                  </tr>
-                </table>
-
-                <div class="evaluation-info">
-                  <p><strong>Instruções:</strong> {{instrucoes}}</p>
-                  <p><strong>Tempo Limite:</strong> {{tempoLimite}}</p>
-                </div>
-
-                {{#each questoes}}
-                <div class="question">
-                  <div class="question-header">
-                    <span>Questão {{numero}}</span>
-                    <span class="points">({{pontuacao}} pontos)</span>
-                  </div>
-                  <div class="question-text">{{pergunta}}</div>
-                  
-                  {{#if opcoes}}
-                  <div class="options">
-                    {{#each opcoes}}
-                    <div class="option">
-                      <span class="option-letter">{{@letter}}</span>
-                      <span>{{this}}</span>
-                    </div>
-                    {{/each}}
-                  </div>
-                  {{else}}
-                  <div class="answer-space"></div>
-                  {{/if}}
-                </div>
-                {{/each}}
+            <!-- Cabeçalho -->
+            <div class="header">
+              <div class="logo">A</div>
+              <div class="texts">
+                <h1>AulagIA</h1>
+                <p>Sua aula com toque mágico</p>
               </div>
             </div>
-          </div>
 
-          <div class="footer">
-            Avaliação gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            <div class="content">
+              <h1>Avaliação</h1>
+
+              <table class="header-table">
+                <tr>
+                  <th colspan="3">{{titulo}}</th>
+                </tr>
+                <tr>
+                  <td><strong>Nome:</strong> _________________________________</td>
+                  <td><strong>Turma:</strong> _____________</td>
+                  <td><strong>Data:</strong> _____________</td>
+                </tr>
+              </table>
+
+              <div class="evaluation-info">
+                <p><strong>Instruções:</strong> {{instrucoes}}</p>
+                <p><strong>Tempo Limite:</strong> {{tempoLimite}}</p>
+              </div>
+
+              {{#each questoes}}
+              <div class="question">
+                <div class="question-header">
+                  <span>Questão {{numero}}</span>
+                  <span class="points">({{pontuacao}} pontos)</span>
+                </div>
+                <div class="question-text">{{pergunta}}</div>
+                
+                {{#if opcoes}}
+                <div class="options">
+                  {{#each opcoes}}
+                  <div class="option">
+                    <span class="option-letter">{{@letter}}</span>
+                    <span>{{this}}</span>
+                  </div>
+                  {{/each}}
+                </div>
+                {{else}}
+                <div class="answer-space"></div>
+                {{/if}}
+              </div>
+              {{/each}}
+            </div>
+
+            <div class="footer">
+              Avaliação gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
           </div>
         </body>
         </html>
