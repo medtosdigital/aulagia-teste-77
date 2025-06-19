@@ -28,18 +28,148 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow && material) {
-      const materialContent = document.querySelector('.material-preview-content')?.innerHTML;
+      // Capturar todo o conteúdo da visualização A4
+      const materialContent = document.querySelector('.a4-document-container')?.outerHTML || 
+                            document.querySelector('.material-preview-content')?.innerHTML;
+      
       if (materialContent) {
         printWindow.document.write(`
           <!DOCTYPE html>
           <html>
           <head>
             <title>${material.title}</title>
+            <meta charset="utf-8">
             <style>
-              body { margin: 0; padding: 0; font-family: 'Times New Roman', serif; }
-              @media print {
-                body { margin: 0; padding: 0; }
-                .page { margin: 0; padding: 0; }
+              @page {
+                size: A4;
+                margin: 0;
+              }
+              
+              body { 
+                margin: 0; 
+                padding: 0; 
+                font-family: 'Times New Roman', serif;
+                background: white;
+              }
+              
+              .a4-document-container {
+                display: block;
+                padding: 0;
+                gap: 0;
+              }
+              
+              .a4-page {
+                width: 210mm;
+                min-height: 297mm;
+                background: white;
+                padding: 2.5cm 3cm 2cm 3cm;
+                margin: 0;
+                font-family: 'Times New Roman', serif;
+                font-size: 12pt;
+                line-height: 1.5;
+                color: #333;
+                page-break-after: always;
+                box-shadow: none;
+                border-radius: 0;
+              }
+              
+              .a4-page:last-child {
+                page-break-after: avoid;
+              }
+              
+              h1 {
+                font-size: 16pt;
+                font-weight: bold;
+                text-align: center;
+                margin-bottom: 2rem;
+                text-transform: uppercase;
+                color: #1e40af;
+              }
+              
+              h2 {
+                font-size: 14pt;
+                font-weight: bold;
+                margin-top: 1.5rem;
+                margin-bottom: 1rem;
+                color: #1e40af;
+                text-transform: uppercase;
+              }
+              
+              h3 {
+                font-size: 12pt;
+                font-weight: bold;
+                margin-top: 1rem;
+                margin-bottom: 0.5rem;
+                color: #374151;
+              }
+              
+              p {
+                margin-bottom: 1rem;
+                text-align: justify;
+                text-indent: 1.25cm;
+              }
+              
+              ul, ol {
+                margin-bottom: 1rem;
+                padding-left: 1.5rem;
+              }
+              
+              li {
+                margin-bottom: 0.5rem;
+                text-align: justify;
+              }
+              
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 1rem 0;
+                font-size: 11pt;
+              }
+              
+              th, td {
+                border: 1px solid #d1d5db;
+                padding: 8px 12px;
+                text-align: left;
+              }
+              
+              th {
+                background-color: #f3f4f6;
+                font-weight: bold;
+                text-align: center;
+              }
+              
+              .lesson-info-table {
+                border: 2px solid #1e40af;
+                margin: 2rem 0;
+              }
+              
+              .lesson-info-table th {
+                background-color: #dbeafe;
+                color: #1e40af;
+                font-weight: bold;
+              }
+              
+              .question-block {
+                margin: 1.5rem 0;
+                padding: 1rem;
+                border-left: 4px solid #1e40af;
+                background-color: #f8fafc;
+              }
+              
+              .question-number {
+                font-weight: bold;
+                color: #1e40af;
+                margin-bottom: 0.5rem;
+              }
+              
+              .question-options {
+                margin-left: 1rem;
+                margin-top: 0.5rem;
+              }
+              
+              .question-options li {
+                list-style-type: lower-alpha;
+                margin-bottom: 0.25rem;
               }
             </style>
           </head>
@@ -49,7 +179,11 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
           </html>
         `);
         printWindow.document.close();
-        printWindow.print();
+        
+        // Aguardar um pouco para garantir que o conteúdo foi carregado antes de imprimir
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
       }
     }
   };
