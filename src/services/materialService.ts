@@ -1,3 +1,4 @@
+
 export interface GeneratedMaterial {
   id: string;
   title: string;
@@ -16,7 +17,6 @@ export interface LessonPlan {
   data: string;
   serie: string;
   bncc: string;
-  dataGeracao: string;
   objetivos: string[];
   habilidades: string[];
   desenvolvimento: {
@@ -116,7 +116,6 @@ class MaterialService {
       data: new Date().toLocaleDateString('pt-BR'),
       serie: grade,
       bncc: 'EF03MA07',
-      dataGeracao: new Date().toISOString(),
       objetivos: [
         `Compreender o conceito de ${topic.toLowerCase()} como conceito fundamental.`,
         `Desenvolver estratégias para resolver problemas de ${topic.toLowerCase()}.`,

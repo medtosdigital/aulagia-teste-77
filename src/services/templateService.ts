@@ -1,3 +1,4 @@
+
 export interface Template {
   id: string;
   name: string;
@@ -15,190 +16,76 @@ class TemplateService {
       name: 'Plano de Aula Padrão',
       type: 'plano-de-aula',
       htmlContent: `
-        <!DOCTYPE html>
-        <html lang="pt-BR">
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-          <title>Plano de Aula</title>
-          <style>
-            @page {
-              size: A4;
-              margin: 3cm 2cm 2cm 2cm;
-            }
-            body {
-              margin: 0;
-              padding: 0;
-              font-family: 'Times New Roman', serif;
-              font-size: 12pt;
-              line-height: 1.5;
-              color: #000;
-              background: white;
-            }
-            .container {
-              width: 100%;
-              max-width: 100%;
-            }
-            h1 {
-              text-align: center;
-              font-size: 16pt;
-              font-weight: bold;
-              margin: 0 0 20pt 0;
-              text-transform: uppercase;
-            }
-            h2 {
-              font-size: 14pt;
-              font-weight: bold;
-              margin: 18pt 0 12pt 0;
-              text-transform: uppercase;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 18pt;
-            }
-            th, td {
-              border: 1px solid #000;
-              padding: 8pt;
-              text-align: left;
-              vertical-align: top;
-            }
-            th {
-              background: #f0f0f0;
-              font-weight: bold;
-            }
-            ul {
-              margin: 0 0 18pt 0;
-              padding-left: 20pt;
-            }
-            li {
-              margin-bottom: 6pt;
-            }
-            .section {
-              margin-bottom: 18pt;
-              page-break-inside: avoid;
-            }
-            .development-table {
-              page-break-inside: auto;
-            }
-            .development-table tr {
-              page-break-inside: avoid;
-            }
-            .footer {
-              position: fixed;
-              bottom: 1cm;
-              left: 2cm;
-              right: 2cm;
-              text-align: center;
-              font-size: 10pt;
-              border-top: 1px solid #000;
-              padding-top: 6pt;
-            }
-            @media print {
-              body {
-                background: white;
-              }
-              .page-break {
-                page-break-before: always;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>PLANO DE AULA</h1>
-
-            <div class="section">
-              <table>
-                <tr>
-                  <th width="20%">Professor(a):</th>
-                  <td width="30%">{{professor}}</td>
-                  <th width="15%">Data:</th>
-                  <td width="35%">{{data}}</td>
-                </tr>
-                <tr>
-                  <th>Disciplina:</th>
-                  <td>{{disciplina}}</td>
-                  <th>Série/Ano:</th>
-                  <td>{{serie}}</td>
-                </tr>
-                <tr>
-                  <th>Tema:</th>
-                  <td colspan="3">{{tema}}</td>
-                </tr>
-                <tr>
-                  <th>Duração:</th>
-                  <td>{{duracao}}</td>
-                  <th>BNCC:</th>
-                  <td>{{bncc}}</td>
-                </tr>
-              </table>
-            </div>
-
-            <div class="section">
-              <h2>OBJETIVOS DE APRENDIZAGEM</h2>
-              <ul>
-                {{#each objetivos}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
-            </div>
-
-            <div class="section">
-              <h2>HABILIDADES BNCC</h2>
-              <ul>
-                {{#each habilidades}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
-            </div>
-
-            <div class="section">
-              <h2>DESENVOLVIMENTO METODOLÓGICO</h2>
-              <table class="development-table">
-                <thead>
-                  <tr>
-                    <th width="20%">Etapa</th>
-                    <th width="40%">Atividade</th>
-                    <th width="15%">Tempo</th>
-                    <th width="25%">Recursos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {{#each desenvolvimento}}
-                  <tr>
-                    <td><strong>{{etapa}}</strong></td>
-                    <td>{{atividade}}</td>
-                    <td>{{tempo}}</td>
-                    <td>{{recursos}}</td>
-                  </tr>
-                  {{/each}}
-                </tbody>
-              </table>
-            </div>
-
-            <div class="section">
-              <h2>RECURSOS DIDÁTICOS</h2>
-              <ul>
-                {{#each recursos}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
-            </div>
-
-            <div class="section">
-              <h2>AVALIAÇÃO</h2>
-              <p>{{avaliacao}}</p>
-            </div>
-
-            <div class="footer">
-              Plano de aula gerado em {{dataGeracao}}
+        <div class="a4-page">
+          <div class="header">
+            <h1>{{tema}}</h1>
+            <div class="info-grid">
+              <div class="info-item">
+                <strong>Professor(a):</strong> {{professor}}
+              </div>
+              <div class="info-item">
+                <strong>Disciplina:</strong> {{disciplina}}
+              </div>
+              <div class="info-item">
+                <strong>Série/Ano:</strong> {{serie}}
+              </div>
+              <div class="info-item">
+                <strong>Data:</strong> {{data}}
+              </div>
+              <div class="info-item">
+                <strong>Duração:</strong> {{duracao}}
+              </div>
+              <div class="info-item">
+                <strong>BNCC:</strong> {{bncc}}
+              </div>
             </div>
           </div>
-        </body>
-        </html>
+          
+          <div class="section">
+            <h2>Objetivos de Aprendizagem</h2>
+            <ul>
+              {{#each objetivos}}
+              <li>{{this}}</li>
+              {{/each}}
+            </ul>
+          </div>
+          
+          <div class="section">
+            <h2>Habilidades BNCC</h2>
+            <ul>
+              {{#each habilidades}}
+              <li>{{this}}</li>
+              {{/each}}
+            </ul>
+          </div>
+          
+          <div class="section">
+            <h2>Desenvolvimento da Aula</h2>
+            {{#each desenvolvimento}}
+            <div class="etapa">
+              <h3>{{etapa}} ({{tempo}})</h3>
+              <p>{{atividade}}</p>
+              <p><strong>Recursos:</strong> {{recursos}}</p>
+            </div>
+            {{/each}}
+          </div>
+          
+          <div class="section">
+            <h2>Recursos Necessários</h2>
+            <ul>
+              {{#each recursos}}
+              <li>{{this}}</li>
+              {{/each}}
+            </ul>
+          </div>
+          
+          <div class="section">
+            <h2>Avaliação</h2>
+            <p>{{avaliacao}}</p>
+          </div>
+        </div>
       `,
-      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'bncc', 'objetivos', 'habilidades', 'desenvolvimento', 'recursos', 'avaliacao', 'dataGeracao'],
+      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'bncc', 'objetivos', 'habilidades', 'desenvolvimento', 'recursos', 'avaliacao'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
