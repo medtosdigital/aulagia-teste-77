@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { templateService } from '@/services/templateService';
 import { GeneratedMaterial } from '@/services/materialService';
@@ -51,9 +52,9 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     <div className="material-preview-container w-full h-full overflow-auto bg-gray-50 flex justify-center py-4">
       <style>{`
         .material-preview-container .a4-page {
-          width: 100%;
-          max-width: 800px;
-          min-height: auto;
+          width: 210mm;
+          min-height: 297mm;
+          max-width: 210mm;
           background: white;
           margin: 0 auto;
           font-family: 'Times New Roman', serif;
@@ -61,7 +62,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           line-height: 1.5;
           color: #333;
           position: relative;
-          padding: 2rem;
+          padding: 20mm;
+          box-sizing: border-box;
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
           border-radius: 12px;
           border: 1px solid rgba(0, 0, 0, 0.05);
@@ -136,9 +138,11 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           }
           
           .material-preview-container .a4-page {
+            width: 100%;
             max-width: 100%;
+            min-height: auto;
             font-size: 11pt;
-            padding: 1.5rem;
+            padding: 15mm;
             margin: 0;
             border-radius: 8px;
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
@@ -172,7 +176,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         @media (max-width: 480px) {
           .material-preview-container .a4-page {
             font-size: 10pt;
-            padding: 1rem;
+            padding: 10mm;
             border-radius: 6px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
           }
