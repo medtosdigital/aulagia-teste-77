@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain } from 'lucide-react';
@@ -10,6 +9,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import MaterialModal from './MaterialModal';
+import BNCCValidationModal from './BNCCValidationModal';
+import GrammarCorrection from './GrammarCorrection';
 import { toast } from 'sonner';
 
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
@@ -37,6 +38,7 @@ const CreateLesson: React.FC = () => {
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generatedMaterial, setGeneratedMaterial] = useState<GeneratedMaterial | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showBNCCValidation, setShowBNCCValidation] = useState(false);
 
   const materialTypes: MaterialTypeOption[] = [{
     id: 'plano-de-aula',
@@ -103,6 +105,21 @@ const CreateLesson: React.FC = () => {
   const handleBackToSelection = () => {
     setStep('selection');
     setSelectedType(null);
+  };
+
+  const handleFormSubmit = () => {
+    // Verificar se todos os campos estão preenchidos
+    if (!formData.topic || !formData.subject || !formData.grade) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    // Abrir modal de validação BNCC
+    setShowBNCCValidation(true);
+  };
+
+  const handleBNCCValidationAccept = () => {
+    handleGenerate();
   };
 
   const handleGenerate = async () => {
@@ -246,117 +263,151 @@ const CreateLesson: React.FC = () => {
   if (step === 'form') {
     const typeInfo = getCurrentTypeInfo();
     const Icon = typeInfo?.icon || BookOpen;
-    return <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 lg:p-8 mb-4">
-            <div className="flex items-center mb-6">
-              <div className={`w-12 h-12 sm:w-16 sm:h-16 ${typeInfo?.iconBg} rounded-xl sm:rounded-2xl flex items-center justify-center mr-4 sm:mr-6 shadow-lg`}>
-                <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Criar {typeInfo?.title}
-                </h1>
-                <p className="text-sm sm:text-base lg:text-lg text-gray-600 mt-1">
-                  Preencha os detalhes para criar seu {typeInfo?.title.toLowerCase()}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                    T
-                  </div>
-                  <Label className="text-base sm:text-lg font-semibold text-gray-800">Tema da Aula</Label>
+    return (
+      <>
+        <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 lg:p-8 mb-4">
+              <div className="flex items-center mb-6">
+                <div className={`w-12 h-12 sm:w-16 sm:h-16 ${typeInfo?.iconBg} rounded-xl sm:rounded-2xl flex items-center justify-center mr-4 sm:mr-6 shadow-lg`}>
+                  <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
-                <div className="relative">
-                  <Input placeholder="Ex: Introdução à Álgebra Linear" value={formData.topic} onChange={e => setFormData({
-                  ...formData,
-                  topic: e.target.value
-                })} className="pr-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" />
-                  <button className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-2 hover:bg-blue-50 rounded-lg transition-colors">
-                    <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-                  </button>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Criar {typeInfo?.title}
+                  </h1>
+                  <p className="text-sm sm:text-base lg:text-lg text-gray-600 mt-1">
+                    Preencha os detalhes para criar seu {typeInfo?.title.toLowerCase()}
+                  </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 <div>
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                      D
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                      T
                     </div>
-                    <Label className="text-base sm:text-lg font-semibold text-gray-800">Disciplina</Label>
+                    <Label className="text-base sm:text-lg font-semibold text-gray-800">Tema da Aula</Label>
                   </div>
-                  <Select value={formData.subject} onValueChange={value => setFormData({
-                  ...formData,
-                  subject: value
-                })}>
-                    <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white">
-                      <SelectValue placeholder="Selecione uma disciplina" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <div className="grid grid-cols-2 gap-1 p-2">
-                        {subjects.map(subject => <SelectItem key={subject} value={subject.toLowerCase()}>
-                            {subject}
-                          </SelectItem>)}
+                  <div className="relative">
+                    <Input 
+                      placeholder="Ex: Introdução à Álgebra Linear" 
+                      value={formData.topic} 
+                      onChange={e => setFormData({
+                        ...formData,
+                        topic: e.target.value
+                      })} 
+                      className="pr-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
+                    />
+                    <button className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-2 hover:bg-blue-50 rounded-lg transition-colors">
+                      <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                    </button>
+                  </div>
+                  
+                  {/* Componente de correção gramatical */}
+                  {formData.topic && (
+                    <GrammarCorrection
+                      text={formData.topic}
+                      onTextChange={(newText) => setFormData({ ...formData, topic: newText })}
+                      className="mt-3"
+                    />
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                        D
                       </div>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                      A
+                      <Label className="text-base sm:text-lg font-semibold text-gray-800">Disciplina</Label>
                     </div>
-                    <Label className="text-base sm:text-lg font-semibold text-gray-800">Turma (Série/Ano)</Label>
-                  </div>
-                  <Select value={formData.grade} onValueChange={value => setFormData({
-                  ...formData,
-                  grade: value
-                })}>
-                    <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white">
-                      <SelectValue placeholder="Selecione a turma" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {grades.map(category => <div key={category.category}>
-                          <div className="px-3 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg mx-2 mt-2">
-                            {category.category}
-                          </div>
-                          {category.options.map(option => <SelectItem key={`${category.category}-${option}`} value={`${category.category}-${option}`}>
-                              {option}
+                    <Select value={formData.subject} onValueChange={value => setFormData({
+                      ...formData,
+                      subject: value
+                    })}>
+                      <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white">
+                        <SelectValue placeholder="Selecione uma disciplina" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="grid grid-cols-2 gap-1 p-2">
+                          {subjects.map(subject => <SelectItem key={subject} value={subject.toLowerCase()}>
+                              {subject}
                             </SelectItem>)}
-                        </div>)}
-                    </SelectContent>
-                  </Select>
+                        </div>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                        A
+                      </div>
+                      <Label className="text-base sm:text-lg font-semibold text-gray-800">Turma (Série/Ano)</Label>
+                    </div>
+                    <Select value={formData.grade} onValueChange={value => setFormData({
+                      ...formData,
+                      grade: value
+                    })}>
+                      <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white">
+                        <SelectValue placeholder="Selecione a turma" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {grades.map(category => <div key={category.category}>
+                            <div className="px-3 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg mx-2 mt-2">
+                              {category.category}
+                            </div>
+                            {category.options.map(option => <SelectItem key={`${category.category}-${option}`} value={`${category.category}-${option}`}>
+                                {option}
+                              </SelectItem>)}
+                          </div>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-between items-center pt-6 gap-4">
+                  <Button variant="outline" onClick={handleBackToSelection} className="w-full sm:w-auto flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-6 border-2 hover:bg-gray-50 rounded-xl">
+                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="font-semibold">Voltar</span>
+                  </Button>
+
+                  <Button 
+                    onClick={handleFormSubmit} 
+                    disabled={!formData.topic || !formData.subject || !formData.grade} 
+                    className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="font-semibold">Criar {typeInfo?.title}</span>
+                  </Button>
                 </div>
               </div>
+            </div>
 
-              <div className="flex flex-col sm:flex-row justify-between items-center pt-6 gap-4">
-                <Button variant="outline" onClick={handleBackToSelection} className="w-full sm:w-auto flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-6 border-2 hover:bg-gray-50 rounded-xl">
-                  <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="font-semibold">Voltar</span>
-                </Button>
-
-                <Button onClick={handleGenerate} disabled={!formData.topic || !formData.subject || !formData.grade} className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                  <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="font-semibold">Criar {typeInfo?.title}</span>
-                </Button>
+            <div className="text-center">
+              <div className="inline-flex items-center space-x-2 bg-white px-4 py-2 sm:px-6 sm:py-3 rounded-full shadow-md">
+                <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
+                <span className="text-sm sm:text-base text-gray-600 font-medium">Conteúdo alinhado à BNCC</span>
               </div>
             </div>
           </div>
+        </main>
 
-          <div className="text-center">
-            <div className="inline-flex items-center space-x-2 bg-white px-4 py-2 sm:px-6 sm:py-3 rounded-full shadow-md">
-              <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
-              <span className="text-sm sm:text-base text-gray-600 font-medium">Conteúdo alinhado à BNCC</span>
-            </div>
-          </div>
-        </div>
-      </main>;
+        {/* Modal de validação BNCC */}
+        <BNCCValidationModal
+          open={showBNCCValidation}
+          onClose={() => setShowBNCCValidation(false)}
+          tema={formData.topic}
+          disciplina={formData.subject}
+          serie={formData.grade}
+          onAccept={handleBNCCValidationAccept}
+        />
+
+        {/* ... keep existing code (MaterialModal) */}
+      </>
+    );
   }
 
   if (step === 'generating') {
