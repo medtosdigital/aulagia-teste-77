@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
@@ -160,7 +159,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent }) => {
         Use as setas ou clique nos pontos para navegar entre os slides
       </div>
 
-      <style jsx>{`
+      <style>{`
         .slide .table {
           width: 100%;
           margin-top: 20px;
