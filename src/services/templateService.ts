@@ -1,4 +1,3 @@
-
 export interface Template {
   id: string;
   name: string;
@@ -45,6 +44,7 @@ class TemplateService {
               max-width: 800px;
               background: white;
               padding: 2rem;
+              padding-bottom: 4rem;
               box-sizing: border-box;
               position: relative;
               margin: 0 auto;
@@ -121,6 +121,18 @@ class TemplateService {
             .page-break {
               page-break-before: always;
             }
+            .footer {
+              position: absolute;
+              bottom: 2rem;
+              left: 2rem;
+              right: 2rem;
+              text-align: center;
+              font-size: 10pt;
+              color: #6b7280;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 1rem;
+              margin-top: 2rem;
+            }
             @media print {
               body { 
                 margin: 0; 
@@ -136,6 +148,12 @@ class TemplateService {
                 width: 100%;
               }
               .page-break { page-break-before: always; }
+              .footer {
+                position: fixed;
+                bottom: 1.5cm;
+                left: 1.5cm;
+                right: 1.5cm;
+              }
             }
           </style>
         </head>
@@ -216,6 +234,10 @@ class TemplateService {
 
             <div class="section-title">Avaliação</div>
             <p>{{avaliacao}}</p>
+
+            <div class="footer">
+              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
           </div>
         </body>
         </html>
@@ -398,6 +420,7 @@ class TemplateService {
               max-width: 800px;
               background: white;
               padding: 2rem;
+              padding-bottom: 4rem;
               box-sizing: border-box;
               position: relative;
               margin: 0 auto;
@@ -482,6 +505,18 @@ class TemplateService {
               height: 40px;
               margin: 10px 0;
             }
+            .footer {
+              position: absolute;
+              bottom: 2rem;
+              left: 2rem;
+              right: 2rem;
+              text-align: center;
+              font-size: 10pt;
+              color: #6b7280;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 1rem;
+              margin-top: 2rem;
+            }
             @media print {
               body { 
                 margin: 0; 
@@ -495,6 +530,12 @@ class TemplateService {
                 padding: 1.5cm;
                 max-width: none;
                 width: 100%;
+              }
+              .footer {
+                position: fixed;
+                bottom: 1.5cm;
+                left: 1.5cm;
+                right: 1.5cm;
               }
             }
           </style>
@@ -547,6 +588,10 @@ class TemplateService {
               {{/if}}
             </div>
             {{/each}}
+
+            <div class="footer">
+              Atividade gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
           </div>
         </body>
         </html>
@@ -589,6 +634,7 @@ class TemplateService {
               max-width: 800px;
               background: white;
               padding: 2rem;
+              padding-bottom: 4rem;
               box-sizing: border-box;
               position: relative;
               margin: 0 auto;
@@ -668,6 +714,18 @@ class TemplateService {
               margin: 10px 0;
               padding: 10px;
             }
+            .footer {
+              position: absolute;
+              bottom: 2rem;
+              left: 2rem;
+              right: 2rem;
+              text-align: center;
+              font-size: 10pt;
+              color: #6b7280;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 1rem;
+              margin-top: 2rem;
+            }
             @media print {
               body { 
                 margin: 0; 
@@ -681,6 +739,13 @@ class TemplateService {
                 padding: 1.5cm;
                 max-width: none;
                 width: 100%;
+              }
+              .page-break { page-break-before: always; }
+              .footer {
+                position: fixed;
+                bottom: 1.5cm;
+                left: 1.5cm;
+                right: 1.5cm;
               }
             }
           </style>
@@ -727,6 +792,10 @@ class TemplateService {
               {{/if}}
             </div>
             {{/each}}
+
+            <div class="footer">
+              Avaliação gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
           </div>
         </body>
         </html>
