@@ -27,7 +27,7 @@ class ExportService {
           <style>
             @page {
               size: A4;
-              margin: 20mm 0 20mm 0;
+              margin: 15mm 0 15mm 0;
             }
             
             body { 
@@ -176,10 +176,10 @@ class ExportService {
         properties: {
           page: {
             margin: {
-              top: 1134, // 1cm em twips
-              right: 1134, // 1cm em twips  
-              bottom: 1134, // 1cm em twips
-              left: 1134, // 1cm em twips
+              top: 1134,
+              right: 1134,
+              bottom: 1134,
+              left: 1134,
             },
           },
         },
@@ -367,68 +367,6 @@ class ExportService {
       'avaliacao': 'Avaliação'
     };
     return labels[type as keyof typeof labels] || type;
-  }
-
-  async exportToWord(material: GeneratedMaterial): Promise<void> {
-    let children: any[] = [];
-
-    children.push(
-      new Paragraph({
-        children: [new TextRun({ text: material.title, bold: true, size: 32 })],
-        heading: HeadingLevel.TITLE,
-        alignment: AlignmentType.CENTER,
-      })
-    );
-
-    children.push(
-      new Paragraph({
-        children: [new TextRun(`${this.getTypeLabel(material.type)} • ${material.subject} • ${material.grade}`)],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 400 }
-      })
-    );
-
-    switch (material.type) {
-      case 'plano-de-aula':
-        children = [...children, ...this.getLessonPlanWordContent(material.content as LessonPlan)];
-        break;
-      case 'slides':
-        children = [...children, ...this.getSlidesWordContent(material.content as Slide[])];
-        break;
-      case 'atividade':
-        children = [...children, ...this.getActivityWordContent(material.content as Activity)];
-        break;
-      case 'avaliacao':
-        children = [...children, ...this.getAssessmentWordContent(material.content as Assessment)];
-        break;
-    }
-
-    const doc = new Document({
-      sections: [{
-        properties: {
-          page: {
-            margin: {
-              top: 1134,
-              right: 1134,
-              bottom: 1134,
-              left: 1134,
-            },
-          },
-        },
-        children: children
-      }]
-    });
-
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${material.title}.docx`);
-  }
-
-  async exportToPPT(material: GeneratedMaterial): Promise<void> {
-    if (material.type !== 'slides') {
-      throw new Error('Exportação PPT disponível apenas para slides');
-    }
-
-    await this.exportSlidesToPDF(material);
   }
 }
 
