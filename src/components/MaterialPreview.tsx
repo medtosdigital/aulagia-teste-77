@@ -56,7 +56,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           justify-content: center;
           align-items: flex-start;
           min-height: 100vh;
-          padding: 0;
+          padding: 20px 0;
           margin: 0;
         }
         
@@ -86,7 +86,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         /* Responsividade para mobile */
         @media (max-width: 768px) {
           .material-preview-container {
-            padding: 0;
+            padding: 10px;
           }
           
           .material-preview-container .a4-page {
