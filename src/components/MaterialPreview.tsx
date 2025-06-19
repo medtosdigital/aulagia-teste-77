@@ -56,7 +56,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           justify-content: center;
           align-items: flex-start;
           min-height: 100vh;
-          padding: 0;
+          padding: 20px 0;
         }
         
         .material-preview-container .a4-page {
@@ -64,7 +64,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           min-height: 297mm;
           max-width: 210mm;
           background: white;
-          margin: 0 auto;
+          margin: 0 auto 20mm auto;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           font-size: 12pt;
           line-height: 1.5;
@@ -76,6 +76,12 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           border-radius: 12px;
           border: 1px solid rgba(0, 0, 0, 0.05);
           overflow: hidden;
+          page-break-after: always;
+        }
+
+        .material-preview-container .a4-page:last-child {
+          margin-bottom: 0;
+          page-break-after: avoid;
         }
         
         /* Responsividade para mobile */
@@ -88,7 +94,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             width: 100%;
             max-width: 100%;
             min-height: auto;
-            margin: 0;
+            margin: 0 0 1rem 0;
             border-radius: 8px;
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
           }
@@ -117,6 +123,11 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             width: 100% !important;
             max-width: none !important;
             min-height: 100vh !important;
+            page-break-after: always;
+          }
+
+          .material-preview-container .a4-page:last-child {
+            page-break-after: avoid;
           }
         }
       `}</style>

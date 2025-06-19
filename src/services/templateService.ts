@@ -25,7 +25,7 @@ class TemplateService {
             /* Define página A4 para impressão e visualização */
             @page {
               size: A4;
-              margin: 0;
+              margin: 15mm;
             }
             body {
               margin: 0;
@@ -54,12 +54,12 @@ class TemplateService {
               opacity: 0.25;
               pointer-events: none;
             }
-            .shape-circle.purple {
+            .shape-circle.blue {
               width: 180px; height: 180px;
-              background: #a78bfa;
+              background: #3b82f6;
               top: -60px; left: -40px;
             }
-            .shape-circle.blue {
+            .shape-circle.light-blue {
               width: 240px; height: 240px;
               background: #60a5fa;
               bottom: -80px; right: -60px;
@@ -68,14 +68,14 @@ class TemplateService {
               position: relative;
               width: 100%;
               min-height: 297mm;
-              padding: 10mm 15mm 15mm 15mm;
+              padding: 15mm;
               box-sizing: border-box;
               z-index: 1;
             }
             /* Cabeçalho */
             .header {
               position: absolute;
-              top: 10mm;
+              top: 15mm;
               left: 15mm;
               display: flex;
               align-items: center;
@@ -84,24 +84,24 @@ class TemplateService {
             .header .logo {
               width: 40px;
               height: 40px;
-              background: #6b21a8;
+              background: #3b82f6;
               border-radius: 8px;
-              margin-right: 12px;
+              margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 16px;
+              font-size: 14px;
             }
             .header .texts h1 {
               font-size: 1.4rem;
-              color: #6b21a8;
+              color: #3b82f6;
               margin: 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             .header .texts p {
-              font-size: 0.8rem;
+              font-size: 0.75rem;
               color: #374151;
               margin: 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -116,7 +116,7 @@ class TemplateService {
               text-align: center;
               margin: 10px 0 18px;
               font-size: 1.5rem;
-              color: #4f46e5;
+              color: #1e40af;
               position: relative;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
@@ -124,7 +124,7 @@ class TemplateService {
               content: '';
               width: 50px;
               height: 3px;
-              background: #a78bfa;
+              background: #60a5fa;
               display: block;
               margin: 6px auto 0;
               border-radius: 2px;
@@ -156,7 +156,7 @@ class TemplateService {
               margin-top: 20px;
               margin-bottom: 10px;
               font-size: 1.1rem;
-              color: #4338ca;
+              color: #1e40af;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               page-break-after: avoid;
             }
@@ -181,7 +181,7 @@ class TemplateService {
             /* Rodapé */
             footer {
               position: fixed;
-              bottom: 10mm;
+              bottom: 15mm;
               left: 15mm;
               right: 15mm;
               text-align: center;
@@ -216,16 +216,16 @@ class TemplateService {
                 page-break-after: always;
               }
               .container {
-                padding: 10mm 15mm 15mm 15mm;
+                padding: 15mm;
               }
               .header {
                 position: fixed;
-                top: 10mm;
+                top: 15mm;
                 left: 15mm;
               }
               footer {
                 position: fixed;
-                bottom: 10mm;
+                bottom: 15mm;
                 left: 15mm;
                 right: 15mm;
               }
@@ -238,12 +238,12 @@ class TemplateService {
         <body>
           <div class="page">
             <!-- Formas decorativas -->
-            <div class="shape-circle purple"></div>
             <div class="shape-circle blue"></div>
+            <div class="shape-circle light-blue"></div>
 
             <!-- Cabeçalho com logo fixo -->
             <div class="header">
-              <div class="logo">A</div>
+              <div class="logo">📖</div>
               <div class="texts">
                 <h1>AulagIA</h1>
                 <p>Sua aula com toque mágico</p>
@@ -500,7 +500,7 @@ class TemplateService {
           <style>
             @page {
               size: A4;
-              margin: 0;
+              margin: 15mm;
             }
             body {
               margin: 0;
@@ -519,7 +519,7 @@ class TemplateService {
               width: 100%;
               max-width: 800px;
               background: white;
-              padding: 10mm 15mm 15mm 15mm;
+              padding: 15mm;
               box-sizing: border-box;
               position: relative;
               margin: 0 auto;
@@ -538,7 +538,7 @@ class TemplateService {
             /* Cabeçalho */
             .header {
               position: absolute;
-              top: 10mm;
+              top: 15mm;
               left: 15mm;
               display: flex;
               align-items: center;
@@ -549,13 +549,13 @@ class TemplateService {
               height: 40px;
               background: #10b981;
               border-radius: 8px;
-              margin-right: 12px;
+              margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 16px;
+              font-size: 14px;
             }
             .header .texts h1 {
               font-size: 1.4rem;
@@ -563,7 +563,7 @@ class TemplateService {
               margin: 0;
             }
             .header .texts p {
-              font-size: 0.8rem;
+              font-size: 0.75rem;
               color: #374151;
               margin: 0;
             }
@@ -644,7 +644,7 @@ class TemplateService {
             }
             .footer {
               position: fixed;
-              bottom: 10mm;
+              bottom: 15mm;
               left: 15mm;
               right: 15mm;
               text-align: center;
@@ -664,18 +664,18 @@ class TemplateService {
               .page { 
                 box-shadow: none; 
                 margin: 0; 
-                padding: 10mm 15mm 15mm 15mm;
+                padding: 15mm;
                 max-width: none;
                 width: 100%;
               }
               .header {
                 position: fixed;
-                top: 10mm;
+                top: 15mm;
                 left: 15mm;
               }
               .footer {
                 position: fixed;
-                bottom: 10mm;
+                bottom: 15mm;
                 left: 15mm;
                 right: 15mm;
               }
@@ -691,7 +691,7 @@ class TemplateService {
 
             <!-- Cabeçalho com logo fixo -->
             <div class="header">
-              <div class="logo">A</div>
+              <div class="logo">📖</div>
               <div class="texts">
                 <h1>AulagIA</h1>
                 <p>Sua aula com toque mágico</p>
@@ -770,7 +770,7 @@ class TemplateService {
           <style>
             @page {
               size: A4;
-              margin: 0;
+              margin: 15mm;
             }
             body {
               margin: 0;
@@ -789,7 +789,7 @@ class TemplateService {
               width: 100%;
               max-width: 800px;
               background: white;
-              padding: 10mm 15mm 15mm 15mm;
+              padding: 15mm;
               box-sizing: border-box;
               position: relative;
               margin: 0 auto;
@@ -797,7 +797,7 @@ class TemplateService {
             /* Cabeçalho */
             .header {
               position: absolute;
-              top: 10mm;
+              top: 15mm;
               left: 15mm;
               display: flex;
               align-items: center;
@@ -808,13 +808,13 @@ class TemplateService {
               height: 40px;
               background: #dc2626;
               border-radius: 8px;
-              margin-right: 12px;
+              margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 16px;
+              font-size: 14px;
             }
             .header .texts h1 {
               font-size: 1.4rem;
@@ -822,7 +822,7 @@ class TemplateService {
               margin: 0;
             }
             .header .texts p {
-              font-size: 0.8rem;
+              font-size: 0.75rem;
               color: #374151;
               margin: 0;
             }
@@ -909,7 +909,7 @@ class TemplateService {
             }
             .footer {
               position: fixed;
-              bottom: 10mm;
+              bottom: 15mm;
               left: 15mm;
               right: 15mm;
               text-align: center;
@@ -929,19 +929,19 @@ class TemplateService {
               .page { 
                 box-shadow: none; 
                 margin: 0; 
-                padding: 10mm 15mm 15mm 15mm;
+                padding: 15mm;
                 max-width: none;
                 width: 100%;
               }
               .header {
                 position: fixed;
-                top: 10mm;
+                top: 15mm;
                 left: 15mm;
               }
               .page-break { page-break-before: always; }
               .footer {
                 position: fixed;
-                bottom: 10mm;
+                bottom: 15mm;
                 left: 15mm;
                 right: 15mm;
               }
@@ -955,7 +955,7 @@ class TemplateService {
           <div class="page">
             <!-- Cabeçalho com logo fixo -->
             <div class="header">
-              <div class="logo">A</div>
+              <div class="logo">📖</div>
               <div class="texts">
                 <h1>AulagIA</h1>
                 <p>Sua aula com toque mágico</p>
