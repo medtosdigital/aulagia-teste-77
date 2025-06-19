@@ -64,7 +64,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           min-height: 297mm;
           max-width: 210mm;
           background: white;
-          margin: 0 auto 20mm auto;
+          margin: 0 auto;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           font-size: 12pt;
           line-height: 1.5;
