@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain } from 'lucide-react';
@@ -186,18 +187,18 @@ const CreateLesson: React.FC = () => {
               {materialTypes.map(type => {
               const Icon = type.icon;
               return <Card key={type.id} className={`cursor-pointer border-2 border-transparent transition-all duration-300 ${type.bgGradient} ${type.hoverEffect} shadow-lg hover:shadow-xl`} onClick={() => handleTypeSelection(type.id)}>
-                    <CardContent className="p-3 sm:p-4">
+                    <CardContent className="p-3 sm:p-4 relative">
                       <div className="flex items-start space-x-3 sm:space-x-4">
                         <div className={`w-10 h-10 sm:w-12 sm:h-12 ${type.iconBg} rounded-xl flex items-center justify-center shadow-md transform transition-transform hover:scale-110`}>
                           <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 pr-8">
                           <h3 className={`text-base sm:text-lg font-bold ${type.color} mb-1`}>{type.title}</h3>
-                          <p className="text-sm text-gray-600 leading-relaxed">{type.description}</p>
+                          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{type.description}</p>
                         </div>
                       </div>
-                      <div className="mt-3 flex justify-end">
-                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm">
+                      <div className="absolute top-3 right-3">
+                        <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm">
                           <ArrowLeft className="w-3 h-3 text-gray-400 rotate-180" />
                         </div>
                       </div>
