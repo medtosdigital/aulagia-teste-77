@@ -7,6 +7,8 @@ export interface GeneratedMaterial {
   content: any;
   createdAt: string;
   formData: any;
+  subject: string;
+  grade: string;
 }
 
 export interface LessonPlan {
@@ -90,10 +92,12 @@ class MaterialService {
     const material: GeneratedMaterial = {
       id: Date.now().toString(),
       type: type as any,
-      title: `${type.charAt(0).toUpperCase() + type.slice(1)} - ${formData.tema}`,
+      title: `${type.charAt(0).toUpperCase() + type.slice(1)} - ${formData.tema || formData.topic}`,
       content,
       createdAt: new Date().toISOString(),
-      formData
+      formData,
+      subject: formData.disciplina || formData.subject,
+      grade: formData.serie || formData.grade
     };
 
     this.materials.push(material);

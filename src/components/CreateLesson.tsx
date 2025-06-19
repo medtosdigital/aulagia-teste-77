@@ -121,8 +121,17 @@ const CreateLesson: React.FC = () => {
     }, 300);
 
     try {
-      // Generate material using the service
-      const material = await materialService.generateMaterial(selectedType!, formData.topic, formData.subject, formData.grade);
+      // Generate material using the service with the correct form data structure
+      const materialFormData = {
+        tema: formData.topic,
+        topic: formData.topic,
+        disciplina: formData.subject,
+        subject: formData.subject,
+        serie: formData.grade,
+        grade: formData.grade
+      };
+      
+      const material = await materialService.generateMaterial(selectedType!, materialFormData);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       setTimeout(() => {
