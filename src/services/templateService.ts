@@ -43,6 +43,9 @@ class TemplateService {
               margin: 0;
               page-break-after: always;
             }
+            .page:last-child {
+              page-break-after: avoid;
+            }
             /* Formas decorativas dentro da página */
             .shape-circle {
               position: fixed;
@@ -65,7 +68,7 @@ class TemplateService {
               position: relative;
               width: 100%;
               min-height: 297mm;
-              padding: 40mm 15mm 30mm 15mm;
+              padding: 25mm 15mm 25mm 15mm;
               box-sizing: border-box;
               z-index: 1;
             }
@@ -78,33 +81,32 @@ class TemplateService {
               display: flex;
               align-items: center;
               z-index: 10;
-              padding: 8mm 15mm;
-              background: white;
-              border-bottom: 1px solid #e5e7eb;
+              padding: 5mm 15mm;
+              background: transparent;
             }
             .header .logo {
-              width: 30px;
-              height: 30px;
+              width: 25px;
+              height: 25px;
               background: #3b82f6;
               border-radius: 6px;
-              margin-right: 10px;
+              margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 14px;
+              font-size: 12px;
               flex-shrink: 0;
             }
             .header .texts h1 {
-              font-size: 1.1rem;
+              font-size: 0.9rem;
               color: #3b82f6;
               margin: 0 0 1px 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               line-height: 1.1;
             }
             .header .texts p {
-              font-size: 0.6rem;
+              font-size: 0.5rem;
               color: #374151;
               margin: 0;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -189,10 +191,11 @@ class TemplateService {
               left: 0;
               right: 0;
               text-align: center;
-              font-size: 0.65rem;
+              font-size: 0.6rem;
               color: #6b7280;
-              padding: 4mm 15mm;
+              padding: 3mm 15mm;
               z-index: 10;
+              background: transparent;
             }
             /* Quebras de página */
             .page-break {
@@ -216,15 +219,18 @@ class TemplateService {
                 padding: 0;
                 page-break-after: always;
               }
+              .page:last-child {
+                page-break-after: avoid;
+              }
               .container {
-                padding: 40mm 15mm 30mm 15mm;
+                padding: 25mm 15mm 25mm 15mm;
               }
               .header {
                 position: fixed;
                 top: 0;
                 left: 0;
                 right: 0;
-                background: white;
+                background: transparent;
               }
               .footer {
                 position: fixed;
@@ -529,6 +535,9 @@ class TemplateService {
               position: relative;
               page-break-after: always;
             }
+            .page:last-child {
+              page-break-after: avoid;
+            }
             .shape-circle {
               position: fixed;
               border-radius: 50%;
@@ -545,7 +554,7 @@ class TemplateService {
               position: relative;
               width: 100%;
               min-height: 297mm;
-              padding: 40mm 15mm 30mm 15mm;
+              padding: 25mm 15mm 25mm 15mm;
               box-sizing: border-box;
               z-index: 1;
             }
@@ -558,32 +567,31 @@ class TemplateService {
               display: flex;
               align-items: center;
               z-index: 10;
-              padding: 8mm 15mm;
-              background: white;
-              border-bottom: 1px solid #e5e7eb;
+              padding: 5mm 15mm;
+              background: transparent;
             }
             .header .logo {
-              width: 30px;
-              height: 30px;
+              width: 25px;
+              height: 25px;
               background: #10b981;
               border-radius: 6px;
-              margin-right: 10px;
+              margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 14px;
+              font-size: 12px;
               flex-shrink: 0;
             }
             .header .texts h1 {
-              font-size: 1.1rem;
+              font-size: 0.9rem;
               color: #10b981;
               margin: 0 0 1px 0;
               line-height: 1.1;
             }
             .header .texts p {
-              font-size: 0.6rem;
+              font-size: 0.5rem;
               color: #374151;
               margin: 0;
               line-height: 1.1;
@@ -664,10 +672,11 @@ class TemplateService {
               left: 0;
               right: 0;
               text-align: center;
-              font-size: 0.65rem;
+              font-size: 0.6rem;
               color: #6b7280;
-              padding: 4mm 15mm;
+              padding: 3mm 15mm;
               z-index: 10;
+              background: transparent;
             }
             @media print {
               body { 
@@ -683,15 +692,18 @@ class TemplateService {
                 width: 100%;
                 border-radius: 0;
               }
+              .page:last-child {
+                page-break-after: avoid;
+              }
               .container {
-                padding: 40mm 15mm 30mm 15mm;
+                padding: 25mm 15mm 25mm 15mm;
               }
               .header {
                 position: fixed;
                 top: 0;
                 left: 0;
                 right: 0;
-                background: white;
+                background: transparent;
               }
               .footer {
                 position: fixed;
@@ -818,11 +830,14 @@ class TemplateService {
               position: relative;
               page-break-after: always;
             }
+            .page:last-child {
+              page-break-after: avoid;
+            }
             .container {
               position: relative;
               width: 100%;
               min-height: 297mm;
-              padding: 40mm 15mm 30mm 15mm;
+              padding: 25mm 15mm 25mm 15mm;
               box-sizing: border-box;
               z-index: 1;
             }
@@ -835,32 +850,31 @@ class TemplateService {
               display: flex;
               align-items: center;
               z-index: 10;
-              padding: 8mm 15mm;
-              background: white;
-              border-bottom: 1px solid #e5e7eb;
+              padding: 5mm 15mm;
+              background: transparent;
             }
             .header .logo {
-              width: 30px;
-              height: 30px;
+              width: 25px;
+              height: 25px;
               background: #dc2626;
               border-radius: 6px;
-              margin-right: 10px;
+              margin-right: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: 14px;
+              font-size: 12px;
               flex-shrink: 0;
             }
             .header .texts h1 {
-              font-size: 1.1rem;
+              font-size: 0.9rem;
               color: #dc2626;
               margin: 0 0 1px 0;
               line-height: 1.1;
             }
             .header .texts p {
-              font-size: 0.6rem;
+              font-size: 0.5rem;
               color: #374151;
               margin: 0;
               line-height: 1.1;
@@ -952,10 +966,11 @@ class TemplateService {
               left: 0;
               right: 0;
               text-align: center;
-              font-size: 0.65rem;
+              font-size: 0.6rem;
               color: #6b7280;
-              padding: 4mm 15mm;
+              padding: 3mm 15mm;
               z-index: 10;
+              background: transparent;
             }
             @media print {
               body { 
@@ -971,15 +986,18 @@ class TemplateService {
                 width: 100%;
                 border-radius: 0;
               }
+              .page:last-child {
+                page-break-after: avoid;
+              }
               .container {
-                padding: 40mm 15mm 30mm 15mm;
+                padding: 25mm 15mm 25mm 15mm;
               }
               .header {
                 position: fixed;
                 top: 0;
                 left: 0;
                 right: 0;
-                background: white;
+                background: transparent;
               }
               .page-break { page-break-before: always; }
               .footer {
