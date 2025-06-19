@@ -20,20 +20,20 @@ class TemplateService {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-          <title>Plano de Aula – Aula Mágica</title>
+          <title>Plano de Aula – AulagIA</title>
           <style>
             /* Define página A4 para impressão e visualização */
             @page {
               size: A4;
-              margin: 15mm 0 15mm 0;
+              margin: 0;
             }
             body {
               margin: 0;
               padding: 0;
-              background: #f0f4f8;
+              background: white;
               display: flex;
               justify-content: center;
-              align-items: center;
+              align-items: flex-start;
               min-height: 100vh;
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
@@ -43,10 +43,9 @@ class TemplateService {
               width: 210mm;
               min-height: 297mm;
               background: white;
-              border-radius: 6px;
               overflow: hidden;
-              box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-              margin: 20px 0;
+              margin: 0;
+              page-break-after: always;
             }
             /* Formas decorativas dentro da página */
             .shape-circle {
@@ -69,14 +68,14 @@ class TemplateService {
               position: relative;
               width: 100%;
               min-height: 297mm;
-              padding: 15mm 15mm 25mm 15mm;
+              padding: 10mm 15mm 15mm 15mm;
               box-sizing: border-box;
               z-index: 1;
             }
             /* Cabeçalho */
             .header {
               position: absolute;
-              top: 15mm;
+              top: 10mm;
               left: 15mm;
               display: flex;
               align-items: center;
@@ -99,15 +98,18 @@ class TemplateService {
               font-size: 1.4rem;
               color: #6b21a8;
               margin: 0;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             .header .texts p {
               font-size: 0.8rem;
               color: #374151;
               margin: 0;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             /* Conteúdo principal */
             .content {
-              margin-top: 70px;
+              margin-top: 60px;
+              padding-bottom: 40mm;
             }
             /* Título principal */
             h2 {
@@ -116,6 +118,7 @@ class TemplateService {
               font-size: 1.5rem;
               color: #4f46e5;
               position: relative;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             h2::after {
               content: '';
@@ -131,11 +134,13 @@ class TemplateService {
               width: 100%;
               border-collapse: collapse;
               margin-bottom: 18px;
+              page-break-inside: avoid;
             }
             th, td {
-              padding: 6px 10px;
-              font-size: 0.85rem;
+              padding: 8px 12px;
+              font-size: 0.9rem;
               border: 1px solid #e5e7eb;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             th {
               background: #f3f4f6;
@@ -148,36 +153,51 @@ class TemplateService {
             /* Seções e listas */
             .section-title {
               font-weight: 600;
-              margin-top: 18px;
-              margin-bottom: 8px;
-              font-size: 1.0rem;
+              margin-top: 20px;
+              margin-bottom: 10px;
+              font-size: 1.1rem;
               color: #4338ca;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              page-break-after: avoid;
             }
             ul {
               list-style: disc inside;
-              margin-bottom: 16px;
-              line-height: 1.4;
-              font-size: 0.9rem;
+              margin-bottom: 18px;
+              line-height: 1.5;
+              font-size: 0.95rem;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              page-break-inside: avoid;
             }
             li {
-              margin-bottom: 4px;
+              margin-bottom: 6px;
+              page-break-inside: avoid;
             }
             p {
-              font-size: 0.9rem;
-              line-height: 1.4;
-              margin-bottom: 12px;
+              font-size: 0.95rem;
+              line-height: 1.5;
+              margin-bottom: 14px;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             /* Rodapé */
             footer {
-              position: absolute;
-              bottom: 15mm;
+              position: fixed;
+              bottom: 10mm;
               left: 15mm;
               right: 15mm;
               text-align: center;
               font-size: 0.7rem;
               color: #6b7280;
               border-top: 1px solid #e5e7eb;
-              padding-top: 4px;
+              padding-top: 8px;
+              background: white;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+            /* Quebras de página */
+            .page-break {
+              page-break-before: always;
+            }
+            .avoid-break {
+              page-break-inside: avoid;
             }
             @media print {
               body { 
@@ -193,20 +213,24 @@ class TemplateService {
                 width: 100%;
                 min-height: 100vh;
                 padding: 0;
+                page-break-after: always;
               }
               .container {
-                padding: 15mm 15mm 25mm 15mm;
+                padding: 10mm 15mm 15mm 15mm;
               }
               .header {
                 position: fixed;
-                top: 15mm;
+                top: 10mm;
                 left: 15mm;
               }
               footer {
                 position: fixed;
-                bottom: 15mm;
+                bottom: 10mm;
                 left: 15mm;
                 right: 15mm;
+              }
+              .content {
+                padding-bottom: 30mm;
               }
             }
           </style>
@@ -232,7 +256,7 @@ class TemplateService {
                 <h2>PLANO DE AULA</h2>
 
                 <!-- Informações básicas -->
-                <table>
+                <table class="avoid-break">
                   <tr>
                     <th>Professor(a):</th>
                     <td>{{professor}}</td>
@@ -259,7 +283,7 @@ class TemplateService {
 
                 <!-- Objetivos de Aprendizagem -->
                 <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
-                <ul>
+                <ul class="avoid-break">
                   {{#each objetivos}}
                   <li>{{this}}</li>
                   {{/each}}
@@ -267,7 +291,7 @@ class TemplateService {
 
                 <!-- Habilidades BNCC -->
                 <div class="section-title">HABILIDADES BNCC</div>
-                <ul>
+                <ul class="avoid-break">
                   {{#each habilidades}}
                   <li>{{this}}</li>
                   {{/each}}
@@ -275,7 +299,7 @@ class TemplateService {
 
                 <!-- Desenvolvimento Metodológico -->
                 <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
-                <table>
+                <table class="avoid-break">
                   <thead>
                     <tr>
                       <th>Etapa</th>
@@ -298,7 +322,7 @@ class TemplateService {
 
                 <!-- Recursos Didáticos -->
                 <div class="section-title">RECURSOS DIDÁTICOS</div>
-                <ul>
+                <ul class="avoid-break">
                   {{#each recursos}}
                   <li>{{this}}</li>
                   {{/each}}
@@ -306,7 +330,7 @@ class TemplateService {
 
                 <!-- Avaliação -->
                 <div class="section-title">AVALIAÇÃO</div>
-                <p>{{avaliacao}}</p>
+                <p class="avoid-break">{{avaliacao}}</p>
               </div>
             </div>
 
@@ -476,12 +500,12 @@ class TemplateService {
           <style>
             @page {
               size: A4;
-              margin: 15mm 0 15mm 0;
+              margin: 0;
             }
             body {
               margin: 0;
               padding: 0;
-              font-family: 'Times New Roman', serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               font-size: 12pt;
               line-height: 1.5;
               color: #000;
@@ -495,7 +519,7 @@ class TemplateService {
               width: 100%;
               max-width: 800px;
               background: white;
-              padding: 15mm 15mm 25mm 15mm;
+              padding: 10mm 15mm 15mm 15mm;
               box-sizing: border-box;
               position: relative;
               margin: 0 auto;
@@ -514,7 +538,7 @@ class TemplateService {
             /* Cabeçalho */
             .header {
               position: absolute;
-              top: 15mm;
+              top: 10mm;
               left: 15mm;
               display: flex;
               align-items: center;
@@ -544,7 +568,8 @@ class TemplateService {
               margin: 0;
             }
             .content {
-              margin-top: 70px;
+              margin-top: 60px;
+              padding-bottom: 30mm;
             }
             h1 {
               text-align: center;
@@ -558,6 +583,7 @@ class TemplateService {
               width: 100%;
               border-collapse: collapse;
               margin-bottom: 30px;
+              page-break-inside: avoid;
             }
             .header-table th {
               background: #10b981;
@@ -581,6 +607,7 @@ class TemplateService {
               border-left: 4px solid #10b981;
               margin-bottom: 30px;
               font-style: italic;
+              page-break-inside: avoid;
             }
             .question {
               margin-bottom: 30px;
@@ -616,16 +643,16 @@ class TemplateService {
               margin: 10px 0;
             }
             .footer {
-              position: absolute;
-              bottom: 15mm;
+              position: fixed;
+              bottom: 10mm;
               left: 15mm;
               right: 15mm;
               text-align: center;
               font-size: 10pt;
               color: #6b7280;
               border-top: 1px solid #e5e7eb;
-              padding-top: 1rem;
-              margin-top: 2rem;
+              padding-top: 8px;
+              background: white;
             }
             @media print {
               body { 
@@ -637,20 +664,23 @@ class TemplateService {
               .page { 
                 box-shadow: none; 
                 margin: 0; 
-                padding: 15mm 15mm 25mm 15mm;
+                padding: 10mm 15mm 15mm 15mm;
                 max-width: none;
                 width: 100%;
               }
               .header {
                 position: fixed;
-                top: 15mm;
+                top: 10mm;
                 left: 15mm;
               }
               .footer {
                 position: fixed;
-                bottom: 15mm;
+                bottom: 10mm;
                 left: 15mm;
                 right: 15mm;
+              }
+              .content {
+                padding-bottom: 25mm;
               }
             }
           </style>
@@ -740,12 +770,12 @@ class TemplateService {
           <style>
             @page {
               size: A4;
-              margin: 15mm 0 15mm 0;
+              margin: 0;
             }
             body {
               margin: 0;
               padding: 0;
-              font-family: 'Times New Roman', serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               font-size: 12pt;
               line-height: 1.5;
               color: #000;
@@ -759,7 +789,7 @@ class TemplateService {
               width: 100%;
               max-width: 800px;
               background: white;
-              padding: 15mm 15mm 25mm 15mm;
+              padding: 10mm 15mm 15mm 15mm;
               box-sizing: border-box;
               position: relative;
               margin: 0 auto;
@@ -767,7 +797,7 @@ class TemplateService {
             /* Cabeçalho */
             .header {
               position: absolute;
-              top: 15mm;
+              top: 10mm;
               left: 15mm;
               display: flex;
               align-items: center;
@@ -797,7 +827,8 @@ class TemplateService {
               margin: 0;
             }
             .content {
-              margin-top: 70px;
+              margin-top: 60px;
+              padding-bottom: 30mm;
             }
             h1 {
               text-align: center;
@@ -811,6 +842,7 @@ class TemplateService {
               width: 100%;
               border-collapse: collapse;
               margin-bottom: 30px;
+              page-break-inside: avoid;
             }
             .header-table th {
               background: #dc2626;
@@ -828,6 +860,7 @@ class TemplateService {
               padding: 15px;
               border-left: 4px solid #dc2626;
               margin-bottom: 30px;
+              page-break-inside: avoid;
             }
             .question {
               margin-bottom: 30px;
@@ -875,16 +908,16 @@ class TemplateService {
               padding: 10px;
             }
             .footer {
-              position: absolute;
-              bottom: 15mm;
+              position: fixed;
+              bottom: 10mm;
               left: 15mm;
               right: 15mm;
               text-align: center;
               font-size: 10pt;
               color: #6b7280;
               border-top: 1px solid #e5e7eb;
-              padding-top: 1rem;
-              margin-top: 2rem;
+              padding-top: 8px;
+              background: white;
             }
             @media print {
               body { 
@@ -896,21 +929,24 @@ class TemplateService {
               .page { 
                 box-shadow: none; 
                 margin: 0; 
-                padding: 15mm 15mm 25mm 15mm;
+                padding: 10mm 15mm 15mm 15mm;
                 max-width: none;
                 width: 100%;
               }
               .header {
                 position: fixed;
-                top: 15mm;
+                top: 10mm;
                 left: 15mm;
               }
               .page-break { page-break-before: always; }
               .footer {
                 position: fixed;
-                bottom: 15mm;
+                bottom: 10mm;
                 left: 15mm;
                 right: 15mm;
+              }
+              .content {
+                padding-bottom: 25mm;
               }
             }
           </style>

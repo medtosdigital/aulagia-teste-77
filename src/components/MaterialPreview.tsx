@@ -49,14 +49,14 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
   };
 
   return (
-    <div className="material-preview-container w-full h-full overflow-auto bg-gray-50 flex justify-center items-start py-4">
+    <div className="material-preview-container w-full h-full overflow-auto bg-gray-50 flex justify-center items-start">
       <style>{`
         .material-preview-container {
           display: flex;
           justify-content: center;
           align-items: flex-start;
           min-height: 100vh;
-          padding: 20px 10px;
+          padding: 0;
         }
         
         .material-preview-container .a4-page {
@@ -65,7 +65,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           max-width: 210mm;
           background: white;
           margin: 0 auto;
-          font-family: 'Times New Roman', serif;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           font-size: 12pt;
           line-height: 1.5;
           color: #333;

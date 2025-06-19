@@ -26,13 +26,13 @@ class ExportService {
           <style>
             @page {
               size: A4;
-              margin: 15mm 0 15mm 0;
+              margin: 0;
             }
             
             body { 
               margin: 0; 
               padding: 0; 
-              font-family: 'Times New Roman', serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               background: white;
               width: 100%;
               height: 100vh;
@@ -174,9 +174,9 @@ class ExportService {
         properties: {
           page: {
             margin: {
-              top: 1134, // 1cm em twips
+              top: 567, // 0.5cm em twips
               right: 1134, // 1cm em twips  
-              bottom: 1134, // 1cm em twips
+              bottom: 567, // 0.5cm em twips
               left: 1134, // 1cm em twips
             },
           },
