@@ -23,6 +23,8 @@ class TemplateService {
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
           <title>Plano de Aula – AulagIA</title>
           <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            
             /* Define página A4 para impressão e visualização */
             @page {
               size: A4;
@@ -32,7 +34,7 @@ class TemplateService {
               margin: 0;
               padding: 0;
               background: white;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              font-family: 'Inter', sans-serif;
             }
             /* Container no tamanho A4 */
             .page {
@@ -58,49 +60,60 @@ class TemplateService {
               display: flex;
               align-items: center;
               z-index: 999;
-              height: 12mm;
+              height: 15mm;
               background: white;
               padding: 0 15mm;
             }
+            .header .logo-container {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+            }
             .header .logo {
-              width: 32px;
-              height: 32px;
+              width: 40px;
+              height: 40px;
               background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-              border-radius: 6px;
-              margin-right: 12px;
+              border-radius: 8px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               flex-shrink: 0;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
             }
             .header .logo svg {
-              width: 18px;
-              height: 18px;
+              width: 20px;
+              height: 20px;
               stroke: white;
               fill: none;
               stroke-width: 2;
             }
-            .header .texts h1 {
-              font-size: 1.2rem;
-              color: #0ea5e9;
-              margin: 0 0 2px 0;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              line-height: 1.1;
-              font-weight: 600;
+            .header .brand-text {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
             }
-            .header .texts p {
-              font-size: 0.7rem;
-              color: #6b7280;
+            .header .brand-text h1 {
+              font-size: 24px;
+              color: #0ea5e9;
               margin: 0;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              line-height: 1.1;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 700;
+              letter-spacing: -0.5px;
+            }
+            .header .brand-text p {
+              font-size: 11px;
+              color: #6b7280;
+              margin: 2px 0 0 0;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 400;
             }
             /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
-              margin-top: 25mm;
-              margin-bottom: 15mm;
+              margin-top: 28mm;
+              margin-bottom: 20mm;
               padding: 0 15mm;
               position: relative;
             }
@@ -111,7 +124,7 @@ class TemplateService {
               font-size: 1.5rem;
               color: #1e40af;
               position: relative;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              font-family: 'Inter', sans-serif;
             }
             h2::after {
               content: '';
@@ -133,7 +146,7 @@ class TemplateService {
               padding: 8px 12px;
               font-size: 0.9rem;
               border: 1px solid #e5e7eb;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              font-family: 'Inter', sans-serif;
             }
             th {
               background: #f3f4f6;
@@ -150,7 +163,7 @@ class TemplateService {
               margin-bottom: 10px;
               font-size: 1.1rem;
               color: #1e40af;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              font-family: 'Inter', sans-serif;
               page-break-after: avoid;
             }
             ul {
@@ -158,7 +171,7 @@ class TemplateService {
               margin-bottom: 18px;
               line-height: 1.5;
               font-size: 0.95rem;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              font-family: 'Inter', sans-serif;
               page-break-inside: avoid;
             }
             li {
@@ -169,7 +182,7 @@ class TemplateService {
               font-size: 0.95rem;
               line-height: 1.5;
               margin-bottom: 14px;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              font-family: 'Inter', sans-serif;
             }
             /* Rodapé que aparece no final de cada página */
             .footer {
@@ -181,18 +194,19 @@ class TemplateService {
               font-size: 0.55rem;
               color: #9ca3af;
               z-index: 999;
-              height: 6mm;
+              height: 8mm;
               display: flex;
               align-items: center;
               justify-content: center;
               background: white;
               padding: 0 15mm;
               border-top: 1px solid #e5e7eb;
+              font-family: 'Inter', sans-serif;
             }
             /* Quebras de página controladas */
             .page-break {
               page-break-before: always;
-              margin-top: 25mm;
+              margin-top: 28mm;
             }
             .avoid-break {
               page-break-inside: avoid;
@@ -240,8 +254,8 @@ class TemplateService {
                 padding: 0 15mm;
               }
               .content {
-                margin-top: 25mm;
-                margin-bottom: 15mm;
+                margin-top: 28mm;
+                margin-bottom: 20mm;
                 padding: 0 15mm;
               }
             }
@@ -250,15 +264,17 @@ class TemplateService {
         <body>
           <!-- Cabeçalho que aparece em todas as páginas -->
           <div class="header">
-            <div class="logo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-              </svg>
-            </div>
-            <div class="texts">
-              <h1>AulagIA</h1>
-              <p>Sua aula com toque mágico</p>
+            <div class="logo-container">
+              <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="brand-text">
+                <h1>AulagIA</h1>
+                <p>Sua aula com toque mágico</p>
+              </div>
             </div>
           </div>
 
