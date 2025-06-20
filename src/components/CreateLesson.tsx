@@ -148,7 +148,11 @@ const CreateLesson: React.FC = () => {
         disciplina: formData.subject,
         subject: formData.subject,
         serie: formData.grade,
-        grade: formData.grade
+        grade: formData.grade,
+        ...(selectedType === 'atividade' || selectedType === 'avaliacao' ? {
+          tipoQuestoes: formData.questionType,
+          quantidadeQuestoes: formData.questionCount[0]
+        } : {})
       };
       
       const material = await materialService.generateMaterial(selectedType!, materialFormData);
@@ -385,19 +389,19 @@ const CreateLesson: React.FC = () => {
                           ...formData,
                           questionType: value
                         })}
-                        className="grid grid-cols-3 gap-4"
+                        className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4"
                       >
-                        <div className="flex items-center space-x-2 p-3 border-2 border-gray-200 rounded-xl hover:border-orange-300 transition-colors">
+                        <div className="flex items-center space-x-2 p-2 sm:p-3 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-300 transition-colors">
                           <RadioGroupItem value="abertas" id="abertas" />
-                          <Label htmlFor="abertas" className="cursor-pointer font-medium">Abertas</Label>
+                          <Label htmlFor="abertas" className="cursor-pointer font-medium text-sm sm:text-base">Abertas</Label>
                         </div>
-                        <div className="flex items-center space-x-2 p-3 border-2 border-gray-200 rounded-xl hover:border-orange-300 transition-colors">
+                        <div className="flex items-center space-x-2 p-2 sm:p-3 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-300 transition-colors">
                           <RadioGroupItem value="fechadas" id="fechadas" />
-                          <Label htmlFor="fechadas" className="cursor-pointer font-medium">Fechadas</Label>
+                          <Label htmlFor="fechadas" className="cursor-pointer font-medium text-sm sm:text-base">Fechadas</Label>
                         </div>
-                        <div className="flex items-center space-x-2 p-3 border-2 border-gray-200 rounded-xl hover:border-orange-300 transition-colors">
+                        <div className="flex items-center space-x-2 p-2 sm:p-3 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-300 transition-colors">
                           <RadioGroupItem value="mistas" id="mistas" />
-                          <Label htmlFor="mistas" className="cursor-pointer font-medium">Mistas</Label>
+                          <Label htmlFor="mistas" className="cursor-pointer font-medium text-sm sm:text-base">Mistas</Label>
                         </div>
                       </RadioGroup>
                     </div>
