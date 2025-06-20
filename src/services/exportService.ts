@@ -26,15 +26,82 @@ class ExportService {
     return height;
   }
 
-  private splitContentIntoPages(htmlContent: string, materialType: string): string[] {
+  private getTypeLabel(type: string): string {
+    const labels = {
+      'plano-de-aula': 'Plano de Aula',
+      'slides': 'Slides',
+      'atividade': 'Atividade',
+      'avaliacao': 'Avaliação'
+    };
+    return labels[type as keyof typeof labels] || type;
+  }
+
+  private wrapPageContent(content: string, isFirstPage: boolean, materialType: string, materialTitle: string, materialSubject: string, materialGrade: string): string {
+    const standardHeader = `
+      <div class="page-header-complete">
+        <div class="logo-section">
+          <div class="logo-circle"></div>
+          <h3 class="logo-text">Sistema Educacional</h3>
+        </div>
+        <div class="material-info">
+          <h2 class="material-title">${materialTitle}</h2>
+          <div class="material-meta">
+            <span class="material-type">${this.getTypeLabel(materialType)}</span>
+            <span class="separator">•</span>
+            <span class="material-subject">${materialSubject || 'Disciplina'}</span>
+            <span class="separator">•</span>
+            <span class="material-grade">${materialGrade || 'Série'}</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const studentInfo = (materialType === 'atividade' || materialType === 'avaliacao') ? `
+      <div class="student-info-section">
+        <div class="student-field">
+          <label>Nome:</label>
+          <div class="field-line"></div>
+        </div>
+        <div class="student-field">
+          <label>Data:</label>
+          <div class="field-line short"></div>
+        </div>
+        <div class="student-field">
+          <label>Turma:</label>
+          <div class="field-line short"></div>
+        </div>
+      </div>
+    ` : '';
+
+    const footer = `
+      <div class="page-footer">
+        <div class="footer-decorative-circle"></div>
+        <p class="footer-text">Gerado automaticamente pelo Sistema Educacional</p>
+        <div class="footer-line"></div>
+      </div>
+    `;
+
+    return `
+      <div class="page-content">
+        ${standardHeader}
+        ${studentInfo}
+        <div class="main-content-area">
+          ${content}
+        </div>
+        ${footer}
+      </div>
+    `;
+  }
+
+  private splitContentIntoPages(htmlContent: string, materialType: string, materialTitle: string, materialSubject: string, materialGrade: string): string[] {
     console.log('ExportService: Starting page split for', materialType);
     
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
-    // Updated page dimensions matching MaterialPreview
-    const pageHeight = 1200; // Increased from 1000px
-    const headerFooterHeight = 350; // Increased from 200px for better safety margin
+    // Ajustar altura da página para acomodar cabeçalho completo e rodapé
+    const pageHeight = 1100; // Reduzido para dar mais espaço aos elementos fixos
+    const headerFooterHeight = 400; // Aumentado para incluir cabeçalho completo e rodapé
     const availableContentHeight = pageHeight - headerFooterHeight;
 
     console.log('ExportService page calculation:', { pageHeight, headerFooterHeight, availableContentHeight });
@@ -45,8 +112,8 @@ class ExportService {
       const questions = tempDiv.querySelectorAll('.questao-container');
       
       if (questions.length === 0) {
-        console.log('ExportService: No questions found, returning original content');
-        return [htmlContent];
+        console.log('ExportService: No questions found, returning original content with wrapper');
+        return [this.wrapPageContent(htmlContent, true, materialType, materialTitle, materialSubject, materialGrade)];
       }
 
       console.log(`ExportService: Found ${questions.length} questions to paginate`);
@@ -54,8 +121,11 @@ class ExportService {
       let currentPageContent = '';
       let currentPageHeight = 0;
       
-      const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
-      const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
+      // Remove cabeçalho original do conteúdo, pois será adicionado pelo wrapper
+      const originalInstructions = tempDiv.querySelector('.instructions-section');
+      
+      // Preservar apenas as instruções para a primeira página
+      const instructionsContent = originalInstructions?.outerHTML || '';
       
       questions.forEach((question, index) => {
         const questionHeight = this.calculateQuestionHeight(question);
@@ -63,7 +133,9 @@ class ExportService {
         
         if (currentPageHeight + questionHeight > availableContentHeight && currentPageContent) {
           console.log(`ExportService: Creating new page at question ${index + 1}, current height: ${currentPageHeight}px`);
-          pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
+          const isFirstPage = pages.length === 0;
+          const pageContent = isFirstPage ? instructionsContent + currentPageContent : currentPageContent;
+          pages.push(this.wrapPageContent(pageContent, isFirstPage, materialType, materialTitle, materialSubject, materialGrade));
           currentPageContent = '';
           currentPageHeight = 0;
         }
@@ -73,30 +145,31 @@ class ExportService {
       });
       
       if (currentPageContent) {
-        pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
+        const isFirstPage = pages.length === 0;
+        const pageContent = isFirstPage ? instructionsContent + currentPageContent : currentPageContent;
+        pages.push(this.wrapPageContent(pageContent, isFirstPage, materialType, materialTitle, materialSubject, materialGrade));
       }
       
       console.log(`ExportService: Split into ${pages.length} pages`);
-      return pages.length > 0 ? pages : [htmlContent];
+      return pages.length > 0 ? pages : [this.wrapPageContent(htmlContent, true, materialType, materialTitle, materialSubject, materialGrade)];
     }
 
     // For lesson plans, split by sections
     if (materialType === 'plano-de-aula') {
       const sections = tempDiv.querySelectorAll('.section');
       if (sections.length <= 1) {
-        return [htmlContent];
+        return [this.wrapPageContent(htmlContent, true, materialType, materialTitle, materialSubject, materialGrade)];
       }
 
       const pages: string[] = [];
       let currentPageContent = '';
       let currentPageHeight = 0;
       const sectionHeight = 250; // Average height per section
-
-      const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       
       sections.forEach((section, index) => {
         if (currentPageHeight + sectionHeight > availableContentHeight && currentPageContent) {
-          pages.push(this.wrapPageContent(currentPageContent, index === 0 ? header : '', false));
+          const isFirstPage = pages.length === 0;
+          pages.push(this.wrapPageContent(currentPageContent, isFirstPage, materialType, materialTitle, materialSubject, materialGrade));
           currentPageContent = '';
           currentPageHeight = 0;
         }
@@ -106,30 +179,14 @@ class ExportService {
       });
       
       if (currentPageContent) {
-        pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header : '', false));
+        const isFirstPage = pages.length === 0;
+        pages.push(this.wrapPageContent(currentPageContent, isFirstPage, materialType, materialTitle, materialSubject, materialGrade));
       }
       
-      return pages.length > 0 ? pages : [htmlContent];
+      return pages.length > 0 ? pages : [this.wrapPageContent(htmlContent, true, materialType, materialTitle, materialSubject, materialGrade)];
     }
 
-    return [htmlContent];
-  }
-
-  private wrapPageContent(content: string, header: string, includeFooter: boolean): string {
-    return `
-      <div class="page-content">
-        <div class="page-header-safe-zone">
-          <div class="logo-section">
-            <img src="/placeholder.svg" alt="Logo" style="height: 40px; margin-bottom: 10px;">
-          </div>
-          ${header}
-        </div>
-        <div class="main-content">
-          ${content}
-        </div>
-        ${includeFooter ? '<div class="page-footer"><p>Gerado automaticamente pelo Sistema Educacional</p></div>' : ''}
-      </div>
-    `;
+    return [this.wrapPageContent(htmlContent, true, materialType, materialTitle, materialSubject, materialGrade)];
   }
 
   private enhanceHtmlWithStyles(htmlContent: string, title: string): string {
@@ -143,7 +200,7 @@ class ExportService {
         <style>
           @page {
             size: A4;
-            margin: 15mm 20mm 15mm 20mm;
+            margin: 10mm 15mm 10mm 15mm;
           }
           
           * {
@@ -162,52 +219,148 @@ class ExportService {
           }
           
           .page-content {
-            min-height: calc(100vh - 30mm);
             display: flex;
             flex-direction: column;
+            min-height: calc(100vh - 20mm);
             page-break-after: always;
-            padding: 0;
-            margin: 0;
+            padding: 10mm 0;
           }
           
           .page-content:last-child {
             page-break-after: avoid;
           }
           
-          .page-header-safe-zone {
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e5e5e5;
-            min-height: 100px;
+          .page-header-complete {
+            margin-bottom: 25px;
+            padding: 20px 20mm;
+            border-bottom: 3px solid #e5e5e5;
+            background: #fafafa;
+            position: relative;
           }
           
           .logo-section {
-            text-align: center;
+            display: flex;
+            align-items: center;
             margin-bottom: 15px;
           }
           
-          .main-content {
+          .logo-circle {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 50%;
+            margin-right: 15px;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+          }
+          
+          .logo-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e40af;
+            margin: 0;
+          }
+          
+          .material-info {
+            text-align: center;
+          }
+          
+          .material-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 8px;
+          }
+          
+          .material-meta {
+            font-size: 14px;
+            color: #64748b;
+          }
+          
+          .separator {
+            margin: 0 8px;
+            color: #cbd5e1;
+          }
+          
+          .student-info-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 20mm 30px 20mm;
+            padding: 15px 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+          }
+          
+          .student-field {
+            display: flex;
+            align-items: center;
+          }
+          
+          .student-field label {
+            font-weight: 600;
+            color: #374151;
+            margin-right: 10px;
+            font-size: 14px;
+          }
+          
+          .field-line {
+            border-bottom: 2px solid #d1d5db;
+            height: 20px;
+            width: 200px;
+          }
+          
+          .field-line.short {
+            width: 120px;
+          }
+          
+          .main-content-area {
             flex: 1;
+            padding: 0 20mm;
             margin-bottom: 30px;
-            padding-top: 10px;
           }
           
           .page-footer {
             margin-top: auto;
-            padding-top: 20px;
-            border-top: 1px solid #e5e5e5;
-            text-align: center;
+            padding: 20px 20mm;
+            border-top: 2px solid #e5e5e5;
+            background: #f9fafb;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          .footer-decorative-circle {
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            margin-right: 12px;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+          }
+          
+          .footer-text {
             font-size: 12px;
-            color: #666;
-            min-height: 40px;
+            color: #6b7280;
+            font-style: italic;
+          }
+          
+          .footer-line {
+            position: absolute;
+            top: 0;
+            left: 20mm;
+            right: 20mm;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
           }
           
           .questao-container {
             margin-bottom: 30px;
-            padding: 20px;
+            padding: 25px;
             background: #fafafa;
-            border-left: 4px solid #3b82f6;
-            border-radius: 8px;
+            border-left: 5px solid #3b82f6;
+            border-radius: 10px;
             page-break-inside: avoid;
             break-inside: avoid;
           }
@@ -226,11 +379,11 @@ class ExportService {
           }
           
           .questao-opcoes {
-            margin-left: 25px;
+            margin-left: 20px;
           }
           
           .opcao {
-            margin: 10px 0;
+            margin: 12px 0;
             display: flex;
             align-items: flex-start;
             font-size: 14px;
@@ -240,6 +393,14 @@ class ExportService {
             font-weight: bold;
             margin-right: 15px;
             min-width: 25px;
+          }
+          
+          .instructions-section {
+            background: #eff6ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3b82f6;
           }
           
           .section {
@@ -255,45 +416,6 @@ class ExportService {
             margin-bottom: 20px;
             padding-bottom: 8px;
             border-bottom: 2px solid #e5e7eb;
-          }
-          
-          .instructions-section {
-            background: #f0f9ff;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #0ea5e9;
-          }
-          
-          @media print {
-            body {
-              margin: 0;
-              padding: 0;
-            }
-            
-            .page-content {
-              margin: 0;
-              padding: 0;
-              max-width: none;
-              height: auto;
-              min-height: auto;
-            }
-            
-            .page-header-safe-zone {
-              margin-bottom: 30px;
-              padding-bottom: 15px;
-            }
-            
-            .questao-container {
-              page-break-inside: avoid;
-              break-inside: avoid;
-              margin-bottom: 25px;
-            }
-            
-            .section {
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
           }
         </style>
       </head>
@@ -311,7 +433,7 @@ class ExportService {
     }
 
     const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
-    const pages = this.splitContentIntoPages(renderedHtml, material.type);
+    const pages = this.splitContentIntoPages(renderedHtml, material.type, material.title, material.subject || '', material.grade || '');
     
     let finalHtml = '';
     pages.forEach((page, index) => {
@@ -416,7 +538,7 @@ class ExportService {
 
       // Renderizar conteúdo e dividir em páginas
       const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
-      const pages = this.splitContentIntoPages(renderedHtml, material.type);
+      const pages = this.splitContentIntoPages(renderedHtml, material.type, material.title, material.subject || '', material.grade || '');
       
       // Processar cada página
       pages.forEach((pageContent, pageIndex) => {
@@ -941,16 +1063,6 @@ class ExportService {
       'avaliacao': '4'
     };
     return typeMap[type as keyof typeof typeMap] || '1';
-  }
-
-  private getTypeLabel(type: string): string {
-    const labels = {
-      'plano-de-aula': 'Plano de Aula',
-      'slides': 'Slides',
-      'atividade': 'Atividade',
-      'avaliacao': 'Avaliação'
-    };
-    return labels[type as keyof typeof labels] || type;
   }
 }
 
