@@ -51,25 +51,25 @@ class TemplateService {
             /* Cabeçalho que aparece no topo */
             .header {
               position: absolute;
-              top: 8mm;
+              top: 6mm;
               left: 0;
               right: 0;
               display: flex;
               align-items: center;
               z-index: 999;
-              height: 15mm;
+              height: 12mm;
               background: white;
-              padding: 0 15mm;
+              padding: 0 12mm;
               flex-shrink: 0;
             }
             .header .logo-container {
               display: flex;
               align-items: center;
-              gap: 10px;
+              gap: 8px;
             }
             .header .logo {
-              width: 40px;
-              height: 40px;
+              width: 32px;
+              height: 32px;
               background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
               border-radius: 50%;
               display: flex;
@@ -77,11 +77,11 @@ class TemplateService {
               justify-content: center;
               color: white;
               flex-shrink: 0;
-              box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+              box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
             }
             .header .logo svg {
-              width: 22px;
-              height: 22px;
+              width: 18px;
+              height: 18px;
               stroke: white;
               fill: none;
               stroke-width: 2;
@@ -92,30 +92,30 @@ class TemplateService {
               justify-content: center;
             }
             .header .brand-text h1 {
-              font-size: 24px;
+              font-size: 20px;
               color: #0ea5e9;
               margin: 0;
               font-family: 'Inter', sans-serif;
               line-height: 1;
               font-weight: 700;
-              letter-spacing: -0.3px;
+              letter-spacing: -0.2px;
             }
             .header .brand-text h1 .ia-text {
               text-transform: uppercase;
             }
             .header .brand-text p {
-              font-size: 11px;
+              font-size: 9px;
               color: #6b7280;
-              margin: 2px 0 0 0;
+              margin: 1px 0 0 0;
               font-family: 'Inter', sans-serif;
               line-height: 1;
               font-weight: 400;
             }
             /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
-              margin-top: 25mm;
-              margin-bottom: 15mm;
-              padding: 0 15mm;
+              margin-top: 20mm;
+              margin-bottom: 12mm;
+              padding: 0 12mm;
               position: relative;
               flex: 1;
               overflow: visible;
@@ -123,83 +123,104 @@ class TemplateService {
             /* Título principal */
             h2 {
               text-align: center;
-              margin: 0 0 12px 0;
-              font-size: 1.3rem;
+              margin: 0 0 8mm 0;
+              font-size: 1.2rem;
               color: #1e40af;
               position: relative;
               font-family: 'Inter', sans-serif;
             }
             h2::after {
               content: '';
-              width: 50px;
-              height: 3px;
+              width: 40px;
+              height: 2px;
               background: #60a5fa;
               display: block;
-              margin: 4px auto 0;
-              border-radius: 2px;
+              margin: 3px auto 0;
+              border-radius: 1px;
             }
             /* Tabelas */
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 10px;
+              margin-bottom: 6mm;
             }
             th, td {
-              padding: 4px 8px;
-              font-size: 0.8rem;
-              border: 1px solid #e5e7eb;
+              padding: 3mm 2mm;
+              font-size: 0.75rem;
+              border: 1px solid #d1d5db;
               font-family: 'Inter', sans-serif;
+              vertical-align: top;
             }
             th {
-              background: #f3f4f6;
-              color: #1f2937;
+              background: #f8fafc;
+              color: #374151;
               font-weight: 600;
+              text-align: center;
             }
             td {
               background: #ffffff;
             }
+            /* Tabela de informações básicas com layout otimizado */
+            .info-table th {
+              width: 15%;
+              font-size: 0.7rem;
+            }
+            .info-table td {
+              font-size: 0.75rem;
+            }
+            /* Desenvolvimento metodológico com tabela mais compacta */
+            .development-table th {
+              font-size: 0.7rem;
+              padding: 2mm 1.5mm;
+            }
+            .development-table td {
+              font-size: 0.7rem;
+              padding: 2mm 1.5mm;
+            }
             /* Seções e listas */
             .section-title {
               font-weight: 600;
-              margin-top: 12px;
-              margin-bottom: 6px;
-              font-size: 1rem;
+              margin-top: 4mm;
+              margin-bottom: 2mm;
+              font-size: 0.9rem;
               color: #1e40af;
               font-family: 'Inter', sans-serif;
             }
             ul {
               list-style: disc inside;
-              margin-bottom: 10px;
-              line-height: 1.3;
-              font-size: 0.85rem;
+              margin-bottom: 4mm;
+              line-height: 1.2;
+              font-size: 0.75rem;
               font-family: 'Inter', sans-serif;
+              padding-left: 0;
             }
             li {
-              margin-bottom: 3px;
+              margin-bottom: 1mm;
             }
             p {
-              font-size: 0.85rem;
-              line-height: 1.3;
-              margin-bottom: 8px;
+              font-size: 0.75rem;
+              line-height: 1.2;
+              margin-bottom: 3mm;
               font-family: 'Inter', sans-serif;
+              text-align: justify;
             }
             /* Rodapé */
             .footer {
               position: absolute;
-              bottom: 8mm;
+              bottom: 6mm;
               left: 0;
               right: 0;
               text-align: center;
-              font-size: 0.6rem;
+              font-size: 0.5rem;
               color: #9ca3af;
               z-index: 999;
-              height: 8mm;
+              height: 6mm;
               display: flex;
               align-items: center;
               justify-content: center;
               background: white;
-              padding: 0 15mm;
-              border-top: 1px solid #e5e7eb;
+              padding: 0 12mm;
+              border-top: 1px solid #f3f4f6;
               font-family: 'Inter', sans-serif;
               flex-shrink: 0;
             }
@@ -209,6 +230,8 @@ class TemplateService {
                 margin: 0; 
                 padding: 0; 
                 background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
               .page { 
                 box-shadow: none; 
@@ -220,25 +243,60 @@ class TemplateService {
                 flex-direction: column;
               }
               .header {
-                position: absolute;
-                top: 8mm;
+                position: fixed;
+                top: 6mm;
                 left: 0;
                 right: 0;
-                padding: 0 15mm;
+                padding: 0 12mm;
                 flex-shrink: 0;
+                background: white;
+                z-index: 1000;
+              }
+              .header .logo {
+                width: 28px;
+                height: 28px;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header .logo svg {
+                width: 16px;
+                height: 16px;
+              }
+              .header .brand-text h1 {
+                font-size: 18px;
+              }
+              .header .brand-text p {
+                font-size: 8px;
               }
               .footer {
-                position: absolute;
-                bottom: 8mm;
+                position: fixed;
+                bottom: 6mm;
                 left: 0;
                 right: 0;
                 flex-shrink: 0;
+                background: white;
               }
               .content {
-                margin-top: 25mm;
-                margin-bottom: 15mm;
-                padding: 0 15mm;
+                margin-top: 20mm;
+                margin-bottom: 12mm;
+                padding: 0 12mm;
                 flex: 1;
+              }
+              h2 {
+                color: #1e40af !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .section-title {
+                color: #1e40af !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              th {
+                background: #f8fafc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
             }
           </style>
@@ -271,7 +329,7 @@ class TemplateService {
               <h2>PLANO DE AULA</h2>
 
               <!-- Informações básicas -->
-              <table>
+              <table class="info-table">
                 <tr>
                   <th>Professor(a):</th>
                   <td>{{professor}}</td>
@@ -290,7 +348,9 @@ class TemplateService {
                 </tr>
                 <tr>
                   <th>Duração:</th>
-                  <td colspan="3">{{duracao}}</td>
+                  <td>{{duracao}}</td>
+                  <th>BNCC:</th>
+                  <td>{{bncc}}</td>
                 </tr>
               </table>
 
@@ -305,13 +365,13 @@ class TemplateService {
               <!-- Desenvolvimento Metodológico -->
               <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
               <div class="development-section">
-                <table>
+                <table class="development-table">
                   <thead>
                     <tr>
-                      <th>Etapa</th>
-                      <th>Atividade</th>
-                      <th>Tempo</th>
-                      <th>Recursos</th>
+                      <th style="width: 20%;">Etapa</th>
+                      <th style="width: 45%;">Atividade</th>
+                      <th style="width: 15%;">Tempo</th>
+                      <th style="width: 20%;">Recursos</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -343,7 +403,7 @@ class TemplateService {
         </body>
         </html>
       `,
-      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
+      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'bncc', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
