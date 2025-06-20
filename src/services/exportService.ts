@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
@@ -132,57 +133,61 @@ class ExportService {
   }
 
   async exportToWord(material: GeneratedMaterial): Promise<void> {
-    let children: any[] = [];
+    try {
+      let children: any[] = [];
 
-    children.push(
-      new Paragraph({
-        children: [new TextRun({ text: material.title, bold: true, size: 32 })],
-        heading: HeadingLevel.TITLE,
-        alignment: AlignmentType.CENTER,
-      })
-    );
+      // Título do documento
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: material.title, bold: true, size: 32 })],
+          heading: HeadingLevel.TITLE,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        })
+      );
 
-    children.push(
-      new Paragraph({
-        children: [new TextRun(`${this.getTypeLabel(material.type)} • ${material.subject} • ${material.grade}`)],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 400 }
-      })
-    );
+      // Informações básicas
+      children.push(
+        new Paragraph({
+          children: [new TextRun(`${this.getTypeLabel(material.type)} • ${material.subject} • ${material.grade}`)],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 600 }
+        })
+      );
 
-    switch (material.type) {
-      case 'plano-de-aula':
-        children = [...children, ...this.getLessonPlanWordContent(material.content as LessonPlan)];
-        break;
-      case 'slides':
-        children = [...children, ...this.getSlidesWordContent(material.content as Slide[])];
-        break;
-      case 'atividade':
-        children = [...children, ...this.getActivityWordContent(material.content as Activity)];
-        break;
-      case 'avaliacao':
-        children = [...children, ...this.getAssessmentWordContent(material.content as Assessment)];
-        break;
+      // Adicionar conteúdo específico baseado no tipo
+      switch (material.type) {
+        case 'plano-de-aula':
+          children = [...children, ...this.getLessonPlanWordContent(material.content as LessonPlan)];
+          break;
+        case 'slides':
+          children = [...children, ...this.getSlidesWordContent(material.content as Slide[])];
+          break;
+        case 'atividade':
+          children = [...children, ...this.getActivityWordContent(material.content as Activity)];
+          break;
+        case 'avaliacao':
+          children = [...children, ...this.getAssessmentWordContent(material.content as Assessment)];
+          break;
+      }
+
+      // Criar documento com configuração simplificada
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: children
+        }]
+      });
+
+      // Gerar e baixar o arquivo
+      const blob = await Packer.toBlob(doc);
+      const fileName = `${material.title.replace(/[^a-zA-Z0-9\s]/g, '')}.docx`;
+      saveAs(blob, fileName);
+
+    } catch (error) {
+      console.error('Erro ao exportar para Word:', error);
+      throw new Error('Falha na exportação para Word. Verifique o conteúdo do material.');
     }
-
-    const doc = new Document({
-      sections: [{
-        properties: {
-          page: {
-            margin: {
-              top: 567, // 0.5cm em twips
-              right: 1134, // 1cm em twips  
-              bottom: 567, // 0.5cm em twips
-              left: 1134, // 1cm em twips
-            },
-          },
-        },
-        children: children
-      }]
-    });
-
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${material.title}.docx`);
   }
 
   async exportToPPT(material: GeneratedMaterial): Promise<void> {
@@ -206,97 +211,136 @@ class ExportService {
   private getLessonPlanWordContent(content: LessonPlan): any[] {
     const paragraphs = [];
 
-    paragraphs.push(new Paragraph({
-      children: [new TextRun({ text: 'PLANO DE AULA', bold: true, size: 24 })],
-      heading: HeadingLevel.HEADING_1,
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 400 }
-    }));
-
-    const infoItems = [
-      `Professor(a): ${content.professor}`,
-      `Disciplina: ${content.disciplina}`,
-      `Tema: ${content.tema}`,
-      `Duração: ${content.duracao}`,
-      `Data: ${content.data}`,
-      `Série/Ano: ${content.serie}`
-    ];
-
-    infoItems.forEach(item => {
+    try {
+      // Seção de informações básicas
       paragraphs.push(new Paragraph({
-        children: [new TextRun(item)],
-        spacing: { after: 100 }
+        children: [new TextRun({ text: 'INFORMAÇÕES BÁSICAS', bold: true, size: 20 })],
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 400, after: 200 }
       }));
-    });
 
-    paragraphs.push(new Paragraph({
-      children: [new TextRun({ text: 'Objetivos de Aprendizagem', bold: true, size: 20 })],
-      heading: HeadingLevel.HEADING_2,
-      spacing: { before: 400, after: 200 }
-    }));
+      const basicInfo = [
+        `Professor(a): ${content.professor || 'Não informado'}`,
+        `Disciplina: ${content.disciplina || 'Não informado'}`,
+        `Tema: ${content.tema || 'Não informado'}`,
+        `Duração: ${content.duracao || 'Não informado'}`,
+        `Data: ${content.data || 'Não informado'}`,
+        `Série/Ano: ${content.serie || 'Não informado'}`
+      ];
 
-    content.objetivos.forEach(objetivo => {
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(`• ${objetivo}`)],
-        spacing: { after: 100 }
-      }));
-    });
-
-    paragraphs.push(new Paragraph({
-      children: [new TextRun({ text: 'Desenvolvimento Metodológico', bold: true, size: 20 })],
-      heading: HeadingLevel.HEADING_2,
-      spacing: { before: 400, after: 200 }
-    }));
-
-    if (content.desenvolvimento && Array.isArray(content.desenvolvimento)) {
-      content.desenvolvimento.forEach((etapa: any) => {
+      basicInfo.forEach(item => {
         paragraphs.push(new Paragraph({
-          children: [new TextRun({ text: `${etapa.etapa}:`, bold: true })],
-          spacing: { before: 200, after: 100 }
-        }));
-        
-        paragraphs.push(new Paragraph({
-          children: [new TextRun(`Atividade: ${etapa.atividade}`)],
-          spacing: { after: 50 }
-        }));
-        
-        paragraphs.push(new Paragraph({
-          children: [new TextRun(`Tempo: ${etapa.tempo}`)],
-          spacing: { after: 50 }
-        }));
-        
-        paragraphs.push(new Paragraph({
-          children: [new TextRun(`Recursos: ${etapa.recursos}`)],
-          spacing: { after: 100 }
+          children: [new TextRun(item)],
+          spacing: { after: 120 }
         }));
       });
-    }
 
-    paragraphs.push(new Paragraph({
-      children: [new TextRun({ text: 'Recursos Didáticos', bold: true, size: 20 })],
-      heading: HeadingLevel.HEADING_2,
-      spacing: { before: 400, after: 200 }
-    }));
-
-    if (content.recursos && Array.isArray(content.recursos)) {
-      content.recursos.forEach(recurso => {
+      // Objetivos de Aprendizagem
+      if (content.objetivos && content.objetivos.length > 0) {
         paragraphs.push(new Paragraph({
-          children: [new TextRun(`• ${recurso}`)],
-          spacing: { after: 100 }
+          children: [new TextRun({ text: 'OBJETIVOS DE APRENDIZAGEM', bold: true, size: 20 })],
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
         }));
-      });
+
+        content.objetivos.forEach(objetivo => {
+          paragraphs.push(new Paragraph({
+            children: [new TextRun(`• ${objetivo}`)],
+            spacing: { after: 120 }
+          }));
+        });
+      }
+
+      // Habilidades BNCC
+      if (content.habilidades && content.habilidades.length > 0) {
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text: 'HABILIDADES BNCC', bold: true, size: 20 })],
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        }));
+
+        content.habilidades.forEach(habilidade => {
+          paragraphs.push(new Paragraph({
+            children: [new TextRun(`• ${habilidade}`)],
+            spacing: { after: 120 }
+          }));
+        });
+      }
+
+      // Desenvolvimento da Aula
+      if (content.desenvolvimento && Array.isArray(content.desenvolvimento)) {
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text: 'DESENVOLVIMENTO DA AULA', bold: true, size: 20 })],
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        }));
+
+        content.desenvolvimento.forEach((etapa: any) => {
+          paragraphs.push(new Paragraph({
+            children: [new TextRun({ text: `${etapa.etapa || 'Etapa'}:`, bold: true })],
+            spacing: { before: 200, after: 100 }
+          }));
+          
+          if (etapa.atividade) {
+            paragraphs.push(new Paragraph({
+              children: [new TextRun(`Atividade: ${etapa.atividade}`)],
+              spacing: { after: 80 }
+            }));
+          }
+          
+          if (etapa.tempo) {
+            paragraphs.push(new Paragraph({
+              children: [new TextRun(`Tempo: ${etapa.tempo}`)],
+              spacing: { after: 80 }
+            }));
+          }
+          
+          if (etapa.recursos) {
+            paragraphs.push(new Paragraph({
+              children: [new TextRun(`Recursos: ${etapa.recursos}`)],
+              spacing: { after: 120 }
+            }));
+          }
+        });
+      }
+
+      // Recursos Didáticos
+      if (content.recursos && Array.isArray(content.recursos) && content.recursos.length > 0) {
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text: 'RECURSOS DIDÁTICOS', bold: true, size: 20 })],
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        }));
+
+        content.recursos.forEach(recurso => {
+          paragraphs.push(new Paragraph({
+            children: [new TextRun(`• ${recurso}`)],
+            spacing: { after: 120 }
+          }));
+        });
+      }
+
+      // Avaliação
+      if (content.avaliacao) {
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text: 'AVALIAÇÃO', bold: true, size: 20 })],
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        }));
+
+        paragraphs.push(new Paragraph({
+          children: [new TextRun(content.avaliacao)],
+          spacing: { after: 120 }
+        }));
+      }
+
+    } catch (error) {
+      console.error('Erro ao processar conteúdo do plano de aula:', error);
+      paragraphs.push(new Paragraph({
+        children: [new TextRun('Erro ao processar o conteúdo do plano de aula.')],
+        spacing: { after: 120 }
+      }));
     }
-
-    paragraphs.push(new Paragraph({
-      children: [new TextRun({ text: 'Avaliação', bold: true, size: 20 })],
-      heading: HeadingLevel.HEADING_2,
-      spacing: { before: 400, after: 200 }
-    }));
-
-    paragraphs.push(new Paragraph({
-      children: [new TextRun(content.avaliacao || '')],
-      spacing: { after: 100 }
-    }));
 
     return paragraphs;
   }
@@ -304,28 +348,38 @@ class ExportService {
   private getSlidesWordContent(slides: Slide[]): any[] {
     const paragraphs: any[] = [];
 
-    slides.forEach((slide, index) => {
-      if (index > 0) {
-        paragraphs.push(new Paragraph({
-          children: [new TextRun('')],
-          pageBreakBefore: true
-        }));
-      }
+    try {
+      slides.forEach((slide, index) => {
+        if (index > 0) {
+          paragraphs.push(new Paragraph({
+            children: [new TextRun('')],
+            pageBreakBefore: true
+          }));
+        }
 
-      paragraphs.push(new Paragraph({
-        children: [new TextRun({ text: `Slide ${slide.numero}: ${slide.titulo}`, bold: true, size: 24 })],
-        heading: HeadingLevel.HEADING_1,
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 400 }
-      }));
-
-      slide.conteudo.forEach(item => {
         paragraphs.push(new Paragraph({
-          children: [new TextRun(item)],
-          spacing: { after: 200 }
+          children: [new TextRun({ text: `Slide ${slide.numero}: ${slide.titulo}`, bold: true, size: 24 })],
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
         }));
+
+        if (slide.conteudo && Array.isArray(slide.conteudo)) {
+          slide.conteudo.forEach(item => {
+            paragraphs.push(new Paragraph({
+              children: [new TextRun(`• ${item}`)],
+              spacing: { after: 200 }
+            }));
+          });
+        }
       });
-    });
+    } catch (error) {
+      console.error('Erro ao processar slides:', error);
+      paragraphs.push(new Paragraph({
+        children: [new TextRun('Erro ao processar o conteúdo dos slides.')],
+        spacing: { after: 120 }
+      }));
+    }
 
     return paragraphs;
   }
@@ -333,38 +387,52 @@ class ExportService {
   private getActivityWordContent(activity: Activity): any[] {
     const paragraphs = [];
 
-    paragraphs.push(new Paragraph({
-      children: [new TextRun({ text: 'ATIVIDADE', bold: true, size: 24 })],
-      heading: HeadingLevel.HEADING_1,
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 400 }
-    }));
+    try {
+      // Instruções
+      if (activity.instrucoes) {
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text: 'INSTRUÇÕES', bold: true, size: 20 })],
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        }));
 
-    paragraphs.push(new Paragraph({
-      children: [new TextRun(activity.instrucoes)],
-      spacing: { after: 400 }
-    }));
+        paragraphs.push(new Paragraph({
+          children: [new TextRun(activity.instrucoes)],
+          spacing: { after: 400 }
+        }));
+      }
 
-    activity.questoes.forEach(questao => {
-      paragraphs.push(new Paragraph({
-        children: [new TextRun({ text: `Questão ${questao.numero}`, bold: true })],
-        spacing: { before: 300, after: 100 }
-      }));
-
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(questao.pergunta)],
-        spacing: { after: 200 }
-      }));
-
-      if (questao.opcoes) {
-        questao.opcoes.forEach(opcao => {
+      // Questões
+      if (activity.questoes && Array.isArray(activity.questoes)) {
+        activity.questoes.forEach(questao => {
           paragraphs.push(new Paragraph({
-            children: [new TextRun(`• ${opcao}`)],
-            spacing: { after: 100 }
+            children: [new TextRun({ text: `Questão ${questao.numero}`, bold: true })],
+            spacing: { before: 300, after: 100 }
           }));
+
+          paragraphs.push(new Paragraph({
+            children: [new TextRun(questao.pergunta)],
+            spacing: { after: 200 }
+          }));
+
+          if (questao.opcoes && Array.isArray(questao.opcoes)) {
+            questao.opcoes.forEach((opcao, index) => {
+              const letra = String.fromCharCode(65 + index);
+              paragraphs.push(new Paragraph({
+                children: [new TextRun(`${letra}) ${opcao}`)],
+                spacing: { after: 100 }
+              }));
+            });
+          }
         });
       }
-    });
+    } catch (error) {
+      console.error('Erro ao processar atividade:', error);
+      paragraphs.push(new Paragraph({
+        children: [new TextRun('Erro ao processar o conteúdo da atividade.')],
+        spacing: { after: 120 }
+      }));
+    }
 
     return paragraphs;
   }
@@ -372,38 +440,60 @@ class ExportService {
   private getAssessmentWordContent(assessment: Assessment): any[] {
     const paragraphs = [];
 
-    paragraphs.push(new Paragraph({
-      children: [new TextRun({ text: 'AVALIAÇÃO', bold: true, size: 24 })],
-      heading: HeadingLevel.HEADING_1,
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 400 }
-    }));
+    try {
+      // Instruções
+      if (assessment.instrucoes) {
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text: 'INSTRUÇÕES DA AVALIAÇÃO', bold: true, size: 20 })],
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        }));
 
-    paragraphs.push(new Paragraph({
-      children: [new TextRun(assessment.instrucoes)],
-      spacing: { after: 400 }
-    }));
+        paragraphs.push(new Paragraph({
+          children: [new TextRun(assessment.instrucoes)],
+          spacing: { after: 200 }
+        }));
+      }
 
-    assessment.questoes.forEach(questao => {
-      paragraphs.push(new Paragraph({
-        children: [new TextRun({ text: `Questão ${questao.numero} (${questao.pontuacao} pontos)`, bold: true })],
-        spacing: { before: 300, after: 100 }
-      }));
+      // Tempo limite
+      if (assessment.tempoLimite) {
+        paragraphs.push(new Paragraph({
+          children: [new TextRun(`Tempo limite: ${assessment.tempoLimite}`)],
+          spacing: { after: 400 }
+        }));
+      }
 
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(questao.pergunta)],
-        spacing: { after: 200 }
-      }));
-
-      if (questao.opcoes) {
-        questao.opcoes.forEach(opcao => {
+      // Questões
+      if (assessment.questoes && Array.isArray(assessment.questoes)) {
+        assessment.questoes.forEach(questao => {
           paragraphs.push(new Paragraph({
-            children: [new TextRun(`• ${opcao}`)],
-            spacing: { after: 100 }
+            children: [new TextRun({ text: `Questão ${questao.numero} (${questao.pontuacao} pontos)`, bold: true })],
+            spacing: { before: 300, after: 100 }
           }));
+
+          paragraphs.push(new Paragraph({
+            children: [new TextRun(questao.pergunta)],
+            spacing: { after: 200 }
+          }));
+
+          if (questao.opcoes && Array.isArray(questao.opcoes)) {
+            questao.opcoes.forEach((opcao, index) => {
+              const letra = String.fromCharCode(65 + index);
+              paragraphs.push(new Paragraph({
+                children: [new TextRun(`${letra}) ${opcao}`)],
+                spacing: { after: 100 }
+              }));
+            });
+          }
         });
       }
-    });
+    } catch (error) {
+      console.error('Erro ao processar avaliação:', error);
+      paragraphs.push(new Paragraph({
+        children: [new TextRun('Erro ao processar o conteúdo da avaliação.')],
+        spacing: { after: 120 }
+      }));
+    }
 
     return paragraphs;
   }
