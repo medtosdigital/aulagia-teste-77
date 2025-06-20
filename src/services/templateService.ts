@@ -881,6 +881,50 @@ class TemplateService {
               background: #fafafa;
             }
             
+            .atividade-bloco {
+              margin-bottom: 30px;
+              page-break-inside: avoid;
+              padding: 20px;
+              border: 1px solid #e5e7eb;
+              border-radius: 8px;
+              background: #fafafa;
+            }
+            .atividade-bloco h3 {
+              font-weight: 600;
+              color: #4338ca;
+              margin-bottom: 15px;
+              font-size: 1.1rem;
+              font-family: 'Inter', sans-serif;
+            }
+            .atividade-bloco p {
+              margin-bottom: 15px;
+              line-height: 1.6;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
+            }
+            .table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 15px 0;
+              font-family: 'Inter', sans-serif;
+            }
+            .table th, .table td {
+              border: 1px solid #d1d5db;
+              padding: 8px 12px;
+              text-align: left;
+            }
+            .table th {
+              background: #f3f4f6;
+              font-weight: 600;
+            }
+            .espaco-resposta {
+              height: 60px;
+              border: 2px dashed #d1d5db;
+              margin-top: 15px;
+              border-radius: 4px;
+              background: #f9fafb;
+            }
+            
             /* Rodapé */
             .footer {
               position: absolute;
@@ -1049,9 +1093,33 @@ class TemplateService {
               </div>
 
               {{#each questoes}}
-              <div class="question">
-                <div class="question-header">Questão {{numero}}</div>
-                <div class="question-text">{{pergunta}}</div>
+              <div class="atividade-bloco">
+                <h3>{{numero}}. {{pergunta}}</h3>
+                
+                {{#if descricao}}
+                <p>{{{descricao}}}</p>
+                {{/if}}
+                
+                {{#if promptImagem}}
+                <p><em>Prompt imagem IA:</em> {{promptImagem}}</p>
+                {{/if}}
+                
+                {{#if tabela}}
+                <table class="table">
+                  {{#each tabela}}
+                  <tr><th>{{operacao}}</th><td>{{resultado}}</td></tr>
+                  {{/each}}
+                </table>
+                {{/if}}
+                
+                {{#if lista}}
+                <p>{{descricao}}</p>
+                <ul>
+                  {{#each lista}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+                {{/if}}
                 
                 {{#if opcoes}}
                 <div class="options">
@@ -1062,10 +1130,9 @@ class TemplateService {
                   </div>
                   {{/each}}
                 </div>
-                {{else}}
-                <div class="answer-space"></div>
-                <div class="answer-space"></div>
                 {{/if}}
+                
+                <div class="espaco-resposta"></div>
               </div>
               {{/each}}
             </div>
@@ -1332,6 +1399,50 @@ class TemplateService {
               background: #fafafa;
             }
             
+            .atividade-bloco {
+              margin-bottom: 30px;
+              page-break-inside: avoid;
+              padding: 20px;
+              border: 1px solid #e5e7eb;
+              border-radius: 8px;
+              background: #fafafa;
+            }
+            .atividade-bloco h3 {
+              font-weight: 600;
+              color: #4338ca;
+              margin-bottom: 15px;
+              font-size: 1.1rem;
+              font-family: 'Inter', sans-serif;
+            }
+            .atividade-bloco p {
+              margin-bottom: 15px;
+              line-height: 1.6;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
+            }
+            .table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 15px 0;
+              font-family: 'Inter', sans-serif;
+            }
+            .table th, .table td {
+              border: 1px solid #d1d5db;
+              padding: 8px 12px;
+              text-align: left;
+            }
+            .table th {
+              background: #f3f4f6;
+              font-weight: 600;
+            }
+            .espaco-resposta {
+              height: 60px;
+              border: 2px dashed #d1d5db;
+              margin-top: 15px;
+              border-radius: 4px;
+              background: #f9fafb;
+            }
+            
             /* Rodapé */
             .footer {
               position: absolute;
@@ -1499,12 +1610,33 @@ class TemplateService {
               </div>
 
               {{#each questoes}}
-              <div class="question">
-                <div class="question-header">
-                  <span>Questão {{numero}}</span>
-                  <span class="points">({{pontuacao}} pontos)</span>
-                </div>
-                <div class="question-text">{{pergunta}}</div>
+              <div class="atividade-bloco">
+                <h3>{{numero}}. {{pergunta}} <span style="font-size: 0.8em; color: #666;">({{pontuacao}} pontos)</span></h3>
+                
+                {{#if descricao}}
+                <p>{{{descricao}}}</p>
+                {{/if}}
+                
+                {{#if promptImagem}}
+                <p><em>Prompt imagem IA:</em> {{promptImagem}}</p>
+                {{/if}}
+                
+                {{#if tabela}}
+                <table class="table">
+                  {{#each tabela}}
+                  <tr><th>{{operacao}}</th><td>{{resultado}}</td></tr>
+                  {{/each}}
+                </table>
+                {{/if}}
+                
+                {{#if lista}}
+                <p>{{descricao}}</p>
+                <ul>
+                  {{#each lista}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+                {{/if}}
                 
                 {{#if opcoes}}
                 <div class="options">
@@ -1515,9 +1647,9 @@ class TemplateService {
                   </div>
                   {{/each}}
                 </div>
-                {{else}}
-                <div class="answer-space"></div>
                 {{/if}}
+                
+                <div class="espaco-resposta"></div>
               </div>
               {{/each}}
             </div>

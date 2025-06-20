@@ -185,73 +185,141 @@ class MaterialService {
   }
 
   private generateActivity(formData: any): any {
+    const questoes = this.generateQuestions(formData, 'atividade');
+    
     return {
       titulo: `Atividade sobre ${formData.tema}`,
       disciplina: formData.disciplina,
       serie: formData.serie,
       instrucoes: `Leia atentamente cada questão e responda de acordo com seus conhecimentos sobre ${formData.tema}.`,
-      questoes: [
-        {
-          numero: 1,
-          pergunta: `O que você entende por ${formData.tema}? Explique com suas palavras.`,
-          opcoes: null
-        },
-        {
-          numero: 2,
-          pergunta: `Qual a importância de ${formData.tema} em nosso dia a dia?`,
-          opcoes: [
-            'É muito importante para o desenvolvimento',
-            'Ajuda a compreender melhor o mundo',
-            'Facilita a resolução de problemas',
-            'Todas as alternativas anteriores'
-          ]
-        },
-        {
-          numero: 3,
-          pergunta: `Cite dois exemplos práticos de ${formData.tema}.`,
-          opcoes: null
-        }
-      ]
+      questoes: questoes
     };
   }
 
   private generateEvaluation(formData: any): any {
+    const questoes = this.generateQuestions(formData, 'avaliacao');
+    
     return {
       titulo: `Avaliação de ${formData.tema}`,
       instrucoes: 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.',
       tempoLimite: '50 minutos',
-      questoes: [
-        {
-          numero: 1,
-          pergunta: `Defina ${formData.tema} e explique sua importância.`,
-          pontuacao: 2.5,
-          opcoes: null
-        },
-        {
-          numero: 2,
-          pergunta: `Sobre ${formData.tema}, é correto afirmar que:`,
-          pontuacao: 2.5,
-          opcoes: [
-            'É um conceito fundamental na disciplina',
-            'Pode ser aplicado em diversas situações',
-            'Requer compreensão teórica e prática',
-            'Todas as alternativas estão corretas'
-          ]
-        },
-        {
-          numero: 3,
-          pergunta: `Analise a seguinte situação relacionada a ${formData.tema} e apresente sua solução.`,
-          pontuacao: 2.5,
-          opcoes: null
-        },
-        {
-          numero: 4,
-          pergunta: `Compare e contraste diferentes aspectos de ${formData.tema}.`,
-          pontuacao: 2.5,
-          opcoes: null
-        }
-      ]
+      questoes: questoes
     };
+  }
+
+  private generateQuestions(formData: any, tipo: 'atividade' | 'avaliacao'): any[] {
+    const quantidade = formData.quantidadeQuestoes || 5;
+    const tipoQuestoes = formData.tipoQuestoes || 'mistas';
+    const tema = formData.tema;
+    const questoes = [];
+
+    const questoesModelos = [
+      {
+        tipo: 'aberta',
+        pergunta: `O que você entende por ${tema}? Explique com suas palavras.`,
+        opcoes: null
+      },
+      {
+        tipo: 'aberta',
+        pergunta: `Resolva a multiplicação abaixo com a ajuda da figura:`,
+        descricao: `João tem <strong>4 caixas</strong> com <strong>3 bolas</strong> em cada. Quantas bolas ele tem ao todo?`,
+        promptImagem: 'criança organizando bolas em caixas para aprender multiplicação, fundo escolar',
+        opcoes: null
+      },
+      {
+        tipo: 'tabela',
+        pergunta: `Complete a tabela com os resultados das multiplicações:`,
+        tabela: [
+          { operacao: '2 × 1', resultado: '___' },
+          { operacao: '2 × 2', resultado: '___' },
+          { operacao: '2 × 3', resultado: '___' }
+        ],
+        opcoes: null
+      },
+      {
+        tipo: 'aberta',
+        pergunta: `Calcule e escreva a fração representada:`,
+        descricao: `Uma pizza foi dividida em 8 pedaços. Maria comeu 3. Qual fração representa o que ela comeu?`,
+        promptImagem: 'desenho de pizza cortada em 8 partes com 3 coloridas, estilo educativo',
+        opcoes: null
+      },
+      {
+        tipo: 'lista',
+        pergunta: `Preencha os quadrinhos abaixo com os resultados das adições:`,
+        descricao: 'Use seus conhecimentos e preencha:',
+        lista: ['12 + 8 = ___', '20 + 5 = ___', '9 + 13 = ___'],
+        opcoes: null
+      },
+      {
+        tipo: 'aberta',
+        pergunta: `Resolva o gráfico:`,
+        descricao: `Observe o gráfico de frutas favoritas da turma e responda: Quantas crianças preferem maçã?`,
+        promptImagem: 'gráfico de barras simples mostrando frutas favoritas em uma sala de aula',
+        opcoes: null
+      },
+      {
+        tipo: 'fechada',
+        pergunta: `Qual a importância de ${tema} em nosso dia a dia?`,
+        opcoes: [
+          'É muito importante para o desenvolvimento',
+          'Ajuda a compreender melhor o mundo',
+          'Facilita a resolução de problemas',
+          'Todas as alternativas anteriores'
+        ]
+      },
+      {
+        tipo: 'fechada',
+        pergunta: `Sobre ${tema}, é correto afirmar que:`,
+        opcoes: [
+          'É um conceito fundamental na disciplina',
+          'Pode ser aplicado em diversas situações',
+          'Requer compreensão teórica e prática',
+          'Todas as alternativas estão corretas'
+        ]
+      },
+      {
+        tipo: 'aberta',
+        pergunta: `Transforme a fração em número decimal:`,
+        descricao: `Transforme <strong>3/4</strong> em número decimal. Mostre o cálculo.`,
+        opcoes: null
+      },
+      {
+        tipo: 'aberta',
+        pergunta: `Problema final:`,
+        descricao: `Pedro juntou <strong>2 moedas de R$ 1,00</strong> por dia durante <strong>5 dias</strong>. Quanto ele conseguiu ao todo?`,
+        opcoes: null
+      }
+    ];
+
+    // Filtrar questões baseado no tipo solicitado
+    let questoesFiltradas = questoesModelos;
+    if (tipoQuestoes === 'abertas') {
+      questoesFiltradas = questoesModelos.filter(q => q.tipo === 'aberta' || q.tipo === 'tabela' || q.tipo === 'lista');
+    } else if (tipoQuestoes === 'fechadas') {
+      questoesFiltradas = questoesModelos.filter(q => q.tipo === 'fechada');
+    }
+
+    // Selecionar questões aleatoriamente até atingir a quantidade
+    for (let i = 0; i < quantidade; i++) {
+      const questaoModelo = questoesFiltradas[i % questoesFiltradas.length];
+      const questao: any = {
+        numero: i + 1,
+        pergunta: questaoModelo.pergunta,
+        opcoes: questaoModelo.opcoes,
+        ...(questaoModelo.descricao && { descricao: questaoModelo.descricao }),
+        ...(questaoModelo.promptImagem && { promptImagem: questaoModelo.promptImagem }),
+        ...(questaoModelo.tabela && { tabela: questaoModelo.tabela }),
+        ...(questaoModelo.lista && { lista: questaoModelo.lista })
+      };
+
+      if (tipo === 'avaliacao') {
+        questao.pontuacao = parseFloat((10 / quantidade).toFixed(1));
+      }
+
+      questoes.push(questao);
+    }
+
+    return questoes;
   }
 
   getMaterials(): GeneratedMaterial[] {
