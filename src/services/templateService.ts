@@ -1,3 +1,4 @@
+
 export interface Template {
   id: string;
   name: string;
@@ -1693,6 +1694,8 @@ class TemplateService {
     if (!template) {
       throw new Error('Template não encontrado');
     }
+
+    let html = template.htmlContent;
 
     // Handle questoesContent for atividade and avaliacao templates
     if ((template.type === 'atividade' || template.type === 'avaliacao') && data.questoes) {
