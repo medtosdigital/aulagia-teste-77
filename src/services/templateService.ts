@@ -39,7 +39,7 @@ class TemplateService {
             .page {
               position: relative;
               width: 210mm;
-              height: 297mm;
+              min-height: 297mm;
               background: white;
               overflow: hidden;
               margin: 0 auto;
@@ -51,7 +51,7 @@ class TemplateService {
             /* Cabeçalho que aparece no topo */
             .header {
               position: absolute;
-              top: 5mm;
+              top: 8mm;
               left: 0;
               right: 0;
               display: flex;
@@ -68,8 +68,8 @@ class TemplateService {
               gap: 8px;
             }
             .header .logo {
-              width: 30px;
-              height: 30px;
+              width: 32px;
+              height: 32px;
               background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
               border-radius: 50%;
               display: flex;
@@ -77,11 +77,11 @@ class TemplateService {
               justify-content: center;
               color: white;
               flex-shrink: 0;
-              box-shadow: 0 2px 6px rgba(14, 165, 233, 0.3);
+              box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
             }
             .header .logo svg {
-              width: 16px;
-              height: 16px;
+              width: 18px;
+              height: 18px;
               stroke: white;
               fill: none;
               stroke-width: 2;
@@ -113,8 +113,8 @@ class TemplateService {
             }
             /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
-              margin-top: 18mm;
-              margin-bottom: 12mm;
+              margin-top: 22mm;
+              margin-bottom: 15mm;
               padding: 0 15mm;
               position: relative;
               flex: 1;
@@ -135,7 +135,7 @@ class TemplateService {
               height: 2px;
               background: #60a5fa;
               display: block;
-              margin: 4px auto 0;
+              margin: 3px auto 0;
               border-radius: 2px;
             }
             /* Tabelas */
@@ -162,17 +162,17 @@ class TemplateService {
             /* Seções e listas */
             .section-title {
               font-weight: 600;
-              margin-top: 8px;
-              margin-bottom: 4px;
-              font-size: 0.85rem;
+              margin-top: 10px;
+              margin-bottom: 5px;
+              font-size: 0.9rem;
               color: #1e40af;
               font-family: 'Inter', sans-serif;
               page-break-after: avoid;
             }
             ul {
               list-style: disc inside;
-              margin-bottom: 6px;
-              line-height: 1.2;
+              margin-bottom: 8px;
+              line-height: 1.3;
               font-size: 0.75rem;
               font-family: 'Inter', sans-serif;
               page-break-inside: avoid;
@@ -183,27 +183,38 @@ class TemplateService {
             }
             p {
               font-size: 0.75rem;
-              line-height: 1.2;
+              line-height: 1.3;
               margin-bottom: 6px;
               font-family: 'Inter', sans-serif;
             }
-            /* Layout em duas colunas para recursos e avaliação */
+            /* Layout em duas colunas para otimizar espaço */
             .two-column {
               display: flex;
-              gap: 15mm;
+              gap: 15px;
               margin-top: 8px;
             }
             .column {
               flex: 1;
             }
+            .column .section-title {
+              margin-top: 0;
+            }
+            /* Desenvolvimento Metodológico com espaçamento reduzido */
+            .development-section table {
+              font-size: 0.7rem;
+            }
+            .development-section th,
+            .development-section td {
+              padding: 3px 6px;
+            }
             /* Rodapé que aparece no final */
             .footer {
               position: absolute;
-              bottom: 5mm;
+              bottom: 8mm;
               left: 0;
               right: 0;
               text-align: center;
-              font-size: 0.5rem;
+              font-size: 0.55rem;
               color: #9ca3af;
               z-index: 999;
               height: 6mm;
@@ -220,16 +231,6 @@ class TemplateService {
             .avoid-break {
               page-break-inside: avoid;
             }
-            /* Desenvolvimento metodológico compacto */
-            .development-section {
-              page-break-inside: avoid;
-            }
-            .development-section table {
-              page-break-inside: avoid;
-            }
-            .development-section tr {
-              page-break-inside: avoid;
-            }
             /* Ajustes para impressão */
             @media print {
               body { 
@@ -242,13 +243,13 @@ class TemplateService {
                 margin: 0; 
                 border-radius: 0;
                 width: 100%;
-                height: 100vh;
+                min-height: 100vh;
                 display: flex;
                 flex-direction: column;
               }
               .header {
                 position: absolute;
-                top: 5mm;
+                top: 8mm;
                 left: 0;
                 right: 0;
                 padding: 0 15mm;
@@ -256,14 +257,14 @@ class TemplateService {
               }
               .footer {
                 position: absolute;
-                bottom: 5mm;
+                bottom: 8mm;
                 left: 0;
                 right: 0;
                 flex-shrink: 0;
               }
               .content {
-                margin-top: 18mm;
-                margin-bottom: 12mm;
+                margin-top: 22mm;
+                margin-bottom: 15mm;
                 padding: 0 15mm;
                 flex: 1;
               }
@@ -282,7 +283,7 @@ class TemplateService {
                   </svg>
                 </div>
                 <div class="brand-text">
-                  <h1>Aulag<span class="ia-text">IA</span></h1>
+                  <h1>AulagIA</h1>
                   <p>Sua aula com toque mágico</p>
                 </div>
               </div>
@@ -317,9 +318,7 @@ class TemplateService {
                 </tr>
                 <tr>
                   <th>Duração:</th>
-                  <td>{{duracao}}</td>
-                  <th>BNCC:</th>
-                  <td>{{bncc}}</td>
+                  <td colspan="3">{{duracao}}</td>
                 </tr>
               </table>
 
@@ -356,10 +355,10 @@ class TemplateService {
                 </table>
               </div>
 
-              <!-- Layout em duas colunas para recursos e avaliação -->
+              <!-- Layout em duas colunas para otimizar espaço -->
               <div class="two-column">
+                <!-- Recursos Didáticos -->
                 <div class="column">
-                  <!-- Recursos Didáticos -->
                   <div class="section-title">RECURSOS DIDÁTICOS</div>
                   <ul class="avoid-break">
                     {{#each recursos}}
@@ -368,8 +367,8 @@ class TemplateService {
                   </ul>
                 </div>
 
+                <!-- Avaliação -->
                 <div class="column">
-                  <!-- Avaliação -->
                   <div class="section-title">AVALIAÇÃO</div>
                   <p class="avoid-break">{{avaliacao}}</p>
                 </div>
@@ -379,7 +378,7 @@ class TemplateService {
         </body>
         </html>
       `,
-      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'bncc', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
+      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
