@@ -30,9 +30,9 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           <div class="logo-section">
             <div style="height: 40px; margin-bottom: 20px; background: #f3f4f6; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px;">Logo</div>
           </div>
-          ${isFirstPage ? header : ''}
+          ${header}
         </div>
-        <div class="main-content" style="margin-top: 40px; padding-top: 20px;">
+        <div class="main-content">
           ${content}
         </div>
         ${includeFooter ? '<div class="page-footer"></div>' : ''}
@@ -44,22 +44,22 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     const enunciado = question.querySelector('.questao-enunciado')?.textContent || '';
     const opcoes = question.querySelectorAll('.opcao');
     
-    // Base height increased to account for better spacing
-    let height = 150; // Increased base padding and margins
+    // Base height for question container with padding and margins
+    let height = 120;
     
-    // More conservative text height calculation
-    height += Math.ceil(enunciado.length / 70) * 30; // More space per line
+    // Calculate text height more conservatively
+    height += Math.ceil(enunciado.length / 80) * 25;
     
-    // More space for options
-    height += opcoes.length * 40; // Increased space per option
+    // Add height for options
+    height += opcoes.length * 35;
     
-    // Additional space for complex questions
-    if (enunciado.length > 200 || opcoes.length > 4) {
-      height += 80; // More generous extra space
+    // Extra space for complex questions
+    if (enunciado.length > 150 || opcoes.length > 4) {
+      height += 60;
     }
     
-    // Add extra margin between questions
-    height += 40;
+    // Margin between questions
+    height += 30;
     
     return height;
   };
@@ -70,12 +70,13 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
-    // Significantly increased header space to prevent overlap
-    const pageHeight = 1200;
-    const headerFooterHeight = 450; // Increased from 350 to 450
-    const availableContentHeight = pageHeight - headerFooterHeight;
+    // Updated page dimensions with more conservative approach
+    const pageHeight = 1100;
+    const headerHeight = 200; // Fixed header space for all pages
+    const footerHeight = 60;
+    const availableContentHeight = pageHeight - headerHeight - footerHeight;
     
-    console.log('Page calculation:', { pageHeight, headerFooterHeight, availableContentHeight });
+    console.log('Page calculation:', { pageHeight, headerHeight, footerHeight, availableContentHeight });
 
     // Split content by questions or sections for activities and evaluations
     if (material.type === 'atividade' || material.type === 'avaliacao') {
@@ -94,24 +95,17 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
-      
-      // Reserve additional space for header on first page
-      const firstPageReservedSpace = 100;
+      const combinedHeader = header + instructions;
       
       questions.forEach((question, index) => {
         const questionHeight = calculateQuestionHeight(question);
         console.log(`Question ${index + 1} estimated height: ${questionHeight}px`);
         
-        // Check if this is the first page and account for header space
-        const pageLimit = (currentPageContent === '' && pages.length === 0) 
-          ? availableContentHeight - firstPageReservedSpace 
-          : availableContentHeight;
-        
-        // More conservative page break logic
-        if (currentPageHeight + questionHeight > pageLimit && currentPageContent) {
+        // Check if adding this question would exceed page limit
+        if (currentPageHeight + questionHeight > availableContentHeight && currentPageContent) {
           console.log(`Creating new page at question ${index + 1}, current height: ${currentPageHeight}px`);
           const isFirstPage = pages.length === 0;
-          pages.push(wrapPageContent(currentPageContent, header + instructions, true, isFirstPage));
+          pages.push(wrapPageContent(currentPageContent, isFirstPage ? combinedHeader : '', true, isFirstPage));
           currentPageContent = '';
           currentPageHeight = 0;
         }
@@ -123,14 +117,14 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       // Add remaining content to last page
       if (currentPageContent) {
         const isFirstPage = pages.length === 0;
-        pages.push(wrapPageContent(currentPageContent, header + instructions, true, isFirstPage));
+        pages.push(wrapPageContent(currentPageContent, isFirstPage ? combinedHeader : '', true, isFirstPage));
       }
       
       console.log(`Split into ${pages.length} pages`);
       return pages.length > 0 ? pages : [htmlContent];
     }
 
-    // For lesson plans, split by sections with better height calculation
+    // For lesson plans, split by sections
     if (material.type === 'plano-de-aula') {
       const sections = tempDiv.querySelectorAll('.section');
       if (sections.length <= 1) {
@@ -140,14 +134,14 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       const pages: string[] = [];
       let currentPageContent = '';
       let currentPageHeight = 0;
-      const sectionHeight = 280; // Increased section height estimate
+      const sectionHeight = 220;
 
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       
       sections.forEach((section, index) => {
         if (currentPageHeight + sectionHeight > availableContentHeight && currentPageContent) {
           const isFirstPage = pages.length === 0;
-          pages.push(wrapPageContent(currentPageContent, header, false, isFirstPage));
+          pages.push(wrapPageContent(currentPageContent, isFirstPage ? header : '', false, isFirstPage));
           currentPageContent = '';
           currentPageHeight = 0;
         }
@@ -158,7 +152,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       
       if (currentPageContent) {
         const isFirstPage = pages.length === 0;
-        pages.push(wrapPageContent(currentPageContent, header, false, isFirstPage));
+        pages.push(wrapPageContent(currentPageContent, isFirstPage ? header : '', false, isFirstPage));
       }
       
       return pages.length > 0 ? pages : [htmlContent];
@@ -208,10 +202,10 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           }
           
           .page-header-safe-zone {
-            margin-bottom: 50px;
-            padding-bottom: 30px;
+            margin-bottom: 40px;
+            padding-bottom: 25px;
             border-bottom: 2px solid #e5e5e5;
-            min-height: 150px; /* Increased minimum height */
+            min-height: 180px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -219,27 +213,27 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           
           .logo-section {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             padding-bottom: 10px;
           }
           
           .header-section {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
           }
           
           .instructions-section {
             background: #f0f9ff;
             padding: 20px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border-left: 4px solid #0ea5e9;
           }
           
           .main-content {
             flex: 1;
             margin-bottom: 30px;
-            padding-top: 20px; /* Additional top padding */
-            margin-top: 20px; /* Additional top margin */
+            padding-top: 30px;
+            margin-top: 30px;
           }
           
           .page-footer {
@@ -253,8 +247,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           }
           
           .questao-container {
-            margin-bottom: 40px; /* Increased margin between questions */
-            padding: 25px; /* Increased padding */
+            margin-bottom: 35px;
+            padding: 20px;
             background: #fafafa;
             border-left: 4px solid #3b82f6;
             border-radius: 8px;
@@ -265,22 +259,22 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           .questao-numero {
             font-weight: bold;
             color: #3b82f6;
-            margin-bottom: 20px; /* Increased margin */
+            margin-bottom: 15px;
             font-size: 16px;
           }
           
           .questao-enunciado {
-            margin-bottom: 25px; /* Increased margin */
-            line-height: 1.8;
+            margin-bottom: 20px;
+            line-height: 1.7;
             font-size: 14px;
           }
           
           .questao-opcoes {
-            margin-left: 25px;
+            margin-left: 20px;
           }
           
           .opcao {
-            margin: 12px 0; /* Increased margin between options */
+            margin: 10px 0;
             display: flex;
             align-items: flex-start;
             font-size: 14px;
@@ -288,47 +282,12 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           
           .opcao-letra {
             font-weight: bold;
-            margin-right: 15px;
-            min-width: 25px;
-          }
-          
-          .espaco-resposta {
-            border-bottom: 1px solid #ccc;
-            margin: 20px 0; /* Increased margin */
-            min-height: 35px; /* Increased height */
-          }
-          
-          .area-calculo {
-            border: 1px dashed #ccc;
-            padding: 30px; /* Increased padding */
-            margin: 25px 0; /* Increased margin */
-            background: #f9f9f9;
-            text-align: center;
-            color: #666;
-            font-style: italic;
-          }
-          
-          .area-desenho {
-            border: 2px solid #ccc;
-            padding: 60px; /* Increased padding */
-            margin: 25px 0; /* Increased margin */
-            background: white;
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            min-height: 180px; /* Increased height */
-          }
-          
-          .texto-interpretacao {
-            background: #f0f8ff;
-            padding: 25px; /* Increased padding */
-            border-left: 4px solid #1e90ff;
-            margin: 25px 0; /* Increased margin */
-            font-style: italic;
+            margin-right: 12px;
+            min-width: 22px;
           }
           
           .section {
-            margin-bottom: 40px; /* Increased margin */
+            margin-bottom: 35px;
             page-break-inside: avoid;
             break-inside: avoid;
           }
@@ -337,8 +296,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             font-size: 18px;
             font-weight: bold;
             color: #2563eb;
-            margin-bottom: 25px; /* Increased margin */
-            padding-bottom: 10px; /* Increased padding */
+            margin-bottom: 20px;
+            padding-bottom: 8px;
             border-bottom: 2px solid #e5e7eb;
           }
           
@@ -364,20 +323,20 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             }
             
             .page-header-safe-zone {
-              margin-bottom: 40px;
+              margin-bottom: 35px;
               padding-bottom: 20px;
-              min-height: 140px; /* Ensured minimum height in print */
+              min-height: 170px;
             }
             
             .main-content {
-              margin-top: 30px; /* Additional space in print */
-              padding-top: 20px;
+              margin-top: 25px;
+              padding-top: 25px;
             }
             
             .questao-container {
               page-break-inside: avoid;
               break-inside: avoid;
-              margin-bottom: 35px;
+              margin-bottom: 30px;
             }
             
             .section {
