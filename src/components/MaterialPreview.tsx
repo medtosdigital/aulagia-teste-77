@@ -24,6 +24,18 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     return typeMap[type as keyof typeof typeMap] || '1';
   };
 
+  const wrapPageContent = (content: string, header: string, includeFooter: boolean): string => {
+    return `
+      <div class="page-content">
+        ${header}
+        <div class="main-content">
+          ${content}
+        </div>
+        ${includeFooter ? '<div class="page-footer"></div>' : ''}
+      </div>
+    `;
+  };
+
   const splitContentIntoPages = (htmlContent: string): string[] => {
     // Check if content needs to be split into multiple pages
     const tempDiv = document.createElement('div');
@@ -58,7 +70,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         
         if (currentPageHeight + questionHeight > pageHeight - headerFooterHeight && currentPageContent) {
           // Create new page
-          pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
+          pages.push(wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
           currentPageContent = '';
           currentPageHeight = 0;
         }
@@ -69,7 +81,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       
       // Add remaining content to last page
       if (currentPageContent) {
-        pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
+        pages.push(wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
       }
       
       return pages.length > 0 ? pages : [htmlContent];
@@ -92,7 +104,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       
       sections.forEach((section, index) => {
         if (sectionCount >= sectionsPerPage && currentPageContent) {
-          pages.push(this.wrapPageContent(currentPageContent, index === 0 ? header : '', false));
+          pages.push(wrapPageContent(currentPageContent, index === 0 ? header : '', false));
           currentPageContent = '';
           sectionCount = 0;
         }
@@ -102,7 +114,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       });
       
       if (currentPageContent) {
-        pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header : '', false));
+        pages.push(wrapPageContent(currentPageContent, pages.length === 0 ? header : '', false));
       }
       
       return pages.length > 0 ? pages : [htmlContent];
@@ -111,111 +123,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     return [htmlContent];
   };
 
-  private wrapPageContent = (content: string, header: string, includeFooter: boolean): string => {
-    return `
-      <div class="page-content">
-        ${header}
-        <div class="main-content">
-          ${content}
-        </div>
-        ${includeFooter ? '<div class="page-footer"></div>' : ''}
-      </div>
-    `;
-  };
-
-  const renderMaterial = () => {
-    const selectedTemplateId = templateId || getDefaultTemplateId(material.type);
-    
-    try {
-      const renderedHtml = templateService.renderTemplate(selectedTemplateId, material.content);
-      
-      // Se for slides, usar o SlideViewer
-      if (material.type === 'slides') {
-        return <SlideViewer htmlContent={renderedHtml} />;
-      }
-      
-      // Split content into pages
-      const pages = this.splitContentIntoPages(renderedHtml);
-      
-      if (pages.length === 1) {
-        // Single page - render directly
-        return (
-          <iframe
-            srcDoc={this.enhanceHtmlWithStyles(pages[0])}
-            style={{
-              width: '100%',
-              height: '100%',
-              border: 'none',
-              backgroundColor: 'white'
-            }}
-            title="Material Preview"
-          />
-        );
-      }
-
-      // Multiple pages - render with navigation
-      return (
-        <div className="multi-page-container h-full flex flex-col">
-          {/* Page Navigation */}
-          <div className="flex items-center justify-between p-4 bg-white border-b shadow-sm">
-            <div className="flex items-center space-x-2">
-              <FileText className="w-5 h-5 text-blue-600" />
-              <span className="font-medium text-gray-700">
-                Página {currentPage + 1} de {pages.length}
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                disabled={currentPage === 0}
-                className="flex items-center space-x-1"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span>Anterior</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
-                disabled={currentPage === pages.length - 1}
-                className="flex items-center space-x-1"
-              >
-                <span>Próxima</span>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Page Content */}
-          <div className="flex-1 overflow-hidden">
-            <iframe
-              srcDoc={this.enhanceHtmlWithStyles(pages[currentPage])}
-              style={{
-                width: '100%',
-                height: '100%',
-                border: 'none',
-                backgroundColor: 'white'
-              }}
-              title={`Material Preview - Página ${currentPage + 1}`}
-            />
-          </div>
-        </div>
-      );
-    } catch (error) {
-      console.error('Erro ao renderizar template:', error);
-      return (
-        <div className="error-message p-4 text-center">
-          <p className="text-red-600 text-sm">Erro ao carregar o template do material.</p>
-        </div>
-      );
-    }
-  };
-
-  private enhanceHtmlWithStyles = (htmlContent: string): string => {
+  const enhanceHtmlWithStyles = (htmlContent: string): string => {
     return `
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -389,6 +297,98 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       </body>
       </html>
     `;
+  };
+
+  const renderMaterial = () => {
+    const selectedTemplateId = templateId || getDefaultTemplateId(material.type);
+    
+    try {
+      const renderedHtml = templateService.renderTemplate(selectedTemplateId, material.content);
+      
+      // Se for slides, usar o SlideViewer
+      if (material.type === 'slides') {
+        return <SlideViewer htmlContent={renderedHtml} />;
+      }
+      
+      // Split content into pages
+      const pages = splitContentIntoPages(renderedHtml);
+      
+      if (pages.length === 1) {
+        // Single page - render directly
+        return (
+          <iframe
+            srcDoc={enhanceHtmlWithStyles(pages[0])}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              backgroundColor: 'white'
+            }}
+            title="Material Preview"
+          />
+        );
+      }
+
+      // Multiple pages - render with navigation
+      return (
+        <div className="multi-page-container h-full flex flex-col">
+          {/* Page Navigation */}
+          <div className="flex items-center justify-between p-4 bg-white border-b shadow-sm">
+            <div className="flex items-center space-x-2">
+              <FileText className="w-5 h-5 text-blue-600" />
+              <span className="font-medium text-gray-700">
+                Página {currentPage + 1} de {pages.length}
+              </span>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                disabled={currentPage === 0}
+                className="flex items-center space-x-1"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Anterior</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
+                disabled={currentPage === pages.length - 1}
+                className="flex items-center space-x-1"
+              >
+                <span>Próxima</span>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Page Content */}
+          <div className="flex-1 overflow-hidden">
+            <iframe
+              srcDoc={enhanceHtmlWithStyles(pages[currentPage])}
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                backgroundColor: 'white'
+              }}
+              title={`Material Preview - Página ${currentPage + 1}`}
+            />
+          </div>
+        </div>
+      );
+    } catch (error) {
+      console.error('Erro ao renderizar template:', error);
+      return (
+        <div className="error-message p-4 text-center">
+          <p className="text-red-600 text-sm">Erro ao carregar o template do material.</p>
+        </div>
+      );
+    }
   };
 
   return (
