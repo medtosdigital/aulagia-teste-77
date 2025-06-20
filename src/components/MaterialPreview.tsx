@@ -23,11 +23,14 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     return typeMap[type as keyof typeof typeMap] || '1';
   };
 
-  const wrapPageContent = (content: string, header: string, includeFooter: boolean): string => {
+  const wrapPageContent = (content: string, header: string, includeFooter: boolean, isFirstPage: boolean = false): string => {
     return `
       <div class="page-content">
         <div class="page-header-safe-zone">
-          ${header}
+          <div class="logo-section">
+            <div style="height: 40px; margin-bottom: 10px; background: #f3f4f6; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px;">Logo</div>
+          </div>
+          ${isFirstPage ? header : ''}
         </div>
         <div class="main-content">
           ${content}
@@ -64,9 +67,9 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
-    // Updated page dimensions for better A4 compatibility
-    const pageHeight = 1200; // Increased from 1000px
-    const headerFooterHeight = 350; // Increased from 200px for better safety margin
+    // Updated page dimensions - now all pages have the same header space reserved
+    const pageHeight = 1200;
+    const headerFooterHeight = 350; // Space for logo + header/footer on all pages
     const availableContentHeight = pageHeight - headerFooterHeight;
     
     console.log('Page calculation:', { pageHeight, headerFooterHeight, availableContentHeight });
@@ -96,7 +99,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         // Check if adding this question would exceed page height
         if (currentPageHeight + questionHeight > availableContentHeight && currentPageContent) {
           console.log(`Creating new page at question ${index + 1}, current height: ${currentPageHeight}px`);
-          pages.push(wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
+          const isFirstPage = pages.length === 0;
+          pages.push(wrapPageContent(currentPageContent, header + instructions, true, isFirstPage));
           currentPageContent = '';
           currentPageHeight = 0;
         }
@@ -107,7 +111,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       
       // Add remaining content to last page
       if (currentPageContent) {
-        pages.push(wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
+        const isFirstPage = pages.length === 0;
+        pages.push(wrapPageContent(currentPageContent, header + instructions, true, isFirstPage));
       }
       
       console.log(`Split into ${pages.length} pages`);
@@ -130,7 +135,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       
       sections.forEach((section, index) => {
         if (currentPageHeight + sectionHeight > availableContentHeight && currentPageContent) {
-          pages.push(wrapPageContent(currentPageContent, index === 0 ? header : '', false));
+          const isFirstPage = pages.length === 0;
+          pages.push(wrapPageContent(currentPageContent, header, false, isFirstPage));
           currentPageContent = '';
           currentPageHeight = 0;
         }
@@ -140,7 +146,8 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       });
       
       if (currentPageContent) {
-        pages.push(wrapPageContent(currentPageContent, pages.length === 0 ? header : '', false));
+        const isFirstPage = pages.length === 0;
+        pages.push(wrapPageContent(currentPageContent, header, false, isFirstPage));
       }
       
       return pages.length > 0 ? pages : [htmlContent];
@@ -193,7 +200,12 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             margin-bottom: 40px;
             padding-bottom: 20px;
             border-bottom: 2px solid #e5e5e5;
-            min-height: 80px;
+            min-height: 120px; /* Increased to accommodate logo space */
+          }
+          
+          .logo-section {
+            text-align: center;
+            margin-bottom: 15px;
           }
           
           .header-section {

@@ -32,9 +32,9 @@ class ExportService {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
-    // Updated page dimensions matching MaterialPreview
-    const pageHeight = 1200; // Increased from 1000px
-    const headerFooterHeight = 350; // Increased from 200px for better safety margin
+    // Updated page dimensions matching MaterialPreview - all pages now reserve header space
+    const pageHeight = 1200;
+    const headerFooterHeight = 350; // Space for logo + header/footer on all pages
     const availableContentHeight = pageHeight - headerFooterHeight;
 
     console.log('ExportService page calculation:', { pageHeight, headerFooterHeight, availableContentHeight });
@@ -63,7 +63,8 @@ class ExportService {
         
         if (currentPageHeight + questionHeight > availableContentHeight && currentPageContent) {
           console.log(`ExportService: Creating new page at question ${index + 1}, current height: ${currentPageHeight}px`);
-          pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
+          const isFirstPage = pages.length === 0;
+          pages.push(this.wrapPageContent(currentPageContent, header + instructions, true, isFirstPage));
           currentPageContent = '';
           currentPageHeight = 0;
         }
@@ -73,7 +74,8 @@ class ExportService {
       });
       
       if (currentPageContent) {
-        pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
+        const isFirstPage = pages.length === 0;
+        pages.push(this.wrapPageContent(currentPageContent, header + instructions, true, isFirstPage));
       }
       
       console.log(`ExportService: Split into ${pages.length} pages`);
@@ -96,7 +98,8 @@ class ExportService {
       
       sections.forEach((section, index) => {
         if (currentPageHeight + sectionHeight > availableContentHeight && currentPageContent) {
-          pages.push(this.wrapPageContent(currentPageContent, index === 0 ? header : '', false));
+          const isFirstPage = pages.length === 0;
+          pages.push(this.wrapPageContent(currentPageContent, header, false, isFirstPage));
           currentPageContent = '';
           currentPageHeight = 0;
         }
@@ -106,7 +109,8 @@ class ExportService {
       });
       
       if (currentPageContent) {
-        pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header : '', false));
+        const isFirstPage = pages.length === 0;
+        pages.push(this.wrapPageContent(currentPageContent, header, false, isFirstPage));
       }
       
       return pages.length > 0 ? pages : [htmlContent];
@@ -115,14 +119,14 @@ class ExportService {
     return [htmlContent];
   }
 
-  private wrapPageContent(content: string, header: string, includeFooter: boolean): string {
+  private wrapPageContent(content: string, header: string, includeFooter: boolean, isFirstPage: boolean = false): string {
     return `
       <div class="page-content">
         <div class="page-header-safe-zone">
           <div class="logo-section">
             <img src="/placeholder.svg" alt="Logo" style="height: 40px; margin-bottom: 10px;">
           </div>
-          ${header}
+          ${isFirstPage ? header : ''}
         </div>
         <div class="main-content">
           ${content}
@@ -178,7 +182,7 @@ class ExportService {
             margin-bottom: 40px;
             padding-bottom: 20px;
             border-bottom: 2px solid #e5e5e5;
-            min-height: 100px;
+            min-height: 120px; /* Increased to accommodate logo space on all pages */
           }
           
           .logo-section {
