@@ -881,219 +881,6 @@ class TemplateService {
               background: #fafafa;
             }
             
-            .questao-item {
-              margin-bottom: 30px;
-              page-break-inside: avoid;
-              padding: 20px 0;
-              border-bottom: 1px solid #e5e7eb;
-            }
-            .questao-titulo {
-              font-weight: 600;
-              color: #000000;
-              margin-bottom: 15px;
-              font-size: 1.1rem;
-              font-family: 'Inter', sans-serif;
-            }
-            .questao-descricao {
-              margin-bottom: 15px;
-              line-height: 1.6;
-              font-family: 'Inter', sans-serif;
-              font-size: 0.9rem;
-              color: #000000;
-            }
-            .opcoes-multipla-escolha {
-              margin: 15px 0;
-            }
-            .opcao-item {
-              display: flex;
-              align-items: flex-start;
-              margin-bottom: 8px;
-              font-family: 'Inter', sans-serif;
-              font-size: 0.9rem;
-            }
-            .opcao-letra {
-              font-weight: bold;
-              margin-right: 10px;
-              color: #000000;
-              min-width: 25px;
-            }
-            .opcao-texto {
-              color: #000000;
-            }
-            .questao-tabela {
-              width: 100%;
-              border-collapse: collapse;
-              margin: 15px 0;
-              font-family: 'Inter', sans-serif;
-            }
-            .questao-tabela th, .questao-tabela td {
-              border: 1px solid #d1d5db;
-              padding: 8px 12px;
-              text-align: center;
-            }
-            .questao-tabela th {
-              background: #f3f4f6;
-              font-weight: 600;
-              color: #000000;
-            }
-            .questao-tabela td {
-              color: #000000;
-            }
-            .campo-resposta {
-              min-width: 60px;
-              font-weight: bold;
-            }
-            .questao-lista {
-              margin: 15px 0;
-              padding-left: 20px;
-            }
-            .item-lista {
-              margin-bottom: 8px;
-              color: #000000;
-              font-family: 'Inter', sans-serif;
-              font-size: 0.9rem;
-            }
-            .questao-ligar {
-              display: flex;
-              gap: 40px;
-              margin: 15px 0;
-            }
-            .coluna-esquerda, .coluna-direita {
-              flex: 1;
-            }
-            .item-ligar {
-              display: flex;
-              align-items: center;
-              margin-bottom: 10px;
-              padding: 8px;
-              border: 1px solid #d1d5db;
-              border-radius: 4px;
-            }
-            .numero-item, .letra-item {
-              font-weight: bold;
-              margin-right: 10px;
-              color: #000000;
-              min-width: 20px;
-            }
-            .texto-item {
-              color: #000000;
-              font-family: 'Inter', sans-serif;
-              font-size: 0.9rem;
-            }
-            .texto-completar {
-              margin: 15px 0;
-              line-height: 2;
-              font-family: 'Inter', sans-serif;
-              font-size: 0.9rem;
-              color: #000000;
-            }
-            .lacuna {
-              border-bottom: 2px solid #000000;
-              display: inline-block;
-              min-width: 80px;
-              margin: 0 5px;
-            }
-            .area-desenho {
-              margin: 15px 0;
-              text-align: center;
-            }
-            .espaco-desenho {
-              width: 100%;
-              height: 200px;
-              border: 2px solid #d1d5db;
-              border-radius: 8px;
-              background: #ffffff;
-            }
-            .texto-interpretacao {
-              margin: 15px 0;
-              padding: 15px;
-              border-left: 4px solid #0ea5e9;
-              background: #f8fafc;
-              font-family: 'Inter', sans-serif;
-              font-size: 0.9rem;
-              line-height: 1.6;
-              color: #000000;
-            }
-            .subquestao {
-              margin: 15px 0;
-            }
-            .subquestao-texto {
-              font-weight: 500;
-              margin-bottom: 10px;
-              color: #000000;
-              font-family: 'Inter', sans-serif;
-            }
-            .linhas-resposta {
-              margin: 10px 0;
-            }
-            .linha-resposta {
-              height: 30px;
-              border-bottom: 1px solid #000000;
-              margin-bottom: 8px;
-            }
-            .area-formula {
-              margin: 15px 0;
-            }
-            .espaco-calculo {
-              margin-bottom: 20px;
-            }
-            .label-calculo, .label-resposta {
-              font-weight: 600;
-              margin-bottom: 10px;
-              color: #000000;
-              font-family: 'Inter', sans-serif;
-            }
-            .linhas-calculo {
-              margin: 10px 0;
-            }
-            .linha-calculo {
-              height: 25px;
-              border-bottom: 1px solid #d1d5db;
-              margin-bottom: 5px;
-            }
-            .resposta-final {
-              margin-top: 20px;
-              padding: 10px;
-              border: 2px solid #0ea5e9;
-              border-radius: 6px;
-              background: #f0f9ff;
-            }
-            .prompt-imagem {
-              font-style: italic;
-              margin: 10px 0;
-              color: #666666;
-              font-size: 0.85rem;
-              font-family: 'Inter', sans-serif;
-            }
-            .atividade-bloco p {
-              margin-bottom: 15px;
-              line-height: 1.6;
-              font-family: 'Inter', sans-serif;
-              font-size: 0.9rem;
-            }
-            .table {
-              width: 100%;
-              border-collapse: collapse;
-              margin: 15px 0;
-              font-family: 'Inter', sans-serif;
-            }
-            .table th, .table td {
-              border: 1px solid #d1d5db;
-              padding: 8px 12px;
-              text-align: left;
-            }
-            .table th {
-              background: #f3f4f6;
-              font-weight: 600;
-            }
-            .espaco-resposta {
-              height: 60px;
-              border: 2px dashed #d1d5db;
-              margin-top: 15px;
-              border-radius: 4px;
-              background: #f9fafb;
-            }
-            
             /* Rodapé */
             .footer {
               position: absolute;
@@ -1261,7 +1048,26 @@ class TemplateService {
                 {{instrucoes}}
               </div>
 
-              {{questoesHTML}}
+              {{#each questoes}}
+              <div class="question">
+                <div class="question-header">Questão {{numero}}</div>
+                <div class="question-text">{{pergunta}}</div>
+                
+                {{#if opcoes}}
+                <div class="options">
+                  {{#each opcoes}}
+                  <div class="option">
+                    <span class="option-letter">{{@letter}}</span>
+                    <span>{{this}}</span>
+                  </div>
+                  {{/each}}
+                </div>
+                {{else}}
+                <div class="answer-space"></div>
+                <div class="answer-space"></div>
+                {{/if}}
+              </div>
+              {{/each}}
             </div>
           </div>
         </body>
@@ -1526,50 +1332,6 @@ class TemplateService {
               background: #fafafa;
             }
             
-            .atividade-bloco {
-              margin-bottom: 30px;
-              page-break-inside: avoid;
-              padding: 20px;
-              border: 1px solid #e5e7eb;
-              border-radius: 8px;
-              background: #fafafa;
-            }
-            .atividade-bloco h3 {
-              font-weight: 600;
-              color: #4338ca;
-              margin-bottom: 15px;
-              font-size: 1.1rem;
-              font-family: 'Inter', sans-serif;
-            }
-            .atividade-bloco p {
-              margin-bottom: 15px;
-              line-height: 1.6;
-              font-family: 'Inter', sans-serif;
-              font-size: 0.9rem;
-            }
-            .table {
-              width: 100%;
-              border-collapse: collapse;
-              margin: 15px 0;
-              font-family: 'Inter', sans-serif;
-            }
-            .table th, .table td {
-              border: 1px solid #d1d5db;
-              padding: 8px 12px;
-              text-align: left;
-            }
-            .table th {
-              background: #f3f4f6;
-              font-weight: 600;
-            }
-            .espaco-resposta {
-              height: 60px;
-              border: 2px dashed #d1d5db;
-              margin-top: 15px;
-              border-radius: 4px;
-              background: #f9fafb;
-            }
-            
             /* Rodapé */
             .footer {
               position: absolute;
@@ -1736,7 +1498,28 @@ class TemplateService {
                 <p><strong>Tempo Limite:</strong> {{tempoLimite}}</p>
               </div>
 
-              {{questoesHTML}}
+              {{#each questoes}}
+              <div class="question">
+                <div class="question-header">
+                  <span>Questão {{numero}}</span>
+                  <span class="points">({{pontuacao}} pontos)</span>
+                </div>
+                <div class="question-text">{{pergunta}}</div>
+                
+                {{#if opcoes}}
+                <div class="options">
+                  {{#each opcoes}}
+                  <div class="option">
+                    <span class="option-letter">{{@letter}}</span>
+                    <span>{{this}}</span>
+                  </div>
+                  {{/each}}
+                </div>
+                {{else}}
+                <div class="answer-space"></div>
+                {{/if}}
+              </div>
+              {{/each}}
             </div>
           </div>
         </body>
@@ -1793,51 +1576,6 @@ class TemplateService {
     return false;
   }
 
-  generateQuestionsHTML(questoes: any[]): string {
-    return questoes.map(questao => {
-      switch (questao.tipo) {
-        case 'tabela':
-          return `
-            <div class="questao-item">
-              <h3 class="questao-titulo">${questao.numero}. ${questao.pergunta}</h3>
-              <table class="questao-tabela">
-                ${questao.tabela?.map(item => `<tr><th>${item.operacao}</th><td class="campo-resposta">${item.resultado}</td></tr>`).join('')}
-              </table>
-            </div>
-          `;
-        case 'multipla_escolha':
-          return `
-            <div class="questao-item">
-              <h3 class="questao-titulo">${questao.numero}. ${questao.pergunta}${questao.pontuacao ? ` <span style="font-size: 0.8em; color: #666;">(${questao.pontuacao} pontos)</span>` : ''}</h3>
-              ${questao.descricao ? `<p class="questao-descricao">${questao.descricao}</p>` : ''}
-              <div class="opcoes-multipla-escolha">
-                ${questao.opcoes?.map((opcao, index) => `
-                  <div class="opcao-item">
-                    <span class="opcao-letra">${String.fromCharCode(97 + index).toUpperCase()})</span>
-                    <span class="opcao-texto">${opcao}</span>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          `;
-        default:
-          return `
-            <div class="questao-item">
-              <h3 class="questao-titulo">${questao.numero}. ${questao.pergunta}${questao.pontuacao ? ` <span style="font-size: 0.8em; color: #666;">(${questao.pontuacao} pontos)</span>` : ''}</h3>
-              ${questao.descricao ? `<p class="questao-descricao">${questao.descricao}</p>` : ''}
-              ${questao.promptImagem ? `<p class="prompt-imagem"><em>Prompt imagem IA:</em> ${questao.promptImagem}</p>` : ''}
-              <div class="linhas-resposta">
-                <div class="linha-resposta"></div>
-                <div class="linha-resposta"></div>
-                <div class="linha-resposta"></div>
-                <div class="linha-resposta"></div>
-              </div>
-            </div>
-          `;
-      }
-    }).join('');
-  }
-
   renderTemplate(templateId: string, data: any): string {
     const template = this.getTemplateById(templateId);
     if (!template) {
@@ -1846,11 +1584,6 @@ class TemplateService {
 
     // Simple template engine (substitui {{variavel}} pelo valor)
     let html = template.htmlContent;
-    
-    // Generate questions HTML if needed
-    if (data.questoes && Array.isArray(data.questoes)) {
-      data.questoesHTML = this.generateQuestionsHTML(data.questoes);
-    }
     
     // Handle simple variables
     Object.keys(data).forEach(key => {
