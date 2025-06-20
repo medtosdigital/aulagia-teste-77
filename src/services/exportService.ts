@@ -32,7 +32,7 @@ class ExportService {
             body { 
               margin: 0; 
               padding: 0; 
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               background: white;
               width: 100%;
               height: 100vh;
@@ -40,13 +40,13 @@ class ExportService {
             
             .page {
               width: 100%;
-              height: 100vh;
+              min-height: 100vh;
               background: white;
               margin: 0;
               padding: 0;
               box-sizing: border-box;
               position: relative;
-              overflow: hidden;
+              overflow: visible;
             }
 
             @media print {
@@ -64,20 +64,14 @@ class ExportService {
                 padding: 0 !important;
                 max-width: none !important;
                 width: 100% !important;
-                height: 100vh !important;
-                page-break-after: always;
-              }
-              
-              .page:last-child {
-                page-break-after: avoid;
+                min-height: 100vh !important;
+                page-break-after: avoid !important;
               }
             }
           </style>
         </head>
         <body>
-          <div class="page">
-            ${renderedHtml}
-          </div>
+          ${renderedHtml}
         </body>
         </html>
       `);
@@ -223,8 +217,7 @@ class ExportService {
       `Tema: ${content.tema}`,
       `Duração: ${content.duracao}`,
       `Data: ${content.data}`,
-      `Série/Ano: ${content.serie}`,
-      `BNCC: ${content.bncc}`
+      `Série/Ano: ${content.serie}`
     ];
 
     infoItems.forEach(item => {
