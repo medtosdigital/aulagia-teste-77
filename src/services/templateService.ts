@@ -634,7 +634,7 @@ class TemplateService {
     },
     {
       id: '3',
-      name: 'Atividade ABNT',
+      name: 'Atividade Padrão',
       type: 'atividade',
       htmlContent: `
         <!DOCTYPE html>
@@ -642,8 +642,11 @@ class TemplateService {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-          <title>Atividade</title>
+          <title>Atividade – AulagIA</title>
           <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            
+            /* Define página A4 para impressão e visualização */
             @page {
               size: A4;
               margin: 0;
@@ -651,116 +654,207 @@ class TemplateService {
             body {
               margin: 0;
               padding: 0;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              font-size: 12pt;
-              line-height: 1.5;
-              color: #000;
-              background: white;
+              background: #f0f4f8;
+              font-family: 'Inter', sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
+              padding: 20px 0;
             }
+            /* Container no tamanho A4 */
             .page {
+              position: relative;
               width: 210mm;
               min-height: 297mm;
               background: white;
-              margin: 0;
+              overflow: hidden;
+              margin: 0 auto;
               box-sizing: border-box;
-              position: relative;
-              page-break-after: always;
-              padding-top: 15mm;
-              padding-bottom: 10mm;
-              padding-left: 15mm;
-              padding-right: 15mm;
+              padding: 0;
+              display: flex;
+              flex-direction: column;
+              border-radius: 6px;
+              box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             }
-            .page:last-child {
-              page-break-after: avoid;
+            
+            /* Formas decorativas */
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.25;
+              pointer-events: none;
+              z-index: 0;
             }
-            /* Cabeçalho no topo da página */
+            .shape-circle.purple {
+              width: 180px; 
+              height: 180px;
+              background: #a78bfa;
+              top: -60px; 
+              left: -40px;
+            }
+            .shape-circle.blue {
+              width: 240px; 
+              height: 240px;
+              background: #60a5fa;
+              bottom: -80px; 
+              right: -60px;
+            }
+            
+            /* Cabeçalho que aparece no topo */
             .header {
               position: absolute;
-              top: 5mm;
-              left: 15mm;
-              right: 15mm;
+              top: 6mm;
+              left: 0;
+              right: 0;
               display: flex;
               align-items: center;
-              z-index: 10;
-              height: 8mm;
+              z-index: 999;
+              height: 12mm;
+              background: transparent;
+              padding: 0 12mm;
+              flex-shrink: 0;
+            }
+            .header .logo-container {
+              display: flex;
+              align-items: center;
+              gap: 3px;
             }
             .header .logo {
-              width: 20px;
-              height: 20px;
-              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-              border-radius: 4px;
-              margin-right: 8px;
+              width: 32px;
+              height: 32px;
+              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+              border-radius: 50%;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
-              font-weight: bold;
-              font-size: 10px;
               flex-shrink: 0;
+              box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
             }
-            .header .texts h1 {
-              font-size: 0.8rem;
-              color: #10b981;
-              margin: 0 0 1px 0;
-              line-height: 1.1;
-              font-weight: 600;
+            .header .logo svg {
+              width: 18px;
+              height: 18px;
+              stroke: white;
+              fill: none;
+              stroke-width: 2;
             }
-            .header .texts p {
-              font-size: 0.45rem;
-              color: #6b7280;
+            .header .brand-text {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+            }
+            .header .brand-text h1 {
+              font-size: 20px;
+              color: #0ea5e9;
               margin: 0;
-              line-height: 1.1;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 700;
+              letter-spacing: -0.2px;
+              text-transform: none;
             }
+            .header .brand-text p {
+              font-size: 8px;
+              color: #6b7280;
+              margin: -1px 0 0 0;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 400;
+            }
+            
+            /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
-              margin-top: 5mm;
-              padding-bottom: 5mm;
+              margin-top: 20mm;
+              margin-bottom: 12mm;
+              padding: 0 15mm;
+              position: relative;
+              flex: 1;
+              overflow: visible;
+              z-index: 1;
             }
-            h1 {
+            /* Título principal */
+            h2 {
               text-align: center;
-              margin: 0 0 30px 0;
-              font-size: 18pt;
-              font-weight: bold;
-              color: #059669;
-              text-transform: uppercase;
+              margin: 10px 0 18px 0;
+              font-size: 1.5rem;
+              color: #4f46e5;
+              position: relative;
+              font-family: 'Inter', sans-serif;
+              font-weight: 700;
             }
-            .header-table {
+            h2::after {
+              content: '';
+              width: 50px;
+              height: 3px;
+              background: #a78bfa;
+              display: block;
+              margin: 6px auto 0;
+              border-radius: 2px;
+            }
+            /* Tabelas */
+            table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 30px;
-              page-break-inside: avoid;
+              margin-bottom: 18px;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             }
-            .header-table th {
-              background: #10b981;
-              color: white;
-              padding: 10px;
-              font-weight: bold;
-              text-align: center;
-            }
-            .header-table td {
+            th, td {
               padding: 8px 12px;
-              border: 1px solid #333;
+              font-size: 0.85rem;
+              border: none;
+              font-family: 'Inter', sans-serif;
+              vertical-align: top;
             }
+            th {
+              background: #f3f4f6;
+              color: #1f2937;
+              font-weight: 600;
+              text-align: left;
+              width: 18%;
+            }
+            td {
+              background: #ffffff;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            td:last-child {
+              border-bottom: none;
+            }
+            
             .instructions {
-              background: #f0fdf4;
+              background: #eff6ff;
               padding: 15px;
-              border-left: 4px solid #10b981;
+              border-left: 4px solid #0ea5e9;
               margin-bottom: 30px;
-              font-style: italic;
-              page-break-inside: avoid;
+              font-family: 'Inter', sans-serif;
+              border-radius: 6px;
             }
+            
+            .student-info {
+              margin-bottom: 20px;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
+            }
+            
             .question {
               margin-bottom: 30px;
               page-break-inside: avoid;
             }
             .question-header {
-              font-weight: bold;
-              color: #059669;
+              font-weight: 600;
+              color: #4338ca;
               margin-bottom: 10px;
-              font-size: 13pt;
+              font-size: 1.0rem;
+              font-family: 'Inter', sans-serif;
             }
             .question-text {
               margin-bottom: 15px;
               text-align: justify;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
+              line-height: 1.4;
             }
             .options {
               margin-left: 20px;
@@ -769,95 +863,183 @@ class TemplateService {
               margin-bottom: 8px;
               display: flex;
               align-items: flex-start;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
             }
             .option-letter {
               font-weight: bold;
               margin-right: 10px;
-              color: #059669;
+              color: #4338ca;
               min-width: 25px;
             }
             .answer-space {
-              border-bottom: 1px solid #333;
-              height: 40px;
+              border: 1px solid #e5e7eb;
+              min-height: 60px;
               margin: 10px 0;
+              padding: 10px;
+              border-radius: 4px;
+              background: #fafafa;
             }
+            
+            /* Rodapé */
             .footer {
               position: absolute;
-              bottom: 3mm;
-              left: 15mm;
-              right: 15mm;
+              bottom: 6mm;
+              left: 0;
+              right: 0;
               text-align: center;
-              font-size: 0.5rem;
-              color: #9ca3af;
-              z-index: 10;
-              height: 4mm;
+              font-size: 0.7rem;
+              color: #6b7280;
+              z-index: 999;
+              height: 6mm;
               display: flex;
               align-items: center;
               justify-content: center;
+              background: transparent;
+              padding: 0 15mm;
+              font-family: 'Inter', sans-serif;
+              flex-shrink: 0;
             }
+            
+            /* Ajustes para impressão */
             @media print {
               body { 
                 margin: 0; 
                 padding: 0; 
                 background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
               .page { 
                 box-shadow: none; 
                 margin: 0; 
-                padding-top: 15mm;
-                padding-bottom: 10mm;
-                padding-left: 15mm;
-                padding-right: 15mm;
-                max-width: none;
-                width: 100%;
                 border-radius: 0;
+                width: 100%;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
               }
-              .page:last-child {
-                page-break-after: avoid;
+              .shape-circle {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
               .header {
-                position: absolute;
-                top: 5mm;
-                left: 15mm;
-                right: 15mm;
+                position: fixed;
+                top: 6mm;
+                left: 0;
+                right: 0;
+                padding: 0 15mm;
+                flex-shrink: 0;
+                background: transparent;
+                z-index: 1000;
+              }
+              .header .logo-container {
+                gap: 6px;
+              }
+              .header .logo {
+                width: 24px;
+                height: 24px;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header .logo svg {
+                width: 14px;
+                height: 14px;
+              }
+              .header .brand-text h1 {
+                font-size: 14px;
+                text-transform: none !important;
+              }
+              .header .brand-text p {
+                font-size: 7px;
+                margin: 0;
               }
               .footer {
-                position: absolute;
-                bottom: 3mm;
-                left: 15mm;
-                right: 15mm;
+                position: fixed;
+                bottom: 6mm;
+                left: 0;
+                right: 0;
+                flex-shrink: 0;
+                background: transparent;
+              }
+              .content {
+                margin-top: 20mm;
+                margin-bottom: 12mm;
+                padding: 0 15mm;
+                flex: 1;
+              }
+              h2 {
+                color: #4f46e5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              h2::after {
+                background: #a78bfa !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .question-header {
+                color: #4338ca !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              th {
+                background: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
             }
           </style>
         </head>
         <body>
           <div class="page">
+            <!-- Formas decorativas -->
+            <div class="shape-circle purple"></div>
+            <div class="shape-circle blue"></div>
+
             <!-- Cabeçalho -->
             <div class="header">
-              <div class="logo">A</div>
-              <div class="texts">
-                <h1>AulagIA</h1>
-                <p>Sua aula com toque mágico</p>
+              <div class="logo-container">
+                <div class="logo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                  </svg>
+                </div>
+                <div class="brand-text">
+                  <h1>AulagIA</h1>
+                  <p>Sua aula com toque mágico</p>
+                </div>
               </div>
             </div>
 
-            <div class="content">
-              <h1>Atividade</h1>
+            <!-- Rodapé -->
+            <div class="footer">
+              Atividade gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
 
-              <table class="header-table">
+            <div class="content">
+              <!-- Título da Atividade -->
+              <h2>ATIVIDADE</h2>
+
+              <!-- Informações básicas -->
+              <table>
                 <tr>
-                  <th>Escola</th>
-                  <th>Disciplina</th>
-                  <th>Série/Ano</th>
+                  <th>Escola:</th>
+                  <td>_________________________________</td>
+                  <th>Data:</th>
+                  <td>_________________</td>
                 </tr>
                 <tr>
-                  <td>_________________________________</td>
-                  <td style="text-align: center;">{{disciplina}}</td>
-                  <td style="text-align: center;">{{serie}}</td>
+                  <th>Disciplina:</th>
+                  <td>{{disciplina}}</td>
+                  <th>Série/Ano:</th>
+                  <td>{{serie}}</td>
                 </tr>
               </table>
 
-              <div style="margin-bottom: 20px;">
+              <div class="student-info">
                 <p><strong>Nome do Aluno(a):</strong> ____________________________________________</p>
               </div>
 
@@ -887,10 +1069,6 @@ class TemplateService {
               </div>
               {{/each}}
             </div>
-
-            <div class="footer">
-              Atividade gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
-            </div>
           </div>
         </body>
         </html>
@@ -909,8 +1087,11 @@ class TemplateService {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-          <title>Avaliação</title>
+          <title>Avaliação – AulagIA</title>
           <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            
+            /* Define página A4 para impressão e visualização */
             @page {
               size: A4;
               margin: 0;
@@ -918,102 +1099,184 @@ class TemplateService {
             body {
               margin: 0;
               padding: 0;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              font-size: 12pt;
-              line-height: 1.5;
-              color: #000;
-              background: white;
+              background: #f0f4f8;
+              font-family: 'Inter', sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
+              padding: 20px 0;
             }
+            /* Container no tamanho A4 */
             .page {
+              position: relative;
               width: 210mm;
               min-height: 297mm;
               background: white;
-              margin: 0;
+              overflow: hidden;
+              margin: 0 auto;
               box-sizing: border-box;
-              position: relative;
-              page-break-after: always;
-              padding-top: 15mm;
-              padding-bottom: 10mm;
-              padding-left: 15mm;
-              padding-right: 15mm;
+              padding: 0;
+              display: flex;
+              flex-direction: column;
+              border-radius: 6px;
+              box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             }
-            .page:last-child {
-              page-break-after: avoid;
+            
+            /* Formas decorativas */
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.25;
+              pointer-events: none;
+              z-index: 0;
             }
-            /* Cabeçalho no topo da página */
+            .shape-circle.purple {
+              width: 180px; 
+              height: 180px;
+              background: #a78bfa;
+              top: -60px; 
+              left: -40px;
+            }
+            .shape-circle.blue {
+              width: 240px; 
+              height: 240px;
+              background: #60a5fa;
+              bottom: -80px; 
+              right: -60px;
+            }
+            
+            /* Cabeçalho que aparece no topo */
             .header {
               position: absolute;
-              top: 5mm;
-              left: 15mm;
-              right: 15mm;
+              top: 6mm;
+              left: 0;
+              right: 0;
               display: flex;
               align-items: center;
-              z-index: 10;
-              height: 8mm;
+              z-index: 999;
+              height: 12mm;
+              background: transparent;
+              padding: 0 12mm;
+              flex-shrink: 0;
+            }
+            .header .logo-container {
+              display: flex;
+              align-items: center;
+              gap: 3px;
             }
             .header .logo {
-              width: 20px;
-              height: 20px;
-              background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-              border-radius: 4px;
-              margin-right: 8px;
+              width: 32px;
+              height: 32px;
+              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+              border-radius: 50%;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
-              font-weight: bold;
-              font-size: 10px;
               flex-shrink: 0;
+              box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
             }
-            .header .texts h1 {
-              font-size: 0.8rem;
-              color: #dc2626;
-              margin: 0 0 1px 0;
-              line-height: 1.1;
-              font-weight: 600;
+            .header .logo svg {
+              width: 18px;
+              height: 18px;
+              stroke: white;
+              fill: none;
+              stroke-width: 2;
             }
-            .header .texts p {
-              font-size: 0.45rem;
-              color: #6b7280;
+            .header .brand-text {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+            }
+            .header .brand-text h1 {
+              font-size: 20px;
+              color: #0ea5e9;
               margin: 0;
-              line-height: 1.1;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 700;
+              letter-spacing: -0.2px;
+              text-transform: none;
             }
+            .header .brand-text p {
+              font-size: 8px;
+              color: #6b7280;
+              margin: -1px 0 0 0;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 400;
+            }
+            
+            /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
-              margin-top: 5mm;
-              padding-bottom: 5mm;
+              margin-top: 20mm;
+              margin-bottom: 12mm;
+              padding: 0 15mm;
+              position: relative;
+              flex: 1;
+              overflow: visible;
+              z-index: 1;
             }
-            h1 {
+            /* Título principal */
+            h2 {
               text-align: center;
-              margin: 0 0 30px 0;
-              font-size: 18pt;
-              font-weight: bold;
-              color: #dc2626;
-              text-transform: uppercase;
+              margin: 10px 0 18px 0;
+              font-size: 1.5rem;
+              color: #4f46e5;
+              position: relative;
+              font-family: 'Inter', sans-serif;
+              font-weight: 700;
             }
-            .header-table {
+            h2::after {
+              content: '';
+              width: 50px;
+              height: 3px;
+              background: #a78bfa;
+              display: block;
+              margin: 6px auto 0;
+              border-radius: 2px;
+            }
+            /* Tabelas */
+            table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 30px;
-              page-break-inside: avoid;
+              margin-bottom: 18px;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             }
-            .header-table th {
-              background: #dc2626;
-              color: white;
-              padding: 10px;
-              font-weight: bold;
-              text-align: center;
-            }
-            .header-table td {
+            th, td {
               padding: 8px 12px;
-              border: 1px solid #333;
+              font-size: 0.85rem;
+              border: none;
+              font-family: 'Inter', sans-serif;
+              vertical-align: top;
             }
+            th {
+              background: #f3f4f6;
+              color: #1f2937;
+              font-weight: 600;
+              text-align: left;
+              width: 18%;
+            }
+            td {
+              background: #ffffff;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            td:last-child {
+              border-bottom: none;
+            }
+            
             .evaluation-info {
-              background: #fef2f2;
+              background: #fef3f2;
               padding: 15px;
-              border-left: 4px solid #dc2626;
+              border-left: 4px solid #ef4444;
               margin-bottom: 30px;
-              page-break-inside: avoid;
+              font-family: 'Inter', sans-serif;
+              border-radius: 6px;
             }
+            
             .question {
               margin-bottom: 30px;
               page-break-inside: avoid;
@@ -1022,22 +1285,27 @@ class TemplateService {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              font-weight: bold;
-              color: #dc2626;
+              font-weight: 600;
+              color: #4338ca;
               margin-bottom: 10px;
-              font-size: 13pt;
+              font-size: 1.0rem;
+              font-family: 'Inter', sans-serif;
             }
             .points {
-              background: #fef2f2;
-              color: #dc2626;
+              background: #fef3f2;
+              color: #ef4444;
               padding: 4px 8px;
-              border: 1px solid #dc2626;
+              border: 1px solid #ef4444;
               border-radius: 4px;
-              font-size: 10pt;
+              font-size: 0.75rem;
+              font-weight: 500;
             }
             .question-text {
               margin-bottom: 15px;
               text-align: justify;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
+              line-height: 1.4;
             }
             .options {
               margin-left: 20px;
@@ -1046,91 +1314,182 @@ class TemplateService {
               margin-bottom: 8px;
               display: flex;
               align-items: flex-start;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
             }
             .option-letter {
               font-weight: bold;
               margin-right: 10px;
-              color: #dc2626;
+              color: #4338ca;
               min-width: 25px;
             }
             .answer-space {
-              border: 1px solid #333;
+              border: 1px solid #e5e7eb;
               min-height: 60px;
               margin: 10px 0;
               padding: 10px;
+              border-radius: 4px;
+              background: #fafafa;
             }
+            
+            /* Rodapé */
             .footer {
               position: absolute;
-              bottom: 3mm;
-              left: 15mm;
-              right: 15mm;
+              bottom: 6mm;
+              left: 0;
+              right: 0;
               text-align: center;
-              font-size: 0.5rem;
-              color: #9ca3af;
-              z-index: 10;
-              height: 4mm;
+              font-size: 0.7rem;
+              color: #6b7280;
+              z-index: 999;
+              height: 6mm;
               display: flex;
               align-items: center;
               justify-content: center;
+              background: transparent;
+              padding: 0 15mm;
+              font-family: 'Inter', sans-serif;
+              flex-shrink: 0;
             }
+            
+            /* Ajustes para impressão */
             @media print {
               body { 
                 margin: 0; 
                 padding: 0; 
                 background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
               .page { 
                 box-shadow: none; 
                 margin: 0; 
-                padding-top: 15mm;
-                padding-bottom: 10mm;
-                padding-left: 15mm;
-                padding-right: 15mm;
-                max-width: none;
-                width: 100%;
                 border-radius: 0;
+                width: 100%;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
               }
-              .page:last-child {
-                page-break-after: avoid;
+              .shape-circle {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
               .header {
-                position: absolute;
-                top: 5mm;
-                left: 15mm;
-                right: 15mm;
+                position: fixed;
+                top: 6mm;
+                left: 0;
+                right: 0;
+                padding: 0 15mm;
+                flex-shrink: 0;
+                background: transparent;
+                z-index: 1000;
               }
-              .page-break { page-break-before: always; }
+              .header .logo-container {
+                gap: 6px;
+              }
+              .header .logo {
+                width: 24px;
+                height: 24px;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header .logo svg {
+                width: 14px;
+                height: 14px;
+              }
+              .header .brand-text h1 {
+                font-size: 14px;
+                text-transform: none !important;
+              }
+              .header .brand-text p {
+                font-size: 7px;
+                margin: 0;
+              }
               .footer {
-                position: absolute;
-                bottom: 3mm;
-                left: 15mm;
-                right: 15mm;
+                position: fixed;
+                bottom: 6mm;
+                left: 0;
+                right: 0;
+                flex-shrink: 0;
+                background: transparent;
+              }
+              .content {
+                margin-top: 20mm;
+                margin-bottom: 12mm;
+                padding: 0 15mm;
+                flex: 1;
+              }
+              h2 {
+                color: #4f46e5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              h2::after {
+                background: #a78bfa !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .question-header {
+                color: #4338ca !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              th {
+                background: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
             }
           </style>
         </head>
         <body>
           <div class="page">
+            <!-- Formas decorativas -->
+            <div class="shape-circle purple"></div>
+            <div class="shape-circle blue"></div>
+
             <!-- Cabeçalho -->
             <div class="header">
-              <div class="logo">A</div>
-              <div class="texts">
-                <h1>AulagIA</h1>
-                <p>Sua aula com toque mágico</p>
+              <div class="logo-container">
+                <div class="logo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                  </svg>
+                </div>
+                <div class="brand-text">
+                  <h1>AulagIA</h1>
+                  <p>Sua aula com toque mágico</p>
+                </div>
               </div>
             </div>
 
-            <div class="content">
-              <h1>Avaliação</h1>
+            <!-- Rodapé -->
+            <div class="footer">
+              Avaliação gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
 
-              <table class="header-table">
+            <div class="content">
+              <!-- Título da Avaliação -->
+              <h2>AVALIAÇÃO</h2>
+
+              <!-- Informações básicas -->
+              <table>
                 <tr>
-                  <th colspan="3">{{titulo}}</th>
+                  <th colspan="4">{{titulo}}</th>
                 </tr>
                 <tr>
-                  <td><strong>Nome:</strong> _________________________________</td>
-                  <td><strong>Turma:</strong> _____________</td>
-                  <td><strong>Data:</strong> _____________</td>
+                  <th>Nome:</th>
+                  <td>_________________________________</td>
+                  <th>Turma:</th>
+                  <td>_____________</td>
+                </tr>
+                <tr>
+                  <th>Data:</th>
+                  <td>_____________</td>
+                  <th>Professor(a):</th>
+                  <td>_____________</td>
                 </tr>
               </table>
 
@@ -1161,10 +1520,6 @@ class TemplateService {
                 {{/if}}
               </div>
               {{/each}}
-            </div>
-
-            <div class="footer">
-              Avaliação gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
             </div>
           </div>
         </body>
