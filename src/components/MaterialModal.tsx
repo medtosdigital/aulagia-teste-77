@@ -2,11 +2,13 @@ import React from 'react';
 import { X, Download, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import MaterialPreview from './MaterialPreview';
 import { GeneratedMaterial } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
 import { templateService } from '@/services/templateService';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MaterialModalProps {
   material: GeneratedMaterial | null;
@@ -15,6 +17,8 @@ interface MaterialModalProps {
 }
 
 const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }) => {
+  const isMobile = useIsMobile();
+
   const getTypeLabel = (type: string): string => {
     const labels = {
       'plano-de-aula': 'Plano de Aula',
@@ -328,6 +332,96 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
 
   if (!material) return null;
 
+  // Mobile layout
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onClose}>
+        <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl border-0 p-0 bg-white">
+          <div className="h-full flex flex-col">
+            {/* Header */}
+            <SheetHeader className="p-4 pb-3 border-b bg-white rounded-t-3xl">
+              <SheetTitle className="text-lg font-bold text-center">
+                {material.title}
+              </SheetTitle>
+              <div className="text-sm text-gray-600 text-center">
+                {getTypeLabel(material.type)} • {material.subject} • {material.grade}
+              </div>
+            </SheetHeader>
+            
+            {/* Content Preview - Scaled down to fit without scrolling */}
+            <div className="flex-1 p-4 overflow-hidden">
+              <div className="h-full border rounded-2xl bg-gray-50 overflow-hidden shadow-inner">
+                <div 
+                  className="origin-top-left transform scale-[0.3] w-[333%] h-[333%] overflow-hidden"
+                  style={{ transformOrigin: '0 0' }}
+                >
+                  <MaterialPreview material={material} />
+                </div>
+              </div>
+            </div>
+            
+            {/* Export Buttons */}
+            <div className="p-4 space-y-3 bg-white border-t">
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrint}
+                  className="text-xs"
+                >
+                  <Printer className="h-3 w-3 mr-1" />
+                  Imprimir
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExport('pdf')}
+                  className="text-xs"
+                >
+                  <Download className="h-3 w-3 mr-1" />
+                  PDF
+                </Button>
+                
+                {material.type === 'slides' ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExport('ppt')}
+                    className="text-xs"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    PPT
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExport('word')}
+                    className="text-xs"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Word
+                  </Button>
+                )}
+              </div>
+              
+              {/* Close Button */}
+              <Button
+                variant="default"
+                onClick={onClose}
+                className="w-full bg-gray-800 hover:bg-gray-900"
+              >
+                Fechar
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop layout (unchanged)
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex">
