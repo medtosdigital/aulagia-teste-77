@@ -32,8 +32,13 @@ class TemplateService {
             body {
               margin: 0;
               padding: 0;
-              background: white;
+              background: #f0f4f8;
               font-family: 'Inter', sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
+              padding: 20px 0;
             }
             /* Container no tamanho A4 */
             .page {
@@ -47,7 +52,33 @@ class TemplateService {
               padding: 0;
               display: flex;
               flex-direction: column;
+              border-radius: 6px;
+              box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             }
+            
+            /* Formas decorativas */
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.25;
+              pointer-events: none;
+              z-index: 0;
+            }
+            .shape-circle.purple {
+              width: 180px; 
+              height: 180px;
+              background: #a78bfa;
+              top: -60px; 
+              left: -40px;
+            }
+            .shape-circle.blue {
+              width: 240px; 
+              height: 240px;
+              background: #60a5fa;
+              bottom: -80px; 
+              right: -60px;
+            }
+            
             /* Cabeçalho que aparece no topo */
             .header {
               position: absolute;
@@ -115,61 +146,70 @@ class TemplateService {
             .content {
               margin-top: 20mm;
               margin-bottom: 12mm;
-              padding: 0 12mm;
+              padding: 0 15mm;
               position: relative;
               flex: 1;
               overflow: visible;
+              z-index: 1;
             }
             /* Título principal */
             h2 {
               text-align: center;
-              margin: 0 0 6mm 0;
-              font-size: 1.1rem;
-              color: #1e40af;
+              margin: 10px 0 18px 0;
+              font-size: 1.5rem;
+              color: #4f46e5;
               position: relative;
               font-family: 'Inter', sans-serif;
+              font-weight: 700;
             }
             h2::after {
               content: '';
-              width: 40px;
-              height: 2px;
-              background: #60a5fa;
+              width: 50px;
+              height: 3px;
+              background: #a78bfa;
               display: block;
-              margin: 3px auto 0;
-              border-radius: 1px;
+              margin: 6px auto 0;
+              border-radius: 2px;
             }
             /* Tabelas */
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 4mm;
+              margin-bottom: 18px;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             }
             th, td {
-              padding: 2mm 1.5mm;
-              font-size: 0.7rem;
-              border: 1px solid #d1d5db;
+              padding: 8px 12px;
+              font-size: 0.85rem;
+              border: none;
               font-family: 'Inter', sans-serif;
               vertical-align: top;
             }
             th {
-              background: #f8fafc;
-              color: #374151;
+              background: #f3f4f6;
+              color: #1f2937;
               font-weight: 600;
               text-align: left;
               width: 18%;
             }
             td {
               background: #ffffff;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            td:last-child {
+              border-bottom: none;
             }
             /* Tabela de informações básicas com layout específico */
             .info-table th {
-              font-size: 0.65rem;
+              font-size: 0.8rem;
               text-align: left;
-              padding: 2mm 1.5mm;
+              padding: 8px 12px;
             }
             .info-table td {
-              font-size: 0.7rem;
-              padding: 2mm 1.5mm;
+              font-size: 0.85rem;
+              padding: 8px 12px;
             }
             /* Layout específico para a primeira linha */
             .info-table tr:first-child th:first-child { width: 15%; }
@@ -195,13 +235,14 @@ class TemplateService {
             
             /* Desenvolvimento metodológico com tabela mais compacta */
             .development-table th {
-              font-size: 0.65rem;
-              padding: 1.5mm 1mm;
+              font-size: 0.8rem;
+              padding: 8px 6px;
               text-align: center;
+              background: #f8fafc;
             }
             .development-table td {
-              font-size: 0.65rem;
-              padding: 1.5mm 1mm;
+              font-size: 0.8rem;
+              padding: 8px 6px;
               text-align: center;
             }
             .development-table th:first-child { width: 15%; }
@@ -212,17 +253,17 @@ class TemplateService {
             /* Seções e listas */
             .section-title {
               font-weight: 600;
-              margin-top: 3mm;
-              margin-bottom: 1.5mm;
-              font-size: 0.8rem;
-              color: #1e40af;
+              margin-top: 18px;
+              margin-bottom: 8px;
+              font-size: 1.0rem;
+              color: #4338ca;
               font-family: 'Inter', sans-serif;
             }
             ul {
               list-style: disc inside;
-              margin-bottom: 3mm;
-              line-height: 1.1;
-              font-size: 0.7rem;
+              margin-bottom: 16px;
+              line-height: 1.4;
+              font-size: 0.9rem;
               font-family: 'Inter', sans-serif;
               padding-left: 0;
             }
@@ -230,9 +271,9 @@ class TemplateService {
               margin-bottom: 0.5mm;
             }
             p {
-              font-size: 0.7rem;
-              line-height: 1.1;
-              margin-bottom: 2mm;
+              font-size: 0.9rem;
+              line-height: 1.4;
+              margin-bottom: 12px;
               font-family: 'Inter', sans-serif;
               text-align: justify;
             }
@@ -243,16 +284,16 @@ class TemplateService {
               left: 0;
               right: 0;
               text-align: center;
-              font-size: 0.5rem;
-              color: #9ca3af;
+              font-size: 0.7rem;
+              color: #6b7280;
               z-index: 999;
               height: 6mm;
               display: flex;
               align-items: center;
               justify-content: center;
               background: white;
-              padding: 0 12mm;
-              border-top: 1px solid #f3f4f6;
+              padding: 0 15mm;
+              border-top: 1px solid #e5e7eb;
               font-family: 'Inter', sans-serif;
               flex-shrink: 0;
             }
@@ -274,12 +315,16 @@ class TemplateService {
                 display: flex;
                 flex-direction: column;
               }
+              .shape-circle {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
               .header {
                 position: fixed;
                 top: 6mm;
                 left: 0;
                 right: 0;
-                padding: 0 12mm;
+                padding: 0 15mm;
                 flex-shrink: 0;
                 background: white;
                 z-index: 1000;
@@ -297,14 +342,12 @@ class TemplateService {
               }
               .header .brand-text h1 {
                 font-size: 16px;
-                text-transform: none !important;
               }
               .header .brand-text h1 .ia-text {
                 text-transform: uppercase !important;
               }
               .header .brand-text p {
                 font-size: 7px;
-                text-transform: none !important;
               }
               .footer {
                 position: fixed;
@@ -317,21 +360,26 @@ class TemplateService {
               .content {
                 margin-top: 20mm;
                 margin-bottom: 12mm;
-                padding: 0 12mm;
+                padding: 0 15mm;
                 flex: 1;
               }
               h2 {
-                color: #1e40af !important;
+                color: #4f46e5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              h2::after {
+                background: #a78bfa !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
               }
               .section-title {
-                color: #1e40af !important;
+                color: #4338ca !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
               }
               th {
-                background: #f8fafc !important;
+                background: #f3f4f6 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
               }
@@ -340,6 +388,10 @@ class TemplateService {
         </head>
         <body>
           <div class="page">
+            <!-- Formas decorativas -->
+            <div class="shape-circle purple"></div>
+            <div class="shape-circle blue"></div>
+
             <!-- Cabeçalho -->
             <div class="header">
               <div class="logo-container">
