@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak } from 'docx';
 import { saveAs } from 'file-saver';
@@ -10,57 +9,66 @@ class ExportService {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
+    const contentHeight = tempDiv.scrollHeight;
+    const pageHeight = 1000; // Approximate page height in pixels
+    
+    if (contentHeight <= pageHeight) {
+      return [htmlContent];
+    }
+
     // Split content by questions or sections for activities and evaluations
     if (materialType === 'atividade' || materialType === 'avaliacao') {
       const pages: string[] = [];
       const questions = tempDiv.querySelectorAll('.questao-container');
       
       if (questions.length === 0) {
-        return [this.wrapPageContent(htmlContent, '', true)];
+        return [htmlContent];
       }
 
       let currentPageContent = '';
-      let questionsPerPage = 3; // Limit questions per page to avoid overflow
-      let currentQuestionCount = 0;
+      let currentPageHeight = 0;
+      const headerFooterHeight = 200;
       
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
       
       questions.forEach((question, index) => {
-        if (currentQuestionCount >= questionsPerPage && currentPageContent) {
+        const questionHeight = 300;
+        
+        if (currentPageHeight + questionHeight > pageHeight - headerFooterHeight && currentPageContent) {
           pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
           currentPageContent = '';
-          currentQuestionCount = 0;
+          currentPageHeight = 0;
         }
         
         currentPageContent += question.outerHTML;
-        currentQuestionCount++;
+        currentPageHeight += questionHeight;
       });
       
       if (currentPageContent) {
         pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
       }
       
-      return pages.length > 0 ? pages : [this.wrapPageContent(htmlContent, '', true)];
+      return pages.length > 0 ? pages : [htmlContent];
     }
 
     // For lesson plans, split by sections
     if (materialType === 'plano-de-aula') {
       const sections = tempDiv.querySelectorAll('.section');
       if (sections.length <= 1) {
-        return [this.wrapPageContent(htmlContent, '', false)];
+        return [htmlContent];
       }
 
       const pages: string[] = [];
       let currentPageContent = '';
       let sectionCount = 0;
-      const sectionsPerPage = 2; // Limit sections per page
+      const sectionsPerPage = 2;
 
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       
       sections.forEach((section, index) => {
         if (sectionCount >= sectionsPerPage && currentPageContent) {
-          pages.push(this.wrapPageContent(currentPageContent, index < sectionsPerPage ? header : '', false));
+          pages.push(this.wrapPageContent(currentPageContent, index === 0 ? header : '', false));
           currentPageContent = '';
           sectionCount = 0;
         }
@@ -73,10 +81,10 @@ class ExportService {
         pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header : '', false));
       }
       
-      return pages.length > 0 ? pages : [this.wrapPageContent(htmlContent, '', false)];
+      return pages.length > 0 ? pages : [htmlContent];
     }
 
-    return [this.wrapPageContent(htmlContent, '', false)];
+    return [htmlContent];
   }
 
   private wrapPageContent(content: string, header: string, includeFooter: boolean): string {
@@ -84,22 +92,14 @@ class ExportService {
       <div class="page-content">
         <div class="page-header">
           <div class="logo-section">
-            <img src="/placeholder.svg" alt="Logo da Escola" style="height: 50px; width: auto; display: block; margin: 0 auto 15px;">
-            <h2 style="text-align: center; color: #4F46E5; margin: 0 0 10px 0; font-size: 18px;">Sistema Educacional</h2>
+            <img src="/placeholder.svg" alt="Logo" style="height: 40px; margin-bottom: 10px;">
           </div>
           ${header}
         </div>
         <div class="main-content">
           ${content}
         </div>
-        ${includeFooter ? `
-          <div class="page-footer">
-            <div style="border-top: 1px solid #e5e5e5; padding-top: 15px; text-align: center;">
-              <p style="margin: 0; font-size: 12px; color: #666;">Gerado automaticamente pelo Sistema Educacional</p>
-              <p style="margin: 5px 0 0 0; font-size: 10px; color: #999;">www.sistemaeducacional.com.br</p>
-            </div>
-          </div>
-        ` : ''}
+        ${includeFooter ? '<div class="page-footer"><p>Gerado automaticamente pelo Sistema Educacional</p></div>' : ''}
       </div>
     `;
   }
@@ -115,7 +115,7 @@ class ExportService {
         <style>
           @page {
             size: A4;
-            margin: 15mm;
+            margin: 20mm;
           }
           
           * {
@@ -126,21 +126,16 @@ class ExportService {
           
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.5;
+            line-height: 1.6;
             color: #333;
             background: white;
-            font-size: 14px;
           }
           
           .page-content {
-            min-height: calc(100vh - 30mm);
-            max-height: calc(100vh - 30mm);
+            min-height: calc(100vh - 40mm);
             display: flex;
             flex-direction: column;
             page-break-after: always;
-            padding: 0;
-            margin: 0;
-            position: relative;
           }
           
           .page-content:last-child {
@@ -151,7 +146,6 @@ class ExportService {
             margin-bottom: 20px;
             border-bottom: 2px solid #e5e5e5;
             padding-bottom: 15px;
-            flex-shrink: 0;
           }
           
           .logo-section {
@@ -159,15 +153,9 @@ class ExportService {
             margin-bottom: 15px;
           }
           
-          .logo-section img {
-            max-height: 50px;
-            width: auto;
-          }
-          
           .main-content {
             flex: 1;
-            overflow: hidden;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
           }
           
           .page-footer {
@@ -177,8 +165,6 @@ class ExportService {
             text-align: center;
             font-size: 12px;
             color: #666;
-            flex-shrink: 0;
-            height: 60px;
           }
           
           .questao-container {
@@ -188,7 +174,6 @@ class ExportService {
             border-left: 4px solid #3b82f6;
             border-radius: 8px;
             page-break-inside: avoid;
-            break-inside: avoid;
           }
           
           .questao-numero {
@@ -200,7 +185,7 @@ class ExportService {
           
           .questao-enunciado {
             margin-bottom: 15px;
-            line-height: 1.6;
+            line-height: 1.8;
           }
           
           .questao-opcoes {
@@ -211,36 +196,17 @@ class ExportService {
             margin: 8px 0;
             display: flex;
             align-items: flex-start;
-            line-height: 1.4;
           }
           
           .opcao-letra {
             font-weight: bold;
             margin-right: 10px;
-            min-width: 25px;
-          }
-          
-          .espaco-resposta {
-            border-bottom: 1px solid #ccc;
-            margin: 15px 0;
-            min-height: 30px;
-          }
-          
-          .area-calculo {
-            border: 1px dashed #ccc;
-            padding: 25px;
-            margin: 20px 0;
-            background: #f9f9f9;
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            min-height: 80px;
+            min-width: 20px;
           }
           
           .section {
             margin-bottom: 25px;
             page-break-inside: avoid;
-            break-inside: avoid;
           }
           
           .section-title {
@@ -264,8 +230,6 @@ class ExportService {
             body {
               margin: 0;
               padding: 0;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
             }
             
             .page-content {
@@ -273,18 +237,7 @@ class ExportService {
               padding: 0;
               max-width: none;
               height: auto;
-              min-height: calc(100vh - 30mm);
-              max-height: calc(100vh - 30mm);
-            }
-            
-            .questao-container {
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-            
-            .section {
-              page-break-inside: avoid;
-              break-inside: avoid;
+              min-height: auto;
             }
           }
         </style>
@@ -375,35 +328,6 @@ class ExportService {
       
       const children: any[] = [];
 
-      // Logo e cabeçalho
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-              color: 'E5E5E5'
-            })
-          ],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 200 }
-        })
-      );
-
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: 'SISTEMA EDUCACIONAL',
-              bold: true,
-              size: 24,
-              color: '4F46E5'
-            })
-          ],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 400 }
-        })
-      );
-
       // Título principal
       children.push(
         new Paragraph({
@@ -416,7 +340,7 @@ class ExportService {
             })
           ],
           alignment: AlignmentType.CENTER,
-          spacing: { after: 400 }
+          spacing: { after: 600 }
         })
       );
 
@@ -426,12 +350,12 @@ class ExportService {
           children: [
             new TextRun({
               text: `${this.getTypeLabel(material.type)} • ${material.subject || 'Disciplina'} • ${material.grade || 'Série'}`,
-              size: 20,
+              size: 24,
               color: '6B7280'
             })
           ],
           alignment: AlignmentType.CENTER,
-          spacing: { after: 600 }
+          spacing: { after: 800 }
         })
       );
 
@@ -442,21 +366,22 @@ class ExportService {
       // Processar cada página
       pages.forEach((pageContent, pageIndex) => {
         if (pageIndex > 0) {
+          // Adicionar quebra de página entre as páginas
           children.push(
             new Paragraph({
               children: [new PageBreak()],
             })
           );
-          
-          // Adicionar cabeçalho em páginas subsequentes
+        }
+        
+        // Adicionar cabeçalho da página (logo e informações)
+        if (pageIndex === 0 || material.type === 'atividade' || material.type === 'avaliacao') {
           children.push(
             new Paragraph({
               children: [
                 new TextRun({
-                  text: 'SISTEMA EDUCACIONAL',
-                  bold: true,
-                  size: 20,
-                  color: '4F46E5'
+                  text: '═══════════════════════════════════════',
+                  color: 'E5E5E5'
                 })
               ],
               alignment: AlignmentType.CENTER,
@@ -469,47 +394,35 @@ class ExportService {
         const pageContentParagraphs = this.processPageContentForWord(pageContent, material);
         children.push(...pageContentParagraphs);
         
-        // Adicionar rodapé
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-                color: 'E5E5E5'
-              })
-            ],
-            alignment: AlignmentType.CENTER,
-            spacing: { before: 400, after: 200 }
-          })
-        );
-        
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Gerado automaticamente pelo Sistema Educacional',
-                size: 18,
-                color: '9CA3AF'
-              })
-            ],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 100 }
-          })
-        );
-        
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'www.sistemaeducacional.com.br',
-                size: 16,
-                color: 'CCCCCC'
-              })
-            ],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 }
-          })
-        );
+        // Adicionar rodapé se necessário
+        if (material.type === 'atividade' || material.type === 'avaliacao') {
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: '═══════════════════════════════════════',
+                  color: 'E5E5E5'
+                })
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 400, after: 200 }
+            })
+          );
+          
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Gerado automaticamente pelo Sistema Educacional',
+                  size: 20,
+                  color: '9CA3AF'
+                })
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 400 }
+            })
+          );
+        }
       });
 
       // Criar documento
