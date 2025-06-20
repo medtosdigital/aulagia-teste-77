@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain } from 'lucide-react';
+import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import MaterialModal from './MaterialModal';
 import BNCCValidationModal from './BNCCValidationModal';
@@ -31,7 +33,9 @@ const CreateLesson: React.FC = () => {
   const [formData, setFormData] = useState({
     topic: '',
     subject: '',
-    grade: ''
+    grade: '',
+    questionType: 'mistas',
+    questionCount: [5]
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -177,7 +181,9 @@ const CreateLesson: React.FC = () => {
     setFormData({
       topic: '',
       subject: '',
-      grade: ''
+      grade: '',
+      questionType: 'mistas',
+      questionCount: [5]
     });
     setSelectedType(null);
   };
@@ -265,7 +271,7 @@ const CreateLesson: React.FC = () => {
     return (
       <>
         <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 lg:p-8 mb-4">
               <div className="flex items-center mb-6">
                 <div className={`w-12 h-12 sm:w-16 sm:h-16 ${typeInfo?.iconBg} rounded-xl sm:rounded-2xl flex items-center justify-center mr-4 sm:mr-6 shadow-lg`}>
@@ -357,6 +363,82 @@ const CreateLesson: React.FC = () => {
                     </Select>
                   </div>
                 </div>
+
+                {/* Campos específicos para atividades e avaliações */}
+                {(selectedType === 'atividade' || selectedType === 'avaliacao') && (
+                  <div className="space-y-6 border-t border-gray-200 pt-6">
+                    <div className="text-center mb-4">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Configurações de Questões</h3>
+                      <p className="text-sm text-gray-600">Personalize o tipo e quantidade de questões</p>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                          ?
+                        </div>
+                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Tipo de Questões</Label>
+                      </div>
+                      <RadioGroup 
+                        value={formData.questionType} 
+                        onValueChange={value => setFormData({
+                          ...formData,
+                          questionType: value
+                        })}
+                        className="grid grid-cols-3 gap-4"
+                      >
+                        <div className="flex items-center space-x-2 p-3 border-2 border-gray-200 rounded-xl hover:border-orange-300 transition-colors">
+                          <RadioGroupItem value="abertas" id="abertas" />
+                          <Label htmlFor="abertas" className="cursor-pointer font-medium">Abertas</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 p-3 border-2 border-gray-200 rounded-xl hover:border-orange-300 transition-colors">
+                          <RadioGroupItem value="fechadas" id="fechadas" />
+                          <Label htmlFor="fechadas" className="cursor-pointer font-medium">Fechadas</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 p-3 border-2 border-gray-200 rounded-xl hover:border-orange-300 transition-colors">
+                          <RadioGroupItem value="mistas" id="mistas" />
+                          <Label htmlFor="mistas" className="cursor-pointer font-medium">Mistas</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                          <Hash className="w-4 h-4" />
+                        </div>
+                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Quantidade de Questões</Label>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="px-4 py-3 bg-gray-50 rounded-xl border-2 border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-700">Questões: {formData.questionCount[0]}</span>
+                            <div className="flex items-center space-x-2 text-xs text-gray-500">
+                              <Sliders className="w-3 h-3" />
+                              <span>Deslize para ajustar</span>
+                            </div>
+                          </div>
+                          <Slider
+                            value={formData.questionCount}
+                            onValueChange={value => setFormData({
+                              ...formData,
+                              questionCount: value
+                            })}
+                            max={20}
+                            min={1}
+                            step={1}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>1</span>
+                            <span>10</span>
+                            <span>20</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex flex-col sm:flex-row justify-between items-center pt-6 gap-4">
                   <Button variant="outline" onClick={handleBackToSelection} className="w-full sm:w-auto flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-6 border-2 hover:bg-gray-50 rounded-xl">
