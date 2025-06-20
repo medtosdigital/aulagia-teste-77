@@ -183,15 +183,6 @@ class TemplateService {
               margin-bottom: 8px;
               font-family: 'Inter', sans-serif;
             }
-            /* Layout em duas colunas para recursos e avaliação */
-            .two-columns {
-              display: flex;
-              gap: 15px;
-              margin-top: 12px;
-            }
-            .column {
-              flex: 1;
-            }
             /* Rodapé */
             .footer {
               position: absolute;
@@ -336,21 +327,17 @@ class TemplateService {
                 </table>
               </div>
 
-              <!-- Recursos Didáticos e Avaliação em duas colunas -->
-              <div class="two-columns">
-                <div class="column">
-                  <div class="section-title">RECURSOS DIDÁTICOS</div>
-                  <ul>
-                    {{#each recursos}}
-                    <li>{{this}}</li>
-                    {{/each}}
-                  </ul>
-                </div>
-                <div class="column">
-                  <div class="section-title">AVALIAÇÃO</div>
-                  <p>{{avaliacao}}</p>
-                </div>
-              </div>
+              <!-- Recursos Didáticos -->
+              <div class="section-title">RECURSOS DIDÁTICOS</div>
+              <ul>
+                {{#each recursos}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
+
+              <!-- Avaliação -->
+              <div class="section-title">AVALIAÇÃO</div>
+              <p>{{avaliacao}}</p>
             </div>
           </div>
         </body>
