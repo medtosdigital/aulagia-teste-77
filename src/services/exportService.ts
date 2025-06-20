@@ -9,19 +9,22 @@ class ExportService {
     const enunciado = question.querySelector('.questao-enunciado')?.textContent || '';
     const opcoes = question.querySelectorAll('.opcao');
     
-    // Base height for question structure
-    let height = 120; // Base padding, margins, and question number
+    // Base height increased to match MaterialPreview
+    let height = 150; // Increased base padding and margins
     
-    // Add height based on text length (approximate)
-    height += Math.ceil(enunciado.length / 80) * 25; // ~25px per line
+    // More conservative text height calculation
+    height += Math.ceil(enunciado.length / 70) * 30; // More space per line
     
-    // Add height for options
-    height += opcoes.length * 35; // ~35px per option
+    // More space for options
+    height += opcoes.length * 40; // Increased space per option
     
-    // Add extra space for complex questions
+    // Additional space for complex questions
     if (enunciado.length > 200 || opcoes.length > 4) {
-      height += 50;
+      height += 80; // More generous extra space
     }
+    
+    // Add extra margin between questions
+    height += 40;
     
     return height;
   }
@@ -32,9 +35,9 @@ class ExportService {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
-    // Updated page dimensions matching MaterialPreview - all pages now reserve header space
+    // Updated page dimensions matching MaterialPreview exactly
     const pageHeight = 1200;
-    const headerFooterHeight = 350; // Space for logo + header/footer on all pages
+    const headerFooterHeight = 450; // Increased from 350 to 450 to match MaterialPreview
     const availableContentHeight = pageHeight - headerFooterHeight;
 
     console.log('ExportService page calculation:', { pageHeight, headerFooterHeight, availableContentHeight });
@@ -57,11 +60,19 @@ class ExportService {
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
       
+      // Reserve additional space for header on first page (matching MaterialPreview)
+      const firstPageReservedSpace = 100;
+      
       questions.forEach((question, index) => {
         const questionHeight = this.calculateQuestionHeight(question);
         console.log(`ExportService: Question ${index + 1} estimated height: ${questionHeight}px`);
         
-        if (currentPageHeight + questionHeight > availableContentHeight && currentPageContent) {
+        // Check if this is the first page and account for header space
+        const pageLimit = (currentPageContent === '' && pages.length === 0) 
+          ? availableContentHeight - firstPageReservedSpace 
+          : availableContentHeight;
+        
+        if (currentPageHeight + questionHeight > pageLimit && currentPageContent) {
           console.log(`ExportService: Creating new page at question ${index + 1}, current height: ${currentPageHeight}px`);
           const isFirstPage = pages.length === 0;
           pages.push(this.wrapPageContent(currentPageContent, header + instructions, true, isFirstPage));
@@ -92,7 +103,7 @@ class ExportService {
       const pages: string[] = [];
       let currentPageContent = '';
       let currentPageHeight = 0;
-      const sectionHeight = 250; // Average height per section
+      const sectionHeight = 280; // Increased to match MaterialPreview
 
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       
@@ -124,11 +135,11 @@ class ExportService {
       <div class="page-content">
         <div class="page-header-safe-zone">
           <div class="logo-section">
-            <img src="/placeholder.svg" alt="Logo" style="height: 40px; margin-bottom: 10px;">
+            <img src="/placeholder.svg" alt="Logo" style="height: 40px; margin-bottom: 20px;">
           </div>
           ${isFirstPage ? header : ''}
         </div>
-        <div class="main-content">
+        <div class="main-content" style="margin-top: 40px; padding-top: 20px;">
           ${content}
         </div>
         ${includeFooter ? '<div class="page-footer"><p>Gerado automaticamente pelo Sistema Educacional</p></div>' : ''}
@@ -179,21 +190,26 @@ class ExportService {
           }
           
           .page-header-safe-zone {
-            margin-bottom: 40px;
-            padding-bottom: 20px;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
             border-bottom: 2px solid #e5e5e5;
-            min-height: 120px; /* Increased to accommodate logo space on all pages */
+            min-height: 150px; /* Increased to match MaterialPreview */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
           }
           
           .logo-section {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
           }
           
           .main-content {
             flex: 1;
             margin-bottom: 30px;
-            padding-top: 10px;
+            padding-top: 20px; /* Additional top padding */
+            margin-top: 20px; /* Additional top margin */
           }
           
           .page-footer {
@@ -207,8 +223,8 @@ class ExportService {
           }
           
           .questao-container {
-            margin-bottom: 30px;
-            padding: 20px;
+            margin-bottom: 40px; /* Increased margin between questions */
+            padding: 25px; /* Increased padding */
             background: #fafafa;
             border-left: 4px solid #3b82f6;
             border-radius: 8px;
@@ -219,12 +235,12 @@ class ExportService {
           .questao-numero {
             font-weight: bold;
             color: #3b82f6;
-            margin-bottom: 15px;
+            margin-bottom: 20px; /* Increased margin */
             font-size: 16px;
           }
           
           .questao-enunciado {
-            margin-bottom: 20px;
+            margin-bottom: 25px; /* Increased margin */
             line-height: 1.8;
             font-size: 14px;
           }
@@ -234,7 +250,7 @@ class ExportService {
           }
           
           .opcao {
-            margin: 10px 0;
+            margin: 12px 0; /* Increased margin between options */
             display: flex;
             align-items: flex-start;
             font-size: 14px;
@@ -247,7 +263,7 @@ class ExportService {
           }
           
           .section {
-            margin-bottom: 35px;
+            margin-bottom: 40px; /* Increased margin */
             page-break-inside: avoid;
             break-inside: avoid;
           }
@@ -256,16 +272,16 @@ class ExportService {
             font-size: 18px;
             font-weight: bold;
             color: #2563eb;
-            margin-bottom: 20px;
-            padding-bottom: 8px;
+            margin-bottom: 25px; /* Increased margin */
+            padding-bottom: 10px; /* Increased padding */
             border-bottom: 2px solid #e5e7eb;
           }
           
           .instructions-section {
             background: #f0f9ff;
-            padding: 20px;
+            padding: 25px; /* Increased padding */
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 25px; /* Increased margin */
             border-left: 4px solid #0ea5e9;
           }
           
@@ -284,14 +300,20 @@ class ExportService {
             }
             
             .page-header-safe-zone {
-              margin-bottom: 30px;
-              padding-bottom: 15px;
+              margin-bottom: 40px;
+              padding-bottom: 20px;
+              min-height: 140px; /* Ensured minimum height in print */
+            }
+            
+            .main-content {
+              margin-top: 30px; /* Additional space in print */
+              padding-top: 20px;
             }
             
             .questao-container {
               page-break-inside: avoid;
               break-inside: avoid;
-              margin-bottom: 25px;
+              margin-bottom: 35px;
             }
             
             .section {
