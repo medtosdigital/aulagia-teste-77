@@ -65,11 +65,7 @@ class ExportService {
                 max-width: none !important;
                 width: 100% !important;
                 height: 100vh !important;
-                page-break-after: always;
-              }
-              
-              .page:last-child {
-                page-break-after: avoid;
+                page-break-after: avoid !important;
               }
             }
           </style>
@@ -223,8 +219,7 @@ class ExportService {
       `Tema: ${content.tema}`,
       `Duração: ${content.duracao}`,
       `Data: ${content.data}`,
-      `Série/Ano: ${content.serie}`,
-      `BNCC: ${content.bncc}`
+      `Série/Ano: ${content.serie}`
     ];
 
     infoItems.forEach(item => {
@@ -246,6 +241,62 @@ class ExportService {
         spacing: { after: 100 }
       }));
     });
+
+    paragraphs.push(new Paragraph({
+      children: [new TextRun({ text: 'Desenvolvimento Metodológico', bold: true, size: 20 })],
+      heading: HeadingLevel.HEADING_2,
+      spacing: { before: 400, after: 200 }
+    }));
+
+    if (content.desenvolvimento && Array.isArray(content.desenvolvimento)) {
+      content.desenvolvimento.forEach((etapa: any) => {
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text: `${etapa.etapa}:`, bold: true })],
+          spacing: { before: 200, after: 100 }
+        }));
+        
+        paragraphs.push(new Paragraph({
+          children: [new TextRun(`Atividade: ${etapa.atividade}`)],
+          spacing: { after: 50 }
+        }));
+        
+        paragraphs.push(new Paragraph({
+          children: [new TextRun(`Tempo: ${etapa.tempo}`)],
+          spacing: { after: 50 }
+        }));
+        
+        paragraphs.push(new Paragraph({
+          children: [new TextRun(`Recursos: ${etapa.recursos}`)],
+          spacing: { after: 100 }
+        }));
+      });
+    }
+
+    paragraphs.push(new Paragraph({
+      children: [new TextRun({ text: 'Recursos Didáticos', bold: true, size: 20 })],
+      heading: HeadingLevel.HEADING_2,
+      spacing: { before: 400, after: 200 }
+    }));
+
+    if (content.recursos && Array.isArray(content.recursos)) {
+      content.recursos.forEach(recurso => {
+        paragraphs.push(new Paragraph({
+          children: [new TextRun(`• ${recurso}`)],
+          spacing: { after: 100 }
+        }));
+      });
+    }
+
+    paragraphs.push(new Paragraph({
+      children: [new TextRun({ text: 'Avaliação', bold: true, size: 20 })],
+      heading: HeadingLevel.HEADING_2,
+      spacing: { before: 400, after: 200 }
+    }));
+
+    paragraphs.push(new Paragraph({
+      children: [new TextRun(content.avaliacao || '')],
+      spacing: { after: 100 }
+    }));
 
     return paragraphs;
   }

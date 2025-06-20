@@ -43,16 +43,12 @@ class TemplateService {
               background: white;
               overflow: hidden;
               margin: 0 auto;
-              page-break-after: always;
               box-sizing: border-box;
               padding: 0;
               display: flex;
               flex-direction: column;
             }
-            .page:last-child {
-              page-break-after: avoid;
-            }
-            /* Cabeçalho que aparece em todas as páginas */
+            /* Cabeçalho que aparece no topo */
             .header {
               position: absolute;
               top: 8mm;
@@ -118,7 +114,7 @@ class TemplateService {
             /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
               margin-top: 25mm;
-              margin-bottom: 20mm;
+              margin-bottom: 15mm;
               padding: 0 15mm;
               position: relative;
               flex: 1;
@@ -127,8 +123,8 @@ class TemplateService {
             /* Título principal */
             h2 {
               text-align: center;
-              margin: 0 0 15px 0;
-              font-size: 1.4rem;
+              margin: 0 0 12px 0;
+              font-size: 1.3rem;
               color: #1e40af;
               position: relative;
               font-family: 'Inter', sans-serif;
@@ -139,19 +135,18 @@ class TemplateService {
               height: 3px;
               background: #60a5fa;
               display: block;
-              margin: 5px auto 0;
+              margin: 4px auto 0;
               border-radius: 2px;
             }
             /* Tabelas */
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 12px;
-              page-break-inside: avoid;
+              margin-bottom: 10px;
             }
             th, td {
-              padding: 6px 10px;
-              font-size: 0.85rem;
+              padding: 4px 8px;
+              font-size: 0.8rem;
               border: 1px solid #e5e7eb;
               font-family: 'Inter', sans-serif;
             }
@@ -166,32 +161,38 @@ class TemplateService {
             /* Seções e listas */
             .section-title {
               font-weight: 600;
-              margin-top: 15px;
-              margin-bottom: 8px;
-              font-size: 1.05rem;
+              margin-top: 12px;
+              margin-bottom: 6px;
+              font-size: 1rem;
               color: #1e40af;
               font-family: 'Inter', sans-serif;
-              page-break-after: avoid;
             }
             ul {
               list-style: disc inside;
-              margin-bottom: 12px;
-              line-height: 1.4;
-              font-size: 0.9rem;
+              margin-bottom: 10px;
+              line-height: 1.3;
+              font-size: 0.85rem;
               font-family: 'Inter', sans-serif;
-              page-break-inside: avoid;
             }
             li {
-              margin-bottom: 4px;
-              page-break-inside: avoid;
+              margin-bottom: 3px;
             }
             p {
-              font-size: 0.9rem;
-              line-height: 1.4;
-              margin-bottom: 10px;
+              font-size: 0.85rem;
+              line-height: 1.3;
+              margin-bottom: 8px;
               font-family: 'Inter', sans-serif;
             }
-            /* Rodapé que aparece em todas as páginas */
+            /* Layout em duas colunas para recursos e avaliação */
+            .two-columns {
+              display: flex;
+              gap: 15px;
+              margin-top: 12px;
+            }
+            .column {
+              flex: 1;
+            }
+            /* Rodapé */
             .footer {
               position: absolute;
               bottom: 8mm;
@@ -211,32 +212,6 @@ class TemplateService {
               font-family: 'Inter', sans-serif;
               flex-shrink: 0;
             }
-            /* Quebras de página controladas */
-            .page-break {
-              page-break-before: always;
-              margin-top: 25mm;
-            }
-            .avoid-break {
-              page-break-inside: avoid;
-            }
-            /* Força quebra de página para seções grandes apenas se necessário */
-            .development-section {
-              page-break-inside: auto;
-            }
-            .development-section table {
-              page-break-inside: auto;
-            }
-            .development-section tr {
-              page-break-inside: avoid;
-            }
-            /* Conteúdo que pode quebrar para próxima página */
-            .content-section {
-              page-break-inside: auto;
-            }
-            .content-section.large {
-              page-break-before: always;
-              margin-top: 25mm;
-            }
             /* Ajustes para impressão */
             @media print {
               body { 
@@ -250,12 +225,8 @@ class TemplateService {
                 border-radius: 0;
                 width: 100%;
                 min-height: 100vh;
-                page-break-after: always;
                 display: flex;
                 flex-direction: column;
-              }
-              .page:last-child {
-                page-break-after: avoid;
               }
               .header {
                 position: absolute;
@@ -274,7 +245,7 @@ class TemplateService {
               }
               .content {
                 margin-top: 25mm;
-                margin-bottom: 20mm;
+                margin-bottom: 15mm;
                 padding: 0 15mm;
                 flex: 1;
               }
@@ -283,7 +254,7 @@ class TemplateService {
         </head>
         <body>
           <div class="page">
-            <!-- Cabeçalho que aparece em todas as páginas -->
+            <!-- Cabeçalho -->
             <div class="header">
               <div class="logo-container">
                 <div class="logo">
@@ -299,7 +270,7 @@ class TemplateService {
               </div>
             </div>
 
-            <!-- Rodapé que aparece em todas as páginas -->
+            <!-- Rodapé -->
             <div class="footer">
               Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
             </div>
@@ -309,7 +280,7 @@ class TemplateService {
               <h2>PLANO DE AULA</h2>
 
               <!-- Informações básicas -->
-              <table class="avoid-break">
+              <table>
                 <tr>
                   <th>Professor(a):</th>
                   <td>{{professor}}</td>
@@ -328,15 +299,13 @@ class TemplateService {
                 </tr>
                 <tr>
                   <th>Duração:</th>
-                  <td>{{duracao}}</td>
-                  <th>BNCC:</th>
-                  <td>{{bncc}}</td>
+                  <td colspan="3">{{duracao}}</td>
                 </tr>
               </table>
 
               <!-- Objetivos de Aprendizagem -->
               <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
-              <ul class="avoid-break">
+              <ul>
                 {{#each objetivos}}
                 <li>{{this}}</li>
                 {{/each}}
@@ -366,50 +335,28 @@ class TemplateService {
                   </tbody>
                 </table>
               </div>
-            </div>
-          </div>
 
-          <!-- Segunda página se necessário -->
-          <div class="page">
-            <!-- Cabeçalho que aparece em todas as páginas -->
-            <div class="header">
-              <div class="logo-container">
-                <div class="logo">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                  </svg>
+              <!-- Recursos Didáticos e Avaliação em duas colunas -->
+              <div class="two-columns">
+                <div class="column">
+                  <div class="section-title">RECURSOS DIDÁTICOS</div>
+                  <ul>
+                    {{#each recursos}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                  </ul>
                 </div>
-                <div class="brand-text">
-                  <h1>AulagIA</h1>
-                  <p>Sua aula com toque mágico</p>
+                <div class="column">
+                  <div class="section-title">AVALIAÇÃO</div>
+                  <p>{{avaliacao}}</p>
                 </div>
               </div>
-            </div>
-
-            <!-- Rodapé que aparece em todas as páginas -->
-            <div class="footer">
-              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
-            </div>
-
-            <div class="content">
-              <!-- Recursos Didáticos -->
-              <div class="section-title">RECURSOS DIDÁTICOS</div>
-              <ul class="avoid-break">
-                {{#each recursos}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
-
-              <!-- Avaliação -->
-              <div class="section-title">AVALIAÇÃO</div>
-              <p class="avoid-break">{{avaliacao}}</p>
             </div>
           </div>
         </body>
         </html>
       `,
-      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'bncc', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
+      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
