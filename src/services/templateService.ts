@@ -328,26 +328,26 @@ class TemplateService {
                 z-index: 1000;
               }
               .header .logo-container {
-                gap: 2px;
+                gap: 6px;
               }
               .header .logo {
-                width: 28px;
-                height: 28px;
+                width: 24px;
+                height: 24px;
                 background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
               }
               .header .logo svg {
-                width: 16px;
-                height: 16px;
+                width: 14px;
+                height: 14px;
               }
               .header .brand-text h1 {
-                font-size: 16px;
+                font-size: 14px;
                 text-transform: none !important;
               }
               .header .brand-text p {
-                font-size: 6px;
-                margin: -2px 0 0 0;
+                font-size: 7px;
+                margin: 0;
               }
               .footer {
                 position: fixed;
