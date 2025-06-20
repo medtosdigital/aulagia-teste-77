@@ -5,7 +5,7 @@ import { GeneratedMaterial, LessonPlan, Activity, Slide, Assessment } from './ma
 import { templateService } from './templateService';
 
 class ExportService {
-  private splitContentIntoPages(htmlContent: string, materialType: string): string[] => {
+  private splitContentIntoPages(htmlContent: string, materialType: string): string[] {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
@@ -255,72 +255,19 @@ class ExportService {
       return;
     }
 
-    // Usar o template renderizado igual à visualização
     const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
+    const pages = this.splitContentIntoPages(renderedHtml, material.type);
     
-    // Criar nova janela para capturar o conteúdo renderizado
+    let finalHtml = '';
+    pages.forEach((page, index) => {
+      finalHtml += page;
+    });
+    
+    const styledHtml = this.enhanceHtmlWithStyles(finalHtml, material.title);
+    
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>${material.title}</title>
-          <meta charset="utf-8">
-          <style>
-            @page {
-              size: A4;
-              margin: 0;
-            }
-            
-            body { 
-              margin: 0; 
-              padding: 0; 
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              background: white;
-              width: 100%;
-              height: 100vh;
-            }
-            
-            .page {
-              width: 100%;
-              height: 100vh;
-              background: white;
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-              position: relative;
-              overflow: hidden;
-            }
-
-            @media print {
-              body { 
-                margin: 0 !important; 
-                padding: 0 !important; 
-                background: white !important;
-                width: 100% !important;
-                height: 100vh !important;
-              }
-              
-              .page { 
-                box-shadow: none !important; 
-                margin: 0 !important; 
-                padding: 0 !important;
-                max-width: none !important;
-                width: 100% !important;
-                height: 100vh !important;
-                page-break-after: avoid !important;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="page">
-            ${renderedHtml}
-          </div>
-        </body>
-        </html>
-      `);
+      printWindow.document.write(styledHtml);
       printWindow.document.close();
       
       setTimeout(() => {
