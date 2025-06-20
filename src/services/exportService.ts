@@ -1,11 +1,254 @@
-
 import jsPDF from 'jspdf';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak } from 'docx';
 import { saveAs } from 'file-saver';
 import { GeneratedMaterial, LessonPlan, Activity, Slide, Assessment } from './materialService';
 import { templateService } from './templateService';
 
 class ExportService {
+  private splitContentIntoPages(htmlContent: string, materialType: string): string[] => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    
+    const contentHeight = tempDiv.scrollHeight;
+    const pageHeight = 1000; // Approximate page height in pixels
+    
+    if (contentHeight <= pageHeight) {
+      return [htmlContent];
+    }
+
+    // Split content by questions or sections for activities and evaluations
+    if (materialType === 'atividade' || materialType === 'avaliacao') {
+      const pages: string[] = [];
+      const questions = tempDiv.querySelectorAll('.questao-container');
+      
+      if (questions.length === 0) {
+        return [htmlContent];
+      }
+
+      let currentPageContent = '';
+      let currentPageHeight = 0;
+      const headerFooterHeight = 200;
+      
+      const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
+      const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
+      
+      questions.forEach((question, index) => {
+        const questionHeight = 300;
+        
+        if (currentPageHeight + questionHeight > pageHeight - headerFooterHeight && currentPageContent) {
+          pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
+          currentPageContent = '';
+          currentPageHeight = 0;
+        }
+        
+        currentPageContent += question.outerHTML;
+        currentPageHeight += questionHeight;
+      });
+      
+      if (currentPageContent) {
+        pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
+      }
+      
+      return pages.length > 0 ? pages : [htmlContent];
+    }
+
+    // For lesson plans, split by sections
+    if (materialType === 'plano-de-aula') {
+      const sections = tempDiv.querySelectorAll('.section');
+      if (sections.length <= 1) {
+        return [htmlContent];
+      }
+
+      const pages: string[] = [];
+      let currentPageContent = '';
+      let sectionCount = 0;
+      const sectionsPerPage = 2;
+
+      const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
+      
+      sections.forEach((section, index) => {
+        if (sectionCount >= sectionsPerPage && currentPageContent) {
+          pages.push(this.wrapPageContent(currentPageContent, index === 0 ? header : '', false));
+          currentPageContent = '';
+          sectionCount = 0;
+        }
+        
+        currentPageContent += section.outerHTML;
+        sectionCount++;
+      });
+      
+      if (currentPageContent) {
+        pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header : '', false));
+      }
+      
+      return pages.length > 0 ? pages : [htmlContent];
+    }
+
+    return [htmlContent];
+  }
+
+  private wrapPageContent(content: string, header: string, includeFooter: boolean): string {
+    return `
+      <div class="page-content">
+        <div class="page-header">
+          <div class="logo-section">
+            <img src="/placeholder.svg" alt="Logo" style="height: 40px; margin-bottom: 10px;">
+          </div>
+          ${header}
+        </div>
+        <div class="main-content">
+          ${content}
+        </div>
+        ${includeFooter ? '<div class="page-footer"><p>Gerado automaticamente pelo Sistema Educacional</p></div>' : ''}
+      </div>
+    `;
+  }
+
+  private enhanceHtmlWithStyles(htmlContent: string, title: string): string {
+    return `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${title}</title>
+        <style>
+          @page {
+            size: A4;
+            margin: 20mm;
+          }
+          
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+          }
+          
+          .page-content {
+            min-height: calc(100vh - 40mm);
+            display: flex;
+            flex-direction: column;
+            page-break-after: always;
+          }
+          
+          .page-content:last-child {
+            page-break-after: avoid;
+          }
+          
+          .page-header {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e5e5;
+            padding-bottom: 15px;
+          }
+          
+          .logo-section {
+            text-align: center;
+            margin-bottom: 15px;
+          }
+          
+          .main-content {
+            flex: 1;
+            margin-bottom: 20px;
+          }
+          
+          .page-footer {
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px solid #e5e5e5;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+          }
+          
+          .questao-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fafafa;
+            border-left: 4px solid #3b82f6;
+            border-radius: 8px;
+            page-break-inside: avoid;
+          }
+          
+          .questao-numero {
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 10px;
+            font-size: 16px;
+          }
+          
+          .questao-enunciado {
+            margin-bottom: 15px;
+            line-height: 1.8;
+          }
+          
+          .questao-opcoes {
+            margin-left: 20px;
+          }
+          
+          .opcao {
+            margin: 8px 0;
+            display: flex;
+            align-items: flex-start;
+          }
+          
+          .opcao-letra {
+            font-weight: bold;
+            margin-right: 10px;
+            min-width: 20px;
+          }
+          
+          .section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+          }
+          
+          .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e5e7eb;
+          }
+          
+          .instructions-section {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0ea5e9;
+          }
+          
+          @media print {
+            body {
+              margin: 0;
+              padding: 0;
+            }
+            
+            .page-content {
+              margin: 0;
+              padding: 0;
+              max-width: none;
+              height: auto;
+              min-height: auto;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${htmlContent}
+      </body>
+      </html>
+    `;
+  }
+
   async exportToPDF(material: GeneratedMaterial): Promise<void> {
     if (material.type === 'slides') {
       await this.exportSlidesToPDF(material);
@@ -169,9 +412,71 @@ class ExportService {
         })
       );
 
-      // Adicionar conteúdo específico
-      const contentParagraphs = this.getWordContent(material);
-      children.push(...contentParagraphs);
+      // Renderizar conteúdo e dividir em páginas
+      const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
+      const pages = this.splitContentIntoPages(renderedHtml, material.type);
+      
+      // Processar cada página
+      pages.forEach((pageContent, pageIndex) => {
+        if (pageIndex > 0) {
+          // Adicionar quebra de página entre as páginas
+          children.push(
+            new Paragraph({
+              children: [new PageBreak()],
+            })
+          );
+        }
+        
+        // Adicionar cabeçalho da página (logo e informações)
+        if (pageIndex === 0 || material.type === 'atividade' || material.type === 'avaliacao') {
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: '═══════════════════════════════════════',
+                  color: 'E5E5E5'
+                })
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 400 }
+            })
+          );
+        }
+        
+        // Processar conteúdo da página
+        const pageContentParagraphs = this.processPageContentForWord(pageContent, material);
+        children.push(...pageContentParagraphs);
+        
+        // Adicionar rodapé se necessário
+        if (material.type === 'atividade' || material.type === 'avaliacao') {
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: '═══════════════════════════════════════',
+                  color: 'E5E5E5'
+                })
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 400, after: 200 }
+            })
+          );
+          
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Gerado automaticamente pelo Sistema Educacional',
+                  size: 20,
+                  color: '9CA3AF'
+                })
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 400 }
+            })
+          );
+        }
+      });
 
       // Criar documento
       const doc = new Document({
@@ -203,6 +508,98 @@ class ExportService {
       console.error('Erro detalhado na exportação Word:', error);
       throw new Error(`Falha na exportação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
+  }
+
+  private processPageContentForWord(pageContent: string, material: GeneratedMaterial): any[] {
+    // Parse HTML content and convert to Word paragraphs
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = pageContent;
+    
+    const paragraphs: any[] = [];
+    
+    // Process questions if present
+    const questions = tempDiv.querySelectorAll('.questao-container');
+    questions.forEach((question, index) => {
+      const questionNumber = question.querySelector('.questao-numero')?.textContent || `${index + 1}`;
+      const questionText = question.querySelector('.questao-enunciado')?.textContent || '';
+      const options = question.querySelectorAll('.opcao');
+      
+      // Question number and text
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Questão ${questionNumber}`,
+              bold: true,
+              size: 28,
+              color: '3B82F6'
+            })
+          ],
+          spacing: { before: 300, after: 150 }
+        })
+      );
+      
+      paragraphs.push(
+        new Paragraph({
+          children: [new TextRun(questionText)],
+          spacing: { after: 200 }
+        })
+      );
+      
+      // Options
+      options.forEach((option, optIndex) => {
+        const optionLetter = String.fromCharCode(65 + optIndex);
+        const optionText = option.textContent?.replace(/^[A-Z]\)\s*/, '') || '';
+        
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun(`${optionLetter}) ${optionText}`)],
+            spacing: { after: 100 }
+          })
+        );
+      });
+      
+      paragraphs.push(
+        new Paragraph({
+          children: [new TextRun('')],
+          spacing: { after: 200 }
+        })
+      );
+    });
+    
+    // Process sections for lesson plans
+    const sections = tempDiv.querySelectorAll('.section');
+    sections.forEach(section => {
+      const title = section.querySelector('.section-title')?.textContent || '';
+      const content = section.textContent?.replace(title, '').trim() || '';
+      
+      if (title) {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: title,
+                bold: true,
+                size: 28,
+                color: '2563EB'
+              })
+            ],
+            spacing: { before: 400, after: 200 }
+          })
+        );
+      }
+      
+      if (content) {
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun(content)],
+            spacing: { after: 300 }
+          })
+        );
+      }
+    });
+    
+    return paragraphs;
   }
 
   private getWordContent(material: GeneratedMaterial): any[] {
