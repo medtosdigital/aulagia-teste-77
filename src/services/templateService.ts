@@ -89,7 +89,7 @@ class TemplateService {
               align-items: center;
               z-index: 999;
               height: 12mm;
-              background: white;
+              background: transparent;
               padding: 0 12mm;
               flex-shrink: 0;
             }
@@ -132,7 +132,7 @@ class TemplateService {
               letter-spacing: -0.2px;
             }
             .header .brand-text h1 .ia-text {
-              text-transform: uppercase;
+              text-transform: none;
             }
             .header .brand-text p {
               font-size: 9px;
@@ -291,9 +291,8 @@ class TemplateService {
               display: flex;
               align-items: center;
               justify-content: center;
-              background: white;
+              background: transparent;
               padding: 0 15mm;
-              border-top: 1px solid #e5e7eb;
               font-family: 'Inter', sans-serif;
               flex-shrink: 0;
             }
@@ -326,7 +325,7 @@ class TemplateService {
                 right: 0;
                 padding: 0 15mm;
                 flex-shrink: 0;
-                background: white;
+                background: transparent;
                 z-index: 1000;
               }
               .header .logo {
@@ -344,7 +343,7 @@ class TemplateService {
                 font-size: 16px;
               }
               .header .brand-text h1 .ia-text {
-                text-transform: uppercase !important;
+                text-transform: none !important;
               }
               .header .brand-text p {
                 font-size: 7px;
@@ -355,7 +354,7 @@ class TemplateService {
                 left: 0;
                 right: 0;
                 flex-shrink: 0;
-                background: white;
+                background: transparent;
               }
               .content {
                 margin-top: 20mm;
