@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, Download, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -60,174 +59,229 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
               body { 
                 margin: 0; 
                 padding: 0; 
-                font-family: 'Times New Roman', serif;
+                font-family: 'Inter', sans-serif;
                 background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
               
               .page {
                 width: 210mm;
                 min-height: 297mm;
                 background: white;
-                padding: 3cm 2cm 2cm 3cm;
+                margin: 0;
                 box-sizing: border-box;
                 position: relative;
-                font-family: 'Times New Roman', serif;
-                font-size: 12pt;
-                line-height: 1.5;
-                color: #000;
-                page-break-after: always;
-              }
-              
-              .page:last-child {
-                page-break-after: avoid;
+                display: flex;
+                flex-direction: column;
+                padding: 0;
+                border-radius: 0;
+                box-shadow: none;
               }
 
               .shape-circle {
                 position: absolute;
                 border-radius: 50%;
-                opacity: 0.15;
+                opacity: 0.25;
                 pointer-events: none;
+                z-index: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
               .shape-circle.purple {
-                width: 120px; height: 120px;
+                width: 180px; 
+                height: 180px;
                 background: #a78bfa;
-                top: 20px; left: 20px;
+                top: -60px; 
+                left: -40px;
               }
               .shape-circle.blue {
-                width: 150px; height: 150px;
+                width: 240px; 
+                height: 240px;
                 background: #60a5fa;
-                bottom: 20px; right: 20px;
-              }
-              .shape-circle.green {
-                width: 120px; height: 120px;
-                background: #10b981;
-                top: 20px; left: 20px;
+                bottom: -80px; 
+                right: -60px;
               }
               
-              h1 {
+              .header {
+                position: absolute;
+                top: 6mm;
+                left: 0;
+                right: 0;
+                display: flex;
+                align-items: center;
+                z-index: 999;
+                height: 12mm;
+                background: transparent;
+                padding: 0 12mm;
+                flex-shrink: 0;
+              }
+              .header .logo-container {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+              }
+              .header .logo {
+                width: 24px;
+                height: 24px;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                flex-shrink: 0;
+                box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header .logo svg {
+                width: 14px;
+                height: 14px;
+                stroke: white;
+                fill: none;
+                stroke-width: 2;
+              }
+              .header .brand-text {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+              }
+              .header .brand-text h1 {
+                font-size: 14px;
+                color: #0ea5e9;
+                margin: 0;
+                font-family: 'Inter', sans-serif;
+                line-height: 1;
+                font-weight: 700;
+                letter-spacing: -0.2px;
+                text-transform: none !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header .brand-text p {
+                font-size: 7px;
+                color: #6b7280;
+                margin: 0;
+                font-family: 'Inter', sans-serif;
+                line-height: 1;
+                font-weight: 400;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              
+              .content {
+                margin-top: 20mm;
+                margin-bottom: 12mm;
+                padding: 0 15mm;
+                position: relative;
+                flex: 1;
+                overflow: visible;
+                z-index: 1;
+              }
+              
+              h2 {
                 text-align: center;
-                margin: 0 0 30px 0;
-                font-size: 18pt;
-                font-weight: bold;
-                text-transform: uppercase;
+                margin: 10px 0 18px 0;
+                font-size: 1.5rem;
+                color: #4f46e5 !important;
+                position: relative;
+                font-family: 'Inter', sans-serif;
+                font-weight: 700;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
-              
-              h1::after {
+              h2::after {
                 content: '';
-                width: 80px;
+                width: 50px;
                 height: 3px;
+                background: #a78bfa !important;
                 display: block;
-                margin: 10px auto 0;
+                margin: 6px auto 0;
                 border-radius: 2px;
-              }
-              
-              .section-title {
-                font-weight: bold;
-                margin: 25px 0 15px 0;
-                font-size: 14pt;
-                text-transform: uppercase;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
               
               table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 20px;
-                font-size: 11pt;
+                margin-bottom: 18px;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
               }
-              
               th, td {
                 padding: 8px 12px;
-                border: 1px solid #333;
-                text-align: left;
+                font-size: 0.85rem;
+                border: none;
+                font-family: 'Inter', sans-serif;
                 vertical-align: top;
               }
-              
               th {
-                background-color: #f8f9fa;
-                font-weight: bold;
+                background: #f3f4f6 !important;
                 color: #1f2937;
+                font-weight: 600;
+                text-align: left;
+                width: 18%;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              td {
+                background: #ffffff;
+                border-bottom: 1px solid #e5e7eb;
+              }
+              td:last-child {
+                border-bottom: none;
               }
               
-              .header-table th {
-                color: white;
-                padding: 10px;
-                font-weight: bold;
-                text-align: center;
+              .section-title {
+                font-weight: 600;
+                margin-top: 18px;
+                margin-bottom: 8px;
+                font-size: 1.0rem;
+                color: #4338ca !important;
+                font-family: 'Inter', sans-serif;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
               
               ul {
-                margin: 0 0 20px 20px;
-                padding: 0;
+                list-style: disc inside;
+                margin-bottom: 16px;
+                line-height: 1.4;
+                font-size: 0.9rem;
+                font-family: 'Inter', sans-serif;
+                padding-left: 0;
               }
-              
               li {
-                margin-bottom: 8px;
+                margin-bottom: 0.5mm;
+              }
+              p {
+                font-size: 0.9rem;
+                line-height: 1.4;
+                margin-bottom: 12px;
+                font-family: 'Inter', sans-serif;
                 text-align: justify;
               }
               
-              p {
-                text-align: justify;
-                margin-bottom: 12px;
-              }
-
-              .instructions {
-                padding: 15px;
-                border-left: 4px solid;
-                margin-bottom: 30px;
-                font-style: italic;
-              }
-
-              .question {
-                margin-bottom: 30px;
-                page-break-inside: avoid;
-              }
-
-              .question-header {
-                font-weight: bold;
-                margin-bottom: 10px;
-                font-size: 13pt;
-              }
-
-              .question-text {
-                margin-bottom: 15px;
-                text-align: justify;
-              }
-
-              .options {
-                margin-left: 20px;
-              }
-
-              .option {
-                margin-bottom: 8px;
+              .footer {
+                position: absolute;
+                bottom: 6mm;
+                left: 0;
+                right: 0;
+                text-align: center;
+                font-size: 0.7rem;
+                color: #6b7280;
+                z-index: 999;
+                height: 6mm;
                 display: flex;
-                align-items: flex-start;
-              }
-
-              .option-letter {
-                font-weight: bold;
-                margin-right: 10px;
-                min-width: 25px;
-              }
-
-              .answer-space {
-                border-bottom: 1px solid #333;
-                height: 40px;
-                margin: 10px 0;
-              }
-
-              .evaluation-info {
-                padding: 15px;
-                border-left: 4px solid #dc2626;
-                margin-bottom: 30px;
-              }
-
-              .points {
-                background: #fef2f2;
-                color: #dc2626;
-                padding: 4px 8px;
-                border: 1px solid #dc2626;
-                border-radius: 4px;
-                font-size: 10pt;
+                align-items: center;
+                justify-content: center;
+                background: transparent;
+                padding: 0 15mm;
+                font-family: 'Inter', sans-serif;
+                flex-shrink: 0;
               }
             </style>
           </head>
