@@ -5,16 +5,39 @@ import { GeneratedMaterial, LessonPlan, Activity, Slide, Assessment } from './ma
 import { templateService } from './templateService';
 
 class ExportService {
+  private calculateQuestionHeight(question: Element): number {
+    const enunciado = question.querySelector('.questao-enunciado')?.textContent || '';
+    const opcoes = question.querySelectorAll('.opcao');
+    
+    // Base height for question structure
+    let height = 120; // Base padding, margins, and question number
+    
+    // Add height based on text length (approximate)
+    height += Math.ceil(enunciado.length / 80) * 25; // ~25px per line
+    
+    // Add height for options
+    height += opcoes.length * 35; // ~35px per option
+    
+    // Add extra space for complex questions
+    if (enunciado.length > 200 || opcoes.length > 4) {
+      height += 50;
+    }
+    
+    return height;
+  }
+
   private splitContentIntoPages(htmlContent: string, materialType: string): string[] {
+    console.log('ExportService: Starting page split for', materialType);
+    
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
-    const contentHeight = tempDiv.scrollHeight;
-    const pageHeight = 1000; // Approximate page height in pixels
-    
-    if (contentHeight <= pageHeight) {
-      return [htmlContent];
-    }
+    // Updated page dimensions matching MaterialPreview
+    const pageHeight = 1200; // Increased from 1000px
+    const headerFooterHeight = 350; // Increased from 200px for better safety margin
+    const availableContentHeight = pageHeight - headerFooterHeight;
+
+    console.log('ExportService page calculation:', { pageHeight, headerFooterHeight, availableContentHeight });
 
     // Split content by questions or sections for activities and evaluations
     if (materialType === 'atividade' || materialType === 'avaliacao') {
@@ -22,20 +45,24 @@ class ExportService {
       const questions = tempDiv.querySelectorAll('.questao-container');
       
       if (questions.length === 0) {
+        console.log('ExportService: No questions found, returning original content');
         return [htmlContent];
       }
 
+      console.log(`ExportService: Found ${questions.length} questions to paginate`);
+
       let currentPageContent = '';
       let currentPageHeight = 0;
-      const headerFooterHeight = 200;
       
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
       
       questions.forEach((question, index) => {
-        const questionHeight = 300;
+        const questionHeight = this.calculateQuestionHeight(question);
+        console.log(`ExportService: Question ${index + 1} estimated height: ${questionHeight}px`);
         
-        if (currentPageHeight + questionHeight > pageHeight - headerFooterHeight && currentPageContent) {
+        if (currentPageHeight + questionHeight > availableContentHeight && currentPageContent) {
+          console.log(`ExportService: Creating new page at question ${index + 1}, current height: ${currentPageHeight}px`);
           pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
           currentPageContent = '';
           currentPageHeight = 0;
@@ -49,6 +76,7 @@ class ExportService {
         pages.push(this.wrapPageContent(currentPageContent, pages.length === 0 ? header + instructions : '', true));
       }
       
+      console.log(`ExportService: Split into ${pages.length} pages`);
       return pages.length > 0 ? pages : [htmlContent];
     }
 
@@ -61,20 +89,20 @@ class ExportService {
 
       const pages: string[] = [];
       let currentPageContent = '';
-      let sectionCount = 0;
-      const sectionsPerPage = 2;
+      let currentPageHeight = 0;
+      const sectionHeight = 250; // Average height per section
 
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       
       sections.forEach((section, index) => {
-        if (sectionCount >= sectionsPerPage && currentPageContent) {
+        if (currentPageHeight + sectionHeight > availableContentHeight && currentPageContent) {
           pages.push(this.wrapPageContent(currentPageContent, index === 0 ? header : '', false));
           currentPageContent = '';
-          sectionCount = 0;
+          currentPageHeight = 0;
         }
         
         currentPageContent += section.outerHTML;
-        sectionCount++;
+        currentPageHeight += sectionHeight;
       });
       
       if (currentPageContent) {
@@ -90,7 +118,7 @@ class ExportService {
   private wrapPageContent(content: string, header: string, includeFooter: boolean): string {
     return `
       <div class="page-content">
-        <div class="page-header">
+        <div class="page-header-safe-zone">
           <div class="logo-section">
             <img src="/placeholder.svg" alt="Logo" style="height: 40px; margin-bottom: 10px;">
           </div>
@@ -115,7 +143,7 @@ class ExportService {
         <style>
           @page {
             size: A4;
-            margin: 20mm;
+            margin: 15mm 20mm 15mm 20mm;
           }
           
           * {
@@ -129,23 +157,28 @@ class ExportService {
             line-height: 1.6;
             color: #333;
             background: white;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
           
           .page-content {
-            min-height: calc(100vh - 40mm);
+            min-height: calc(100vh - 30mm);
             display: flex;
             flex-direction: column;
             page-break-after: always;
+            padding: 0;
+            margin: 0;
           }
           
           .page-content:last-child {
             page-break-after: avoid;
           }
           
-          .page-header {
-            margin-bottom: 20px;
+          .page-header-safe-zone {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
             border-bottom: 2px solid #e5e5e5;
-            padding-bottom: 15px;
+            min-height: 100px;
           }
           
           .logo-section {
@@ -155,72 +188,78 @@ class ExportService {
           
           .main-content {
             flex: 1;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            padding-top: 10px;
           }
           
           .page-footer {
             margin-top: auto;
-            padding-top: 15px;
+            padding-top: 20px;
             border-top: 1px solid #e5e5e5;
             text-align: center;
             font-size: 12px;
             color: #666;
+            min-height: 40px;
           }
           
           .questao-container {
-            margin-bottom: 20px;
-            padding: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
             background: #fafafa;
             border-left: 4px solid #3b82f6;
             border-radius: 8px;
             page-break-inside: avoid;
+            break-inside: avoid;
           }
           
           .questao-numero {
             font-weight: bold;
             color: #3b82f6;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             font-size: 16px;
           }
           
           .questao-enunciado {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             line-height: 1.8;
+            font-size: 14px;
           }
           
           .questao-opcoes {
-            margin-left: 20px;
+            margin-left: 25px;
           }
           
           .opcao {
-            margin: 8px 0;
+            margin: 10px 0;
             display: flex;
             align-items: flex-start;
+            font-size: 14px;
           }
           
           .opcao-letra {
             font-weight: bold;
-            margin-right: 10px;
-            min-width: 20px;
+            margin-right: 15px;
+            min-width: 25px;
           }
           
           .section {
-            margin-bottom: 25px;
+            margin-bottom: 35px;
             page-break-inside: avoid;
+            break-inside: avoid;
           }
           
           .section-title {
             font-size: 18px;
             font-weight: bold;
             color: #2563eb;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
             border-bottom: 2px solid #e5e7eb;
           }
           
           .instructions-section {
             background: #f0f9ff;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
             border-left: 4px solid #0ea5e9;
@@ -238,6 +277,22 @@ class ExportService {
               max-width: none;
               height: auto;
               min-height: auto;
+            }
+            
+            .page-header-safe-zone {
+              margin-bottom: 30px;
+              padding-bottom: 15px;
+            }
+            
+            .questao-container {
+              page-break-inside: avoid;
+              break-inside: avoid;
+              margin-bottom: 25px;
+            }
+            
+            .section {
+              page-break-inside: avoid;
+              break-inside: avoid;
             }
           }
         </style>
@@ -394,7 +449,6 @@ class ExportService {
         const pageContentParagraphs = this.processPageContentForWord(pageContent, material);
         children.push(...pageContentParagraphs);
         
-        // Adicionar rodapé se necessário
         if (material.type === 'atividade' || material.type === 'avaliacao') {
           children.push(
             new Paragraph({
