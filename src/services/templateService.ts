@@ -123,8 +123,8 @@ class TemplateService {
             /* Título principal */
             h2 {
               text-align: center;
-              margin: 0 0 8mm 0;
-              font-size: 1.2rem;
+              margin: 0 0 6mm 0;
+              font-size: 1.1rem;
               color: #1e40af;
               position: relative;
               font-family: 'Inter', sans-serif;
@@ -142,11 +142,11 @@ class TemplateService {
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 6mm;
+              margin-bottom: 4mm;
             }
             th, td {
-              padding: 3mm 2mm;
-              font-size: 0.75rem;
+              padding: 2mm 1.5mm;
+              font-size: 0.7rem;
               border: 1px solid #d1d5db;
               font-family: 'Inter', sans-serif;
               vertical-align: top;
@@ -155,52 +155,84 @@ class TemplateService {
               background: #f8fafc;
               color: #374151;
               font-weight: 600;
-              text-align: center;
+              text-align: left;
+              width: 18%;
             }
             td {
               background: #ffffff;
             }
-            /* Tabela de informações básicas com layout otimizado */
+            /* Tabela de informações básicas com layout específico */
             .info-table th {
-              width: 15%;
-              font-size: 0.7rem;
+              font-size: 0.65rem;
+              text-align: left;
+              padding: 2mm 1.5mm;
             }
             .info-table td {
-              font-size: 0.75rem;
+              font-size: 0.7rem;
+              padding: 2mm 1.5mm;
             }
+            /* Layout específico para a primeira linha */
+            .info-table tr:first-child th:first-child { width: 15%; }
+            .info-table tr:first-child td:first-child { width: 35%; }
+            .info-table tr:first-child th:nth-child(3) { width: 10%; }
+            .info-table tr:first-child td:nth-child(4) { width: 40%; }
+            
+            /* Layout para segunda linha */
+            .info-table tr:nth-child(2) th:first-child { width: 15%; }
+            .info-table tr:nth-child(2) td:first-child { width: 35%; }
+            .info-table tr:nth-child(2) th:nth-child(3) { width: 15%; }
+            .info-table tr:nth-child(2) td:nth-child(4) { width: 35%; }
+            
+            /* Layout para terceira linha - tema ocupa largura total */
+            .info-table tr:nth-child(3) th { width: 15%; }
+            .info-table tr:nth-child(3) td { width: 85%; }
+            
+            /* Layout para quarta linha */
+            .info-table tr:nth-child(4) th:first-child { width: 15%; }
+            .info-table tr:nth-child(4) td:first-child { width: 35%; }
+            .info-table tr:nth-child(4) th:nth-child(3) { width: 10%; }
+            .info-table tr:nth-child(4) td:nth-child(4) { width: 40%; }
+            
             /* Desenvolvimento metodológico com tabela mais compacta */
             .development-table th {
-              font-size: 0.7rem;
-              padding: 2mm 1.5mm;
+              font-size: 0.65rem;
+              padding: 1.5mm 1mm;
+              text-align: center;
             }
             .development-table td {
-              font-size: 0.7rem;
-              padding: 2mm 1.5mm;
+              font-size: 0.65rem;
+              padding: 1.5mm 1mm;
+              text-align: center;
             }
+            .development-table th:first-child { width: 15%; }
+            .development-table th:nth-child(2) { width: 50%; }
+            .development-table th:nth-child(3) { width: 15%; }
+            .development-table th:nth-child(4) { width: 20%; }
+            
             /* Seções e listas */
             .section-title {
               font-weight: 600;
-              margin-top: 4mm;
-              margin-bottom: 2mm;
-              font-size: 0.9rem;
+              margin-top: 3mm;
+              margin-bottom: 1.5mm;
+              font-size: 0.8rem;
               color: #1e40af;
               font-family: 'Inter', sans-serif;
             }
             ul {
               list-style: disc inside;
-              margin-bottom: 4mm;
-              line-height: 1.2;
-              font-size: 0.75rem;
+              margin-bottom: 3mm;
+              line-height: 1.1;
+              font-size: 0.7rem;
               font-family: 'Inter', sans-serif;
               padding-left: 0;
             }
             li {
-              margin-bottom: 1mm;
+              margin-bottom: 0.5mm;
             }
             p {
-              font-size: 0.75rem;
-              line-height: 1.2;
-              margin-bottom: 3mm;
+              font-size: 0.7rem;
+              line-height: 1.1;
+              margin-bottom: 2mm;
               font-family: 'Inter', sans-serif;
               text-align: justify;
             }
@@ -264,10 +296,15 @@ class TemplateService {
                 height: 16px;
               }
               .header .brand-text h1 {
-                font-size: 18px;
+                font-size: 16px;
+                text-transform: none !important;
+              }
+              .header .brand-text h1 .ia-text {
+                text-transform: uppercase !important;
               }
               .header .brand-text p {
-                font-size: 8px;
+                font-size: 7px;
+                text-transform: none !important;
               }
               .footer {
                 position: fixed;
@@ -313,7 +350,7 @@ class TemplateService {
                   </svg>
                 </div>
                 <div class="brand-text">
-                  <h1>AulagIA</h1>
+                  <h1>Aulag<span class="ia-text">IA</span></h1>
                   <p>Sua aula com toque mágico</p>
                 </div>
               </div>
@@ -368,10 +405,10 @@ class TemplateService {
                 <table class="development-table">
                   <thead>
                     <tr>
-                      <th style="width: 20%;">Etapa</th>
-                      <th style="width: 45%;">Atividade</th>
-                      <th style="width: 15%;">Tempo</th>
-                      <th style="width: 20%;">Recursos</th>
+                      <th>Etapa</th>
+                      <th>Atividade</th>
+                      <th>Tempo</th>
+                      <th>Recursos</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -389,11 +426,7 @@ class TemplateService {
 
               <!-- Recursos Didáticos -->
               <div class="section-title">RECURSOS DIDÁTICOS</div>
-              <ul>
-                {{#each recursos}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
+              <p>{{recursos}}</p>
 
               <!-- Avaliação -->
               <div class="section-title">AVALIAÇÃO</div>
