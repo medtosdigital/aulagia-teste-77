@@ -96,7 +96,7 @@ class TemplateService {
             .header .logo-container {
               display: flex;
               align-items: center;
-              gap: 6px;
+              gap: 3px;
             }
             .header .logo {
               width: 32px;
@@ -133,13 +133,14 @@ class TemplateService {
               text-transform: none;
             }
             .header .brand-text p {
-              font-size: 9px;
+              font-size: 8px;
               color: #6b7280;
-              margin: 1px 0 0 0;
+              margin: -1px 0 0 0;
               font-family: 'Inter', sans-serif;
               line-height: 1;
               font-weight: 400;
             }
+            
             /* Conteúdo principal com margem para não sobrepor o cabeçalho */
             .content {
               margin-top: 20mm;
@@ -326,6 +327,9 @@ class TemplateService {
                 background: transparent;
                 z-index: 1000;
               }
+              .header .logo-container {
+                gap: 2px;
+              }
               .header .logo {
                 width: 28px;
                 height: 28px;
@@ -342,7 +346,8 @@ class TemplateService {
                 text-transform: none !important;
               }
               .header .brand-text p {
-                font-size: 7px;
+                font-size: 6px;
+                margin: -2px 0 0 0;
               }
               .footer {
                 position: fixed;
