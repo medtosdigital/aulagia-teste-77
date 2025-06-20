@@ -96,7 +96,7 @@ class TemplateService {
             .header .logo-container {
               display: flex;
               align-items: center;
-              gap: 8px;
+              gap: 6px;
             }
             .header .logo {
               width: 32px;
@@ -130,8 +130,6 @@ class TemplateService {
               line-height: 1;
               font-weight: 700;
               letter-spacing: -0.2px;
-            }
-            .header .brand-text h1 .ia-text {
               text-transform: none;
             }
             .header .brand-text p {
@@ -341,8 +339,6 @@ class TemplateService {
               }
               .header .brand-text h1 {
                 font-size: 16px;
-              }
-              .header .brand-text h1 .ia-text {
                 text-transform: none !important;
               }
               .header .brand-text p {
@@ -401,7 +397,7 @@ class TemplateService {
                   </svg>
                 </div>
                 <div class="brand-text">
-                  <h1>Aulag<span class="ia-text">IA</span></h1>
+                  <h1>AulagIA</h1>
                   <p>Sua aula com toque mágico</p>
                 </div>
               </div>
