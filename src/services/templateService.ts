@@ -880,6 +880,81 @@ class TemplateService {
               border-radius: 4px;
               background: #fafafa;
             }
+            .answer-lines {
+              border-bottom: 1px solid #d1d5db;
+              margin-bottom: 8px;
+              height: 20px;
+            }
+            .answer-lines:last-child {
+              margin-bottom: 0;
+            }
+            .math-space {
+              border: 1px solid #e5e7eb;
+              min-height: 80px;
+              margin: 10px 0;
+              padding: 15px;
+              border-radius: 4px;
+              background: #fafafa;
+              text-align: center;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #9ca3af;
+              font-size: 0.8rem;
+            }
+            .matching-section {
+              display: flex;
+              gap: 30px;
+              margin: 15px 0;
+            }
+            .matching-column {
+              flex: 1;
+            }
+            .matching-item {
+              padding: 8px 12px;
+              border: 1px solid #d1d5db;
+              margin-bottom: 8px;
+              border-radius: 4px;
+              background: #f9fafb;
+            }
+            .fill-blank {
+              display: inline-block;
+              border-bottom: 2px solid #4338ca;
+              min-width: 100px;
+              height: 20px;
+              margin: 0 5px;
+            }
+            .image-space {
+              border: 2px dashed #d1d5db;
+              min-height: 120px;
+              margin: 15px 0;
+              border-radius: 8px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #9ca3af;
+              font-size: 0.8rem;
+              background: #fafafa;
+            }
+            .interpretation-text {
+              background: #f3f4f6;
+              padding: 15px;
+              border-radius: 6px;
+              margin: 15px 0;
+              font-size: 0.9rem;
+              line-height: 1.5;
+              border-left: 4px solid #6b7280;
+            }
+            .formula-display {
+              background: #f8fafc;
+              padding: 20px;
+              border-radius: 8px;
+              margin: 15px 0;
+              text-align: center;
+              font-family: 'Times New Roman', serif;
+              font-size: 1.1rem;
+              border: 1px solid #e2e8f0;
+            }
             
             /* Rodapé */
             .footer {
@@ -1048,26 +1123,8 @@ class TemplateService {
                 {{instrucoes}}
               </div>
 
-              {{#each questoes}}
-              <div class="question">
-                <div class="question-header">Questão {{numero}}</div>
-                <div class="question-text">{{pergunta}}</div>
-                
-                {{#if opcoes}}
-                <div class="options">
-                  {{#each opcoes}}
-                  <div class="option">
-                    <span class="option-letter">{{@letter}}</span>
-                    <span>{{this}}</span>
-                  </div>
-                  {{/each}}
-                </div>
-                {{else}}
-                <div class="answer-space"></div>
-                <div class="answer-space"></div>
-                {{/if}}
-              </div>
-              {{/each}}
+              <!-- Questões -->
+              {{questoesContent}}
             </div>
           </div>
         </body>
@@ -1331,6 +1388,81 @@ class TemplateService {
               border-radius: 4px;
               background: #fafafa;
             }
+            .answer-lines {
+              border-bottom: 1px solid #d1d5db;
+              margin-bottom: 8px;
+              height: 20px;
+            }
+            .answer-lines:last-child {
+              margin-bottom: 0;
+            }
+            .math-space {
+              border: 1px solid #e5e7eb;
+              min-height: 80px;
+              margin: 10px 0;
+              padding: 15px;
+              border-radius: 4px;
+              background: #fafafa;
+              text-align: center;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #9ca3af;
+              font-size: 0.8rem;
+            }
+            .matching-section {
+              display: flex;
+              gap: 30px;
+              margin: 15px 0;
+            }
+            .matching-column {
+              flex: 1;
+            }
+            .matching-item {
+              padding: 8px 12px;
+              border: 1px solid #d1d5db;
+              margin-bottom: 8px;
+              border-radius: 4px;
+              background: #f9fafb;
+            }
+            .fill-blank {
+              display: inline-block;
+              border-bottom: 2px solid #4338ca;
+              min-width: 100px;
+              height: 20px;
+              margin: 0 5px;
+            }
+            .image-space {
+              border: 2px dashed #d1d5db;
+              min-height: 120px;
+              margin: 15px 0;
+              border-radius: 8px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #9ca3af;
+              font-size: 0.8rem;
+              background: #fafafa;
+            }
+            .interpretation-text {
+              background: #f3f4f6;
+              padding: 15px;
+              border-radius: 6px;
+              margin: 15px 0;
+              font-size: 0.9rem;
+              line-height: 1.5;
+              border-left: 4px solid #6b7280;
+            }
+            .formula-display {
+              background: #f8fafc;
+              padding: 20px;
+              border-radius: 8px;
+              margin: 15px 0;
+              text-align: center;
+              font-family: 'Times New Roman', serif;
+              font-size: 1.1rem;
+              border: 1px solid #e2e8f0;
+            }
             
             /* Rodapé */
             .footer {
@@ -1498,28 +1630,8 @@ class TemplateService {
                 <p><strong>Tempo Limite:</strong> {{tempoLimite}}</p>
               </div>
 
-              {{#each questoes}}
-              <div class="question">
-                <div class="question-header">
-                  <span>Questão {{numero}}</span>
-                  <span class="points">({{pontuacao}} pontos)</span>
-                </div>
-                <div class="question-text">{{pergunta}}</div>
-                
-                {{#if opcoes}}
-                <div class="options">
-                  {{#each opcoes}}
-                  <div class="option">
-                    <span class="option-letter">{{@letter}}</span>
-                    <span>{{this}}</span>
-                  </div>
-                  {{/each}}
-                </div>
-                {{else}}
-                <div class="answer-space"></div>
-                {{/if}}
-              </div>
-              {{/each}}
+              <!-- Questões -->
+              {{questoesContent}}
             </div>
           </div>
         </body>
@@ -1582,9 +1694,12 @@ class TemplateService {
       throw new Error('Template não encontrado');
     }
 
-    // Simple template engine (substitui {{variavel}} pelo valor)
-    let html = template.htmlContent;
-    
+    // Handle questoesContent for atividade and avaliacao templates
+    if ((template.type === 'atividade' || template.type === 'avaliacao') && data.questoes) {
+      const questoesHtml = this.generateQuestionsHTML(data.questoes, template.type);
+      html = html.replace('{{questoesContent}}', questoesHtml);
+    }
+
     // Handle simple variables
     Object.keys(data).forEach(key => {
       const regex = new RegExp(`{{${key}}}`, 'g');
@@ -1636,6 +1751,131 @@ class TemplateService {
     });
 
     return html;
+  }
+
+  private generateQuestionsHTML(questoes: any[], type: 'atividade' | 'avaliacao'): string {
+    return questoes.map((questao, index) => {
+      let questionHTML = `
+        <div class="question">
+          <div class="question-header">
+            <span>Questão ${questao.numero || index + 1}</span>
+            ${type === 'avaliacao' && questao.pontuacao ? 
+              `<span class="points">(${questao.pontuacao} pontos)</span>` : ''
+            }
+          </div>`;
+
+      // Adicionar texto de interpretação se existir
+      if (questao.textoInterpretacao) {
+        questionHTML += `
+          <div class="interpretation-text">
+            <strong>Texto para interpretação:</strong><br>
+            ${questao.textoInterpretacao}
+          </div>`;
+      }
+
+      // Adicionar fórmula se existir
+      if (questao.formula) {
+        questionHTML += `
+          <div class="formula-display">
+            ${questao.formula}
+          </div>`;
+      }
+
+      questionHTML += `<div class="question-text">${questao.pergunta}</div>`;
+
+      // Diferentes tipos de questão
+      switch (questao.tipo) {
+        case 'multipla_escolha':
+          if (questao.opcoes && questao.opcoes.length > 0) {
+            questionHTML += '<div class="options">';
+            questao.opcoes.forEach((opcao: string, opcaoIndex: number) => {
+              questionHTML += `
+                <div class="option">
+                  <span class="option-letter">${String.fromCharCode(65 + opcaoIndex)})</span>
+                  <span>${opcao}</span>
+                </div>`;
+            });
+            questionHTML += '</div>';
+          }
+          break;
+
+        case 'aberta':
+          if (questao.isCalculo) {
+            questionHTML += '<div class="math-space">Espaço para cálculos</div>';
+          } else {
+            // Adicionar linhas para resposta baseado no tamanho esperado
+            const numLines = questao.linhasResposta || 3;
+            for (let i = 0; i < numLines; i++) {
+              questionHTML += '<div class="answer-lines"></div>';
+            }
+          }
+          break;
+
+        case 'verdadeiro_falso':
+          questionHTML += `
+            <div class="options">
+              <div class="option">
+                <span class="option-letter">( )</span>
+                <span>Verdadeiro</span>
+              </div>
+              <div class="option">
+                <span class="option-letter">( )</span>
+                <span>Falso</span>
+              </div>
+            </div>`;
+          break;
+
+        case 'ligar':
+          if (questao.colunaA && questao.colunaB) {
+            questionHTML += `
+              <div class="matching-section">
+                <div class="matching-column">
+                  <strong>Coluna A</strong>`;
+            questao.colunaA.forEach((item: string, idx: number) => {
+              questionHTML += `<div class="matching-item">${idx + 1}) ${item}</div>`;
+            });
+            questionHTML += `
+                </div>
+                <div class="matching-column">
+                  <strong>Coluna B</strong>`;
+            questao.colunaB.forEach((item: string, idx: number) => {
+              questionHTML += `<div class="matching-item">${String.fromCharCode(65 + idx)}) ${item}</div>`;
+            });
+            questionHTML += `
+                </div>
+              </div>`;
+          }
+          break;
+
+        case 'completar':
+          // Para questões de completar, o texto já deve ter os espaços marcados
+          if (questao.textoComLacunas) {
+            questionHTML += `<div class="question-text">${questao.textoComLacunas}</div>`;
+          }
+          break;
+
+        case 'desenho':
+          questionHTML += `
+            <div class="image-space">
+              <span>Espaço para desenho ou colagem de imagem</span>
+            </div>`;
+          break;
+
+        case 'dissertativa':
+          const numLines = questao.linhasResposta || 5;
+          for (let i = 0; i < numLines; i++) {
+            questionHTML += '<div class="answer-lines"></div>';
+          }
+          break;
+
+        default:
+          // Questão padrão com espaço para resposta
+          questionHTML += '<div class="answer-space"></div>';
+      }
+
+      questionHTML += '</div>';
+      return questionHTML;
+    }).join('');
   }
 
   // Novo método para gerar dados de slides baseados em keywords
