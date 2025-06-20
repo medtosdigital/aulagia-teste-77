@@ -293,7 +293,7 @@ class TemplateService {
                   </svg>
                 </div>
                 <div class="brand-text">
-                  <h1>aulag<span class="ia-text">IA</span></h1>
+                  <h1>AulagIA</h1>
                   <p>Sua aula com toque mágico</p>
                 </div>
               </div>
@@ -342,14 +342,6 @@ class TemplateService {
                 {{/each}}
               </ul>
 
-              <!-- Habilidades BNCC -->
-              <div class="section-title">HABILIDADES BNCC</div>
-              <ul class="avoid-break">
-                {{#each habilidades}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
-
               <!-- Desenvolvimento Metodológico -->
               <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
               <div class="development-section">
@@ -389,7 +381,7 @@ class TemplateService {
                   </svg>
                 </div>
                 <div class="brand-text">
-                  <h1>aulag<span class="ia-text">IA</span></h1>
+                  <h1>AulagIA</h1>
                   <p>Sua aula com toque mágico</p>
                 </div>
               </div>
@@ -417,7 +409,7 @@ class TemplateService {
         </body>
         </html>
       `,
-      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'bncc', 'objetivos', 'habilidades', 'desenvolvimento', 'recursos', 'avaliacao'],
+      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'bncc', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
