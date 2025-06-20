@@ -65,10 +65,6 @@ class ExportService {
                 max-width: none !important;
                 width: 100% !important;
                 height: 100vh !important;
-                page-break-after: always;
-              }
-              
-              .page:last-child {
                 page-break-after: avoid;
               }
             }
