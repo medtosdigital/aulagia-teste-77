@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { materialService, type GeneratedMaterial, type LessonPlan, type Activity, type Slide, type Assessment } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
@@ -141,20 +142,26 @@ const MaterialViewer = () => {
 
       <div>
         <h4 className="font-semibold text-sm text-gray-600 mb-3">Desenvolvimento da Aula</h4>
-        <div className="space-y-4">
-          {content.desenvolvimento.map((etapa, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h5 className="font-medium text-blue-600">{etapa.etapa}</h5>
-                <Badge variant="outline">{etapa.tempo}</Badge>
-              </div>
-              <p className="text-sm text-gray-700 mb-2">{etapa.atividade}</p>
-              <p className="text-xs text-gray-500">
-                <span className="font-medium">Recursos:</span> {etapa.recursos}
-              </p>
-            </div>
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Etapa</TableHead>
+              <TableHead>Atividade</TableHead>
+              <TableHead>Tempo</TableHead>
+              <TableHead>Recursos</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {content.desenvolvimento.map((etapa, index) => (
+              <TableRow key={index}>
+                <TableCell className="font-medium">{etapa.etapa}</TableCell>
+                <TableCell>{etapa.atividade}</TableCell>
+                <TableCell>{etapa.tempo}</TableCell>
+                <TableCell>{etapa.recursos}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
       <Separator />
