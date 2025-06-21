@@ -1,8 +1,94 @@
+export interface Template {
+  id: string;
+  name: string;
+  type: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
+  variables: string[];
+  htmlContent: string;
+  createdAt: string;
+}
+
 class TemplateService {
   private templates = new Map<string, string>();
+  private templateMetadata: Template[] = [];
 
   constructor() {
     this.loadTemplates();
+    this.initializeMetadata();
+  }
+
+  private initializeMetadata() {
+    this.templateMetadata = [
+      {
+        id: '1',
+        name: 'Plano de Aula Completo',
+        type: 'plano-de-aula',
+        variables: ['professor', 'disciplina', 'tema', 'duracao', 'serie', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
+        htmlContent: this.templates.get('1') || '',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '2',
+        name: 'Apresentação de Slides',
+        type: 'slides',
+        variables: ['slides'],
+        htmlContent: this.templates.get('2') || '',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '3',
+        name: 'Atividade Educacional',
+        type: 'atividade',
+        variables: ['subject', 'grade', 'title', 'instructions', 'bnccCode', 'questionsContent'],
+        htmlContent: this.templates.get('3') || '',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '4',
+        name: 'Avaliação',
+        type: 'avaliacao',
+        variables: ['title', 'instructions', 'tempoLimite', 'questoes'],
+        htmlContent: this.templates.get('4') || '',
+        createdAt: new Date().toISOString()
+      }
+    ];
+  }
+
+  getTemplates(): Template[] {
+    return this.templateMetadata;
+  }
+
+  deleteTemplate(id: string): boolean {
+    const index = this.templateMetadata.findIndex(t => t.id === id);
+    if (index !== -1) {
+      this.templateMetadata.splice(index, 1);
+      this.templates.delete(id);
+      return true;
+    }
+    return false;
+  }
+
+  generateSlidesData(formData: any): any {
+    // Generate slides data based on form input
+    const numSlides = Math.min(formData.numSlides || 5, 10);
+    const slides = [];
+    
+    for (let i = 1; i <= numSlides; i++) {
+      slides.push({
+        numero: i,
+        titulo: `${formData.tema} - Slide ${i}`,
+        conteudo: [
+          `Conceito ${i} sobre ${formData.tema}`,
+          `Aplicação prática ${i}`,
+          `Exemplo ${i}`
+        ]
+      });
+    }
+
+    return {
+      titulo: `Apresentação: ${formData.tema}`,
+      serie: formData.serie || 'Ensino Fundamental',
+      slides: slides
+    };
   }
 
   private loadTemplates() {
