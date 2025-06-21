@@ -1,7 +1,6 @@
-
 import { LessonPlan, Activity, Slide, Assessment } from './materialService';
 
-interface Template {
+export interface Template {
   id: string;
   name: string;
   type: string;
@@ -275,6 +274,58 @@ class TemplateService {
     return this.templates;
   }
 
+  getTemplates(): Template[] {
+    return this.getAllTemplates();
+  }
+
+  generateSlidesData(formData: any): any {
+    const slides = [
+      {
+        numero: 1,
+        titulo: `Introdução a ${formData.tema}`,
+        conteudo: [
+          `Bem-vindos à aula sobre ${formData.tema}`,
+          `Objetivos da aula`,
+          `O que vamos aprender hoje`
+        ]
+      },
+      {
+        numero: 2,
+        titulo: `Conceitos Fundamentais`,
+        conteudo: [
+          `Definição de ${formData.tema}`,
+          `Principais características`,
+          `Importância no contexto de ${formData.disciplina}`
+        ]
+      },
+      {
+        numero: 3,
+        titulo: `Aplicações Práticas`,
+        conteudo: [
+          `Como ${formData.tema} é usado no dia a dia`,
+          `Exemplos práticos`,
+          `Exercícios e atividades`
+        ]
+      },
+      {
+        numero: 4,
+        titulo: `Conclusão`,
+        conteudo: [
+          `Resumo dos pontos principais`,
+          `Próximos passos`,
+          `Perguntas e discussão`
+        ]
+      }
+    ];
+
+    return {
+      titulo: `Slides sobre ${formData.tema}`,
+      serie: formData.serie,
+      disciplina: formData.disciplina,
+      slides: slides
+    };
+  }
+
   renderTemplate(templateId: string, data: any): string {
     const template = this.getTemplate(templateId);
     if (!template) {
@@ -368,8 +419,10 @@ class TemplateService {
     return id;
   }
 
-  deleteTemplate(id: string): void {
+  deleteTemplate(id: string): boolean {
+    const initialLength = this.templates.length;
     this.templates = this.templates.filter(template => template.id !== id);
+    return this.templates.length < initialLength;
   }
 }
 
