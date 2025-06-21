@@ -1,1023 +1,1985 @@
+
 export interface Template {
   id: string;
   name: string;
   type: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
-  variables: string[];
   htmlContent: string;
+  variables: string[]; // variáveis que podem ser preenchidas no template
   createdAt: string;
+  updatedAt: string;
 }
 
 class TemplateService {
-  private templates = new Map<string, string>();
-  private templateMetadata: Template[] = [];
+  private templates: Template[] = [
+    {
+      id: '1',
+      name: 'Plano de Aula ABNT',
+      type: 'plano-de-aula',
+      htmlContent: `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Plano de Aula – AulagIA</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            
+            /* Define página A4 para impressão e visualização */
+            @page {
+              size: A4;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              background: #f0f4f8;
+              font-family: 'Inter', sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
+              padding: 20px 0;
+            }
+            /* Container no tamanho A4 */
+            .page {
+              position: relative;
+              width: 210mm;
+              min-height: 297mm;
+              background: white;
+              overflow: hidden;
+              margin: 0 auto;
+              box-sizing: border-box;
+              padding: 0;
+              display: flex;
+              flex-direction: column;
+              border-radius: 6px;
+              box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            
+            /* Formas decorativas */
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.25;
+              pointer-events: none;
+              z-index: 0;
+            }
+            .shape-circle.purple {
+              width: 180px; 
+              height: 180px;
+              background: #a78bfa;
+              top: -60px; 
+              left: -40px;
+            }
+            .shape-circle.blue {
+              width: 240px; 
+              height: 240px;
+              background: #60a5fa;
+              bottom: -80px; 
+              right: -60px;
+            }
+            
+            /* Cabeçalho que aparece no topo */
+            .header {
+              position: absolute;
+              top: 6mm;
+              left: 0;
+              right: 0;
+              display: flex;
+              align-items: center;
+              z-index: 999;
+              height: 12mm;
+              background: transparent;
+              padding: 0 12mm;
+              flex-shrink: 0;
+            }
+            .header .logo-container {
+              display: flex;
+              align-items: center;
+              gap: 3px;
+            }
+            .header .logo {
+              width: 32px;
+              height: 32px;
+              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              flex-shrink: 0;
+              box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
+            }
+            .header .logo svg {
+              width: 18px;
+              height: 18px;
+              stroke: white;
+              fill: none;
+              stroke-width: 2;
+            }
+            .header .brand-text {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+            }
+            .header .brand-text h1 {
+              font-size: 20px;
+              color: #0ea5e9;
+              margin: 0;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 700;
+              letter-spacing: -0.2px;
+              text-transform: none;
+            }
+            .header .brand-text p {
+              font-size: 8px;
+              color: #6b7280;
+              margin: -1px 0 0 0;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 400;
+            }
+            
+            /* Conteúdo principal com margem para não sobrepor o cabeçalho */
+            .content {
+              margin-top: 20mm;
+              margin-bottom: 12mm;
+              padding: 0 15mm;
+              position: relative;
+              flex: 1;
+              overflow: visible;
+              z-index: 1;
+            }
+            /* Título principal */
+            h2 {
+              text-align: center;
+              margin: 10px 0 18px 0;
+              font-size: 1.5rem;
+              color: #4f46e5;
+              position: relative;
+              font-family: 'Inter', sans-serif;
+              font-weight: 700;
+            }
+            h2::after {
+              content: '';
+              width: 50px;
+              height: 3px;
+              background: #a78bfa;
+              display: block;
+              margin: 6px auto 0;
+              border-radius: 2px;
+            }
+            /* Tabelas */
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 18px;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+            th, td {
+              padding: 8px 12px;
+              font-size: 0.85rem;
+              border: none;
+              font-family: 'Inter', sans-serif;
+              vertical-align: top;
+            }
+            th {
+              background: #f3f4f6;
+              color: #1f2937;
+              font-weight: 600;
+              text-align: left;
+              width: 18%;
+            }
+            td {
+              background: #ffffff;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            td:last-child {
+              border-bottom: none;
+            }
+            /* Tabela de informações básicas com layout específico */
+            .info-table th {
+              font-size: 0.8rem;
+              text-align: left;
+              padding: 8px 12px;
+            }
+            .info-table td {
+              font-size: 0.85rem;
+              padding: 8px 12px;
+            }
+            /* Layout específico para a primeira linha */
+            .info-table tr:first-child th:first-child { width: 15%; }
+            .info-table tr:first-child td:first-child { width: 35%; }
+            .info-table tr:first-child th:nth-child(3) { width: 10%; }
+            .info-table tr:first-child td:nth-child(4) { width: 40%; }
+            
+            /* Layout para segunda linha */
+            .info-table tr:nth-child(2) th:first-child { width: 15%; }
+            .info-table tr:nth-child(2) td:first-child { width: 35%; }
+            .info-table tr:nth-child(2) th:nth-child(3) { width: 15%; }
+            .info-table tr:nth-child(2) td:nth-child(4) { width: 35%; }
+            
+            /* Layout para terceira linha - tema ocupa largura total */
+            .info-table tr:nth-child(3) th { width: 15%; }
+            .info-table tr:nth-child(3) td { width: 85%; }
+            
+            /* Layout para quarta linha */
+            .info-table tr:nth-child(4) th:first-child { width: 15%; }
+            .info-table tr:nth-child(4) td:first-child { width: 35%; }
+            .info-table tr:nth-child(4) th:nth-child(3) { width: 10%; }
+            .info-table tr:nth-child(4) td:nth-child(4) { width: 40%; }
+            
+            /* Desenvolvimento metodológico com tabela mais compacta */
+            .development-table th {
+              font-size: 0.8rem;
+              padding: 8px 6px;
+              text-align: center;
+              background: #f8fafc;
+            }
+            .development-table td {
+              font-size: 0.8rem;
+              padding: 8px 6px;
+              text-align: center;
+            }
+            .development-table th:first-child { width: 15%; }
+            .development-table th:nth-child(2) { width: 50%; }
+            .development-table th:nth-child(3) { width: 15%; }
+            .development-table th:nth-child(4) { width: 20%; }
+            
+            /* Seções e listas */
+            .section-title {
+              font-weight: 600;
+              margin-top: 18px;
+              margin-bottom: 8px;
+              font-size: 1.0rem;
+              color: #4338ca;
+              font-family: 'Inter', sans-serif;
+            }
+            ul {
+              list-style: disc inside;
+              margin-bottom: 16px;
+              line-height: 1.4;
+              font-size: 0.9rem;
+              font-family: 'Inter', sans-serif;
+              padding-left: 0;
+            }
+            li {
+              margin-bottom: 0.5mm;
+            }
+            p {
+              font-size: 0.9rem;
+              line-height: 1.4;
+              margin-bottom: 12px;
+              font-family: 'Inter', sans-serif;
+              text-align: justify;
+            }
+            /* Rodapé */
+            .footer {
+              position: absolute;
+              bottom: 6mm;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 0.7rem;
+              color: #6b7280;
+              z-index: 999;
+              height: 6mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: transparent;
+              padding: 0 15mm;
+              font-family: 'Inter', sans-serif;
+              flex-shrink: 0;
+            }
+            /* Ajustes para impressão */
+            @media print {
+              body { 
+                margin: 0; 
+                padding: 0; 
+                background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .page { 
+                box-shadow: none; 
+                margin: 0; 
+                border-radius: 0;
+                width: 100%;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+              }
+              .shape-circle {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header {
+                position: fixed;
+                top: 6mm;
+                left: 0;
+                right: 0;
+                padding: 0 15mm;
+                flex-shrink: 0;
+                background: transparent;
+                z-index: 1000;
+              }
+              .header .logo-container {
+                gap: 6px;
+              }
+              .header .logo {
+                width: 24px;
+                height: 24px;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header .logo svg {
+                width: 14px;
+                height: 14px;
+              }
+              .header .brand-text h1 {
+                font-size: 14px;
+                text-transform: none !important;
+              }
+              .header .brand-text p {
+                font-size: 7px;
+                margin: 0;
+              }
+              .footer {
+                position: fixed;
+                bottom: 6mm;
+                left: 0;
+                right: 0;
+                flex-shrink: 0;
+                background: transparent;
+              }
+              .content {
+                margin-top: 20mm;
+                margin-bottom: 12mm;
+                padding: 0 15mm;
+                flex: 1;
+              }
+              h2 {
+                color: #4f46e5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              h2::after {
+                background: #a78bfa !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .section-title {
+                color: #4338ca !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              th {
+                background: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="page">
+            <!-- Formas decorativas -->
+            <div class="shape-circle purple"></div>
+            <div class="shape-circle blue"></div>
 
-  constructor() {
-    this.loadTemplates();
-    this.initializeMetadata();
-  }
+            <!-- Cabeçalho -->
+            <div class="header">
+              <div class="logo-container">
+                <div class="logo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                  </svg>
+                </div>
+                <div class="brand-text">
+                  <h1>AulagIA</h1>
+                  <p>Sua aula com toque mágico</p>
+                </div>
+              </div>
+            </div>
 
-  private initializeMetadata() {
-    this.templateMetadata = [
-      {
-        id: '1',
-        name: 'Plano de Aula Completo',
-        type: 'plano-de-aula',
-        variables: ['professor', 'disciplina', 'tema', 'duracao', 'serie', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
-        htmlContent: this.templates.get('1') || '',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: '2',
-        name: 'Apresentação de Slides',
-        type: 'slides',
-        variables: ['slides'],
-        htmlContent: this.templates.get('2') || '',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: '3',
-        name: 'Atividade Educacional',
-        type: 'atividade',
-        variables: ['subject', 'grade', 'title', 'instructions', 'bnccCode', 'questionsContent'],
-        htmlContent: this.templates.get('3') || '',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: '4',
-        name: 'Avaliação',
-        type: 'avaliacao',
-        variables: ['title', 'instructions', 'tempoLimite', 'questoes'],
-        htmlContent: this.templates.get('4') || '',
-        createdAt: new Date().toISOString()
-      }
-    ];
-  }
+            <!-- Rodapé -->
+            <div class="footer">
+              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
+
+            <div class="content">
+              <!-- Título do Plano de Aula -->
+              <h2>PLANO DE AULA</h2>
+
+              <!-- Informações básicas -->
+              <table class="info-table">
+                <tr>
+                  <th>Professor(a):</th>
+                  <td>{{professor}}</td>
+                  <th>Data:</th>
+                  <td>{{data}}</td>
+                </tr>
+                <tr>
+                  <th>Disciplina:</th>
+                  <td>{{disciplina}}</td>
+                  <th>Série/Ano:</th>
+                  <td>{{serie}}</td>
+                </tr>
+                <tr>
+                  <th>Tema:</th>
+                  <td colspan="3">{{tema}}</td>
+                </tr>
+                <tr>
+                  <th>Duração:</th>
+                  <td>{{duracao}}</td>
+                  <th>BNCC:</th>
+                  <td>{{bncc}}</td>
+                </tr>
+              </table>
+
+              <!-- Objetivos de Aprendizagem -->
+              <div class="section-title">OBJETIVOS DE APRENDIZAGEM</div>
+              <ul>
+                {{#each objetivos}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
+
+              <!-- Desenvolvimento Metodológico -->
+              <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
+              <div class="development-section">
+                <table class="development-table">
+                  <thead>
+                    <tr>
+                      <th>Etapa</th>
+                      <th>Atividade</th>
+                      <th>Tempo</th>
+                      <th>Recursos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each desenvolvimento}}
+                    <tr>
+                      <td>{{etapa}}</td>
+                      <td>{{atividade}}</td>
+                      <td>{{tempo}}</td>
+                      <td>{{recursos}}</td>
+                    </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Recursos Didáticos -->
+              <div class="section-title">RECURSOS DIDÁTICOS</div>
+              <p>{{recursos}}</p>
+
+              <!-- Avaliação -->
+              <div class="section-title">AVALIAÇÃO</div>
+              <p>{{avaliacao}}</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'bncc', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: '2',
+      name: 'Slides Educativos Interativos',
+      type: 'slides',
+      htmlContent: `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>{{titulo}} - {{serie}}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Fredoka:wght@400;600&display=swap');
+
+            body {
+              margin: 0;
+              padding: 0;
+              background-color: #e0f2fe;
+              font-family: 'Fredoka', sans-serif;
+            }
+
+            .page-separator {
+              height: 40px;
+              background-color: #1e3a8a;
+            }
+
+            .slide {
+              width: 960px;
+              height: 720px;
+              margin: auto;
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: space-between;
+              padding: 40px;
+              background-color: #ffffff;
+              box-sizing: border-box;
+            }
+
+            .text-content {
+              width: 55%;
+            }
+
+            .title {
+              font-family: 'Patrick Hand', cursive;
+              font-size: 2.8rem;
+              color: #0f172a;
+              margin-bottom: 20px;
+            }
+
+            .content {
+              font-size: 1.4rem;
+              color: #1e293b;
+              line-height: 1.6;
+            }
+
+            .image-side img {
+              width: 280px;
+            }
+
+            .table {
+              width: 100%;
+              margin-top: 20px;
+              border-collapse: collapse;
+            }
+
+            .table th, .table td {
+              border: 1px solid #ccc;
+              padding: 10px 14px;
+              font-size: 1.1rem;
+              text-align: center;
+            }
+
+            .grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 16px;
+              margin-top: 20px;
+            }
+
+            .box {
+              background-color: #fef9c3;
+              padding: 16px;
+              border-radius: 10px;
+              font-size: 1.2rem;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            }
+          </style>
+        </head>
+        <body>
+          {{#each slides}}
+          <div class="slide">
+            <div class="text-content">
+              <div class="title">{{titulo}}</div>
+              {{#if conteudo}}
+              <div class="content">{{conteudo}}</div>
+              {{/if}}
+              {{#if tabela}}
+              <table class="table">
+                {{#if tabela.cabecalho}}
+                <tr>
+                  {{#each tabela.cabecalho}}
+                  <th>{{this}}</th>
+                  {{/each}}
+                </tr>
+                {{/if}}
+                {{#each tabela.linhas}}
+                <tr>
+                  {{#each this}}
+                  <td>{{this}}</td>
+                  {{/each}}
+                </tr>
+                {{/each}}
+              </table>
+              {{/if}}
+              {{#if grade}}
+              <div class="grid">
+                {{#each grade}}
+                <div class="box">{{this}}</div>
+                {{/each}}
+              </div>
+              {{/if}}
+            </div>
+            {{#if imagem}}
+            <div class="image-side">
+              <img src="{{imagem}}" alt="{{altImagem}}">
+            </div>
+            {{/if}}
+          </div>
+          {{#unless @last}}
+          <div class="page-separator"></div>
+          {{/unless}}
+          {{/each}}
+        </body>
+        </html>
+      `,
+      variables: ['titulo', 'serie', 'slides'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: '3',
+      name: 'Atividade Padrão',
+      type: 'atividade',
+      htmlContent: `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Atividade – AulagIA</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            
+            /* Define página A4 para impressão e visualização */
+            @page {
+              size: A4;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              background: #f0f4f8;
+              font-family: 'Inter', sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
+              padding: 20px 0;
+            }
+            /* Container no tamanho A4 */
+            .page {
+              position: relative;
+              width: 210mm;
+              min-height: 297mm;
+              background: white;
+              overflow: hidden;
+              margin: 0 auto;
+              box-sizing: border-box;
+              padding: 0;
+              display: flex;
+              flex-direction: column;
+              border-radius: 6px;
+              box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            
+            /* Formas decorativas */
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.25;
+              pointer-events: none;
+              z-index: 0;
+            }
+            .shape-circle.purple {
+              width: 180px; 
+              height: 180px;
+              background: #a78bfa;
+              top: -60px; 
+              left: -40px;
+            }
+            .shape-circle.blue {
+              width: 240px; 
+              height: 240px;
+              background: #60a5fa;
+              bottom: -80px; 
+              right: -60px;
+            }
+            
+            /* Cabeçalho que aparece no topo */
+            .header {
+              position: absolute;
+              top: 6mm;
+              left: 0;
+              right: 0;
+              display: flex;
+              align-items: center;
+              z-index: 999;
+              height: 12mm;
+              background: transparent;
+              padding: 0 12mm;
+              flex-shrink: 0;
+            }
+            .header .logo-container {
+              display: flex;
+              align-items: center;
+              gap: 3px;
+            }
+            .header .logo {
+              width: 32px;
+              height: 32px;
+              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              flex-shrink: 0;
+              box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
+            }
+            .header .logo svg {
+              width: 18px;
+              height: 18px;
+              stroke: white;
+              fill: none;
+              stroke-width: 2;
+            }
+            .header .brand-text {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+            }
+            .header .brand-text h1 {
+              font-size: 20px;
+              color: #0ea5e9;
+              margin: 0;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 700;
+              letter-spacing: -0.2px;
+              text-transform: none;
+            }
+            .header .brand-text p {
+              font-size: 8px;
+              color: #6b7280;
+              margin: -1px 0 0 0;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 400;
+            }
+            
+            /* Conteúdo principal com margem para não sobrepor o cabeçalho */
+            .content {
+              margin-top: 20mm;
+              margin-bottom: 12mm;
+              padding: 0 15mm;
+              position: relative;
+              flex: 1;
+              overflow: visible;
+              z-index: 1;
+            }
+            /* Título principal */
+            h2 {
+              text-align: center;
+              margin: 10px 0 18px 0;
+              font-size: 1.5rem;
+              color: #4f46e5;
+              position: relative;
+              font-family: 'Inter', sans-serif;
+              font-weight: 700;
+            }
+            h2::after {
+              content: '';
+              width: 50px;
+              height: 3px;
+              background: #a78bfa;
+              display: block;
+              margin: 6px auto 0;
+              border-radius: 2px;
+            }
+            /* Tabelas */
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 18px;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+            th, td {
+              padding: 8px 12px;
+              font-size: 0.85rem;
+              border: none;
+              font-family: 'Inter', sans-serif;
+              vertical-align: top;
+            }
+            th {
+              background: #f3f4f6;
+              color: #1f2937;
+              font-weight: 600;
+              text-align: left;
+              width: 18%;
+            }
+            td {
+              background: #ffffff;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            td:last-child {
+              border-bottom: none;
+            }
+            
+            .instructions {
+              background: #eff6ff;
+              padding: 15px;
+              border-left: 4px solid #0ea5e9;
+              margin-bottom: 30px;
+              font-family: 'Inter', sans-serif;
+              border-radius: 6px;
+            }
+            
+            .student-info {
+              margin-bottom: 20px;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
+            }
+            
+            .question {
+              margin-bottom: 30px;
+              page-break-inside: avoid;
+            }
+            .question-header {
+              font-weight: 600;
+              color: #4338ca;
+              margin-bottom: 10px;
+              font-size: 1.0rem;
+              font-family: 'Inter', sans-serif;
+            }
+            .question-text {
+              margin-bottom: 15px;
+              text-align: justify;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
+              line-height: 1.4;
+            }
+            .options {
+              margin-left: 20px;
+            }
+            .option {
+              margin-bottom: 8px;
+              display: flex;
+              align-items: flex-start;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
+            }
+            .option-letter {
+              font-weight: bold;
+              margin-right: 10px;
+              color: #4338ca;
+              min-width: 25px;
+            }
+            .answer-space {
+              border: 1px solid #e5e7eb;
+              min-height: 60px;
+              margin: 10px 0;
+              padding: 10px;
+              border-radius: 4px;
+              background: #fafafa;
+            }
+            .answer-lines {
+              border-bottom: 1px solid #d1d5db;
+              margin-bottom: 8px;
+              height: 20px;
+            }
+            .answer-lines:last-child {
+              margin-bottom: 0;
+            }
+            .math-space {
+              border: 1px solid #e5e7eb;
+              min-height: 80px;
+              margin: 10px 0;
+              padding: 15px;
+              border-radius: 4px;
+              background: #fafafa;
+              text-align: center;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #9ca3af;
+              font-size: 0.8rem;
+            }
+            .matching-section {
+              display: flex;
+              gap: 30px;
+              margin: 15px 0;
+            }
+            .matching-column {
+              flex: 1;
+            }
+            .matching-item {
+              padding: 8px 12px;
+              border: 1px solid #d1d5db;
+              margin-bottom: 8px;
+              border-radius: 4px;
+              background: #f9fafb;
+            }
+            .fill-blank {
+              display: inline-block;
+              border-bottom: 2px solid #4338ca;
+              min-width: 100px;
+              height: 20px;
+              margin: 0 5px;
+            }
+            .image-space {
+              border: 2px dashed #d1d5db;
+              min-height: 120px;
+              margin: 15px 0;
+              border-radius: 8px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #9ca3af;
+              font-size: 0.8rem;
+              background: #fafafa;
+            }
+            .interpretation-text {
+              background: #f3f4f6;
+              padding: 15px;
+              border-radius: 6px;
+              margin: 15px 0;
+              font-size: 0.9rem;
+              line-height: 1.5;
+              border-left: 4px solid #6b7280;
+            }
+            .formula-display {
+              background: #f8fafc;
+              padding: 20px;
+              border-radius: 8px;
+              margin: 15px 0;
+              text-align: center;
+              font-family: 'Times New Roman', serif;
+              font-size: 1.1rem;
+              border: 1px solid #e2e8f0;
+            }
+            
+            /* Rodapé */
+            .footer {
+              position: absolute;
+              bottom: 6mm;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 0.7rem;
+              color: #6b7280;
+              z-index: 999;
+              height: 6mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: transparent;
+              padding: 0 15mm;
+              font-family: 'Inter', sans-serif;
+              flex-shrink: 0;
+            }
+            
+            /* Ajustes para impressão */
+            @media print {
+              body { 
+                margin: 0; 
+                padding: 0; 
+                background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .page { 
+                box-shadow: none; 
+                margin: 0; 
+                border-radius: 0;
+                width: 100%;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+              }
+              .shape-circle {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header {
+                position: fixed;
+                top: 6mm;
+                left: 0;
+                right: 0;
+                padding: 0 15mm;
+                flex-shrink: 0;
+                background: transparent;
+                z-index: 1000;
+              }
+              .header .logo-container {
+                gap: 6px;
+              }
+              .header .logo {
+                width: 24px;
+                height: 24px;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header .logo svg {
+                width: 14px;
+                height: 14px;
+              }
+              .header .brand-text h1 {
+                font-size: 14px;
+                text-transform: none !important;
+              }
+              .header .brand-text p {
+                font-size: 7px;
+                margin: 0;
+              }
+              .footer {
+                position: fixed;
+                bottom: 6mm;
+                left: 0;
+                right: 0;
+                flex-shrink: 0;
+                background: transparent;
+              }
+              .content {
+                margin-top: 20mm;
+                margin-bottom: 12mm;
+                padding: 0 15mm;
+                flex: 1;
+              }
+              h2 {
+                color: #4f46e5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              h2::after {
+                background: #a78bfa !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .question-header {
+                color: #4338ca !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              th {
+                background: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="page">
+            <!-- Formas decorativas -->
+            <div class="shape-circle purple"></div>
+            <div class="shape-circle blue"></div>
+
+            <!-- Cabeçalho -->
+            <div class="header">
+              <div class="logo-container">
+                <div class="logo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                  </svg>
+                </div>
+                <div class="brand-text">
+                  <h1>AulagIA</h1>
+                  <p>Sua aula com toque mágico</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rodapé -->
+            <div class="footer">
+              Atividade gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
+
+            <div class="content">
+              <!-- Título da Atividade -->
+              <h2>ATIVIDADE</h2>
+
+              <!-- Informações básicas -->
+              <table>
+                <tr>
+                  <th>Escola:</th>
+                  <td>_________________________________</td>
+                  <th>Data:</th>
+                  <td>_________________</td>
+                </tr>
+                <tr>
+                  <th>Disciplina:</th>
+                  <td>{{disciplina}}</td>
+                  <th>Série/Ano:</th>
+                  <td>{{serie}}</td>
+                </tr>
+              </table>
+
+              <div class="student-info">
+                <p><strong>Nome do Aluno(a):</strong> ____________________________________________</p>
+              </div>
+
+              <div class="instructions">
+                <strong>{{titulo}}</strong><br>
+                {{instrucoes}}
+              </div>
+
+              <!-- Questões -->
+              {{questoesContent}}
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      variables: ['titulo', 'disciplina', 'serie', 'instrucoes', 'questoes'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: '4',
+      name: 'Avaliação ABNT',
+      type: 'avaliacao',
+      htmlContent: `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Avaliação – AulagIA</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            
+            /* Define página A4 para impressão e visualização */
+            @page {
+              size: A4;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              background: #f0f4f8;
+              font-family: 'Inter', sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
+              padding: 20px 0;
+            }
+            /* Container no tamanho A4 */
+            .page {
+              position: relative;
+              width: 210mm;
+              min-height: 297mm;
+              background: white;
+              overflow: hidden;
+              margin: 0 auto;
+              box-sizing: border-box;
+              padding: 0;
+              display: flex;
+              flex-direction: column;
+              border-radius: 6px;
+              box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            
+            /* Formas decorativas */
+            .shape-circle {
+              position: absolute;
+              border-radius: 50%;
+              opacity: 0.25;
+              pointer-events: none;
+              z-index: 0;
+            }
+            .shape-circle.purple {
+              width: 180px; 
+              height: 180px;
+              background: #a78bfa;
+              top: -60px; 
+              left: -40px;
+            }
+            .shape-circle.blue {
+              width: 240px; 
+              height: 240px;
+              background: #60a5fa;
+              bottom: -80px; 
+              right: -60px;
+            }
+            
+            /* Cabeçalho que aparece no topo */
+            .header {
+              position: absolute;
+              top: 6mm;
+              left: 0;
+              right: 0;
+              display: flex;
+              align-items: center;
+              z-index: 999;
+              height: 12mm;
+              background: transparent;
+              padding: 0 12mm;
+              flex-shrink: 0;
+            }
+            .header .logo-container {
+              display: flex;
+              align-items: center;
+              gap: 3px;
+            }
+            .header .logo {
+              width: 32px;
+              height: 32px;
+              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              flex-shrink: 0;
+              box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
+            }
+            .header .logo svg {
+              width: 18px;
+              height: 18px;
+              stroke: white;
+              fill: none;
+              stroke-width: 2;
+            }
+            .header .brand-text {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+            }
+            .header .brand-text h1 {
+              font-size: 20px;
+              color: #0ea5e9;
+              margin: 0;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 700;
+              letter-spacing: -0.2px;
+              text-transform: none;
+            }
+            .header .brand-text p {
+              font-size: 8px;
+              color: #6b7280;
+              margin: -1px 0 0 0;
+              font-family: 'Inter', sans-serif;
+              line-height: 1;
+              font-weight: 400;
+            }
+            
+            /* Conteúdo principal com margem para não sobrepor o cabeçalho */
+            .content {
+              margin-top: 20mm;
+              margin-bottom: 12mm;
+              padding: 0 15mm;
+              position: relative;
+              flex: 1;
+              overflow: visible;
+              z-index: 1;
+            }
+            /* Título principal */
+            h2 {
+              text-align: center;
+              margin: 10px 0 18px 0;
+              font-size: 1.5rem;
+              color: #4f46e5;
+              position: relative;
+              font-family: 'Inter', sans-serif;
+              font-weight: 700;
+            }
+            h2::after {
+              content: '';
+              width: 50px;
+              height: 3px;
+              background: #a78bfa;
+              display: block;
+              margin: 6px auto 0;
+              border-radius: 2px;
+            }
+            /* Tabelas */
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 18px;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+            th, td {
+              padding: 8px 12px;
+              font-size: 0.85rem;
+              border: none;
+              font-family: 'Inter', sans-serif;
+              vertical-align: top;
+            }
+            th {
+              background: #f3f4f6;
+              color: #1f2937;
+              font-weight: 600;
+              text-align: left;
+              width: 18%;
+            }
+            td {
+              background: #ffffff;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            td:last-child {
+              border-bottom: none;
+            }
+            
+            .evaluation-info {
+              background: #fef3f2;
+              padding: 15px;
+              border-left: 4px solid #ef4444;
+              margin-bottom: 30px;
+              font-family: 'Inter', sans-serif;
+              border-radius: 6px;
+            }
+            
+            .question {
+              margin-bottom: 30px;
+              page-break-inside: avoid;
+            }
+            .question-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              font-weight: 600;
+              color: #4338ca;
+              margin-bottom: 10px;
+              font-size: 1.0rem;
+              font-family: 'Inter', sans-serif;
+            }
+            .points {
+              background: #fef3f2;
+              color: #ef4444;
+              padding: 4px 8px;
+              border: 1px solid #ef4444;
+              border-radius: 4px;
+              font-size: 0.75rem;
+              font-weight: 500;
+            }
+            .question-text {
+              margin-bottom: 15px;
+              text-align: justify;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
+              line-height: 1.4;
+            }
+            .options {
+              margin-left: 20px;
+            }
+            .option {
+              margin-bottom: 8px;
+              display: flex;
+              align-items: flex-start;
+              font-family: 'Inter', sans-serif;
+              font-size: 0.9rem;
+            }
+            .option-letter {
+              font-weight: bold;
+              margin-right: 10px;
+              color: #4338ca;
+              min-width: 25px;
+            }
+            .answer-space {
+              border: 1px solid #e5e7eb;
+              min-height: 60px;
+              margin: 10px 0;
+              padding: 10px;
+              border-radius: 4px;
+              background: #fafafa;
+            }
+            .answer-lines {
+              border-bottom: 1px solid #d1d5db;
+              margin-bottom: 8px;
+              height: 20px;
+            }
+            .answer-lines:last-child {
+              margin-bottom: 0;
+            }
+            .math-space {
+              border: 1px solid #e5e7eb;
+              min-height: 80px;
+              margin: 10px 0;
+              padding: 15px;
+              border-radius: 4px;
+              background: #fafafa;
+              text-align: center;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #9ca3af;
+              font-size: 0.8rem;
+            }
+            .matching-section {
+              display: flex;
+              gap: 30px;
+              margin: 15px 0;
+            }
+            .matching-column {
+              flex: 1;
+            }
+            .matching-item {
+              padding: 8px 12px;
+              border: 1px solid #d1d5db;
+              margin-bottom: 8px;
+              border-radius: 4px;
+              background: #f9fafb;
+            }
+            .fill-blank {
+              display: inline-block;
+              border-bottom: 2px solid #4338ca;
+              min-width: 100px;
+              height: 20px;
+              margin: 0 5px;
+            }
+            .image-space {
+              border: 2px dashed #d1d5db;
+              min-height: 120px;
+              margin: 15px 0;
+              border-radius: 8px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #9ca3af;
+              font-size: 0.8rem;
+              background: #fafafa;
+            }
+            .interpretation-text {
+              background: #f3f4f6;
+              padding: 15px;
+              border-radius: 6px;
+              margin: 15px 0;
+              font-size: 0.9rem;
+              line-height: 1.5;
+              border-left: 4px solid #6b7280;
+            }
+            .formula-display {
+              background: #f8fafc;
+              padding: 20px;
+              border-radius: 8px;
+              margin: 15px 0;
+              text-align: center;
+              font-family: 'Times New Roman', serif;
+              font-size: 1.1rem;
+              border: 1px solid #e2e8f0;
+            }
+            
+            /* Rodapé */
+            .footer {
+              position: absolute;
+              bottom: 6mm;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 0.7rem;
+              color: #6b7280;
+              z-index: 999;
+              height: 6mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: transparent;
+              padding: 0 15mm;
+              font-family: 'Inter', sans-serif;
+              flex-shrink: 0;
+            }
+            
+            /* Ajustes para impressão */
+            @media print {
+              body { 
+                margin: 0; 
+                padding: 0; 
+                background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .page { 
+                box-shadow: none; 
+                margin: 0; 
+                border-radius: 0;
+                width: 100%;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+              }
+              .shape-circle {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header {
+                position: fixed;
+                top: 6mm;
+                left: 0;
+                right: 0;
+                padding: 0 15mm;
+                flex-shrink: 0;
+                background: transparent;
+                z-index: 1000;
+              }
+              .header .logo-container {
+                gap: 6px;
+              }
+              .header .logo {
+                width: 24px;
+                height: 24px;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header .logo svg {
+                width: 14px;
+                height: 14px;
+              }
+              .header .brand-text h1 {
+                font-size: 14px;
+                text-transform: none !important;
+              }
+              .header .brand-text p {
+                font-size: 7px;
+                margin: 0;
+              }
+              .footer {
+                position: fixed;
+                bottom: 6mm;
+                left: 0;
+                right: 0;
+                flex-shrink: 0;
+                background: transparent;
+              }
+              .content {
+                margin-top: 20mm;
+                margin-bottom: 12mm;
+                padding: 0 15mm;
+                flex: 1;
+              }
+              h2 {
+                color: #4f46e5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              h2::after {
+                background: #a78bfa !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .question-header {
+                color: #4338ca !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              th {
+                background: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="page">
+            <!-- Formas decorativas -->
+            <div class="shape-circle purple"></div>
+            <div class="shape-circle blue"></div>
+
+            <!-- Cabeçalho -->
+            <div class="header">
+              <div class="logo-container">
+                <div class="logo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                  </svg>
+                </div>
+                <div class="brand-text">
+                  <h1>AulagIA</h1>
+                  <p>Sua aula com toque mágico</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rodapé -->
+            <div class="footer">
+              Avaliação gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+            </div>
+
+            <div class="content">
+              <!-- Título da Avaliação -->
+              <h2>AVALIAÇÃO</h2>
+
+              <!-- Informações básicas -->
+              <table>
+                <tr>
+                  <th colspan="4">{{titulo}}</th>
+                </tr>
+                <tr>
+                  <th>Nome:</th>
+                  <td>_________________________________</td>
+                  <th>Turma:</th>
+                  <td>_____________</td>
+                </tr>
+                <tr>
+                  <th>Data:</th>
+                  <td>_____________</td>
+                  <th>Professor(a):</th>
+                  <td>_____________</td>
+                </tr>
+              </table>
+
+              <div class="evaluation-info">
+                <p><strong>Instruções:</strong> {{instrucoes}}</p>
+                <p><strong>Tempo Limite:</strong> {{tempoLimite}}</p>
+              </div>
+
+              <!-- Questões -->
+              {{questoesContent}}
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      variables: ['titulo', 'instrucoes', 'tempoLimite', 'questoes'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
 
   getTemplates(): Template[] {
-    return this.templateMetadata;
+    return this.templates;
+  }
+
+  getTemplatesByType(type: Template['type']): Template[] {
+    return this.templates.filter(t => t.type === type);
+  }
+
+  getTemplateById(id: string): Template | undefined {
+    return this.templates.find(t => t.id === id);
+  }
+
+  createTemplate(template: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>): Template {
+    const newTemplate: Template = {
+      ...template,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.templates.push(newTemplate);
+    return newTemplate;
+  }
+
+  updateTemplate(id: string, updates: Partial<Template>): Template | undefined {
+    const index = this.templates.findIndex(t => t.id === id);
+    if (index !== -1) {
+      this.templates[index] = {
+        ...this.templates[index],
+        ...updates,
+        updatedAt: new Date().toISOString()
+      };
+      return this.templates[index];
+    }
+    return undefined;
   }
 
   deleteTemplate(id: string): boolean {
-    const index = this.templateMetadata.findIndex(t => t.id === id);
+    const index = this.templates.findIndex(t => t.id === id);
     if (index !== -1) {
-      this.templateMetadata.splice(index, 1);
-      this.templates.delete(id);
+      this.templates.splice(index, 1);
       return true;
     }
     return false;
   }
 
-  generateSlidesData(formData: any): any {
-    // Generate slides data based on form input
-    const numSlides = Math.min(formData.numSlides || 5, 10);
-    const slides = [];
-    
-    for (let i = 1; i <= numSlides; i++) {
-      slides.push({
-        numero: i,
-        titulo: `${formData.tema} - Slide ${i}`,
-        conteudo: [
-          `Conceito ${i} sobre ${formData.tema}`,
-          `Aplicação prática ${i}`,
-          `Exemplo ${i}`
-        ]
-      });
-    }
-
-    return {
-      titulo: `Apresentação: ${formData.tema}`,
-      serie: formData.serie || 'Ensino Fundamental',
-      slides: slides
-    };
-  }
-
-  private loadTemplates() {
-    // Template 1: Plano de Aula
-    this.templates.set('1', `
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plano de Aula</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f4f4f4;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h1, h2 {
-            color: #444;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
-        }
-        h2 {
-            font-size: 1.5em;
-            margin-top: 30px;
-        }
-        ul {
-            list-style-type: square;
-            padding-left: 20px;
-        }
-        li {
-            margin-bottom: 8px;
-        }
-        .section {
-            margin-bottom: 30px;
-        }
-        .section-title {
-            font-size: 1.2em;
-            color: #555;
-            margin-bottom: 10px;
-        }
-        @media print {
-            body {
-                background: #fff;
-                color: #000;
-            }
-            .container {
-                box-shadow: none;
-                border-radius: 0;
-                padding: 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Plano de Aula</h1>
-
-        <div class="section">
-            <h2 class="section-title">Informações Gerais</h2>
-            <p><strong>Professor(a):</strong> {{professor}}</p>
-            <p><strong>Disciplina:</strong> {{disciplina}}</p>
-            <p><strong>Tema:</strong> {{tema}}</p>
-            <p><strong>Duração:</strong> {{duracao}}</p>
-            <p><strong>Série:</strong> {{serie}}</p>
-        </div>
-
-        <div class="section">
-            <h2 class="section-title">Objetivos</h2>
-            <ul>
-                {{#objetivos}}
-                <li>{{.}}</li>
-                {{/objetivos}}
-            </ul>
-        </div>
-
-        <div class="section">
-            <h2 class="section-title">Desenvolvimento</h2>
-            {{#desenvolvimento}}
-            <div class="etapa">
-                <h3>Etapa: {{etapa}}</h3>
-                <p><strong>Atividade:</strong> {{atividade}}</p>
-                <p><strong>Tempo:</strong> {{tempo}}</p>
-            </div>
-            {{/desenvolvimento}}
-        </div>
-
-        <div class="section">
-            <h2 class="section-title">Recursos</h2>
-            <ul>
-                {{#recursos}}
-                <li>{{.}}</li>
-                {{/recursos}}
-            </ul>
-        </div>
-
-        <div class="section">
-            <h2 class="section-title">Avaliação</h2>
-            <p>{{avaliacao}}</p>
-        </div>
-    </div>
-</body>
-</html>
-    `);
-
-    // Template 2: Slides
-    this.templates.set('2', `
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slides</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f4f4f4;
-            padding: 20px;
-        }
-        .slide {
-            max-width: 800px;
-            margin: 20px auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #444;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
-        }
-        ul {
-            list-style-type: disc;
-            padding-left: 20px;
-        }
-        li {
-            margin-bottom: 8px;
-        }
-        @media print {
-            body {
-                background: #fff;
-                color: #000;
-            }
-            .slide {
-                box-shadow: none;
-                border-radius: 0;
-                padding: 0;
-                margin: 0;
-                page-break-after: always;
-            }
-            .slide:last-child {
-                page-break-after: auto;
-            }
-        }
-    </style>
-</head>
-<body>
-    {{#slides}}
-    <div class="slide">
-        <h1>{{titulo}}</h1>
-        <ul>
-            {{#conteudo}}
-            <li>{{.}}</li>
-            {{/conteudo}}
-        </ul>
-    </div>
-    {{/slides}}
-</body>
-</html>
-    `);
-
-    // Template 3: Atividade com quebras de página corrigidas
-    this.templates.set('3', `
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Atividade – AulagIA</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    /* Define página A4 para impressão e visualização */
-    @page {
-      size: A4;
-      margin: 15mm 20mm;
-    }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      margin: 0;
-      padding: 0;
-      background: #f0f4f8;
-      font-family: 'Inter', sans-serif;
-      line-height: 1.4;
-      color: #1f2937;
-      font-size: 14px;
-    }
-    
-    /* Container principal da página */
-    .page-container {
-      width: 210mm;
-      min-height: 297mm;
-      background: white;
-      margin: 0 auto 20px auto;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      border-radius: 6px;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      page-break-after: always;
-    }
-    
-    .page-container:last-child {
-      page-break-after: auto;
-      margin-bottom: 0;
-    }
-    
-    /* Formas decorativas */
-    .shape-circle {
-      position: absolute;
-      border-radius: 50%;
-      opacity: 0.25;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .shape-circle.purple {
-      width: 180px; 
-      height: 180px;
-      background: #a78bfa;
-      top: -60px; 
-      left: -40px;
-    }
-    .shape-circle.blue {
-      width: 240px; 
-      height: 240px;
-      background: #60a5fa;
-      bottom: -80px; 
-      right: -60px;
-    }
-    
-    /* Cabeçalho fixo */
-    .header {
-      position: absolute;
-      top: 15mm;
-      left: 20mm;
-      right: 20mm;
-      height: 15mm;
-      display: flex;
-      align-items: center;
-      z-index: 10;
-      background: transparent;
-    }
-    
-    .header .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .header .logo {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
-    }
-    
-    .header .logo svg {
-      width: 18px;
-      height: 18px;
-      stroke: white;
-      fill: none;
-      stroke-width: 2;
-    }
-    
-    .header .brand-text h1 {
-      font-size: 20px;
-      color: #0ea5e9;
-      margin: 0;
-      font-weight: 700;
-      letter-spacing: -0.2px;
-      line-height: 1;
-    }
-    
-    .header .brand-text p {
-      font-size: 8px;
-      color: #6b7280;
-      margin: -1px 0 0 0;
-      font-weight: 400;
-      line-height: 1;
-    }
-    
-    /* Área de conteúdo principal */
-    .content {
-      position: absolute;
-      top: 35mm;
-      left: 20mm;
-      right: 20mm;
-      bottom: 25mm;
-      z-index: 5;
-      overflow: visible;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .content.subsequent-page {
-      top: 35mm;
-    }
-    
-    /* Título principal */
-    .title {
-      text-align: center;
-      margin: 0 0 20px 0;
-      font-size: 24px;
-      color: #4f46e5;
-      font-weight: 700;
-      position: relative;
-    }
-    
-    .title::after {
-      content: '';
-      width: 50px;
-      height: 3px;
-      background: #a78bfa;
-      display: block;
-      margin: 8px auto 0;
-      border-radius: 2px;
-    }
-    
-    /* Tabela de informações */
-    .info-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-    
-    .info-table th,
-    .info-table td {
-      padding: 10px 12px;
-      font-size: 13px;
-      border: none;
-      vertical-align: middle;
-    }
-    
-    .info-table th {
-      background: #f3f4f6;
-      color: #1f2937;
-      font-weight: 600;
-      text-align: left;
-      width: 20%;
-    }
-    
-    .info-table td {
-      background: #ffffff;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .info-table tr:last-child td {
-      border-bottom: none;
-    }
-    
-    /* Instruções */
-    .instructions {
-      background: #eff6ff;
-      padding: 16px;
-      border-left: 4px solid #0ea5e9;
-      margin-bottom: 25px;
-      border-radius: 6px;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-    
-    .instructions strong {
-      display: block;
-      margin-bottom: 8px;
-      color: #1e40af;
-      font-weight: 600;
-    }
-    
-    /* Área de questões */
-    .questions-area {
-      flex: 1;
-      overflow: visible;
-    }
-    
-    /* Questões individuais */
-    .question {
-      margin-bottom: 25px;
-      page-break-inside: avoid;
-      break-inside: avoid;
-      position: relative;
-    }
-    
-    .question-header {
-      font-weight: 600;
-      color: #4338ca;
-      margin-bottom: 12px;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .question-number {
-      background: #4338ca;
-      color: white;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
-    }
-    
-    .question-text {
-      margin-bottom: 16px;
-      text-align: justify;
-      font-size: 13px;
-      line-height: 1.5;
-      color: #374151;
-    }
-    
-    .question-options {
-      margin-left: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    
-    .question-option {
-      display: flex;
-      align-items: flex-start;
-      font-size: 13px;
-      line-height: 1.4;
-      padding: 8px 12px;
-      background: #f9fafb;
-      border-radius: 6px;
-      border: 1px solid #e5e7eb;
-    }
-    
-    .option-letter {
-      font-weight: 700;
-      color: #4338ca;
-      min-width: 25px;
-      margin-right: 12px;
-    }
-    
-    .option-text {
-      flex: 1;
-      color: #374151;
-    }
-    
-    /* Espaços para respostas */
-    .answer-space {
-      border: 2px dashed #d1d5db;
-      min-height: 60px;
-      margin: 15px 0;
-      padding: 12px;
-      border-radius: 6px;
-      background: #fafafa;
-      position: relative;
-    }
-    
-    .answer-space::before {
-      content: 'Espaço para resposta';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #9ca3af;
-      font-size: 12px;
-      font-style: italic;
-    }
-    
-    .answer-lines {
-      border-bottom: 1px solid #d1d5db;
-      margin-bottom: 12px;
-      height: 24px;
-    }
-    
-    .answer-lines:last-child {
-      margin-bottom: 0;
-    }
-    
-    /* Espaço para cálculos matemáticos */
-    .math-space {
-      border: 2px dashed #e5e7eb;
-      min-height: 100px;
-      margin: 15px 0;
-      padding: 20px;
-      border-radius: 8px;
-      background: #fafafa;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #9ca3af;
-      font-size: 12px;
-      font-style: italic;
-    }
-    
-    /* Espaços para imagens */
-    .image-space {
-      border: 2px dashed #d1d5db;
-      min-height: 120px;
-      margin: 15px 0;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #9ca3af;
-      font-size: 12px;
-      background: #fafafa;
-      font-style: italic;
-    }
-    
-    /* Rodapé fixo */
-    .footer {
-      position: absolute;
-      bottom: 15mm;
-      left: 20mm;
-      right: 20mm;
-      text-align: center;
-      font-size: 10px;
-      color: #6b7280;
-      z-index: 10;
-      background: transparent;
-      font-weight: 400;
-    }
-    
-    /* Ajustes para impressão */
-    @media print {
-      body { 
-        margin: 0; 
-        padding: 0; 
-        background: white;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      
-      .page-container { 
-        box-shadow: none; 
-        margin: 0;
-        border-radius: 0;
-        width: 100%;
-        min-height: 100vh;
-        page-break-after: always;
-        display: flex;
-        flex-direction: column;
-      }
-      
-      .page-container:last-child {
-        page-break-after: auto;
-      }
-      
-      .shape-circle {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      
-      .header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        margin: 15mm 20mm 0;
-        background: white;
-      }
-      
-      .footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        margin: 0 20mm 15mm;
-        background: white;
-      }
-      
-      .content {
-        position: static;
-        margin: 30mm 0 20mm;
-        padding: 0;
-      }
-      
-      .header .logo {
-        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      
-      .title {
-        color: #4f46e5 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      
-      .title::after {
-        background: #a78bfa !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      
-      .question-header {
-        color: #4338ca !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      
-      .question-number {
-        background: #4338ca !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      
-      .info-table th {
-        background: #f3f4f6 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      
-      .instructions {
-        background: #eff6ff !important;
-        border-left: 4px solid #0ea5e9 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      
-      .question {
-        page-break-inside: avoid;
-        break-inside: avoid;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="page-container">
-    <!-- Formas decorativas -->
-    <div class="shape-circle purple"></div>
-    <div class="shape-circle blue"></div>
-
-    <!-- Cabeçalho AulagIA -->
-    <div class="header">
-      <div class="logo-container">
-        <div class="logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-          </svg>
-        </div>
-        <div class="brand-text">
-          <h1>AulagIA</h1>
-          <p>Sua aula com toque mágico</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Rodapé -->
-    <div class="footer">
-      Atividade gerada pela AulagIA - Sua aula com toque mágico • aulagia.com.br
-    </div>
-
-    <!-- Conteúdo principal -->
-    <div class="content">
-      <!-- Título da Atividade -->
-      <h2 class="title">ATIVIDADE</h2>
-
-      <!-- Informações básicas -->
-      <table class="info-table">
-        <tr>
-          <th>Escola:</th>
-          <td>_________________________________</td>
-          <th>Data:</th>
-          <td>_________________</td>
-        </tr>
-        <tr>
-          <th>Disciplina:</th>
-          <td>{{subject}}</td>
-          <th>Série/Ano:</th>
-          <td>{{grade}}</td>
-        </tr>
-        <tr>
-          <th>Aluno(a):</th>
-          <td>____________________________________________</td>
-          <th>BNCC:</th>
-          <td>{{bnccCode}}</td>
-        </tr>
-      </table>
-
-      <!-- Instruções -->
-      <div class="instructions">
-        <strong>{{title}}</strong>
-        {{instructions}}
-      </div>
-
-      <!-- Área de questões -->
-      <div class="questions-area">
-        {{questionsContent}}
-      </div>
-    </div>
-  </div>
-</body>
-</html>
-    `);
-
-    // Template 4: Avaliação
-    this.templates.set('4', `
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avaliação</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f4f4f4;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h1, h2 {
-            color: #444;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
-        }
-        ul {
-            list-style-type: disc;
-            padding-left: 20px;
-        }
-        li {
-            margin-bottom: 8px;
-        }
-        .question {
-            margin-bottom: 20px;
-        }
-        .options {
-            margin-left: 20px;
-        }
-        @media print {
-            body {
-                background: #fff;
-                color: #000;
-            }
-            .container {
-                box-shadow: none;
-                border-radius: 0;
-                padding: 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Avaliação</h1>
-        <h2>{{title}}</h2>
-        <p><strong>Instruções:</strong> {{instructions}}</p>
-        <p><strong>Tempo Limite:</strong> {{tempoLimite}}</p>
-
-        {{#questoes}}
-        <div class="question">
-            <h3>Questão {{numero}} ({{pontuacao}} pontos)</h3>
-            <p>{{pergunta}}</p>
-            {{#opcoes}}
-            <div class="options">
-                <li>{{.}}</li>
-            </div>
-            {{/opcoes}}
-        </div>
-        {{/questoes}}
-    </div>
-</body>
-</html>
-    `);
-  }
-
-  renderTemplate(templateId: string, content: any): string {
-    const template = this.templates.get(templateId);
+  renderTemplate(templateId: string, data: any): string {
+    const template = this.getTemplateById(templateId);
     if (!template) {
-      throw new Error(`Template ${templateId} não encontrado`);
+      throw new Error('Template não encontrado');
     }
 
-    // Renderização específica para atividades (template 3)
-    if (templateId === '3') {
-      return this.renderActivityTemplate(template, content);
+    let html = template.htmlContent;
+
+    // Handle questoesContent for atividade and avaliacao templates
+    if ((template.type === 'atividade' || template.type === 'avaliacao') && data.questoes) {
+      const questoesHtml = this.generateQuestionsHTML(data.questoes, template.type);
+      html = html.replace('{{questoesContent}}', questoesHtml);
     }
 
-    // Renderização para slides (template 2)
-    if (templateId === '2') {
-      let rendered = template;
-      // Certifique-se de que 'content' é um objeto com a propriedade 'slides'
-      if (content && content.slides && Array.isArray(content.slides)) {
-        // Use a função 'replace' com um loop para substituir todas as ocorrências
-        let slidesHtml = '';
-        for (const slide of content.slides) {
-          let slideHtml = `<div class="slide">
-            <h1>${slide.titulo}</h1>
-            <ul>`;
-          if (slide.conteudo && Array.isArray(slide.conteudo)) {
-            for (const item of slide.conteudo) {
-              slideHtml += `<li>${item}</li>`;
-            }
-          }
-          slideHtml += `</ul></div>`;
-          slidesHtml += slideHtml;
+    // Handle simple variables
+    Object.keys(data).forEach(key => {
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      html = html.replace(regex, data[key] || '');
+    });
+
+    // Handle arrays with #each
+    const eachRegex = /{{#each (\w+)}}([\s\S]*?){{\/each}}/g;
+    html = html.replace(eachRegex, (match, arrayName, template) => {
+      const array = data[arrayName];
+      if (!Array.isArray(array)) return '';
+      
+      return array.map((item, index) => {
+        let itemHtml = template;
+        
+        // Handle {{this}} for simple arrays
+        itemHtml = itemHtml.replace(/{{this}}/g, typeof item === 'string' ? item : '');
+        
+        // Handle object properties
+        if (typeof item === 'object') {
+          Object.keys(item).forEach(prop => {
+            const propRegex = new RegExp(`{{${prop}}}`, 'g');
+            itemHtml = itemHtml.replace(propRegex, item[prop] || '');
+          });
         }
-        rendered = rendered.replace(/\{\{slides\}\}/g, slidesHtml);
-      }
-      return rendered;
-    }
-    
-    return template;
+        
+        // Handle @letter for options (A, B, C, D)
+        itemHtml = itemHtml.replace(/{{@letter}}/g, String.fromCharCode(65 + index) + ')');
+        
+        // Handle @last for conditional rendering
+        itemHtml = itemHtml.replace(/{{#unless @last}}([\s\S]*?){{\/unless}}/g, (match, content) => {
+          return index < array.length - 1 ? content : '';
+        });
+        
+        // Handle conditional blocks
+        const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
+        itemHtml = itemHtml.replace(ifRegex, (match, condition, content) => {
+          return item[condition] ? content : '';
+        });
+        
+        return itemHtml;
+      }).join('');
+    });
+
+    // Handle top-level conditional blocks
+    const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
+    html = html.replace(ifRegex, (match, condition, content) => {
+      return data[condition] ? content : '';
+    });
+
+    return html;
   }
 
-  private renderActivityTemplate(template: string, content: any): string {
-    let rendered = template;
-
-    // Substituir informações básicas
-    rendered = rendered.replace(/\{\{subject\}\}/g, content.disciplina || 'Disciplina');
-    rendered = rendered.replace(/\{\{grade\}\}/g, content.serie || 'Série');
-    rendered = rendered.replace(/\{\{title\}\}/g, content.titulo || 'Atividade');
-    rendered = rendered.replace(/\{\{instructions\}\}/g, content.instrucoes || 'Instruções da atividade');
-    rendered = rendered.replace(/\{\{bnccCode\}\}/g, content.bnccCode || '');
-
-    // Renderizar questões
-    if (content.questoes && Array.isArray(content.questoes)) {
-      const questionsHtml = this.renderQuestions(content.questoes);
-      rendered = rendered.replace(/\{\{questionsContent\}\}/g, questionsHtml);
-    } else {
-      rendered = rendered.replace(/\{\{questionsContent\}\}/g, '');
-    }
-
-    return rendered;
-  }
-
-  private renderQuestions(questoes: any[]): string {
+  private generateQuestionsHTML(questoes: any[], type: 'atividade' | 'avaliacao'): string {
     return questoes.map((questao, index) => {
-      const questionNumber = questao.numero || (index + 1);
-      let questionHtml = `
+      let questionHTML = `
         <div class="question">
           <div class="question-header">
-            <div class="question-number">${questionNumber}</div>
-            <span>Questão ${questionNumber}</span>
-          </div>
-          <div class="question-text">${questao.pergunta || ''}</div>
-      `;
+            <span>Questão ${questao.numero || index + 1}</span>
+            ${type === 'avaliacao' && questao.pontuacao ? 
+              `<span class="points">(${questao.pontuacao} pontos)</span>` : ''
+            }
+          </div>`;
 
-      // Renderizar opções baseadas no tipo
-      if (questao.tipo === 'multipla_escolha' && questao.opcoes) {
-        questionHtml += '<div class="question-options">';
-        questao.opcoes.forEach((opcao: string, optIndex: number) => {
-          const letter = String.fromCharCode(65 + optIndex);
-          questionHtml += `
-            <div class="question-option">
-              <span class="option-letter">${letter})</span>
-              <span class="option-text">${opcao}</span>
-            </div>
-          `;
-        });
-        questionHtml += '</div>';
-      } else if (questao.tipo === 'dissertativa' || questao.tipo === 'aberta') {
-        questionHtml += '<div class="answer-space"></div>';
-        for (let i = 0; i < 4; i++) {
-          questionHtml += '<div class="answer-lines"></div>';
-        }
-      } else if (questao.tipo === 'calculo') {
-        questionHtml += '<div class="math-space">Espaço para cálculos</div>';
-      } else if (questao.tipo === 'desenho' || questao.tipo === 'esquema') {
-        questionHtml += '<div class="image-space">Espaço para desenho/esquema</div>';
-      } else if (questao.tipo === 'verdadeiro_falso') {
-        questionHtml += `
-          <div class="question-options">
-            <div class="question-option">
-              <span class="option-letter">( )</span>
-              <span class="option-text">Verdadeiro</span>
-            </div>
-            <div class="question-option">
-              <span class="option-letter">( )</span>
-              <span class="option-text">Falso</span>
-            </div>
-          </div>
-        `;
+      // Adicionar texto de interpretação se existir
+      if (questao.textoInterpretacao) {
+        questionHTML += `
+          <div class="interpretation-text">
+            <strong>Texto para interpretação:</strong><br>
+            ${questao.textoInterpretacao}
+          </div>`;
       }
 
-      questionHtml += '</div>';
-      return questionHtml;
+      // Adicionar fórmula se existir
+      if (questao.formula) {
+        questionHTML += `
+          <div class="formula-display">
+            ${questao.formula}
+          </div>`;
+      }
+
+      questionHTML += `<div class="question-text">${questao.pergunta}</div>`;
+
+      // Diferentes tipos de questão
+      switch (questao.tipo) {
+        case 'multipla_escolha':
+          if (questao.opcoes && questao.opcoes.length > 0) {
+            questionHTML += '<div class="options">';
+            questao.opcoes.forEach((opcao: string, opcaoIndex: number) => {
+              questionHTML += `
+                <div class="option">
+                  <span class="option-letter">${String.fromCharCode(65 + opcaoIndex)})</span>
+                  <span>${opcao}</span>
+                </div>`;
+            });
+            questionHTML += '</div>';
+          }
+          break;
+
+        case 'aberta':
+          if (questao.isCalculo) {
+            questionHTML += '<div class="math-space">Espaço para cálculos</div>';
+          } else {
+            // Adicionar linhas para resposta baseado no tamanho esperado
+            const numLines = questao.linhasResposta || 3;
+            for (let i = 0; i < numLines; i++) {
+              questionHTML += '<div class="answer-lines"></div>';
+            }
+          }
+          break;
+
+        case 'verdadeiro_falso':
+          questionHTML += `
+            <div class="options">
+              <div class="option">
+                <span class="option-letter">( )</span>
+                <span>Verdadeiro</span>
+              </div>
+              <div class="option">
+                <span class="option-letter">( )</span>
+                <span>Falso</span>
+              </div>
+            </div>`;
+          break;
+
+        case 'ligar':
+          if (questao.colunaA && questao.colunaB) {
+            questionHTML += `
+              <div class="matching-section">
+                <div class="matching-column">
+                  <strong>Coluna A</strong>`;
+            questao.colunaA.forEach((item: string, idx: number) => {
+              questionHTML += `<div class="matching-item">${idx + 1}) ${item}</div>`;
+            });
+            questionHTML += `
+                </div>
+                <div class="matching-column">
+                  <strong>Coluna B</strong>`;
+            questao.colunaB.forEach((item: string, idx: number) => {
+              questionHTML += `<div class="matching-item">${String.fromCharCode(65 + idx)}) ${item}</div>`;
+            });
+            questionHTML += `
+                </div>
+              </div>`;
+          }
+          break;
+
+        case 'completar':
+          // Para questões de completar, o texto já deve ter os espaços marcados
+          if (questao.textoComLacunas) {
+            questionHTML += `<div class="question-text">${questao.textoComLacunas}</div>`;
+          }
+          break;
+
+        case 'desenho':
+          questionHTML += `
+            <div class="image-space">
+              <span>Espaço para desenho ou colagem de imagem</span>
+            </div>`;
+          break;
+
+        case 'dissertativa':
+          const numLines = questao.linhasResposta || 5;
+          for (let i = 0; i < numLines; i++) {
+            questionHTML += '<div class="answer-lines"></div>';
+          }
+          break;
+
+        default:
+          // Questão padrão com espaço para resposta
+          questionHTML += '<div class="answer-space"></div>';
+      }
+
+      questionHTML += '</div>';
+      return questionHTML;
     }).join('');
   }
 
-  getTemplate(templateId: string): string | undefined {
-    return this.templates.get(templateId);
+  // Novo método para gerar dados de slides baseados em keywords
+  generateSlidesData(formData: any): any {
+    const keywords = this.extractKeywords(formData);
+    
+    return {
+      titulo: `Slides sobre ${formData.tema}`,
+      serie: formData.serie || '3º Ano',
+      slides: this.createSlidesFromKeywords(keywords, formData)
+    };
+  }
+
+  private extractKeywords(formData: any): string[] {
+    const text = `${formData.tema} ${formData.disciplina} ${formData.objetivos?.join(' ') || ''}`;
+    
+    // Keywords educacionais por disciplina
+    const keywordsBySubject = {
+      matematica: ['números', 'operações', 'geometria', 'medidas', 'gráficos', 'problemas', 'cálculos', 'tabuada'],
+      portugues: ['leitura', 'escrita', 'gramática', 'interpretação', 'texto', 'palavras', 'frases'],
+      ciencias: ['experimentos', 'natureza', 'animais', 'plantas', 'corpo humano', 'meio ambiente'],
+      historia: ['tempo', 'passado', 'presente', 'cultura', 'sociedade', 'civilizações'],
+      geografia: ['mapas', 'lugares', 'paisagens', 'clima', 'relevo', 'população']
+    };
+
+    const disciplina = formData.disciplina?.toLowerCase() || '';
+    const baseKeywords = keywordsBySubject[disciplina] || [];
+    
+    // Extrai keywords do tema
+    const themeKeywords = text.toLowerCase().split(' ').filter(word => word.length > 3);
+    
+    return [...baseKeywords, ...themeKeywords].slice(0, 10);
+  }
+
+  private createSlidesFromKeywords(keywords: string[], formData: any): any[] {
+    const slides = [];
+    
+    // Slide de introdução
+    slides.push({
+      titulo: `Vamos aprender ${formData.tema}!`,
+      conteudo: `Hoje vamos descobrir coisas incríveis sobre ${formData.tema}. Preparem-se para uma aula divertida!`,
+      imagem: 'https://cdn-icons-png.flaticon.com/512/1687/1687603.png',
+      altImagem: 'aprendizado'
+    });
+
+    // Slides de conteúdo baseados em keywords
+    keywords.slice(0, 6).forEach((keyword, index) => {
+      const slide: any = {
+        titulo: `${keyword.charAt(0).toUpperCase() + keyword.slice(1)}`,
+        conteudo: `Vamos explorar ${keyword} de forma prática e divertida!`,
+        imagem: index % 2 === 0 ? 'https://cdn-icons-png.flaticon.com/512/2403/2403361.png' : 'https://cdn-icons-png.flaticon.com/512/2917/2917999.png',
+        altImagem: keyword
+      };
+
+      if (index % 3 === 0) {
+        slide.tabela = {
+          cabecalho: ['Conceito', 'Exemplo'],
+          linhas: [
+            [keyword, `Exemplo prático de ${keyword}`],
+            ['Aplicação', `Como usar ${keyword} no dia a dia`]
+          ]
+        };
+      }
+
+      if (index % 2 === 0) {
+        slide.grade = [
+          `${keyword} na teoria`,
+          `${keyword} na prática`,
+          `Exemplo de ${keyword}`,
+          `Aplicação de ${keyword}`
+        ];
+      }
+
+      slides.push(slide);
+    });
+
+    // Slide de desafio
+    slides.push({
+      titulo: 'Desafio!',
+      conteudo: `Agora é sua vez! Vamos testar o que aprendemos sobre ${formData.tema}. Como você aplicaria ${formData.tema} em uma situação do seu dia a dia?`,
+      imagem: 'https://cdn-icons-png.flaticon.com/512/1732/1732602.png',
+      altImagem: 'desafio'
+    });
+
+    // Slide de resposta
+    slides.push({
+      titulo: 'Excelente!',
+      conteudo: `Existem muitas formas de aplicar ${formData.tema}. O importante é praticar e explorar!`,
+      imagem: 'https://cdn-icons-png.flaticon.com/512/2601/2601717.png',
+      altImagem: 'resposta'
+    });
+
+    // Slide de conclusão
+    slides.push({
+      titulo: 'Parabéns!',
+      conteudo: `Você aprendeu muito sobre ${formData.tema}! Continue praticando e explorando esse tema fascinante.`,
+      imagem: 'https://cdn-icons-png.flaticon.com/512/4149/4149673.png',
+      altImagem: 'celebração'
+    });
+
+    return slides;
   }
 }
 
