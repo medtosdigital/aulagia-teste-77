@@ -613,9 +613,9 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     try {
       const renderedHtml = templateService.renderTemplate(selectedTemplateId, material.content);
       
-      // Se for slides, usar o SlideViewer
+      // Se for slides, usar o SlideViewer com material
       if (material.type === 'slides') {
-        return <SlideViewer htmlContent={renderedHtml} />;
+        return <SlideViewer htmlContent={renderedHtml} material={material} />;
       }
       
       // Split content into pages com o novo sistema
