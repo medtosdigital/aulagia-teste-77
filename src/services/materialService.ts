@@ -76,7 +76,395 @@ export interface Assessment {
     linhasResposta?: number;
   }[];
   tempoLimite: string;
+  htmlContent?: string; // Nova propriedade para o HTML completo
 }
+
+// Template HTML para avaliações
+const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Avaliação – AulagIA</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    /* Define página A4 para impressão e visualização */
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f0f4f8;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 0;
+    }
+    .page {
+      position: relative;
+      width: 210mm;
+      min-height: 297mm;
+      background: white;
+      overflow: hidden;
+      margin: 0 auto 20px auto;
+      box-sizing: border-box;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      border-radius: 6px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      page-break-after: always;
+    }
+    .page:last-of-type {
+      page-break-after: auto;
+      margin-bottom: 0;
+    }
+    
+    .shape-circle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.25;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .shape-circle.purple {
+      width: 180px; 
+      height: 180px;
+      background: #a78bfa;
+      top: -60px; 
+      left: -40px;
+    }
+    .shape-circle.blue {
+      width: 240px; 
+      height: 240px;
+      background: #60a5fa;
+      bottom: -80px; 
+      right: -60px;
+    }
+    
+    .header {
+      position: absolute;
+      top: 6mm;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      z-index: 999;
+      height: 15mm;
+      background: transparent;
+      padding: 0 12mm;
+      flex-shrink: 0;
+    }
+    .header .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .header .logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3);
+    }
+    .header .logo svg {
+      width: 20px;
+      height: 20px;
+      stroke: white;
+      fill: none;
+      stroke-width: 2;
+    }
+    .header .brand-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .header .brand-text h1 {
+      font-size: 24px;
+      color: #0ea5e9;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      text-transform: none;
+    }
+    .header .brand-text p {
+      font-size: 9px;
+      color: #6b7280;
+      margin: 1px 0 0 0;
+      font-family: 'Inter', sans-serif;
+      line-height: 1;
+      font-weight: 400;
+    }
+    
+    .content {
+      margin-top: 25mm;
+      margin-bottom: 12mm;
+      padding: 0 15mm;
+      position: relative;
+      flex: 1;
+      overflow: visible;
+      z-index: 1;
+    }
+    .content.subsequent-page {
+      margin-top: 40mm;
+    }
+
+    h2 {
+      text-align: center;
+      margin: 10px 0 18px 0;
+      font-size: 1.5rem;
+      color: #4f46e5;
+      position: relative;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+    }
+    h2::after {
+      content: '';
+      width: 50px;
+      height: 3px;
+      background: #a78bfa;
+      display: block;
+      margin: 6px auto 0;
+      border-radius: 2px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    th, td {
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      vertical-align: top;
+    }
+    th {
+      background: #f3f4f6;
+      color: #1f2937;
+      font-weight: 600;
+      text-align: left;
+      width: 18%;
+    }
+    td {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    td:last-child {
+      border-bottom: none;
+    }
+    table .student-info-cell {
+        width: 32%; 
+    }
+    .bncc-highlight-cell {
+        background-color: #e0f2f7;
+        color: #000000;
+        font-weight: 600;
+    }
+    
+    .instructions {
+      background: #eff6ff;
+      padding: 15px;
+      border-left: 4px solid #0ea5e9;
+      margin-bottom: 30px;
+      font-family: 'Inter', sans-serif;
+      border-radius: 6px;
+    }
+    
+    .question {
+      margin-bottom: 30px;
+      page-break-inside: avoid; 
+    }
+    .question-header {
+      font-weight: 600;
+      color: #4338ca;
+      margin-bottom: 10px;
+      font-size: 1.0rem;
+      font-family: 'Inter', sans-serif;
+    }
+    .question-text {
+      margin-bottom: 15px;
+      text-align: justify;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    .options {
+      margin-left: 20px;
+    }
+    .option {
+      margin-bottom: 8px;
+      display: flex;
+      align-items: flex-start;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+    }
+    .option-letter {
+      font-weight: bold;
+      margin-right: 10px;
+      color: #4338ca;
+      min-width: 25px;
+    }
+    .answer-lines {
+      border-bottom: 1px solid #d1d5db;
+      margin-bottom: 8px;
+      height: 20px;
+      padding: 0;
+      background: none;
+      border-radius: 0;
+      min-height: 20px; 
+    }
+    .answer-lines:last-child {
+      margin-bottom: 0;
+    }
+    .math-space, .image-space {
+      border: 1px solid #e5e7eb;
+      min-height: 80px;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 4px;
+      background: #fafafa;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+      font-size: 0.8rem;
+    }
+    .image-space {
+        min-height: 120px;
+        border: 2px dashed #d1d5db;
+    }
+    .matching-section {
+      display: flex;
+      gap: 30px;
+      margin: 15px 0;
+    }
+    .matching-column {
+      flex: 1;
+    }
+    .matching-item {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      background: #f9fafb;
+    }
+    .fill-blank {
+      display: inline-block;
+      border-bottom: 2px solid #4338ca;
+      min-width: 100px;
+      height: 20px;
+      margin: 0 5px;
+    }
+    
+    .formula-display {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 15px 0;
+      text-align: center;
+      font-family: 'Times New Roman', serif;
+      font-size: 1.1rem;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .footer {
+      position: absolute; 
+      bottom: 6mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #6b7280;
+      z-index: 999;
+      height: 6mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      padding: 0 15mm;
+      font-family: 'Inter', sans-serif;
+      flex-shrink: 0;
+    }
+    
+    @media print {
+      body { 
+        margin: 0; 
+        padding: 0; 
+        background: white;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .page { 
+        box-shadow: none; 
+        margin: 0; 
+        border-radius: 0;
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .shape-circle {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .header, .footer {
+        position: fixed; 
+        background: transparent; 
+      }
+      .header .logo {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .header .brand-text h1 {
+        text-transform: none !important;
+      }
+      h2 {
+        color: #4f46e5 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      h2::after {
+        background: #a78bfa !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .question-header {
+        color: #4338ca !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      th {
+        background: #f3f4f6 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+  {{CONTENT}}
+</body>
+</html>`;
 
 class MaterialService {
   private materials: GeneratedMaterial[] = [];
@@ -232,8 +620,7 @@ class MaterialService {
     };
   }
 
-  private generateEvaluation(formData: any): any {
-    // Use the correct field names from form data
+  private generateEvaluation(formData: any): Assessment {
     const numQuestoes = formData.numeroQuestoes || formData.quantidadeQuestoes || 4;
     const tipoQuestoes = formData.tipoQuestoes || formData.tiposQuestoes || 'mistas';
     const dificuldade = formData.dificuldade || 'medio';
@@ -242,7 +629,6 @@ class MaterialService {
     
     console.log('Generating evaluation with:', { numQuestoes, tipoQuestoes, dificuldade });
     
-    // Map question type to the types array for evaluations
     let tiposQuestoesArray = [];
     switch (tipoQuestoes) {
       case 'abertas':
@@ -257,12 +643,219 @@ class MaterialService {
         break;
     }
     
+    const questoes = this.generateAdvancedQuestions(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, dificuldade, pontuacaoPorQuestao);
+    const htmlContent = this.generateAssessmentHTML(formData, questoes);
+    
     return {
       titulo: `Avaliação de ${formData.tema}`,
       instrucoes: 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.',
       tempoLimite: formData.tempoLimite || '50 minutos',
-      questoes: this.generateQuestionsWithNewTemplate(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, 'avaliacao', dificuldade, pontuacaoPorQuestao)
+      questoes,
+      htmlContent
     };
+  }
+
+  private generateAdvancedQuestions(
+    numQuestoes: number, 
+    tiposQuestoes: string[], 
+    tema: string, 
+    disciplina: string, 
+    dificuldade: string,
+    pontuacao: number
+  ): any[] {
+    const questoes = [];
+    
+    for (let i = 0; i < numQuestoes; i++) {
+      const tipoQuestao = tiposQuestoes[i % tiposQuestoes.length];
+      const numeroQuestao = i + 1;
+      
+      let questao: any = {
+        numero: numeroQuestao,
+        tipo: tipoQuestao,
+        pontuacao: Math.round(pontuacao * 10) / 10
+      };
+
+      switch (tipoQuestao) {
+        case 'multipla_escolha':
+          questao.pergunta = this.generateMultipleChoiceQuestion(tema, disciplina, numeroQuestao, dificuldade);
+          questao.opcoes = this.generateMultipleChoiceOptions(tema, disciplina, dificuldade);
+          break;
+        
+        case 'dissertativa':
+          questao.pergunta = this.generateOpenQuestion(tema, disciplina, numeroQuestao, dificuldade);
+          questao.linhasResposta = this.getResponseLines(dificuldade);
+          break;
+        
+        case 'verdadeiro_falso':
+          questao.pergunta = this.generateTrueFalseQuestion(tema, disciplina, numeroQuestao);
+          break;
+        
+        case 'ligar':
+          const matching = this.generateMatchingQuestion(tema, disciplina);
+          questao.pergunta = `Ligue os itens da Coluna A com os da Coluna B relacionados a ${tema}:`;
+          questao.colunaA = matching.colunaA;
+          questao.colunaB = matching.colunaB;
+          break;
+        
+        case 'completar':
+          questao.pergunta = 'Complete as lacunas:';
+          questao.textoComLacunas = this.generateFillBlankQuestion(tema, disciplina, numeroQuestao);
+          break;
+      }
+      
+      questoes.push(questao);
+    }
+    
+    return questoes;
+  }
+
+  private generateAssessmentHTML(formData: any, questoes: any[]): string {
+    const today = new Date().toLocaleDateString('pt-BR');
+    
+    let pagesContent = '';
+    const questoesPorPagina = 4;
+    const totalPaginas = Math.ceil(questoes.length / questoesPorPagina);
+    
+    for (let pagina = 0; pagina < totalPaginas; pagina++) {
+      const isFirstPage = pagina === 0;
+      const inicioQuestoes = pagina * questoesPorPagina;
+      const fimQuestoes = Math.min(inicioQuestoes + questoesPorPagina, questoes.length);
+      const questoesPagina = questoes.slice(inicioQuestoes, fimQuestoes);
+      
+      pagesContent += `
+  <div class="page ${isFirstPage ? 'first-page-content' : 'subsequent-page-content'}">
+    <!-- Formas decorativas -->
+    <div class="shape-circle purple"></div>
+    <div class="shape-circle blue"></div>
+
+    <!-- Cabeçalho AulagIA -->
+    <div class="header">
+      <div class="logo-container">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>AulagIA</h1>
+          <p>Sua aula com toque mágico</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rodapé -->
+    <div class="footer">
+      Avaliação gerada pela AulagIA - Sua aula com toque mágico em ${today} • aulagia.com.br
+    </div>
+
+    <div class="content ${isFirstPage ? '' : 'subsequent-page'}">`;
+
+      if (isFirstPage) {
+        pagesContent += `
+      <!-- Título da Avaliação -->
+      <h2>AVALIAÇÃO</h2>
+
+      <!-- Informações básicas da Avaliação -->
+      <table>
+        <tr>
+          <th>Escola:</th>
+          <td>_________________________________</td>
+          <th>Data:</th>
+          <td>${today}</td>
+        </tr>
+        <tr>
+          <th>Disciplina:</th>
+          <td>${formData.disciplina}</td>
+          <th>Série/Ano:</th>
+          <td>${formData.serie}</td>
+        </tr>
+        <tr>
+          <th>Aluno(a):</th>
+          <td class="student-info-cell">____________________________________________</td>
+          <th>NOTA:</th>
+          <td class="student-info-cell bncc-highlight-cell"></td>
+        </tr>
+      </table>
+
+      <!-- Instruções da Avaliação -->
+      <div class="instructions">
+        <strong>Avaliação de ${formData.tema}:</strong><br>
+        Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.
+      </div>`;
+      }
+
+      // Adicionar questões da página
+      questoesPagina.forEach(questao => {
+        pagesContent += this.generateQuestionHTML(questao);
+      });
+
+      pagesContent += `
+    </div>
+  </div>`;
+    }
+    
+    return ASSESSMENT_HTML_TEMPLATE.replace('{{CONTENT}}', pagesContent);
+  }
+
+  private generateQuestionHTML(questao: any): string {
+    let html = `
+      <div class="question">
+        <div class="question-header">Questão ${questao.numero}</div>
+        <div class="question-text">${questao.pergunta}</div>`;
+
+    switch (questao.tipo) {
+      case 'multipla_escolha':
+        html += `
+        <div class="options">
+          ${questao.opcoes.map((opcao: string, index: number) => 
+            `<div class="option"><span class="option-letter">${String.fromCharCode(65 + index)})</span> ${opcao}</div>`
+          ).join('')}
+        </div>`;
+        break;
+
+      case 'dissertativa':
+        for (let i = 0; i < (questao.linhasResposta || 3); i++) {
+          html += '<div class="answer-lines"></div>';
+        }
+        break;
+
+      case 'verdadeiro_falso':
+        html += `
+        <div class="options">
+          <div class="option"><span class="option-letter">V)</span> Verdadeiro</div>
+          <div class="option"><span class="option-letter">F)</span> Falso</div>
+        </div>`;
+        break;
+
+      case 'ligar':
+        html += `
+        <div class="matching-section">
+          <div class="matching-column">
+            ${questao.colunaA.map((item: string, index: number) => 
+              `<div class="matching-item">(${index + 1}) ${item}</div>`
+            ).join('')}
+          </div>
+          <div class="matching-column">
+            ${questao.colunaB.map((item: string) => 
+              `<div class="matching-item">( ) ${item}</div>`
+            ).join('')}
+          </div>
+        </div>
+        <div class="answer-lines"></div>`;
+        break;
+
+      case 'completar':
+        html += `
+        <div class="fill-blank"></div>
+        <div class="fill-blank"></div>`;
+        break;
+    }
+
+    html += `
+      </div>`;
+
+    return html;
   }
 
   private generateQuestionsWithNewTemplate(

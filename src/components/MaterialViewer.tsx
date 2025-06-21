@@ -269,57 +269,83 @@ const MaterialViewer = () => {
     </div>
   );
 
-  const renderAssessment = (assessment: Assessment) => (
-    <div className="space-y-6">
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h4 className="font-semibold text-purple-800">Instruções da Avaliação</h4>
-          <Badge variant="outline" className="text-purple-600 border-purple-300">
-            {assessment.tempoLimite}
-          </Badge>
+  const renderAssessment = (assessment: Assessment) => {
+    // Se a avaliação tem HTML content, renderizar o HTML completo
+    if (assessment.htmlContent) {
+      return (
+        <div className="w-full">
+          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h4 className="font-semibold text-yellow-800 mb-2">Preview da Avaliação</h4>
+            <p className="text-sm text-yellow-700">
+              Esta é uma prévia da avaliação. Use o botão "PDF" para exportar a versão completa formatada para impressão.
+            </p>
+          </div>
+          <div 
+            className="assessment-preview border rounded-lg p-4 bg-white"
+            dangerouslySetInnerHTML={{ __html: assessment.htmlContent }}
+            style={{ 
+              maxHeight: '80vh', 
+              overflow: 'auto',
+              fontSize: '0.85rem'
+            }}
+          />
         </div>
-        <p className="text-sm text-purple-700">{assessment.instrucoes}</p>
-      </div>
+      );
+    }
 
+    // Fallback para o formato antigo
+    return (
       <div className="space-y-6">
-        {assessment.questoes.map((questao, index) => (
-          <Card key={index} className="border-l-4 border-l-purple-500">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-base">Questão {questao.numero}</CardTitle>
-                <Badge variant="secondary">{questao.pontuacao} pontos</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm mb-4">{questao.pergunta}</p>
-              
-              {questao.opcoes && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">Opções:</p>
-                  <ul className="space-y-1">
-                    {questao.opcoes.map((opcao, opcaoIndex) => (
-                      <li key={opcaoIndex} className="flex items-center">
-                        <span className="text-purple-500 font-bold mr-2">
-                          {String.fromCharCode(65 + opcaoIndex)})
-                        </span>
-                        <span className="text-sm">{opcao}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <div className="flex justify-between items-start mb-2">
+            <h4 className="font-semibold text-purple-800">Instruções da Avaliação</h4>
+            <Badge variant="outline" className="text-purple-600 border-purple-300">
+              {assessment.tempoLimite}
+            </Badge>
+          </div>
+          <p className="text-sm text-purple-700">{assessment.instrucoes}</p>
+        </div>
 
-              <div className="mt-3 pt-3 border-t border-gray-100">
-                <Badge variant={questao.tipo === 'multipla_escolha' ? 'default' : 'secondary'}>
-                  {questao.tipo === 'multipla_escolha' ? 'Múltipla Escolha' : 'Dissertativa'}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <div className="space-y-6">
+          {assessment.questoes.map((questao, index) => (
+            <Card key={index} className="border-l-4 border-l-purple-500">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-base">Questão {questao.numero}</CardTitle>
+                  <Badge variant="secondary">{questao.pontuacao} pontos</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm mb-4">{questao.pergunta}</p>
+                
+                {questao.opcoes && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">Opções:</p>
+                    <ul className="space-y-1">
+                      {questao.opcoes.map((opcao, opcaoIndex) => (
+                        <li key={opcaoIndex} className="flex items-center">
+                          <span className="text-purple-500 font-bold mr-2">
+                            {String.fromCharCode(65 + opcaoIndex)})
+                          </span>
+                          <span className="text-sm">{opcao}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <Badge variant={questao.tipo === 'multipla_escolha' ? 'default' : 'secondary'}>
+                    {questao.tipo === 'multipla_escolha' ? 'Múltipla Escolha' : 'Dissertativa'}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderContent = () => {
     if (!material) return null;
