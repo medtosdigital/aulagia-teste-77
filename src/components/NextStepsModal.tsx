@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CheckCircle, Calendar, Download, Edit, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -142,7 +143,16 @@ const NextStepsModal: React.FC<NextStepsModalProps> = ({
 
         {/* Botões fixos no rodapé */}
         <DialogFooter className="flex-shrink-0 p-5 pt-3 border-t bg-white rounded-b-2xl">
-          <div className={`flex ${isMobile ? 'flex-col' : 'flex-row justify-end'} w-full`}>
+          <div className={`flex gap-3 ${isMobile ? 'flex-col' : 'flex-row justify-end'} w-full`}>
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className={`border-gray-300 rounded-xl hover:bg-gray-50 transition-colors ${
+                isMobile ? 'w-full h-11 text-sm' : 'px-6 h-11'
+              }`}
+            >
+              Cancelar
+            </Button>
             <Button
               onClick={onContinue}
               className={`bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors ${
