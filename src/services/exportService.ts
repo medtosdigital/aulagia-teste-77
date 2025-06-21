@@ -1,4 +1,6 @@
+
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, PageBreak } from 'docx';
 import { saveAs } from 'file-saver';
 import { GeneratedMaterial, LessonPlan, Activity, Slide, Assessment } from './materialService';
@@ -472,29 +474,53 @@ class ExportService {
       
       const styledHtml = this.enhanceHtmlWithNewTemplate(finalHtml, material);
       
-      // Criar um iframe oculto para renderizar o HTML
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'absolute';
-      iframe.style.top = '-9999px';
-      iframe.style.left = '-9999px';
-      iframe.style.width = '210mm';
-      iframe.style.height = '297mm';
-      document.body.appendChild(iframe);
+      // Criar um elemento temporário para renderizar o HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = styledHtml;
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '-9999px';
+      tempDiv.style.width = '210mm';
+      tempDiv.style.background = 'white';
+      document.body.appendChild(tempDiv);
+
+      // Configurar jsPDF para A4
+      const pdf = new jsPDF('portrait', 'mm', 'a4');
+      const pageWidth = 210;
+      const pageHeight = 297;
+
+      // Capturar cada página
+      const pageElements = tempDiv.querySelectorAll('.page');
       
-      iframe.contentDocument?.open();
-      iframe.contentDocument?.write(styledHtml);
-      iframe.contentDocument?.close();
-      
-      // Aguardar o carregamento e depois imprimir
-      setTimeout(() => {
-        if (iframe.contentWindow) {
-          iframe.contentWindow.print();
+      for (let i = 0; i < pageElements.length; i++) {
+        if (i > 0) {
+          pdf.addPage();
         }
-        // Remover o iframe após um tempo
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 1000);
-      }, 1000);
+
+        const pageElement = pageElements[i] as HTMLElement;
+        
+        // Capturar a página como imagem
+        const canvas = await html2canvas(pageElement, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          width: 794, // A4 width in pixels at 96 DPI
+          height: 1123 // A4 height in pixels at 96 DPI
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        
+        // Adicionar a imagem ao PDF
+        pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+      }
+
+      // Remover o elemento temporário
+      document.body.removeChild(tempDiv);
+
+      // Baixar o PDF automaticamente
+      const fileName = `${material.title.replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'material'}.pdf`;
+      pdf.save(fileName);
 
     } catch (error) {
       console.error('Erro na exportação PDF:', error);
