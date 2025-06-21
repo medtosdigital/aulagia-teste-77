@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, FileCheck, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -134,204 +133,404 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
     if (!answerKey) return;
 
     try {
-      const doc = new jsPDF('portrait', 'mm', 'a4');
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 15;
-      const contentWidth = pageWidth - (margin * 2);
-      let currentY = margin;
+      // Create the new HTML template
+      const questionsPerPage = 4;
+      let pages: string[] = [];
+      let currentPage = 0;
+      
+      for (let i = 0; i < answerKey.questoes.length; i += questionsPerPage) {
+        const questionsForPage = answerKey.questoes.slice(i, i + questionsPerPage);
+        const isFirstPage = currentPage === 0;
+        
+        let pageContent = '';
+        
+        if (isFirstPage) {
+          // First page with title and info
+          pageContent = `
+            <!-- Título Principal -->
+            <h2>GABARITO OFICIAL</h2>
 
-      // Função para adicionar nova página se necessário
-      const checkPageBreak = (neededHeight: number) => {
-        if (currentY + neededHeight > pageHeight - margin) {
-          doc.addPage();
-          currentY = margin;
-          addHeader();
+            <!-- Informações da Avaliação -->
+            <div class="subtitle-info">
+              ${answerKey.disciplina} ${answerKey.serie}<br>
+              ${material?.type === 'avaliacao' ? 'Avaliação' : 'Atividade'}: ${material?.title}<br>
+              Total de questões: ${answerKey.totalQuestoes}
+            </div>
+
+            <div class="answers-section-title">RESPOSTAS</div>
+          `;
         }
-      };
-
-      // Função para adicionar cabeçalho com logo AulagIA
-      const addHeader = () => {
-        // Formas decorativas
-        doc.setFillColor(167, 139, 250, 0.25);
-        doc.circle(10, 10, 15, 'F');
         
-        doc.setFillColor(96, 165, 250, 0.25);
-        doc.circle(pageWidth - 20, pageHeight - 20, 20, 'F');
-
-        // Logo AulagIA
-        doc.setFillColor(14, 165, 233);
-        doc.circle(margin + 8, currentY + 8, 8, 'F');
+        // Add questions for this page
+        questionsForPage.forEach((questao: any) => {
+          pageContent += `
+            <div class="gabarito-item">
+              <div class="gabarito-item-header">
+                <span class="question-num">Questão ${questao.numero}</span>
+                <span class="points">(${questao.pontuacao} ponto${questao.pontuacao > 1 ? 's' : ''})</span>
+              </div>
+              <div class="gabarito-item-type">Tipo: ${questao.tipo}</div>
+              <div class="gabarito-item-answer">Resposta: ${questao.resposta}</div>
+            </div>
+          `;
+        });
         
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(10);
-        doc.text('✓', margin + 6, currentY + 10);
-
-        // Título da marca AulagIA
-        doc.setTextColor(14, 165, 233);
-        doc.setFontSize(16);
-        doc.setFont(undefined, 'bold');
-        doc.text('AulagIA', margin + 20, currentY + 8);
-        
-        doc.setTextColor(107, 114, 128);
-        doc.setFontSize(8);
-        doc.setFont(undefined, 'normal');
-        doc.text('Sua aula com toque mágico', margin + 20, currentY + 14);
-
-        currentY += 30;
-      };
-
-      // Adicionar cabeçalho inicial
-      addHeader();
-
-      // Título principal do gabarito
-      doc.setTextColor(79, 70, 229);
-      doc.setFontSize(24);
-      doc.setFont(undefined, 'bold');
-      const titleLines = doc.splitTextToSize('GABARITO OFICIAL', contentWidth);
-      doc.text(titleLines, pageWidth / 2, currentY, { align: 'center' });
-      currentY += titleLines.length * 8 + 5;
-
-      // Linha decorativa
-      doc.setDrawColor(167, 139, 250);
-      doc.setLineWidth(2);
-      doc.line(pageWidth / 2 - 25, currentY, pageWidth / 2 + 25, currentY);
-      currentY += 10;
-
-      // Informações da avaliação/atividade
-      doc.setTextColor(107, 114, 128);
-      doc.setFontSize(12);
-      doc.setFont(undefined, 'normal');
-      doc.text(`${answerKey.disciplina} • ${answerKey.serie}`, pageWidth / 2, currentY, { align: 'center' });
-      currentY += 8;
-      doc.text(`${material?.type === 'avaliacao' ? 'Avaliação' : 'Atividade'}: ${material?.title}`, pageWidth / 2, currentY, { align: 'center' });
-      currentY += 8;
-      doc.text(`Total de questões: ${answerKey.totalQuestoes}`, pageWidth / 2, currentY, { align: 'center' });
-      currentY += 20;
-
-      // Tabela de informações
-      const tableY = currentY;
-      doc.setFillColor(243, 244, 246);
-      doc.rect(margin, tableY, contentWidth, 30, 'F');
-      
-      doc.setDrawColor(229, 231, 235);
-      doc.setLineWidth(1);
-      
-      // Linhas da tabela
-      for (let i = 0; i <= 2; i++) {
-        doc.line(margin, tableY + (i * 10), margin + contentWidth, tableY + (i * 10));
+        pages.push(pageContent);
+        currentPage++;
       }
       
-      // Colunas da tabela
-      const colWidth = contentWidth / 4;
-      for (let i = 0; i <= 4; i++) {
-        doc.line(margin + (i * colWidth), tableY, margin + (i * colWidth), tableY + 20);
+      // Generate complete HTML with new template
+      let completeHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gabarito Oficial – AulagIA</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f0f4f8;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 0;
+    }
+    .page {
+      position: relative;
+      width: 210mm;
+      min-height: 297mm;
+      background: white;
+      overflow: hidden;
+      margin: 0 auto 20px auto;
+      box-sizing: border-box;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      border-radius: 6px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      page-break-after: always;
+    }
+
+    .page:last-of-type {
+      page-break-after: auto;
+      margin-bottom: 0;
+    }
+    
+    .shape-circle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.25;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .shape-circle.purple {
+      width: 180px; 
+      height: 180px;
+      background: #a78bfa;
+      top: -60px; 
+      left: -40px;
+    }
+    .shape-circle.blue {
+      width: 240px; 
+      height: 240px;
+      background: #60a5fa;
+      bottom: -80px; 
+      right: -60px;
+    }
+    
+    .header {
+      position: absolute;
+      top: 6mm;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      z-index: 999;
+      height: 15mm;
+      background: transparent;
+      padding: 0 12mm;
+      flex-shrink: 0;
+    }
+    .header .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .header .logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3);
+    }
+    .header .logo svg {
+      width: 20px;
+      height: 20px;
+      stroke: white;
+      fill: none;
+      stroke-width: 2;
+    }
+    .header .brand-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .header .brand-text h1 {
+      font-size: 24px;
+      color: #0ea5e9;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      text-transform: none;
+    }
+    .header .brand-text p {
+      font-size: 9px;
+      color: #6b7280;
+      margin: 1px 0 0 0;
+      font-family: 'Inter', sans-serif;
+      line-height: 1;
+      font-weight: 400;
+    }
+    
+    .content {
+      margin-top: 25mm;
+      margin-bottom: 12mm;
+      padding: 0 15mm;
+      position: relative;
+      flex: 1;
+      overflow: visible;
+      z-index: 1;
+    }
+
+    h2 {
+      text-align: center;
+      margin: 10px 0 5px 0;
+      font-size: 1.8rem;
+      color: #4f46e5;
+      position: relative;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    h2::after {
+      content: '';
+      width: 80px;
+      height: 4px;
+      background: #a78bfa;
+      display: block;
+      margin: 6px auto 0;
+      border-radius: 2px;
+    }
+
+    .subtitle-info {
+        text-align: center;
+        font-size: 0.9rem;
+        color: #374151;
+        margin-bottom: 15px;
+        line-height: 1.4;
+    }
+    
+    .answers-section-title {
+        font-size: 1.2rem;
+        color: #4f46e5;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-bottom: 2px solid #a78bfa;
+        padding-bottom: 5px;
+    }
+
+    .gabarito-item {
+        margin-bottom: 20px;
+        padding: 10px 0;
+        border-bottom: 1px dashed #e5e7eb;
+        page-break-inside: avoid;
+    }
+    .gabarito-item:last-child {
+        border-bottom: none;
+    }
+    .gabarito-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 5px;
+    }
+    .gabarito-item-header .question-num {
+        font-weight: 700;
+        color: #1f2937;
+        font-size: 1.1rem;
+    }
+    .gabarito-item-header .points {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+    .gabarito-item-type {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-bottom: 5px;
+    }
+    .gabarito-item-answer {
+        font-size: 1.0rem;
+        font-weight: 600;
+        color: #000000;
+        padding-left: 10px;
+    }
+    
+    .footer {
+      position: absolute; 
+      bottom: 6mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #6b7280;
+      z-index: 999;
+      height: 6mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      padding: 0 15mm;
+      font-family: 'Inter', sans-serif;
+      flex-shrink: 0;
+    }
+    
+    @media print {
+      body { 
+        margin: 0; 
+        padding: 0; 
+        background: white;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .page { 
+        box-shadow: none; 
+        margin: 0; 
+        border-radius: 0;
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .shape-circle {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .header, .footer {
+        position: fixed; 
+        background: transparent; 
       }
 
-      // Conteúdo da tabela
-      doc.setTextColor(31, 41, 59);
-      doc.setFontSize(10);
-      doc.setFont(undefined, 'bold');
-      
-      // Primeira linha
-      doc.text('Escola:', margin + 5, tableY + 7);
-      doc.text('Data:', margin + colWidth * 2 + 5, tableY + 7);
-      doc.text(new Date().toLocaleDateString('pt-BR'), margin + colWidth * 3 + 5, tableY + 7);
-      
-      // Segunda linha
-      doc.text('Disciplina:', margin + 5, tableY + 17);
-      doc.text(answerKey.disciplina, margin + colWidth + 5, tableY + 17);
-      doc.text('Série/Ano:', margin + colWidth * 2 + 5, tableY + 17);
-      doc.text(answerKey.serie, margin + colWidth * 3 + 5, tableY + 17);
-
-      currentY += 35;
-
-      // Instruções
-      if (answerKey.instrucoes) {
-        checkPageBreak(20);
-        doc.setFillColor(239, 246, 255);
-        doc.rect(margin, currentY - 5, contentWidth, 15, 'F');
-        
-        doc.setDrawColor(14, 165, 233);
-        doc.setLineWidth(2);
-        doc.line(margin, currentY - 5, margin, currentY + 10);
-
-        doc.setTextColor(14, 165, 233);
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'bold');
-        doc.text('INSTRUÇÕES:', margin + 8, currentY);
-        
-        doc.setTextColor(30, 41, 59);
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        const instrucaoLines = doc.splitTextToSize(answerKey.instrucoes, contentWidth - 16);
-        doc.text(instrucaoLines, margin + 8, currentY + 5);
-        currentY += Math.max(15, instrucaoLines.length * 4 + 10);
+      .header .logo {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
+      .header .brand-text h1 {
+        text-transform: none !important;
+      }
+      .header .logo svg {
+          width: 20px !important;
+          height: 20px !important;
+      }
+      h2 {
+        color: #4f46e5 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      h2::after {
+        background: #a78bfa !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .gabarito-item-answer {
+          color: #000000 !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>`;
 
-      // Título das respostas
-      checkPageBreak(15);
-      doc.setTextColor(79, 70, 229);
-      doc.setFontSize(16);
-      doc.setFont(undefined, 'bold');
-      doc.text('RESPOSTAS', margin, currentY);
-      currentY += 12;
+      // Add pages
+      pages.forEach((pageContent, index) => {
+        const pageClass = index === 0 ? 'first-page-content' : 'subsequent-page-content';
+        completeHtml += `
+  <div class="page ${pageClass}">
+    <div class="shape-circle purple"></div>
+    <div class="shape-circle blue"></div>
 
-      // Questões e respostas
-      answerKey.questoes.forEach((questao: any) => {
-        const questionHeight = questao.tipo === 'dissertativa' || questao.tipo === 'aberta' ? 40 : 30;
-        checkPageBreak(questionHeight);
+    <div class="header">
+      <div class="logo-container">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>AulagIA</h1>
+          <p>Sua aula com toque mágico</p>
+        </div>
+      </div>
+    </div>
 
-        // Container da questão
-        doc.setFillColor(249, 250, 251);
-        doc.rect(margin, currentY - 3, contentWidth, questionHeight - 5, 'F');
-        
-        doc.setDrawColor(59, 130, 246);
-        doc.setLineWidth(2);
-        doc.line(margin, currentY - 3, margin, currentY + questionHeight - 8);
+    <div class="footer">
+      Gabarito gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br
+    </div>
 
-        // Número da questão
-        doc.setTextColor(59, 130, 246);
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text(`Questão ${questao.numero}`, margin + 5, currentY + 2);
-
-        // Pontuação
-        if (questao.pontuacao) {
-          doc.setTextColor(107, 114, 128);
-          doc.setFontSize(9);
-          doc.setFont(undefined, 'normal');
-          doc.text(`(${questao.pontuacao} ponto${questao.pontuacao > 1 ? 's' : ''})`, contentWidth + margin - 30, currentY + 2);
-        }
-
-        // Tipo da questão
-        doc.setTextColor(107, 114, 128);
-        doc.setFontSize(9);
-        doc.text(`Tipo: ${questao.tipo}`, margin + 5, currentY + 8);
-
-        // Resposta
-        doc.setTextColor(22, 163, 74);
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'bold');
-        doc.text('Resposta:', margin + 5, currentY + 14);
-        
-        doc.setTextColor(30, 41, 59);
-        doc.setFont(undefined, 'normal');
-        const respostaLines = doc.splitTextToSize(questao.resposta, contentWidth - 30);
-        doc.text(respostaLines, margin + 30, currentY + 14);
-
-        currentY += questionHeight;
+    <div class="content">
+      ${pageContent}
+    </div>
+  </div>`;
       });
 
-      // Rodapé
-      const footerY = pageHeight - 10;
-      doc.setTextColor(107, 114, 128);
-      doc.setFontSize(8);
-      doc.text('Gabarito gerado automaticamente pela AulagIA - Sua aula com toque mágico • aulagia.com.br', pageWidth / 2, footerY, { align: 'center' });
+      completeHtml += `
+</body>
+</html>`;
 
-      // Salvar PDF
-      const fileName = `gabarito-${material?.title?.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-') || 'material'}.pdf`;
-      doc.save(fileName);
+      // Create hidden iframe for printing
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.top = '-9999px';
+      iframe.style.left = '-9999px';
+      iframe.style.width = '210mm';
+      iframe.style.height = '297mm';
+      document.body.appendChild(iframe);
+      
+      iframe.contentDocument?.open();
+      iframe.contentDocument?.write(completeHtml);
+      iframe.contentDocument?.close();
+      
+      // Wait for loading and then print
+      setTimeout(() => {
+        if (iframe.contentWindow) {
+          iframe.contentWindow.print();
+        }
+        // Remove iframe after some time
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 1000);
       
       toast.success('Gabarito em PDF baixado com sucesso!');
     } catch (error) {
