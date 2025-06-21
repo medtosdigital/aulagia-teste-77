@@ -1,5 +1,6 @@
+
 import jsPDF from 'jspdf';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, PageBreak } from 'docx';
+import { Document, Packer, Paragraph, TextRun, AlignmentType, PageBreak, Table, TableRow, TableCell, WidthType } from 'docx';
 import { saveAs } from 'file-saver';
 import { GeneratedMaterial, LessonPlan, Activity, Slide, Assessment } from './materialService';
 import { templateService } from './templateService';
@@ -428,6 +429,139 @@ class ExportService {
             print-color-adjust: exact;
           }
           
+          /* Estilos para diferentes tipos de questões */
+          .answer-lines {
+            border-bottom: 1px solid #d1d5db;
+            margin-bottom: 8px;
+            height: 20px;
+            padding: 0;
+            background: none;
+            border-radius: 0;
+            min-height: 20px;
+            width: 100%;
+            display: block;
+          }
+          .answer-lines:last-child {
+            margin-bottom: 0;
+          }
+
+          .math-space {
+            border: 1px solid #e5e7eb;
+            min-height: 80px;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 4px;
+            background: #fafafa !important;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 0.8rem;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          .matching-section {
+            display: flex;
+            gap: 30px;
+            margin: 15px 0;
+            width: 100%;
+          }
+          .matching-column {
+            flex: 1;
+            min-width: 0;
+          }
+          .matching-column h4 {
+            font-weight: 600;
+            color: #4338ca !important;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .matching-item {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            background: #f9fafb !important;
+            font-size: 0.9rem;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          .fill-blank {
+            display: inline-block;
+            border-bottom: 2px solid #4338ca;
+            min-width: 100px;
+            height: 20px;
+            margin: 0 5px;
+          }
+
+          .image-space {
+            border: 2px dashed #d1d5db;
+            min-height: 120px;
+            margin: 15px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 0.8rem;
+            background: #fafafa !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          .formula-display {
+            background: #f8fafc !important;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.1rem;
+            border: 1px solid #e2e8f0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          /* Questões Verdadeiro/Falso */
+          .true-false-options {
+            display: flex;
+            gap: 30px;
+            margin: 15px 0;
+            align-items: center;
+          }
+          .true-false-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .true-false-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #4338ca;
+            border-radius: 3px;
+            display: inline-block;
+          }
+
+          /* Questões de Desenho */
+          .drawing-space {
+            border: 2px solid #e5e7eb;
+            min-height: 150px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 0.9rem;
+            text-align: center;
+          }
+          
           .footer {
             position: absolute;
             bottom: 6mm;
@@ -641,18 +775,17 @@ class ExportService {
     const paragraphs: any[] = [];
     
     // Process questions if present
-    const questions = tempDiv.querySelectorAll('.questao-container');
+    const questions = tempDiv.querySelectorAll('.questao-container, .question');
     questions.forEach((question, index) => {
-      const questionNumber = question.querySelector('.questao-numero')?.textContent || `${index + 1}`;
-      const questionText = question.querySelector('.questao-enunciado')?.textContent || '';
-      const options = question.querySelectorAll('.opcao');
+      const questionNumber = question.querySelector('.questao-numero, .question-header')?.textContent || `${index + 1}`;
+      const questionText = question.querySelector('.questao-enunciado, .question-text')?.textContent || '';
       
       // Question number and text
       paragraphs.push(
         new Paragraph({
           children: [
             new TextRun({
-              text: `Questão ${questionNumber}`,
+              text: questionNumber,
               bold: true,
               size: 28,
               color: '3B82F6'
@@ -669,18 +802,142 @@ class ExportService {
         })
       );
       
-      // Options
-      options.forEach((option, optIndex) => {
-        const optionLetter = String.fromCharCode(65 + optIndex);
-        const optionText = option.textContent?.replace(/^[A-Z]\)\s*/, '') || '';
+      // Handle different question types
+      
+      // Multiple choice options
+      const options = question.querySelectorAll('.opcao, .option');
+      if (options.length > 0) {
+        options.forEach((option, optIndex) => {
+          const optionLetter = String.fromCharCode(65 + optIndex);
+          const optionText = option.textContent?.replace(/^[A-Z]\)\s*/, '') || '';
+          
+          paragraphs.push(
+            new Paragraph({
+              children: [new TextRun(`${optionLetter}) ${optionText}`)],
+              spacing: { after: 100 }
+            })
+          );
+        });
+      }
+      
+      // Matching columns
+      const matchingSection = question.querySelector('.matching-section');
+      if (matchingSection) {
+        const columnA = matchingSection.querySelector('.matching-column:first-child');
+        const columnB = matchingSection.querySelector('.matching-column:last-child');
         
+        if (columnA && columnB) {
+          const table = new Table({
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    children: [new Paragraph({
+                      children: [new TextRun({ text: 'Coluna A', bold: true })],
+                      alignment: AlignmentType.CENTER
+                    })],
+                    width: { size: 50, type: WidthType.PERCENTAGE }
+                  }),
+                  new TableCell({
+                    children: [new Paragraph({
+                      children: [new TextRun({ text: 'Coluna B', bold: true })],
+                      alignment: AlignmentType.CENTER
+                    })],
+                    width: { size: 50, type: WidthType.PERCENTAGE }
+                  })
+                ]
+              })
+            ]
+          });
+          
+          const itemsA = columnA.querySelectorAll('.matching-item');
+          const itemsB = columnB.querySelectorAll('.matching-item');
+          const maxItems = Math.max(itemsA.length, itemsB.length);
+          
+          for (let i = 0; i < maxItems; i++) {
+            const itemA = itemsA[i]?.textContent || '';
+            const itemB = itemsB[i]?.textContent || '';
+            
+            table.addChildElement(
+              new TableRow({
+                children: [
+                  new TableCell({
+                    children: [new Paragraph({ children: [new TextRun(itemA)] })],
+                    width: { size: 50, type: WidthType.PERCENTAGE }
+                  }),
+                  new TableCell({
+                    children: [new Paragraph({ children: [new TextRun(itemB)] })],
+                    width: { size: 50, type: WidthType.PERCENTAGE }
+                  })
+                ]
+              })
+            );
+          }
+          
+          paragraphs.push(new Paragraph({
+            children: [table as any],
+            spacing: { after: 300 }
+          }));
+        }
+      }
+      
+      // Answer lines for open questions
+      const answerLines = question.querySelectorAll('.answer-lines');
+      if (answerLines.length > 0) {
+        answerLines.forEach(() => {
+          paragraphs.push(
+            new Paragraph({
+              children: [new TextRun('_'.repeat(80))],
+              spacing: { after: 100 }
+            })
+          );
+        });
+      }
+      
+      // Math space
+      const mathSpace = question.querySelector('.math-space');
+      if (mathSpace) {
         paragraphs.push(
           new Paragraph({
-            children: [new TextRun(`${optionLetter}) ${optionText}`)],
-            spacing: { after: 100 }
+            children: [new TextRun({ text: '[Espaço para cálculos]', italics: true, color: '6B7280' })],
+            spacing: { after: 200 }
           })
         );
-      });
+      }
+      
+      // Drawing space
+      const drawingSpace = question.querySelector('.drawing-space, .image-space');
+      if (drawingSpace) {
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun({ text: '[Espaço para desenho/imagem]', italics: true, color: '6B7280' })],
+            spacing: { after: 200 }
+          })
+        );
+      }
+      
+      // Formula display
+      const formula = question.querySelector('.formula-display');
+      if (formula) {
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun({ text: formula.textContent || '', bold: true })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 }
+          })
+        );
+      }
+      
+      // True/False options
+      const trueFalseOptions = question.querySelector('.true-false-options');
+      if (trueFalseOptions) {
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun('( ) Verdadeiro    ( ) Falso')],
+            spacing: { after: 200 }
+          })
+        );
+      }
       
       paragraphs.push(
         new Paragraph({
