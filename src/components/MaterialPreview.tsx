@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { templateService } from '@/services/templateService';
 import { GeneratedMaterial } from '@/services/materialService';
@@ -22,6 +21,45 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       'avaliacao': '4'
     };
     return typeMap[type as keyof typeof typeMap] || '1';
+  };
+
+  // Novo método para criar páginas com o template otimizado
+  const wrapPageContentWithTemplate = (content: string, isFirstPage: boolean): string => {
+    const pageClass = isFirstPage ? 'first-page-content' : 'subsequent-page-content';
+    const contentClass = isFirstPage ? 'content' : 'content subsequent-page';
+    
+    return `
+      <div class="page ${pageClass}">
+        <!-- Formas decorativas -->
+        <div class="shape-circle purple"></div>
+        <div class="shape-circle blue"></div>
+
+        <!-- Cabeçalho AulagIA - Visível em todas as páginas -->
+        <div class="header">
+          <div class="logo-container">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+            </div>
+            <div class="brand-text">
+              <h1>AulagIA</h1>
+              <p>Sua aula com toque mágico</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rodapé - Visível em todas as páginas -->
+        <div class="footer">
+          ${material.type === 'atividade' ? 'Atividade' : 'Avaliação'} gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br
+        </div>
+
+        <div class="${contentClass}">
+          ${content}
+        </div>
+      </div>
+    `;
   };
 
   // Sistema de paginação otimizado baseado no template fornecido
@@ -68,7 +106,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           pageContent += question.outerHTML;
         });
 
-        pages.push(this.wrapPageContentWithTemplate(pageContent, isFirstPage));
+        pages.push(wrapPageContentWithTemplate(pageContent, isFirstPage));
       }
       
       console.log(`Split into ${pages.length} optimized pages`);
@@ -106,52 +144,13 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           pageContent += section.outerHTML;
         });
 
-        pages.push(this.wrapPageContentWithTemplate(pageContent, isFirstPage));
+        pages.push(wrapPageContentWithTemplate(pageContent, isFirstPage));
       }
       
       return pages.length > 0 ? pages : [htmlContent];
     }
 
     return [htmlContent];
-  };
-
-  // Novo método para criar páginas com o template otimizado
-  const wrapPageContentWithTemplate = (content: string, isFirstPage: boolean): string => {
-    const pageClass = isFirstPage ? 'first-page-content' : 'subsequent-page-content';
-    const contentClass = isFirstPage ? 'content' : 'content subsequent-page';
-    
-    return `
-      <div class="page ${pageClass}">
-        <!-- Formas decorativas -->
-        <div class="shape-circle purple"></div>
-        <div class="shape-circle blue"></div>
-
-        <!-- Cabeçalho AulagIA - Visível em todas as páginas -->
-        <div class="header">
-          <div class="logo-container">
-            <div class="logo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-              </svg>
-            </div>
-            <div class="brand-text">
-              <h1>AulagIA</h1>
-              <p>Sua aula com toque mágico</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Rodapé - Visível em todas as páginas -->
-        <div class="footer">
-          ${material.type === 'atividade' ? 'Atividade' : 'Avaliação'} gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br
-        </div>
-
-        <div class="${contentClass}">
-          ${content}
-        </div>
-      </div>
-    `;
   };
 
   const enhanceHtmlWithOptimizedStyles = (htmlContent: string): string => {
