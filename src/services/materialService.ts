@@ -228,7 +228,7 @@ class MaterialService {
       disciplina: formData.disciplina,
       serie: formData.serie,
       instrucoes: `Leia atentamente cada questão e responda de acordo com seus conhecimentos sobre ${formData.tema}.`,
-      questoes: this.generateQuestionsOptimized(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, 'atividade', dificuldade)
+      questoes: this.generateQuestionsWithNewTemplate(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, 'atividade', dificuldade)
     };
   }
 
@@ -261,11 +261,11 @@ class MaterialService {
       titulo: `Avaliação de ${formData.tema}`,
       instrucoes: 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.',
       tempoLimite: formData.tempoLimite || '50 minutos',
-      questoes: this.generateQuestionsOptimized(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, 'avaliacao', dificuldade, pontuacaoPorQuestao)
+      questoes: this.generateQuestionsWithNewTemplate(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, 'avaliacao', dificuldade, pontuacaoPorQuestao)
     };
   }
 
-  private generateQuestionsOptimized(
+  private generateQuestionsWithNewTemplate(
     numQuestoes: number, 
     tiposQuestoes: string[], 
     tema: string, 
@@ -276,7 +276,7 @@ class MaterialService {
   ): any[] {
     const questoes = [];
     
-    console.log('Generating optimized questions:', { numQuestoes, tiposQuestoes, tema, disciplina });
+    console.log('Generating questions with new template:', { numQuestoes, tiposQuestoes, tema, disciplina });
     
     for (let i = 0; i < numQuestoes; i++) {
       const tipoQuestao = tiposQuestoes[i % tiposQuestoes.length];
@@ -288,85 +288,110 @@ class MaterialService {
       };
 
       if (materialType === 'avaliacao' && pontuacao) {
-        questao.pontuacao = Math.round(pontuacao * 10) / 10; // Arredondar para 1 decimal
+        questao.pontuacao = Math.round(pontuacao * 10) / 10;
       }
 
-      switch (tipoQuestao) {
-        case 'multipla_escolha':
-          questao = {
-            ...questao,
-            pergunta: this.generateMultipleChoiceQuestion(tema, disciplina, numeroQuestao, dificuldade),
-            opcoes: this.generateMultipleChoiceOptions(tema, disciplina, dificuldade)
-          };
-          break;
-
-        case 'aberta':
-        case 'dissertativa':
-          const isCalculation = disciplina.toLowerCase().includes('matemática') && Math.random() > 0.6;
-          questao = {
-            ...questao,
-            pergunta: this.generateOpenQuestion(tema, disciplina, numeroQuestao, dificuldade),
-            isCalculo: isCalculation,
-            linhasResposta: isCalculation ? 2 : this.getResponseLines(dificuldade)
-          };
-          
-          // Adicionar fórmulas para questões de matemática
-          if (disciplina.toLowerCase().includes('matemática') && isCalculation) {
-            questao.formula = this.generateMathFormula(tema);
-          }
-          break;
-
-        case 'verdadeiro_falso':
-          questao = {
-            ...questao,
-            pergunta: this.generateTrueFalseQuestion(tema, disciplina, numeroQuestao)
-          };
-          break;
-
-        case 'ligar':
-          const matching = this.generateMatchingQuestion(tema, disciplina);
-          questao = {
-            ...questao,
-            pergunta: `Ligue os itens da Coluna A com os da Coluna B relacionados a ${tema}:`,
-            colunaA: matching.colunaA,
-            colunaB: matching.colunaB
-          };
-          break;
-
-        case 'completar':
-          const fillBlank = this.generateFillBlankQuestion(tema, disciplina, numeroQuestao);
-          questao = {
-            ...questao,
-            pergunta: 'Complete as lacunas no texto abaixo:',
-            textoComLacunas: fillBlank
-          };
-          break;
-
-        case 'desenho':
-          questao = {
-            ...questao,
-            pergunta: this.generateDrawingQuestion(tema, disciplina, numeroQuestao)
-          };
-          break;
-
-        default:
-          questao = {
-            ...questao,
-            pergunta: `Explique os principais conceitos relacionados a ${tema}.`,
-            linhasResposta: 3
-          };
-      }
-
-      // Adicionar texto de interpretação para algumas questões de português
-      if (disciplina.toLowerCase().includes('português') && Math.random() > 0.7) {
-        questao.textoInterpretacao = this.generateInterpretationText(tema);
-      }
-
-      questoes.push(questao);
+      const questionHtml = this.generateQuestionHtml(tipoQuestao, tema, disciplina, numeroQuestao, dificuldade);
+      
+      // Wrap question in container div with new template classes
+      const wrappedHtml = `<div class="question">${questionHtml}</div>`;
+      
+      questoes.push({
+        ...questao,
+        html: wrappedHtml
+      });
     }
     
-    console.log('Generated optimized questions:', questoes);
+    console.log('Generated questions with new template:', questoes);
     return questoes;
+  }
+
+  private generateQuestionHtml(tipoQuestao: string, tema: string, disciplina: string, numeroQuestao: number, dificuldade: string): string {
+    let html = `<div class="question-header">Questão ${numeroQuestao}</div>`;
+    
+    switch (tipoQuestao) {
+      case 'multipla_escolha':
+        html += `
+          <div class="question-text">${this.generateMultipleChoiceQuestion(tema, disciplina, numeroQuestao, dificuldade)}</div>
+          <div class="options">
+            <div class="option"><span class="option-letter">A)</span> ${this.generateMultipleChoiceOptions(tema, disciplina, dificuldade)[0]}</div>
+            <div class="option"><span class="option-letter">B)</span> ${this.generateMultipleChoiceOptions(tema, disciplina, dificuldade)[1]}</div>
+            <div class="option"><span class="option-letter">C)</span> ${this.generateMultipleChoiceOptions(tema, disciplina, dificuldade)[2]}</div>
+            <div class="option"><span class="option-letter">D)</span> ${this.generateMultipleChoiceOptions(tema, disciplina, dificuldade)[3]}</div>
+          </div>
+        `;
+        break;
+
+      case 'aberta':
+      case 'dissertativa':
+        const isCalculation = disciplina.toLowerCase().includes('matemática') && Math.random() > 0.6;
+        html += `<div class="question-text">${this.generateOpenQuestion(tema, disciplina, numeroQuestao, dificuldade)}</div>`;
+        
+        if (isCalculation && disciplina.toLowerCase().includes('matemática')) {
+          html += `<div class="math-space">[Fórmula Matemática: ${this.generateMathFormula(tema)}]</div>`;
+        }
+        
+        const numLines = this.getResponseLines(dificuldade);
+        for (let i = 0; i < numLines; i++) {
+          html += '<div class="answer-lines"></div>';
+        }
+        break;
+
+      case 'verdadeiro_falso':
+        html += `
+          <div class="question-text">${this.generateTrueFalseQuestion(tema, disciplina, numeroQuestao)}</div>
+          <div class="options">
+              <div class="option"><span class="option-letter">V)</span> Verdadeiro</div>
+              <div class="option"><span class="option-letter">F)</span> Falso</div>
+          </div>
+        `;
+        break;
+
+      case 'ligar':
+        const matching = this.generateMatchingQuestion(tema, disciplina);
+        html += `
+          <div class="question-text">Ligue os itens da Coluna A com os da Coluna B relacionados a ${tema}:</div>
+          <div class="matching-section">
+            <div class="matching-column">
+              <div class="matching-item">(1) ${matching.colunaA[0]}</div>
+              <div class="matching-item">(2) ${matching.colunaA[1]}</div>
+            </div>
+            <div class="matching-column">
+              <div class="matching-item">( ) ${matching.colunaB[0]}</div>
+              <div class="matching-item">( ) ${matching.colunaB[1]}</div>
+            </div>
+          </div>
+          <div class="answer-lines"></div>
+        `;
+        break;
+
+      case 'completar':
+        html += `
+          <div class="question-text">Complete as lacunas:</div>
+          <div class="fill-blank"></div>
+          <div class="fill-blank"></div>
+        `;
+        break;
+
+      case 'desenho':
+        html += `
+          <div class="question-text">${this.generateDrawingQuestion(tema, disciplina, numeroQuestao)}</div>
+          <div class="image-space"></div>
+          <div class="answer-lines"></div>
+          <div class="answer-lines"></div>
+        `;
+        break;
+
+      default:
+        html += `
+          <div class="question-text">Explique os principais conceitos relacionados a ${tema}.</div>
+          <div class="answer-lines"></div>
+          <div class="answer-lines"></div>
+          <div class="answer-lines"></div>
+        `;
+    }
+
+    return html;
   }
 
   private generateMultipleChoiceQuestion(tema: string, disciplina: string, numero: number, dificuldade: string): string {

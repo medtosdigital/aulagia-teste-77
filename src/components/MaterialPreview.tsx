@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { templateService } from '@/services/templateService';
 import { GeneratedMaterial } from '@/services/materialService';
@@ -23,7 +24,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     return typeMap[type as keyof typeof typeMap] || '1';
   };
 
-  // Método para criar páginas com o template atualizado
+  // Método para criar páginas com o novo template
   const wrapPageContentWithTemplate = (content: string, isFirstPage: boolean): string => {
     const pageClass = isFirstPage ? 'first-page-content' : 'subsequent-page-content';
     const contentClass = isFirstPage ? 'content' : 'content subsequent-page';
@@ -62,7 +63,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     `;
   };
 
-  // Sistema de paginação otimizado baseado no template atualizado
+  // Sistema de paginação otimizado baseado no novo template
   const splitContentIntoPages = (htmlContent: string): string[] => {
     console.log('Starting optimized page split for:', material.type);
     
@@ -72,7 +73,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     // Para atividades e avaliações - usar o novo sistema de paginação
     if (material.type === 'atividade' || material.type === 'avaliacao') {
       const pages: string[] = [];
-      const questions = tempDiv.querySelectorAll('.questao-container');
+      const questions = tempDiv.querySelectorAll('.questao-container, .question');
       
       if (questions.length === 0) {
         console.log('No questions found, returning single page');
@@ -83,7 +84,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
 
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
-      const questionsPerPage = 4; // Baseado no template: 4 questões por página
+      const questionsPerPage = 4; // Baseado no novo template: 4 questões por página
       let questionIndex = 0;
 
       while (questionIndex < questions.length) {
@@ -186,7 +187,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     return [htmlContent];
   };
 
-  const enhanceHtmlWithOptimizedStyles = (htmlContent: string): string => {
+  const enhanceHtmlWithNewTemplate = (htmlContent: string): string => {
     return `
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -400,71 +401,35 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             border-radius: 6px;
           }
 
-          .questao-container {
+          .questao-container, .question {
             margin-bottom: 30px;
             page-break-inside: avoid;
           }
-          .questao-numero {
+          .questao-numero, .question-header {
             font-weight: 600;
             color: #4338ca;
             margin-bottom: 10px;
             font-size: 1.0rem;
             font-family: 'Inter', sans-serif;
           }
-          .questao-enunciado {
+          .questao-enunciado, .question-text {
             margin-bottom: 15px;
             text-align: justify;
             font-family: 'Inter', sans-serif;
             font-size: 0.9rem;
             line-height: 1.4;
           }
-          .questao-opcoes {
+          .questao-opcoes, .options {
             margin-left: 20px;
           }
-          .opcao {
+          .opcao, .option {
             margin-bottom: 8px;
             display: flex;
             align-items: flex-start;
             font-family: 'Inter', sans-serif;
             font-size: 0.9rem;
           }
-          .opcao-letra {
-            font-weight: bold;
-            margin-right: 10px;
-            color: #4338ca;
-            min-width: 25px;
-          }
-
-          /* Novos estilos baseados no template */
-          .question {
-            margin-bottom: 30px;
-            page-break-inside: avoid;
-          }
-          .question-header {
-            font-weight: 600;
-            color: #4338ca;
-            margin-bottom: 10px;
-            font-size: 1.0rem;
-            font-family: 'Inter', sans-serif;
-          }
-          .question-text {
-            margin-bottom: 15px;
-            text-align: justify;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            line-height: 1.4;
-          }
-          .options {
-            margin-left: 20px;
-          }
-          .option {
-            margin-bottom: 8px;
-            display: flex;
-            align-items: flex-start;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-          }
-          .option-letter {
+          .opcao-letra, .option-letter {
             font-weight: bold;
             margin-right: 10px;
             color: #4338ca;
@@ -646,7 +611,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         // Single page - render directly
         return (
           <iframe
-            srcDoc={enhanceHtmlWithOptimizedStyles(pages[0])}
+            srcDoc={enhanceHtmlWithNewTemplate(pages[0])}
             style={{
               width: '100%',
               height: '100%',
@@ -698,7 +663,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           {/* Page Content */}
           <div className="flex-1 overflow-hidden">
             <iframe
-              srcDoc={enhanceHtmlWithOptimizedStyles(pages[currentPage])}
+              srcDoc={enhanceHtmlWithNewTemplate(pages[currentPage])}
               style={{
                 width: '100%',
                 height: '100%',
