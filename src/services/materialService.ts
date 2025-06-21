@@ -273,10 +273,11 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
     table .student-info-cell {
         width: 32%; 
     }
-    .bncc-highlight-cell {
-        background-color: #e0f2f7;
+    .nota-highlight-cell {
+        background-color: #fef3c7;
         color: #000000;
         font-weight: 600;
+        border: 2px solid #f59e0b;
     }
     
     .instructions {
@@ -455,6 +456,12 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
       }
       th {
         background: #f3f4f6 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .nota-highlight-cell {
+        background-color: #fef3c7 !important;
+        border: 2px solid #f59e0b !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
@@ -774,7 +781,7 @@ class MaterialService {
           <th>Aluno(a):</th>
           <td class="student-info-cell">____________________________________________</td>
           <th>NOTA:</th>
-          <td class="student-info-cell bncc-highlight-cell"></td>
+          <td class="student-info-cell nota-highlight-cell"></td>
         </tr>
       </table>
 

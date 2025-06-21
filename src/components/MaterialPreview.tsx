@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { templateService } from '@/services/templateService';
 import { GeneratedMaterial } from '@/services/materialService';
@@ -100,10 +99,10 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         // Construir conteúdo da página
         let pageContent = '';
         if (isFirstPage) {
-          // Título da Atividade
-          pageContent += '<h2>ATIVIDADE</h2>';
+          // Título do Material
+          pageContent += material.type === 'atividade' ? '<h2>ATIVIDADE</h2>' : '<h2>AVALIAÇÃO</h2>';
           
-          // Informações básicas da Atividade
+          // Informações básicas do Material
           pageContent += `
             <table>
               <tr>
@@ -121,17 +120,17 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
               <tr>
                 <th>Aluno(a):</th>
                 <td class="student-info-cell">____________________________________________</td>
-                <th>BNCC:</th>
-                <td class="student-info-cell">{{Código da BNCC}}</td>
+                <th>${material.type === 'avaliacao' ? 'NOTA:' : 'BNCC:'}</th>
+                <td class="student-info-cell ${material.type === 'avaliacao' ? 'nota-highlight-cell' : ''}">${material.type === 'avaliacao' ? '' : '{{Código da BNCC}}'}</td>
               </tr>
             </table>
           `;
           
-          // Instruções da Atividade
+          // Instruções do Material
           pageContent += `
             <div class="instructions">
               <strong>${material.title}:</strong><br>
-              ${instructions || 'Leia atentamente cada questão e responda de acordo com o solicitado.'}
+              ${instructions || (material.type === 'avaliacao' ? 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.' : 'Leia atentamente cada questão e responda de acordo com o solicitado.')}
             </div>
           `;
         }
@@ -392,6 +391,13 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             width: 32%;
           }
           
+          .nota-highlight-cell {
+            background-color: #fef3c7;
+            color: #000000;
+            font-weight: 600;
+            border: 2px solid #f59e0b;
+          }
+          
           .instructions {
             background: #eff6ff;
             padding: 15px;
@@ -580,6 +586,12 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             }
             th {
               background: #f3f4f6 !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .nota-highlight-cell {
+              background-color: #fef3c7 !important;
+              border: 2px solid #f59e0b !important;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
