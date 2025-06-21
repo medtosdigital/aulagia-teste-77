@@ -116,17 +116,21 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
                     {tema}
                   </span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="font-medium text-gray-600">Disciplina:</span>
-                  <span className="font-semibold text-gray-900">
-                    {disciplina}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-medium text-gray-600">Turma:</span>
-                  <span className="font-semibold text-gray-900">
-                    {getGradeDisplayName(serie)}
-                  </span>
+                
+                {/* Disciplina e Turma lado a lado */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-600">Disciplina:</span>
+                    <span className="font-semibold text-gray-900">
+                      {disciplina}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-600">Turma:</span>
+                    <span className="font-semibold text-gray-900">
+                      {getGradeDisplayName(serie)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
