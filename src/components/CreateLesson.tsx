@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders } from 'lucide-react';
+import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,7 +35,9 @@ const CreateLesson: React.FC = () => {
     subject: '',
     grade: '',
     questionType: 'mistas',
-    questionCount: [5]
+    questionCount: [5],
+    // Novos campos para múltiplos assuntos/conteúdos (específico para avaliações)
+    subjects: [''] as string[]
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -100,9 +102,43 @@ const CreateLesson: React.FC = () => {
     options: ['Graduação']
   }];
 
+  // Funções para gerenciar múltiplos assuntos/conteúdos
+  const addSubject = () => {
+    setFormData({
+      ...formData,
+      subjects: [...formData.subjects, '']
+    });
+  };
+
+  const removeSubject = (index: number) => {
+    if (formData.subjects.length > 1) {
+      const newSubjects = formData.subjects.filter((_, i) => i !== index);
+      setFormData({
+        ...formData,
+        subjects: newSubjects
+      });
+    }
+  };
+
+  const updateSubject = (index: number, value: string) => {
+    const newSubjects = [...formData.subjects];
+    newSubjects[index] = value;
+    setFormData({
+      ...formData,
+      subjects: newSubjects
+    });
+  };
+
   const handleTypeSelection = (type: MaterialType) => {
     setSelectedType(type);
     setStep('form');
+    // Reset subjects para avaliações
+    if (type === 'avaliacao') {
+      setFormData(prev => ({
+        ...prev,
+        subjects: ['']
+      }));
+    }
   };
 
   const handleBackToSelection = () => {
@@ -111,13 +147,21 @@ const CreateLesson: React.FC = () => {
   };
 
   const handleFormSubmit = () => {
-    // Verificar se todos os campos estão preenchidos
+    // Verificar campos básicos
     if (!formData.topic || !formData.subject || !formData.grade) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    // Abrir modal de validação BNCC
+    // Verificar assuntos específicos para avaliações
+    if (selectedType === 'avaliacao') {
+      const validSubjects = formData.subjects.filter(s => s.trim() !== '');
+      if (validSubjects.length === 0) {
+        toast.error('Adicione pelo menos um assunto/conteúdo para a avaliação');
+        return;
+      }
+    }
+
     setShowBNCCValidation(true);
   };
 
@@ -141,7 +185,7 @@ const CreateLesson: React.FC = () => {
     }, 300);
 
     try {
-      // Generate material using the service with the correct form data structure
+      // Para avaliações, usar os múltiplos assuntos
       const materialFormData = {
         tema: formData.topic,
         topic: formData.topic,
@@ -149,12 +193,17 @@ const CreateLesson: React.FC = () => {
         subject: formData.subject,
         serie: formData.grade,
         grade: formData.grade,
+        // Adicionar assuntos específicos para avaliações
+        ...(selectedType === 'avaliacao' ? {
+          assuntos: formData.subjects.filter(s => s.trim() !== ''),
+          subjects: formData.subjects.filter(s => s.trim() !== '')
+        } : {}),
         // Correct mapping for question configuration
         ...(selectedType === 'atividade' || selectedType === 'avaliacao' ? {
           tipoQuestoes: formData.questionType,
-          tiposQuestoes: [formData.questionType], // Support both formats
+          tiposQuestoes: [formData.questionType],
           numeroQuestoes: formData.questionCount[0],
-          quantidadeQuestoes: formData.questionCount[0] // Support both formats
+          quantidadeQuestoes: formData.questionCount[0]
         } : {})
       };
       
@@ -167,7 +216,7 @@ const CreateLesson: React.FC = () => {
         setIsGenerating(false);
         setGeneratedMaterial(material);
         setShowModal(true);
-        setStep('selection'); // Reset to selection for next material
+        setStep('selection');
         toast.success(`${getCurrentTypeInfo()?.title} criado com sucesso!`);
       }, 1000);
     } catch (error) {
@@ -192,7 +241,8 @@ const CreateLesson: React.FC = () => {
       subject: '',
       grade: '',
       questionType: 'mistas',
-      questionCount: [5]
+      questionCount: [5],
+      subjects: ['']
     });
     setSelectedType(null);
   };
@@ -373,6 +423,59 @@ const CreateLesson: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Campo específico para múltiplos assuntos/conteúdos nas avaliações */}
+                {selectedType === 'avaliacao' && (
+                  <div className="space-y-4 border-t border-gray-200 pt-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                          C
+                        </div>
+                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Assuntos/Conteúdos da Avaliação</Label>
+                      </div>
+                      <Button 
+                        type="button"
+                        onClick={addSubject}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center space-x-1 hover:bg-blue-50 border-blue-200"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Adicionar</span>
+                      </Button>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Adicione os assuntos ou conteúdos específicos que serão abordados na avaliação. As questões serão baseadas nesses temas.
+                    </p>
+                    
+                    <div className="space-y-3">
+                      {formData.subjects.map((subject, index) => (
+                        <div key={index} className="flex items-center space-x-3">
+                          <div className="flex-1">
+                            <Input
+                              placeholder={`Ex: ${index === 0 ? 'Equações do 1º grau' : index === 1 ? 'Sistemas lineares' : 'Funções quadráticas'}`}
+                              value={subject}
+                              onChange={(e) => updateSubject(index, e.target.value)}
+                              className="h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all"
+                            />
+                          </div>
+                          {formData.subjects.length > 1 && (
+                            <Button
+                              type="button"
+                              onClick={() => removeSubject(index)}
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center justify-center w-12 h-12 hover:bg-red-50 border-red-200 text-red-500"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Campos específicos para atividades e avaliações */}
                 {(selectedType === 'atividade' || selectedType === 'avaliacao') && (
                   <div className="space-y-6 border-t border-gray-200 pt-6">
@@ -457,7 +560,7 @@ const CreateLesson: React.FC = () => {
 
                   <Button 
                     onClick={handleFormSubmit} 
-                    disabled={!formData.topic || !formData.subject || !formData.grade} 
+                    disabled={!formData.topic ||!formData.subject || !formData.grade} 
                     className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />

@@ -621,6 +621,231 @@ class MaterialService {
     };
   }
 
+  private generateEvaluation(formData: any): Assessment {
+    const numQuestoes = formData.numeroQuestoes || formData.quantidadeQuestoes || 4;
+    const tipoQuestoes = formData.tipoQuestoes || formData.tiposQuestoes || 'mistas';
+    const dificuldade = formData.dificuldade || 'medio';
+    const pontuacaoTotal = 10;
+    const pontuacaoPorQuestao = pontuacaoTotal / numQuestoes;
+    
+    // Obter múltiplos assuntos se fornecidos
+    const assuntos = formData.assuntos || formData.subjects || [formData.tema];
+    const assuntosLimpos = assuntos.filter((assunto: string) => assunto && assunto.trim() !== '');
+    
+    console.log('Generating evaluation with multiple subjects:', { numQuestoes, tipoQuestoes, dificuldade, assuntos: assuntosLimpos });
+    
+    let tiposQuestoesArray = [];
+    switch (tipoQuestoes) {
+      case 'abertas':
+        tiposQuestoesArray = ['dissertativa'];
+        break;
+      case 'fechadas':
+        tiposQuestoesArray = ['multipla_escolha', 'verdadeiro_falso'];
+        break;
+      case 'mistas':
+      default:
+        tiposQuestoesArray = ['multipla_escolha', 'dissertativa', 'verdadeiro_falso', 'completar', 'ligar'];
+        break;
+    }
+    
+    // Gerar questões com múltiplos assuntos e tipos aleatórios
+    const questoes = this.generateMultiSubjectQuestions(
+      numQuestoes, 
+      tiposQuestoesArray, 
+      assuntosLimpos, 
+      formData.disciplina, 
+      dificuldade, 
+      pontuacaoPorQuestao
+    );
+    
+    const htmlContent = this.generateAssessmentHTML(formData, questoes);
+    
+    const tituloAvaliacao = assuntosLimpos.length > 1 
+      ? `Avaliação de ${assuntosLimpos.slice(0, 2).join(' e ')}${assuntosLimpos.length > 2 ? ' e outros' : ''}`
+      : `Avaliação de ${formData.tema}`;
+    
+    return {
+      titulo: tituloAvaliacao,
+      instrucoes: 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.',
+      tempoLimite: formData.tempoLimite || '50 minutos',
+      questoes,
+      htmlContent
+    };
+  }
+
+  // Novo método para gerar questões com múltiplos assuntos
+  private generateMultiSubjectQuestions(
+    numQuestoes: number, 
+    tiposQuestoes: string[], 
+    assuntos: string[], 
+    disciplina: string, 
+    dificuldade: string,
+    pontuacao: number
+  ): any[] {
+    const questoes = [];
+    
+    // Embaralhar tipos de questões para garantir aleatoriedade
+    const shuffleArray = (array: string[]) => {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    };
+
+    // Distribuir questões entre os assuntos de forma equilibrada
+    for (let i = 0; i < numQuestoes; i++) {
+      const assuntoIndex = i % assuntos.length;
+      const assuntoAtual = assuntos[assuntoIndex];
+      
+      // Embaralhar tipos para cada questão
+      const tiposEmbaralhados = shuffleArray(tiposQuestoes);
+      const tipoQuestao = tiposEmbaralhados[i % tiposEmbaralhados.length];
+      const numeroQuestao = i + 1;
+      
+      let questao: any = {
+        numero: numeroQuestao,
+        tipo: tipoQuestao,
+        pontuacao: Math.round(pontuacao * 10) / 10,
+        assunto: assuntoAtual // Adicionar assunto específico para esta questão
+      };
+
+      switch (tipoQuestao) {
+        case 'multipla_escolha':
+          questao.pergunta = this.generateMultipleChoiceQuestionForSubject(assuntoAtual, disciplina, numeroQuestao, dificuldade);
+          questao.opcoes = this.generateMultipleChoiceOptionsForSubject(assuntoAtual, disciplina, dificuldade);
+          break;
+        
+        case 'dissertativa':
+          questao.pergunta = this.generateOpenQuestionForSubject(assuntoAtual, disciplina, numeroQuestao, dificuldade);
+          questao.linhasResposta = this.getResponseLines(dificuldade);
+          break;
+        
+        case 'verdadeiro_falso':
+          questao.pergunta = this.generateTrueFalseQuestionForSubject(assuntoAtual, disciplina, numeroQuestao);
+          break;
+        
+        case 'ligar':
+          const matching = this.generateMatchingQuestionForSubject(assuntoAtual, disciplina);
+          questao.pergunta = `Ligue os itens da Coluna A com os da Coluna B relacionados a ${assuntoAtual}: `;
+          questao.colunaA = matching.colunaA;
+          questao.colunaB = matching.colunaB;
+          break;
+        
+        case 'completar':
+          questao.pergunta = 'Complete as lacunas:';
+          questao.textoComLacunas = this.generateFillBlankQuestionForSubject(assuntoAtual, disciplina, numeroQuestao);
+          break;
+      }
+      
+      questoes.push(questao);
+    }
+    
+    // Embaralhar a ordem final das questões para máxima aleatoriedade
+    return this.shuffleQuestions(questoes);
+  }
+
+  // Embaralhar questões mantendo numeração sequencial
+  private shuffleQuestions(questoes: any[]): any[] {
+    const shuffled = [...questoes];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    // Renumerar após embaralhar
+    return shuffled.map((questao, index) => ({
+      ...questao,
+      numero: index + 1
+    }));
+  }
+
+  // Métodos específicos para gerar questões por assunto
+  private generateMultipleChoiceQuestionForSubject(assunto: string, disciplina: string, numero: number, dificuldade: string): string {
+    const questions = [
+      `Sobre ${assunto}, qual das alternativas está correta?`,
+      `Em relação a ${assunto}, podemos afirmar que:`,
+      `${assunto} pode ser caracterizado como:`,
+      `A principal importância de ${assunto} está em:`,
+      `Qual é a definição mais adequada para ${assunto}?`,
+      `Como ${assunto} se manifesta em ${disciplina}?`,
+      `Qual das seguintes características pertence a ${assunto}?`,
+      `${assunto} é fundamental porque:`,
+      `No contexto de ${disciplina}, ${assunto} representa:`
+    ];
+    
+    return questions[numero % questions.length];
+  }
+
+  private generateMultipleChoiceOptionsForSubject(assunto: string, disciplina: string, dificuldade: string): string[] {
+    return [
+      `É um conceito fundamental em ${disciplina}`,
+      `Tem aplicação prática no estudo de ${assunto}`,
+      `Requer compreensão teórica e análise crítica`,
+      `Todas as alternativas anteriores estão corretas`
+    ];
+  }
+
+  private generateOpenQuestionForSubject(assunto: string, disciplina: string, numero: number, dificuldade: string): string {
+    const questions = [
+      `Defina ${assunto} e explique sua importância em ${disciplina}.`,
+      `Como ${assunto} pode ser aplicado em situações do dia a dia?`,
+      `Analise os principais aspectos de ${assunto}.`,
+      `Descreva as características mais importantes de ${assunto}.`,
+      `Explique como ${assunto} se relaciona com outros conceitos em ${disciplina}.`,
+      `Dê exemplos práticos de ${assunto} no cotidiano.`,
+      `Por que é importante estudar ${assunto} em ${disciplina}?`,
+      `Compare ${assunto} com outros conceitos similares.`,
+      `Discuta as implicações de ${assunto} na área de ${disciplina}.`
+    ];
+    
+    return questions[numero % questions.length];
+  }
+
+  private generateTrueFalseQuestionForSubject(assunto: string, disciplina: string, numero: number): string {
+    const statements = [
+      `${assunto} é considerado um conceito básico em ${disciplina}.`,
+      `O estudo de ${assunto} é fundamental para compreender ${disciplina}.`,
+      `${assunto} pode ser observado apenas em situações específicas.`,
+      `Existem diferentes formas de abordar ${assunto} em ${disciplina}.`,
+      `${assunto} tem aplicação prática no cotidiano.`,
+      `Todos os aspectos de ${assunto} são fáceis de compreender.`,
+      `${assunto} se relaciona diretamente com os princípios de ${disciplina}.`
+    ];
+    
+    return statements[numero % statements.length];
+  }
+
+  private generateMatchingQuestionForSubject(assunto: string, disciplina: string): { colunaA: string[], colunaB: string[] } {
+    return {
+      colunaA: [
+        `Conceito de ${assunto}`,
+        `Aplicação prática`,
+        `Característica principal`,
+        `Exemplo comum`
+      ],
+      colunaB: [
+        `Situação do cotidiano`,
+        `Definição específica`,
+        `Aspecto relevante`,
+        `Caso prático em ${disciplina}`
+      ]
+    };
+  }
+
+  private generateFillBlankQuestionForSubject(assunto: string, disciplina: string, numero: number): string {
+    const texts = [
+      `O conceito de ${assunto} é fundamental para compreender _______. Sua aplicação permite _______ de forma mais eficiente.`,
+      `Em ${disciplina}, ${assunto} representa _______. Por isso, é importante _______ para obter melhores resultados.`,
+      `Quando estudamos ${assunto}, observamos que _______. Isso nos ajuda a _______ adequadamente.`,
+      `${assunto} pode ser definido como _______. Esta definição nos permite _______ melhor o assunto.`,
+      `A importância de ${assunto} em ${disciplina} está no fato de que _______. Assim, podemos _______ com maior precisão.`
+    ];
+    
+    return texts[numero % texts.length];
+  }
+
   private generateStructuredQuestions(
     numQuestoes: number,
     tipoQuestoes: string,
@@ -774,41 +999,6 @@ class MaterialService {
     ];
     
     return texts[numero % texts.length];
-  }
-
-  private generateEvaluation(formData: any): Assessment {
-    const numQuestoes = formData.numeroQuestoes || formData.quantidadeQuestoes || 4;
-    const tipoQuestoes = formData.tipoQuestoes || formData.tiposQuestoes || 'mistas';
-    const dificuldade = formData.dificuldade || 'medio';
-    const pontuacaoTotal = 10;
-    const pontuacaoPorQuestao = pontuacaoTotal / numQuestoes;
-    
-    console.log('Generating evaluation with:', { numQuestoes, tipoQuestoes, dificuldade });
-    
-    let tiposQuestoesArray = [];
-    switch (tipoQuestoes) {
-      case 'abertas':
-        tiposQuestoesArray = ['dissertativa'];
-        break;
-      case 'fechadas':
-        tiposQuestoesArray = ['multipla_escolha', 'verdadeiro_falso'];
-        break;
-      case 'mistas':
-      default:
-        tiposQuestoesArray = ['multipla_escolha', 'dissertativa', 'verdadeiro_falso', 'completar', 'ligar'];
-        break;
-    }
-    
-    const questoes = this.generateAdvancedQuestions(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, dificuldade, pontuacaoPorQuestao);
-    const htmlContent = this.generateAssessmentHTML(formData, questoes);
-    
-    return {
-      titulo: `Avaliação de ${formData.tema}`,
-      instrucoes: 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.',
-      tempoLimite: formData.tempoLimite || '50 minutos',
-      questoes,
-      htmlContent
-    };
   }
 
   private generateAdvancedQuestions(
