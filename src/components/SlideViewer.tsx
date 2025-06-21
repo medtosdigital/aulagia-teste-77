@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Printer, Download } from 'lucide-react';
 import { Button } from './ui/button';
@@ -615,10 +614,31 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         </div>
       </div>
 
-      {/* Slide Content */}
-      <div className="bg-gray-100 p-6 rounded-b-xl">
-        <div className="aspect-[16/9] w-full">
+      {/* Slide Content with Mobile Navigation Arrows */}
+      <div className="bg-gray-100 p-6 rounded-b-xl relative">
+        <div className="aspect-[16/9] w-full relative">
           {renderSlide(slides[currentSlide], currentSlide)}
+          
+          {/* Mobile Navigation Arrows - Large and positioned on sides */}
+          <div className="md:hidden absolute inset-y-0 left-0 flex items-center">
+            <button
+              onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+              disabled={currentSlide === 0}
+              className="ml-4 w-16 h-16 bg-blue-900 text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
+            >
+              <ChevronLeft className="h-8 w-8" />
+            </button>
+          </div>
+          
+          <div className="md:hidden absolute inset-y-0 right-0 flex items-center">
+            <button
+              onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+              disabled={currentSlide === slides.length - 1}
+              className="mr-4 w-16 h-16 bg-blue-900 text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
+            >
+              <ChevronRight className="h-8 w-8" />
+            </button>
+          </div>
         </div>
       </div>
 
