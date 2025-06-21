@@ -7,10 +7,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import MaterialPreview from './MaterialPreview';
 import AnswerKeyModal from './AnswerKeyModal';
 import { GeneratedMaterial } from '@/services/materialService';
-import { exportService } from '@/services/exportService';
 import { templateService } from '@/services/templateService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx';
+import { saveAs } from 'file-saver';
 
 interface MaterialModalProps {
   material: GeneratedMaterial | null;
@@ -42,61 +45,189 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
     return typeMap[type as keyof typeof typeMap] || '1';
   };
 
-  const handlePrint = async () => {
-    if (!material) return;
-
-    try {
-      if (material.type === 'slides') {
-        // Para slides, criar HTML otimizado para impressão
-        const slidesForPrint = generateSlidesHTML(material);
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-          printWindow.document.write(slidesForPrint);
-          printWindow.document.close();
-          printWindow.print();
-        }
-        toast.success('Slides enviados para impressão!');
-      } else {
-        // Para outros materiais, usar o método padrão
-        await exportService.exportToPDF(material);
-        toast.success('Material enviado para impressão!');
-      }
-    } catch (error) {
-      console.error('Erro ao preparar impressão:', error);
-      toast.error('Erro ao preparar a impressão');
-    }
-  };
-
-  const handleExport = async (format: 'pdf' | 'word' | 'ppt') => {
-    if (!material) return;
-
-    try {
-      switch (format) {
-        case 'pdf':
-          if (material.type === 'slides') {
-            await exportSlidesToPDF(material);
-          } else {
-            await exportService.exportToPDF(material);
+  const createStyledHTML = (content: string, material: GeneratedMaterial): string => {
+    return `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${material.title}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+          
+          @page {
+            size: A4;
+            margin: 15mm;
           }
-          toast.success('Material exportado para PDF com sucesso!');
-          break;
-        case 'word':
-          await exportService.exportToWord(material);
-          toast.success('Material exportado para Word com sucesso!');
-          break;
-        case 'ppt':
-          if (material.type === 'slides') {
-            await exportSlidesToPPT(material);
-          } else {
-            await exportService.exportToPPT(material);
+          
+          body {
+            margin: 0;
+            padding: 20px;
+            background: white;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
-          toast.success('Material exportado para PowerPoint com sucesso!');
-          break;
-      }
-    } catch (error) {
-      toast.error('Erro ao exportar material');
-      console.error('Export error:', error);
-    }
+          
+          .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #0ea5e9;
+          }
+          
+          .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+          }
+          
+          .brand-info h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #0ea5e9;
+            font-weight: 700;
+          }
+          
+          .brand-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #6b7280;
+          }
+          
+          h2 {
+            color: #4f46e5;
+            font-size: 1.8rem;
+            margin: 25px 0 15px 0;
+            text-align: center;
+            position: relative;
+          }
+          
+          h2::after {
+            content: '';
+            width: 60px;
+            height: 3px;
+            background: #a78bfa;
+            display: block;
+            margin: 8px auto 0;
+            border-radius: 2px;
+          }
+          
+          h3 {
+            color: #1f2937;
+            font-size: 1.3rem;
+            margin: 20px 0 10px 0;
+            font-weight: 600;
+          }
+          
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          
+          th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #e5e7eb;
+          }
+          
+          th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+            color: #374151;
+          }
+          
+          .instructions {
+            background: #eff6ff;
+            padding: 20px;
+            border-left: 4px solid #0ea5e9;
+            margin: 20px 0;
+            border-radius: 6px;
+          }
+          
+          .questao-container, .question {
+            margin: 25px 0;
+            page-break-inside: avoid;
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+          }
+          
+          .questao-numero, .question-header {
+            font-weight: 600;
+            color: #4338ca;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+          }
+          
+          .questao-enunciado, .question-text {
+            margin-bottom: 15px;
+            line-height: 1.6;
+          }
+          
+          .opcao, .option {
+            margin: 8px 0;
+            display: flex;
+            align-items: flex-start;
+          }
+          
+          .opcao-letra, .option-letter {
+            font-weight: bold;
+            color: #4338ca;
+            margin-right: 10px;
+            min-width: 25px;
+          }
+          
+          .footer {
+            position: fixed;
+            bottom: 10mm;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+          }
+          
+          @media print {
+            body { 
+              margin: 0; 
+              padding: 15mm;
+            }
+            .header {
+              margin-bottom: 20px;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">A</div>
+          <div class="brand-info">
+            <h1>AulagIA</h1>
+            <p>Sua aula com toque mágico</p>
+          </div>
+        </div>
+        ${content}
+        <div class="footer">
+          Material gerado pela AulagIA em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br
+        </div>
+      </body>
+      </html>
+    `;
   };
 
   const generateSlidesHTML = (material: GeneratedMaterial): string => {
@@ -472,36 +603,311 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
     }
   };
 
-  const exportSlidesToPDF = async (material: GeneratedMaterial) => {
-    const slidesHTML = generateSlidesHTML(material);
-    
-    // Criar iframe oculto para renderizar e imprimir
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'absolute';
-    iframe.style.top = '-9999px';
-    iframe.style.left = '-9999px';
-    iframe.style.width = '1024px';
-    iframe.style.height = '768px';
-    document.body.appendChild(iframe);
-    
-    iframe.contentDocument?.open();
-    iframe.contentDocument?.write(slidesHTML);
-    iframe.contentDocument?.close();
-    
-    // Aguardar carregamento e imprimir
-    setTimeout(() => {
-      if (iframe.contentWindow) {
-        iframe.contentWindow.print();
+  const handlePrint = async () => {
+    if (!material) return;
+
+    try {
+      let htmlContent = '';
+      
+      if (material.type === 'slides') {
+        htmlContent = generateSlidesHTML(material);
+      } else {
+        const renderedContent = templateService.renderTemplate(getTemplateId(material.type), material.content);
+        htmlContent = createStyledHTML(renderedContent, material);
       }
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-      }, 1000);
-    }, 1000);
+
+      // Criar um iframe oculto para imprimir
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.top = '-10000px';
+      iframe.style.left = '-10000px';
+      iframe.style.width = '210mm';
+      iframe.style.height = '297mm';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (iframeDoc) {
+        iframeDoc.open();
+        iframeDoc.write(htmlContent);
+        iframeDoc.close();
+
+        // Aguardar carregamento e imprimir
+        setTimeout(() => {
+          iframe.contentWindow?.print();
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 1000);
+        }, 1000);
+      }
+
+      toast.success('Material enviado para impressão!');
+    } catch (error) {
+      console.error('Erro ao preparar impressão:', error);
+      toast.error('Erro ao preparar a impressão');
+    }
   };
 
-  const exportSlidesToPPT = async (material: GeneratedMaterial) => {
-    // Para PPT, usar a mesma lógica do PDF por enquanto
-    await exportSlidesToPDF(material);
+  const handleExportPDF = async () => {
+    if (!material) return;
+
+    try {
+      let htmlContent = '';
+      
+      if (material.type === 'slides') {
+        htmlContent = generateSlidesHTML(material);
+      } else {
+        const renderedContent = templateService.renderTemplate(getTemplateId(material.type), material.content);
+        htmlContent = createStyledHTML(renderedContent, material);
+      }
+
+      // Criar iframe para capturar o conteúdo
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.top = '-10000px';
+      iframe.style.left = '-10000px';
+      iframe.style.width = '210mm';
+      iframe.style.height = '297mm';
+      iframe.style.border = 'none';
+      iframe.style.background = 'white';
+      document.body.appendChild(iframe);
+
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (iframeDoc) {
+        iframeDoc.open();
+        iframeDoc.write(htmlContent);
+        iframeDoc.close();
+
+        // Aguardar o carregamento completo
+        setTimeout(async () => {
+          try {
+            const canvas = await html2canvas(iframeDoc.body, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              backgroundColor: '#ffffff',
+              width: 794, // A4 width at 96 DPI
+              height: 1123 // A4 height at 96 DPI
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            
+            const imgWidth = 210;
+            const pageHeight = 297;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+              position = heightLeft - imgHeight;
+              pdf.addPage();
+              pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+              heightLeft -= pageHeight;
+            }
+
+            const fileName = `${material.title.replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'material'}.pdf`;
+            pdf.save(fileName);
+            
+            toast.success('Material exportado para PDF com sucesso!');
+          } catch (error) {
+            console.error('Erro ao gerar PDF:', error);
+            toast.error('Erro ao gerar PDF');
+          } finally {
+            document.body.removeChild(iframe);
+          }
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Erro na exportação PDF:', error);
+      toast.error('Erro ao exportar material');
+    }
+  };
+
+  const handleExportWord = async () => {
+    if (!material) return;
+
+    try {
+      const renderedContent = templateService.renderTemplate(getTemplateId(material.type), material.content);
+      
+      // Parse HTML content to extract text
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = renderedContent;
+      
+      const children: any[] = [];
+
+      // Adicionar cabeçalho
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'AulagIA - Sua aula com toque mágico',
+              bold: true,
+              size: 24,
+              color: '0ea5e9'
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        })
+      );
+
+      // Título principal
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: material.title || 'Material Educacional',
+              bold: true,
+              size: 32,
+              color: '4F46E5'
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        })
+      );
+
+      // Informações do material
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `${getTypeLabel(material.type)} • ${material.subject || 'Disciplina'} • ${material.grade || 'Série'}`,
+              size: 20,
+              color: '6B7280'
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 600 }
+        })
+      );
+
+      // Processar questões se for atividade ou avaliação
+      const questions = tempDiv.querySelectorAll('.questao-container, .question');
+      questions.forEach((question, index) => {
+        const questionNumber = question.querySelector('.questao-numero, .question-header')?.textContent || `${index + 1}`;
+        const questionText = question.querySelector('.questao-enunciado, .question-text')?.textContent || '';
+        const options = question.querySelectorAll('.opcao, .option');
+        
+        // Número e texto da questão
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Questão ${questionNumber}`,
+                bold: true,
+                size: 24,
+                color: '4338ca'
+              })
+            ],
+            spacing: { before: 300, after: 150 }
+          })
+        );
+        
+        children.push(
+          new Paragraph({
+            children: [new TextRun(questionText)],
+            spacing: { after: 200 }
+          })
+        );
+        
+        // Opções
+        options.forEach((option, optIndex) => {
+          const optionLetter = String.fromCharCode(65 + optIndex);
+          const optionText = option.textContent?.replace(/^[A-Z]\)\s*/, '') || '';
+          
+          children.push(
+            new Paragraph({
+              children: [new TextRun(`${optionLetter}) ${optionText}`)],
+              spacing: { after: 100 }
+            })
+          );
+        });
+        
+        children.push(
+          new Paragraph({
+            children: [new TextRun('')],
+            spacing: { after: 300 }
+          })
+        );
+      });
+
+      // Se não há questões, processar texto geral
+      if (questions.length === 0) {
+        const textContent = tempDiv.textContent || '';
+        const paragraphs = textContent.split('\n').filter(p => p.trim());
+        
+        paragraphs.forEach(paragraph => {
+          if (paragraph.trim()) {
+            children.push(
+              new Paragraph({
+                children: [new TextRun(paragraph.trim())],
+                spacing: { after: 200 }
+              })
+            );
+          }
+        });
+      }
+
+      // Criar documento
+      const doc = new Document({
+        sections: [
+          {
+            properties: {
+              page: {
+                margin: {
+                  top: 1134,
+                  right: 850,
+                  bottom: 1134,
+                  left: 850,
+                }
+              }
+            },
+            children: children
+          }
+        ]
+      });
+
+      // Gerar e baixar arquivo
+      const blob = await Packer.toBlob(doc);
+      const fileName = `${material.title.replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'material'}.docx`;
+      saveAs(blob, fileName);
+
+      toast.success('Material exportado para Word com sucesso!');
+    } catch (error) {
+      console.error('Erro na exportação Word:', error);
+      toast.error('Erro ao exportar material');
+    }
+  };
+
+  const handleExport = async (format: 'pdf' | 'word' | 'ppt') => {
+    if (!material) return;
+
+    try {
+      switch (format) {
+        case 'pdf':
+          await handleExportPDF();
+          break;
+        case 'word':
+          await handleExportWord();
+          break;
+        case 'ppt':
+          if (material.type === 'slides') {
+            await handleExportPDF(); // Para PPT, usar PDF por enquanto
+          } else {
+            await handleExportPDF();
+          }
+          toast.success('Material exportado para PowerPoint com sucesso!');
+          break;
+      }
+    } catch (error) {
+      toast.error('Erro ao exportar material');
+      console.error('Export error:', error);
+    }
   };
 
   const canGenerateAnswerKey = material && (material.type === 'atividade' || material.type === 'avaliacao');
