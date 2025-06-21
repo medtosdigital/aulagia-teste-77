@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, PageBreak, Table, TableRow, TableCell, WidthType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, AlignmentType, PageBreak } from 'docx';
 import { saveAs } from 'file-saver';
 import { GeneratedMaterial, LessonPlan, Activity, Slide, Assessment } from './materialService';
 import { templateService } from './templateService';
@@ -31,9 +31,9 @@ class ExportService {
           </div>
         </div>
 
-        <!-- Rodapé - Atualizado -->
+        <!-- Rodapé - Visível em todas as páginas -->
         <div class="footer">
-          ${material.type === 'atividade' ? 'Atividade' : material.type === 'avaliacao' ? 'Avaliação' : material.type === 'plano-de-aula' ? 'Plano de Aula' : 'Material'} gerada pela AulagIA em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br
+          ${material.type === 'atividade' ? 'Atividade' : 'Avaliação'} gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br
         </div>
 
         <div class="${contentClass}">
@@ -462,8 +462,6 @@ class ExportService {
         return;
       }
 
-      console.log('Iniciando exportação PDF para:', material.type);
-      
       const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
       const pages = this.splitContentIntoPages(renderedHtml, material);
       
@@ -474,47 +472,29 @@ class ExportService {
       
       const styledHtml = this.enhanceHtmlWithNewTemplate(finalHtml, material);
       
-      // Usar html2canvas e jsPDF para gerar PDF automaticamente
-      const { default: html2canvas } = await import('html2canvas');
+      // Criar um iframe oculto para renderizar o HTML
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.top = '-9999px';
+      iframe.style.left = '-9999px';
+      iframe.style.width = '210mm';
+      iframe.style.height = '297mm';
+      document.body.appendChild(iframe);
       
-      // Criar container temporário
-      const container = document.createElement('div');
-      container.innerHTML = styledHtml;
-      container.style.position = 'absolute';
-      container.style.top = '-9999px';
-      container.style.left = '-9999px';
-      container.style.width = '210mm';
-      document.body.appendChild(container);
+      iframe.contentDocument?.open();
+      iframe.contentDocument?.write(styledHtml);
+      iframe.contentDocument?.close();
       
-      try {
-        // Aguardar renderização
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Capturar páginas
-        const pageElements = container.querySelectorAll('.page');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        
-        for (let i = 0; i < pageElements.length; i++) {
-          if (i > 0) pdf.addPage();
-          
-          const canvas = await html2canvas(pageElements[i] as HTMLElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff'
-          });
-          
-          const imgData = canvas.toDataURL('image/png');
-          pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+      // Aguardar o carregamento e depois imprimir
+      setTimeout(() => {
+        if (iframe.contentWindow) {
+          iframe.contentWindow.print();
         }
-        
-        // Download automático
-        const fileName = `${material.title.replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'material'}.pdf`;
-        pdf.save(fileName);
-        
-      } finally {
-        document.body.removeChild(container);
-      }
+        // Remover o iframe após um tempo
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 1000);
 
     } catch (error) {
       console.error('Erro na exportação PDF:', error);
@@ -569,37 +549,16 @@ class ExportService {
 
   async exportToWord(material: GeneratedMaterial): Promise<void> {
     try {
-      console.log('Iniciando nova exportação para Word:', material.type);
+      console.log('Iniciando exportação para Word:', material.type);
       
       const children: any[] = [];
 
-      // Cabeçalho AulagIA
+      // Título principal
       children.push(
         new Paragraph({
           children: [
             new TextRun({
-              text: 'AulagIA',
-              bold: true,
-              size: 28,
-              color: '0EA5E9'
-            }),
-            new TextRun({
-              text: ' - Sua aula com toque mágico',
-              size: 16,
-              color: '6B7280'
-            })
-          ],
-          alignment: AlignmentType.LEFT,
-          spacing: { after: 400 }
-        })
-      );
-
-      // Título do material
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: this.getTypeLabel(material.type).toUpperCase(),
+              text: material.title || 'Material Educacional',
               bold: true,
               size: 32,
               color: '4F46E5'
@@ -610,152 +569,38 @@ class ExportService {
         })
       );
 
-      // Tabela de informações
-      const infoTable = new Table({
-        width: {
-          size: 100,
-          type: WidthType.PERCENTAGE,
-        },
-        rows: [
-          new TableRow({
-            children: [
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun({ text: 'Escola:', bold: true })]
-                })],
-                width: { size: 25, type: WidthType.PERCENTAGE }
-              }),
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun('_________________________________')]
-                })],
-                width: { size: 35, type: WidthType.PERCENTAGE }
-              }),
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun({ text: 'Data:', bold: true })]
-                })],
-                width: { size: 15, type: WidthType.PERCENTAGE }
-              }),
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun(new Date().toLocaleDateString('pt-BR'))]
-                })],
-                width: { size: 25, type: WidthType.PERCENTAGE }
-              })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun({ text: 'Disciplina:', bold: true })]
-                })]
-              }),
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun(material.subject || '[DISCIPLINA]')]
-                })]
-              }),
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun({ text: 'Série/Ano:', bold: true })]
-                })]
-              }),
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun(material.grade || '[SERIE_ANO]')]
-                })]
-              })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun({ text: 'Aluno(a):', bold: true })]
-                })]
-              }),
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun('____________________________________________')]
-                })]
-              }),
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun({ 
-                    text: material.type === 'avaliacao' ? 'NOTA:' : 'BNCC:', 
-                    bold: true 
-                  })]
-                })]
-              }),
-              new TableCell({
-                children: [new Paragraph({
-                  children: [new TextRun(material.type === 'avaliacao' ? '' : '{{Código da BNCC}}')] 
-                })]
-              })
-            ]
-          })
-        ]
-      });
-
-      children.push(infoTable);
-
-      // Espaçamento
-      children.push(
-        new Paragraph({
-          children: [new TextRun('')],
-          spacing: { after: 400 }
-        })
-      );
-
-      // Título do material
-      if (material.title) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: material.title,
-                bold: true,
-                size: 24,
-                color: '4F46E5'
-              })
-            ],
-            spacing: { after: 300 }
-          })
-        );
-      }
-
-      // Processar conteúdo baseado no tipo
-      if (material.type === 'plano-de-aula') {
-        children.push(...this.createLessonPlanContentForWord(material.content as LessonPlan));
-      } else if (material.type === 'atividade') {
-        children.push(...this.createActivityContentForWord(material.content as Activity));
-      } else if (material.type === 'avaliacao') {
-        children.push(...this.createAssessmentContentForWord(material.content as Assessment));
-      }
-
-      // Rodapé
-      children.push(
-        new Paragraph({
-          children: [new TextRun('')],
-          spacing: { before: 800 }
-        })
-      );
-
+      // Informações do material
       children.push(
         new Paragraph({
           children: [
             new TextRun({
-              text: `${this.getTypeLabel(material.type)} gerada pela AulagIA em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br`,
-              size: 16,
+              text: `${this.getTypeLabel(material.type)} • ${material.subject || 'Disciplina'} • ${material.grade || 'Série'}`,
+              size: 24,
               color: '6B7280'
             })
           ],
           alignment: AlignmentType.CENTER,
-          spacing: { before: 400 }
+          spacing: { after: 800 }
         })
       );
+
+      // Renderizar conteúdo e dividir em páginas usando o novo sistema
+      const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
+      const pages = this.splitContentIntoPages(renderedHtml, material);
+      
+      // Processar cada página
+      pages.forEach((pageContent, pageIndex) => {
+        if (pageIndex > 0) {
+          children.push(
+            new Paragraph({
+              children: [new PageBreak()],
+            })
+          );
+        }
+        
+        const pageContentParagraphs = this.processPageContentForWord(pageContent, material);
+        children.push(...pageContentParagraphs);
+      });
 
       // Criar documento
       const doc = new Document({
@@ -776,27 +621,161 @@ class ExportService {
         ]
       });
 
-      // Gerar e baixar arquivo
+      // Gerar arquivo
       const blob = await Packer.toBlob(doc);
       const fileName = `${material.title.replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'material'}.docx`;
       saveAs(blob, fileName);
 
-      console.log('Exportação Word concluída com sucesso');
+      console.log('Exportação para Word concluída com sucesso');
 
     } catch (error) {
-      console.error('Erro na exportação Word:', error);
-      throw new Error(`Falha na exportação Word: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      console.error('Erro detalhado na exportação Word:', error);
+      throw new Error(`Falha na exportação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 
-  private createLessonPlanContentForWord(content: LessonPlan): any[] {
+  private processPageContentForWord(pageContent: string, material: GeneratedMaterial): any[] {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = pageContent;
+    
     const paragraphs: any[] = [];
+    
+    // Process questions if present
+    const questions = tempDiv.querySelectorAll('.questao-container');
+    questions.forEach((question, index) => {
+      const questionNumber = question.querySelector('.questao-numero')?.textContent || `${index + 1}`;
+      const questionText = question.querySelector('.questao-enunciado')?.textContent || '';
+      const options = question.querySelectorAll('.opcao');
+      
+      // Question number and text
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Questão ${questionNumber}`,
+              bold: true,
+              size: 28,
+              color: '3B82F6'
+            })
+          ],
+          spacing: { before: 300, after: 150 }
+        })
+      );
+      
+      paragraphs.push(
+        new Paragraph({
+          children: [new TextRun(questionText)],
+          spacing: { after: 200 }
+        })
+      );
+      
+      // Options
+      options.forEach((option, optIndex) => {
+        const optionLetter = String.fromCharCode(65 + optIndex);
+        const optionText = option.textContent?.replace(/^[A-Z]\)\s*/, '') || '';
+        
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun(`${optionLetter}) ${optionText}`)],
+            spacing: { after: 100 }
+          })
+        );
+      });
+      
+      paragraphs.push(
+        new Paragraph({
+          children: [new TextRun('')],
+          spacing: { after: 200 }
+        })
+      );
+    });
+    
+    // Process sections for lesson plans
+    const sections = tempDiv.querySelectorAll('.section');
+    sections.forEach(section => {
+      const title = section.querySelector('.section-title')?.textContent || '';
+      const content = section.textContent?.replace(title, '').trim() || '';
+      
+      if (title) {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: title,
+                bold: true,
+                size: 28,
+                color: '2563EB'
+              })
+            ],
+            spacing: { before: 400, after: 200 }
+          })
+        );
+      }
+      
+      if (content) {
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun(content)],
+            spacing: { after: 300 }
+          })
+        );
+      }
+    });
+    
+    return paragraphs;
+  }
+
+  private createLessonPlanContent(content: LessonPlan): any[] {
+    const paragraphs: any[] = [];
+
+    // Informações básicas
+    paragraphs.push(
+      new Paragraph({
+        children: [new TextRun({ text: 'INFORMAÇÕES BÁSICAS', bold: true, size: 28, color: '4F46E5' })],
+        spacing: { before: 400, after: 300 }
+      })
+    );
+
+    if (content.professor) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun(`Professor(a): ${content.professor}`)],
+        spacing: { after: 150 }
+      }));
+    }
+
+    if (content.disciplina) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun(`Disciplina: ${content.disciplina}`)],
+        spacing: { after: 150 }
+      }));
+    }
+
+    if (content.tema) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun(`Tema: ${content.tema}`)],
+        spacing: { after: 150 }
+      }));
+    }
+
+    if (content.duracao) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun(`Duração: ${content.duracao}`)],
+        spacing: { after: 150 }
+      }));
+    }
+
+    if (content.serie) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun(`Série: ${content.serie}`)],
+        spacing: { after: 300 }
+      }));
+    }
 
     // Objetivos
     if (content.objetivos && Array.isArray(content.objetivos) && content.objetivos.length > 0) {
       paragraphs.push(
         new Paragraph({
-          children: [new TextRun({ text: 'OBJETIVOS DE APRENDIZAGEM', bold: true, size: 24, color: '4F46E5' })],
+          children: [new TextRun({ text: 'OBJETIVOS DE APRENDIZAGEM', bold: true, size: 28, color: '4F46E5' })],
           spacing: { before: 400, after: 300 }
         })
       );
@@ -813,7 +792,7 @@ class ExportService {
     if (content.desenvolvimento && Array.isArray(content.desenvolvimento) && content.desenvolvimento.length > 0) {
       paragraphs.push(
         new Paragraph({
-          children: [new TextRun({ text: 'DESENVOLVIMENTO DA AULA', bold: true, size: 24, color: '4F46E5' })],
+          children: [new TextRun({ text: 'DESENVOLVIMENTO DA AULA', bold: true, size: 28, color: '4F46E5' })],
           spacing: { before: 400, after: 300 }
         })
       );
@@ -821,21 +800,21 @@ class ExportService {
       content.desenvolvimento.forEach((etapa, index) => {
         if (etapa && typeof etapa === 'object') {
           paragraphs.push(new Paragraph({
-            children: [new TextRun({ text: `${index + 1}. ${etapa.etapa || 'Etapa'}`, bold: true, size: 20 })],
+            children: [new TextRun({ text: `${index + 1}. ${etapa.etapa || 'Etapa'}`, bold: true })],
             spacing: { before: 200, after: 100 }
           }));
           
           if (etapa.atividade) {
             paragraphs.push(new Paragraph({
-              children: [new TextRun(`${etapa.atividade}`)],
+              children: [new TextRun(`Atividade: ${etapa.atividade}`)],
               spacing: { after: 100 }
             }));
           }
           
           if (etapa.tempo) {
             paragraphs.push(new Paragraph({
-              children: [new TextRun({ text: `Tempo: ${etapa.tempo}`, italics: true })],
-              spacing: { after: 150 }
+              children: [new TextRun(`Tempo: ${etapa.tempo}`)],
+              spacing: { after: 100 }
             }));
           }
         }
@@ -846,7 +825,7 @@ class ExportService {
     if (content.recursos && Array.isArray(content.recursos) && content.recursos.length > 0) {
       paragraphs.push(
         new Paragraph({
-          children: [new TextRun({ text: 'RECURSOS NECESSÁRIOS', bold: true, size: 24, color: '4F46E5' })],
+          children: [new TextRun({ text: 'RECURSOS NECESSÁRIOS', bold: true, size: 28, color: '4F46E5' })],
           spacing: { before: 400, after: 300 }
         })
       );
@@ -863,7 +842,7 @@ class ExportService {
     if (content.avaliacao) {
       paragraphs.push(
         new Paragraph({
-          children: [new TextRun({ text: 'AVALIAÇÃO', bold: true, size: 24, color: '4F46E5' })],
+          children: [new TextRun({ text: 'AVALIAÇÃO', bold: true, size: 28, color: '4F46E5' })],
           spacing: { before: 400, after: 300 }
         })
       );
@@ -877,14 +856,65 @@ class ExportService {
     return paragraphs;
   }
 
-  private createActivityContentForWord(activity: Activity): any[] {
+  private createSlidesContent(slidesContent: any): any[] {
+    const paragraphs: any[] = [];
+    
+    try {
+      const slides = slidesContent.slides || [];
+      
+      if (!Array.isArray(slides)) {
+        return [new Paragraph({
+          children: [new TextRun('Conteúdo de slides inválido')],
+          spacing: { after: 200 }
+        })];
+      }
+
+      slides.forEach((slide, index) => {
+        if (index > 0) {
+          paragraphs.push(new Paragraph({
+            children: [new TextRun('')],
+            pageBreakBefore: true
+          }));
+        }
+
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ 
+            text: `Slide ${slide.numero || index + 1}: ${slide.titulo || 'Sem título'}`, 
+            bold: true, 
+            size: 32,
+            color: '4F46E5'
+          })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        }));
+
+        if (slide.conteudo && Array.isArray(slide.conteudo)) {
+          slide.conteudo.forEach((item: string) => {
+            paragraphs.push(new Paragraph({
+              children: [new TextRun(`• ${item}`)],
+              spacing: { after: 200 }
+            }));
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao processar slides:', error);
+      paragraphs.push(new Paragraph({
+        children: [new TextRun('Erro ao processar slides')],
+        spacing: { after: 200 }
+      }));
+    }
+
+    return paragraphs;
+  }
+
+  private createActivityContent(activity: Activity): any[] {
     const paragraphs: any[] = [];
 
-    // Instruções
     if (activity.instrucoes) {
       paragraphs.push(
         new Paragraph({
-          children: [new TextRun({ text: 'INSTRUÇÕES', bold: true, size: 24, color: '4F46E5' })],
+          children: [new TextRun({ text: 'INSTRUÇÕES', bold: true, size: 28, color: '4F46E5' })],
           spacing: { before: 400, after: 300 }
         })
       );
@@ -895,11 +925,17 @@ class ExportService {
       }));
     }
 
-    // Questões
     if (activity.questoes && Array.isArray(activity.questoes)) {
+      paragraphs.push(
+        new Paragraph({
+          children: [new TextRun({ text: 'QUESTÕES', bold: true, size: 28, color: '4F46E5' })],
+          spacing: { before: 400, after: 300 }
+        })
+      );
+
       activity.questoes.forEach(questao => {
         paragraphs.push(new Paragraph({
-          children: [new TextRun({ text: `Questão ${questao.numero}`, bold: true, size: 20, color: '4338CA' })],
+          children: [new TextRun({ text: `Questão ${questao.numero}`, bold: true })],
           spacing: { before: 300, after: 150 }
         }));
 
@@ -917,25 +953,19 @@ class ExportService {
             }));
           });
         }
-
-        paragraphs.push(new Paragraph({
-          children: [new TextRun('')],
-          spacing: { after: 200 }
-        }));
       });
     }
 
     return paragraphs;
   }
 
-  private createAssessmentContentForWord(assessment: Assessment): any[] {
+  private createAssessmentContent(assessment: Assessment): any[] {
     const paragraphs: any[] = [];
 
-    // Instruções
     if (assessment.instrucoes) {
       paragraphs.push(
         new Paragraph({
-          children: [new TextRun({ text: 'INSTRUÇÕES DA AVALIAÇÃO', bold: true, size: 24, color: '4F46E5' })],
+          children: [new TextRun({ text: 'INSTRUÇÕES DA AVALIAÇÃO', bold: true, size: 28, color: '4F46E5' })],
           spacing: { before: 400, after: 300 }
         })
       );
@@ -948,25 +978,24 @@ class ExportService {
 
     if (assessment.tempoLimite) {
       paragraphs.push(new Paragraph({
-        children: [new TextRun({ text: `Tempo limite: ${assessment.tempoLimite}`, bold: true })],
+        children: [new TextRun(`Tempo limite: ${assessment.tempoLimite}`)],
         spacing: { after: 400 }
       }));
     }
 
-    // Questões
     if (assessment.questoes && Array.isArray(assessment.questoes)) {
+      paragraphs.push(
+        new Paragraph({
+          children: [new TextRun({ text: 'QUESTÕES', bold: true, size: 28, color: '4F46E5' })],
+          spacing: { before: 400, after: 300 }
+        })
+      );
+
       assessment.questoes.forEach(questao => {
         paragraphs.push(new Paragraph({
-          children: [new TextRun({ text: `Questão ${questao.numero}`, bold: true, size: 20, color: '4338CA' })],
+          children: [new TextRun({ text: `Questão ${questao.numero} (${questao.pontuacao} pontos)`, bold: true })],
           spacing: { before: 300, after: 150 }
         }));
-
-        if (questao.pontuacao) {
-          paragraphs.push(new Paragraph({
-            children: [new TextRun({ text: `(${questao.pontuacao} pontos)`, italics: true, size: 18 })],
-            spacing: { after: 100 }
-          }));
-        }
 
         paragraphs.push(new Paragraph({
           children: [new TextRun(questao.pergunta)],
@@ -982,11 +1011,6 @@ class ExportService {
             }));
           });
         }
-
-        paragraphs.push(new Paragraph({
-          children: [new TextRun('')],
-          spacing: { after: 200 }
-        }));
       });
     }
 
@@ -1004,7 +1028,7 @@ class ExportService {
   private getTemplateId(type: string): string {
     const typeMap = {
       'plano-de-aula': '1',
-      'slides': '2', 
+      'slides': '2',
       'atividade': '3',
       'avaliacao': '4'
     };
@@ -1014,7 +1038,7 @@ class ExportService {
   private getTypeLabel(type: string): string {
     const labels = {
       'plano-de-aula': 'Plano de Aula',
-      'slides': 'Slides', 
+      'slides': 'Slides',
       'atividade': 'Atividade',
       'avaliacao': 'Avaliação'
     };
