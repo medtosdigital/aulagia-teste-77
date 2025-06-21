@@ -4,7 +4,7 @@ import { Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { templateService, type Template } from '@/services/templateService';
+import { templateService, Template } from '@/services/templateService';
 import { toast } from 'sonner';
 
 const TemplateAdmin: React.FC = () => {
