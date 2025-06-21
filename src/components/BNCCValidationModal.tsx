@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, CheckCircle, BookOpen, Target, Lightbulb } from 'lucide-react';
+import { AlertTriangle, BookOpen, Lightbulb } from 'lucide-react';
 import { BNCCValidationService } from '@/services/bnccValidationService';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BNCCValidationModalProps {
   open: boolean;
@@ -32,6 +33,8 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
 }) => {
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [shouldShow, setShouldShow] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (open && tema && disciplina && serie) {
@@ -44,8 +47,20 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
     try {
       const result = await BNCCValidationService.validateTopic(tema, disciplina, serie);
       setValidation(result);
+      
+      // Só mostra o modal se o tema NÃO estiver alinhado com a BNCC
+      if (!result.isValid) {
+        setShouldShow(true);
+      } else {
+        // Se está alinhado, continua direto sem mostrar o modal
+        onAccept();
+        onClose();
+      }
     } catch (error) {
       console.error('Erro na validação BNCC:', error);
+      // Em caso de erro, permite continuar
+      onAccept();
+      onClose();
     } finally {
       setIsLoading(false);
     }
@@ -56,109 +71,98 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
     return parts.length > 1 ? `${parts[1]} (${parts[0]})` : serie;
   };
 
+  // Se está carregando ou não deve mostrar, não renderiza o modal
+  if (isLoading || !shouldShow || !validation || validation.isValid) {
+    return null;
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-white" />
-            </div>
-            <span>Validação BNCC</span>
-          </DialogTitle>
-        </DialogHeader>
+    <Dialog open={open && shouldShow} onOpenChange={onClose}>
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[90vh] mx-2' : 'max-w-2xl'} p-0 overflow-hidden`}>
+        <div className={`${isMobile ? 'p-4' : 'p-6'}`}>
+          <DialogHeader className="mb-6">
+            <DialogTitle className="flex items-center space-x-3 text-orange-600">
+              <AlertTriangle className="w-6 h-6" />
+              <span className={`${isMobile ? 'text-lg' : 'text-xl'}`}>Validação do Tema</span>
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Informações do tema */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Tema</label>
-                <p className="font-semibold text-gray-900">{tema}</p>
+          <div className="space-y-6">
+            {/* Informações Atuais */}
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <BookOpen className="w-5 h-5 text-gray-600" />
+                <h3 className="font-semibold text-gray-800">Informações Atuais</h3>
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Disciplina</label>
-                <p className="font-semibold text-gray-900">{disciplina}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Série/Ano</label>
-                <p className="font-semibold text-gray-900">{getGradeDisplayName(serie)}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Loading */}
-          {isLoading && (
-            <div className="text-center py-8">
-              <div className="inline-flex items-center space-x-3">
-                <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-                <span className="text-gray-600">Validando com a BNCC...</span>
+              
+              <div className={`space-y-3 ${isMobile ? 'text-sm' : ''}`}>
+                <div>
+                  <span className="font-medium text-gray-600">Tema:</span>
+                  <span className="ml-2 font-semibold text-gray-900">{tema}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">Disciplina:</span>
+                  <span className="ml-2 font-semibold text-gray-900">{disciplina}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">Turma:</span>
+                  <span className="ml-2 font-semibold text-gray-900">{getGradeDisplayName(serie)}</span>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* Resultado da validação */}
-          {validation && !isLoading && (
-            <div className="space-y-4">
-              {/* Status */}
-              <div className={`flex items-center space-x-3 p-4 rounded-lg ${
-                validation.isValid ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'
-              }`}>
-                {validation.isValid ? (
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                ) : (
-                  <AlertTriangle className="w-6 h-6 text-yellow-600" />
-                )}
+            {/* Aviso - Tema Não Recomendado */}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className={`font-medium ${validation.isValid ? 'text-green-800' : 'text-yellow-800'}`}>
+                  <h4 className="font-semibold text-red-800 mb-2">Tema Não Recomendado</h4>
+                  <p className={`text-red-700 ${isMobile ? 'text-sm' : ''} leading-relaxed`}>
                     {validation.feedback}
                   </p>
-                  <div className="flex items-center space-x-2 mt-2">
-                    <span className="text-sm text-gray-600">Confiança:</span>
-                    <Badge variant={validation.confidence >= 0.7 ? 'default' : validation.confidence >= 0.5 ? 'secondary' : 'destructive'}>
-                      {Math.round(validation.confidence * 100)}%
-                    </Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Sugestões */}
+            {validation.suggestions.length > 0 && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <Lightbulb className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-orange-800 mb-3">Sugestões de Temas Alternativos:</h4>
+                    <ul className={`space-y-2 ${isMobile ? 'text-sm' : ''}`}>
+                      {validation.suggestions.map((suggestion, index) => (
+                        <li key={index} className="flex items-start text-orange-700">
+                          <span className="w-2 h-2 bg-orange-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                          {suggestion}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* Sugestões */}
-              {validation.suggestions.length > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <Lightbulb className="w-5 h-5 text-blue-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-blue-800 mb-2">Sugestões de Melhoria</h4>
-                      <ul className="space-y-1 text-sm text-blue-700">
-                        {validation.suggestions.map((suggestion, index) => (
-                          <li key={index} className="flex items-start">
-                            <Target className="w-3 h-3 mt-1 mr-2 flex-shrink-0" />
-                            {suggestion}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
+            {/* Botões */}
+            <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'justify-end space-x-3'} pt-4 border-t`}>
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className={`${isMobile ? 'w-full' : ''} border-gray-300`}
+              >
+                Corrigir Tema
+              </Button>
+              <Button 
+                onClick={() => {
+                  onAccept();
+                  onClose();
+                }}
+                className={`${isMobile ? 'w-full' : ''} bg-orange-500 hover:bg-orange-600 text-white`}
+              >
+                Gerar Mesmo Assim
+              </Button>
             </div>
-          )}
-
-          {/* Botões */}
-          <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
-              Revisar Tema
-            </Button>
-            <Button 
-              onClick={() => {
-                onAccept();
-                onClose();
-              }}
-              disabled={validation && !validation.isValid}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-            >
-              Continuar
-            </Button>
           </div>
         </div>
       </DialogContent>
