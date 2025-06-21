@@ -80,45 +80,51 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
     <Dialog open={open && shouldShow} onOpenChange={onClose}>
       <DialogContent className={`${
         isMobile 
-          ? 'max-w-[95vw] max-h-[85vh] mx-2 rounded-2xl' 
+          ? 'w-[95vw] h-[90vh] max-w-none max-h-none m-2 rounded-2xl' 
           : 'max-w-2xl rounded-xl'
-      } p-0 overflow-hidden`}>
-        <div className={`${isMobile ? 'p-4' : 'p-6'} h-full overflow-y-auto`}>
-          <DialogHeader className={`mb-4 ${isMobile ? 'mb-3' : 'mb-6'}`}>
-            <DialogTitle className={`flex items-center space-x-3 text-orange-600 ${
-              isMobile ? 'text-lg' : 'text-xl'
-            }`}>
-              <AlertTriangle className={`w-6 h-6 ${isMobile ? 'w-5 h-5' : ''}`} />
-              <span>Validação do Tema</span>
-            </DialogTitle>
-          </DialogHeader>
+      } p-0 overflow-hidden flex flex-col`}>
+        
+        {/* Header fixo */}
+        <DialogHeader className={`flex-shrink-0 p-4 pb-3 border-b bg-white ${
+          isMobile ? 'rounded-t-2xl' : 'rounded-t-xl'
+        }`}>
+          <DialogTitle className={`flex items-center space-x-2 text-orange-600 ${
+            isMobile ? 'text-base' : 'text-xl'
+          }`}>
+            <AlertTriangle className={`w-5 h-5 ${isMobile ? 'w-4 h-4' : 'w-6 h-6'}`} />
+            <span>Validação do Tema</span>
+          </DialogTitle>
+        </DialogHeader>
 
+        {/* Conteúdo scrollável */}
+        <div className={`flex-1 overflow-y-auto p-4 ${isMobile ? 'pb-2' : 'p-6'}`}>
           <div className={`space-y-4 ${isMobile ? 'space-y-3' : 'space-y-6'}`}>
+            
             {/* Informações Atuais */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <div className="flex items-center space-x-2 mb-3">
-                <BookOpen className={`w-5 h-5 text-gray-600 ${isMobile ? 'w-4 h-4' : ''}`} />
-                <h3 className={`font-semibold text-gray-800 ${isMobile ? 'text-sm' : ''}`}>
+            <div className="bg-gray-50 rounded-xl p-3">
+              <div className="flex items-center space-x-2 mb-2">
+                <BookOpen className={`w-4 h-4 text-gray-600`} />
+                <h3 className={`font-semibold text-gray-800 ${isMobile ? 'text-sm' : 'text-base'}`}>
                   Informações Atuais
                 </h3>
               </div>
               
-              <div className={`space-y-2 ${isMobile ? 'text-sm' : ''}`}>
-                <div className="flex flex-col sm:flex-row sm:items-center">
-                  <span className="font-medium text-gray-600 min-w-fit">Tema:</span>
-                  <span className={`font-semibold text-gray-900 ${isMobile ? 'mt-1' : 'ml-2'}`}>
+              <div className={`space-y-1.5 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-600">Tema:</span>
+                  <span className="font-semibold text-gray-900 break-words">
                     {tema}
                   </span>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:items-center">
-                  <span className="font-medium text-gray-600 min-w-fit">Disciplina:</span>
-                  <span className={`font-semibold text-gray-900 ${isMobile ? 'mt-1' : 'ml-2'}`}>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-600">Disciplina:</span>
+                  <span className="font-semibold text-gray-900">
                     {disciplina}
                   </span>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:items-center">
-                  <span className="font-medium text-gray-600 min-w-fit">Turma:</span>
-                  <span className={`font-semibold text-gray-900 ${isMobile ? 'mt-1' : 'ml-2'}`}>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-600">Turma:</span>
+                  <span className="font-semibold text-gray-900">
                     {getGradeDisplayName(serie)}
                   </span>
                 </div>
@@ -126,19 +132,17 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
             </div>
 
             {/* Aviso - Tema Não Recomendado */}
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <div className="flex items-start space-x-3">
-                <AlertTriangle className={`w-5 h-5 text-red-600 mt-0.5 flex-shrink-0 ${
-                  isMobile ? 'w-4 h-4' : ''
-                }`} />
-                <div className="flex-1">
-                  <h4 className={`font-semibold text-red-800 mb-2 ${
-                    isMobile ? 'text-sm' : ''
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+              <div className="flex items-start space-x-2">
+                <AlertTriangle className={`w-4 h-4 text-red-600 mt-0.5 flex-shrink-0`} />
+                <div className="flex-1 min-w-0">
+                  <h4 className={`font-semibold text-red-800 mb-1.5 ${
+                    isMobile ? 'text-sm' : 'text-base'
                   }`}>
                     Tema Não Recomendado
                   </h4>
-                  <p className={`text-red-700 leading-relaxed ${
-                    isMobile ? 'text-sm' : ''
+                  <p className={`text-red-700 leading-relaxed break-words ${
+                    isMobile ? 'text-xs' : 'text-sm'
                   }`}>
                     {validation.feedback}
                   </p>
@@ -148,22 +152,20 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
 
             {/* Sugestões */}
             {validation.suggestions.length > 0 && (
-              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-                <div className="flex items-start space-x-3">
-                  <Lightbulb className={`w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0 ${
-                    isMobile ? 'w-4 h-4' : ''
-                  }`} />
-                  <div className="flex-1">
-                    <h4 className={`font-semibold text-orange-800 mb-3 ${
-                      isMobile ? 'text-sm mb-2' : ''
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
+                <div className="flex items-start space-x-2">
+                  <Lightbulb className={`w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0`} />
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`font-semibold text-orange-800 mb-2 ${
+                      isMobile ? 'text-sm' : 'text-base'
                     }`}>
                       Sugestões de Temas Alternativos:
                     </h4>
-                    <ul className={`space-y-2 ${isMobile ? 'text-sm space-y-1' : ''}`}>
+                    <ul className={`space-y-1.5 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       {validation.suggestions.map((suggestion, index) => (
                         <li key={index} className="flex items-start text-orange-700">
-                          <span className="w-2 h-2 bg-orange-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                          {suggestion}
+                          <span className="w-1.5 h-1.5 bg-orange-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                          <span className="break-words">{suggestion}</span>
                         </li>
                       ))}
                     </ul>
@@ -171,30 +173,34 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        </div>
 
-            {/* Botões */}
-            <div className={`flex gap-3 pt-4 border-t ${
-              isMobile ? 'flex-col pt-3' : 'justify-end'
-            }`}>
-              <Button 
-                variant="outline" 
-                onClick={onClose}
-                className={`border-gray-300 rounded-lg ${isMobile ? 'w-full order-2' : ''}`}
-              >
-                Corrigir Tema
-              </Button>
-              <Button 
-                onClick={() => {
-                  onAccept();
-                  onClose();
-                }}
-                className={`bg-orange-500 hover:bg-orange-600 text-white rounded-lg ${
-                  isMobile ? 'w-full order-1' : ''
-                }`}
-              >
-                Gerar Mesmo Assim
-              </Button>
-            </div>
+        {/* Botões fixos no rodapé */}
+        <div className={`flex-shrink-0 p-4 pt-2 border-t bg-white ${
+          isMobile ? 'rounded-b-2xl' : 'rounded-b-xl'
+        }`}>
+          <div className={`flex gap-2 ${isMobile ? 'flex-col' : 'justify-end'}`}>
+            <Button 
+              variant="outline" 
+              onClick={onClose}
+              className={`border-gray-300 rounded-lg ${
+                isMobile ? 'w-full h-10 text-sm' : 'px-6'
+              }`}
+            >
+              Corrigir Tema
+            </Button>
+            <Button 
+              onClick={() => {
+                onAccept();
+                onClose();
+              }}
+              className={`bg-orange-500 hover:bg-orange-600 text-white rounded-lg ${
+                isMobile ? 'w-full h-10 text-sm' : 'px-6'
+              }`}
+            >
+              Gerar Mesmo Assim
+            </Button>
           </div>
         </div>
       </DialogContent>
