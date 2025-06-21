@@ -688,7 +688,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             </div>
           )}
 
-          {/* Mobile Floating Navigation Buttons */}
+          {/* Mobile Floating Navigation Buttons - Increased scale */}
           {isMobile && pages.length > 1 && (
             <>
               {/* Previous Button */}
@@ -697,9 +697,9 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
                 size="icon"
                 onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                 disabled={currentPage === 0}
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 z-50 w-12 h-12 rounded-full shadow-lg bg-white/90 backdrop-blur-sm disabled:opacity-30"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 z-50 w-16 h-16 rounded-full shadow-lg bg-white/90 backdrop-blur-sm disabled:opacity-30"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-8 h-8" />
               </Button>
 
               {/* Next Button */}
@@ -708,9 +708,9 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
                 size="icon"
                 onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
                 disabled={currentPage === pages.length - 1}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 z-50 w-12 h-12 rounded-full shadow-lg bg-white/90 backdrop-blur-sm disabled:opacity-30"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 z-50 w-16 h-16 rounded-full shadow-lg bg-white/90 backdrop-blur-sm disabled:opacity-30"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-8 h-8" />
               </Button>
             </>
           )}
