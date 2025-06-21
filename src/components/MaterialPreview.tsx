@@ -4,6 +4,7 @@ import { GeneratedMaterial } from '@/services/materialService';
 import SlideViewer from './SlideViewer';
 import { ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MaterialPreviewProps {
   material: GeneratedMaterial;
@@ -12,6 +13,7 @@ interface MaterialPreviewProps {
 
 const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId }) => {
   const [currentPage, setCurrentPage] = useState(0);
+  const isMobile = useIsMobile();
 
   const getDefaultTemplateId = (type: string): string => {
     const typeMap = {
@@ -637,40 +639,81 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
 
       // Multiple pages - render with navigation
       return (
-        <div className="multi-page-container h-full flex flex-col">
-          {/* Page Navigation */}
-          <div className="flex items-center justify-between p-4 bg-white border-b shadow-sm">
-            <div className="flex items-center space-x-2">
-              <FileText className="w-5 h-5 text-blue-600" />
-              <span className="font-medium text-gray-700">
-                Página {currentPage + 1} de {pages.length}
-              </span>
+        <div className="multi-page-container h-full flex flex-col relative">
+          {/* Desktop Navigation Bar */}
+          {!isMobile && (
+            <div className="flex items-center justify-between p-4 bg-white border-b shadow-sm">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <span className="font-medium text-gray-700">
+                  Página {currentPage + 1} de {pages.length}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                  disabled={currentPage === 0}
+                  className="flex items-center space-x-1"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Anterior</span>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
+                  disabled={currentPage === pages.length - 1}
+                  className="flex items-center space-x-1"
+                >
+                  <span>Próxima</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-            
-            <div className="flex items-center space-x-2">
+          )}
+
+          {/* Mobile Page Counter */}
+          {isMobile && (
+            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-md">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  {currentPage + 1} / {pages.length}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Floating Navigation Buttons */}
+          {isMobile && pages.length > 1 && (
+            <>
+              {/* Previous Button */}
               <Button
                 variant="outline"
-                size="sm"
+                size="icon"
                 onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                 disabled={currentPage === 0}
-                className="flex items-center space-x-1"
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 z-50 w-12 h-12 rounded-full shadow-lg bg-white/90 backdrop-blur-sm disabled:opacity-30"
               >
-                <ChevronLeft className="w-4 h-4" />
-                <span>Anterior</span>
+                <ChevronLeft className="w-6 h-6" />
               </Button>
-              
+
+              {/* Next Button */}
               <Button
                 variant="outline"
-                size="sm"
+                size="icon"
                 onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
                 disabled={currentPage === pages.length - 1}
-                className="flex items-center space-x-1"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 z-50 w-12 h-12 rounded-full shadow-lg bg-white/90 backdrop-blur-sm disabled:opacity-30"
               >
-                <span>Próxima</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-6 h-6" />
               </Button>
-            </div>
-          </div>
+            </>
+          )}
 
           {/* Page Content */}
           <div className="flex-1 overflow-hidden">
