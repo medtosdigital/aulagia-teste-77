@@ -2,6 +2,13 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from './ui/carousel';
 
 interface SlideViewerProps {
   htmlContent: string;
@@ -38,601 +45,150 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent }) => {
     });
   }, [htmlContent]);
 
-  const generateAdvancedSlideHTML = (slidesData: any[]): string => {
+  const renderSlide = (slide: any, index: number) => {
+    const slideNumber = index + 1;
+    const isFirstSlide = index === 0;
+    const isLastSlide = index === slides.length - 1;
     const today = new Date().toLocaleDateString('pt-BR');
     
-    const slidesHTML = slidesData.map((slide, index) => {
-      const slideNumber = index + 1;
-      const isFirstSlide = index === 0;
-      const isLastSlide = index === slidesData.length - 1;
-      
-      // Determine slide type based on content
-      let slideType = 'normal';
-      if (isFirstSlide) slideType = 'title';
-      else if (isLastSlide) slideType = 'conclusion';
-      else if (slide.table) slideType = 'table';
-      else if (slide.imageUrl) slideType = 'image';
-      else if (slide.content && slide.content.includes('processo')) slideType = 'process';
-      else if (slide.content && slide.content.includes('pergunta')) slideType = 'question';
-      
-      return generateSlideContent(slide, slideNumber, slideType, today, slidesData.length);
-    }).join('\n[QUEBRA_DE_PAGINA]\n');
+    // Determine slide type based on content
+    let slideType = 'normal';
+    if (isFirstSlide) slideType = 'title';
+    else if (isLastSlide) slideType = 'conclusion';
+    else if (slide.table) slideType = 'table';
+    else if (slide.imageUrl) slideType = 'image';
+    else if (slide.content && slide.content.includes('processo')) slideType = 'process';
+    else if (slide.content && slide.content.includes('pergunta')) slideType = 'question';
 
-    return getAdvancedSlideTemplate().replace('{{SLIDES_CONTENT}}', slidesHTML);
-  };
-
-  const generateSlideContent = (slide: any, slideNumber: number, slideType: string, date: string, totalSlides: number): string => {
-    const shapes = generateShapes(slideNumber);
-    const header = generateHeader(slideType, slide.title);
-    const footer = generateFooter(date, slideNumber);
-    
-    let content = '';
-    
-    switch (slideType) {
-      case 'title':
-        content = `
-          <div class="slide-content centered-content">
-            <h2>${slide.title}</h2>
-            <h3>Apresentação Educativa</h3>
-            <p style="font-size: 1.3rem; margin-top: 30px;">Apresentado por: <br> <strong>Professor(a)</strong></p>
-            <p style="font-size: 1rem; color: #666;">AulagIA - Material Educativo</p>
-          </div>
-        `;
-        break;
+    return (
+      <div className="relative w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+        {/* Decorative shapes */}
+        <div className="absolute top-0 left-0 w-32 h-32 bg-teal-400 rounded-full opacity-10 -translate-x-16 -translate-y-16 rotate-12"></div>
+        <div className="absolute bottom-0 right-0 w-40 h-40 bg-coral-400 rounded-full opacity-10 translate-x-20 translate-y-20 -rotate-12"></div>
         
-      case 'conclusion':
-        content = `
-          <div class="slide-content centered-content">
-            <h2>OBRIGADO(A)!</h2>
-            <p style="font-size: 1.4rem; margin-top: 25px;">Para mais materiais educativos, visite:</p>
-            <p style="font-size: 1.8rem; font-weight: 800; color: #FF6B6B; margin-top: 10px;">aulagia.com.br</p>
-            <p style="font-size: 1.1rem; margin-top: 40px; color: #666666;">
-              Slides gerados pela AulagIA <br>
-              Sua aula com toque mágico
-            </p>
-          </div>
-        `;
-        break;
-        
-      case 'table':
-        content = `
-          <div class="slide-content centered-content">
-            <h3>${slide.title}</h3>
-            ${slide.table}
-            <p style="font-size: 0.95rem; color: #888;">Fonte: Material educativo AulagIA</p>
-          </div>
-        `;
-        break;
-        
-      case 'image':
-        if (slide.imageUrl) {
-          content = `
-            <div class="slide-content slide-with-image">
-              <div class="text-section">
-                <h3>${slide.title}</h3>
-                <div>${slide.content}</div>
-              </div>
-              <div class="image-container-lateral">
-                <img src="${slide.imageUrl}" alt="${slide.imageAlt}">
-                <span class="image-label">${slide.imageAlt || 'Imagem educativa'}</span>
-              </div>
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-md">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-5 h-5">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
             </div>
-          `;
-        } else {
-          content = generateNormalContent(slide);
-        }
-        break;
-        
-      case 'process':
-        content = `
-          <div class="slide-content centered-content">
-            <h3>${slide.title}</h3>
-            <div class="process-flow">
-              <div class="process-step">
-                <div class="process-icon">1</div>
-                <span class="process-text">Primeira etapa</span>
-              </div>
-              <span class="process-arrow">→</span>
-              <div class="process-step">
-                <div class="process-icon">2</div>
-                <span class="process-text">Segunda etapa</span>
-              </div>
-              <span class="process-arrow">→</span>
-              <div class="process-step">
-                <div class="process-icon">3</div>
-                <span class="process-text">Terceira etapa</span>
-              </div>
-            </div>
-            <div>${slide.content}</div>
+            <h1 className="text-xl font-bold text-gray-800">AulagIA</h1>
           </div>
-        `;
-        break;
-        
-      case 'question':
-        content = `
-          <div class="slide-content centered-content" style="background-color: #f8faff; border: 2px dashed #007bff; border-radius: 16px; padding: 50px;">
-            <h3 style="color: #007bff; font-size: 3.5rem; margin-bottom: 30px;">Vamos Pensar?</h3>
-            <p style="font-size: 1.6rem; line-height: 1.6; font-weight: 500; color: #444; max-width: 80%;">${slide.content}</p>
-            <div class="answer-reveal-button" style="background-color: #FF6B6B; color: white; padding: 15px 30px; border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 1.4rem; font-weight: 700; margin-top: 40px;">
-              Clique para pensar!
-            </div>
-          </div>
-        `;
-        break;
-        
-      default:
-        content = generateNormalContent(slide);
-    }
-
-    return `
-      <div class="slide-page">
-        ${shapes}
-        ${header}
-        ${content}
-        ${footer}
-      </div>
-    `;
-  };
-
-  const generateNormalContent = (slide: any): string => {
-    return `
-      <div class="slide-content">
-        <h3>${slide.title}</h3>
-        <div>${slide.content}</div>
-        ${slide.grid || ''}
-      </div>
-    `;
-  };
-
-  const generateShapes = (slideNumber: number): string => {
-    const shapeVariations = [
-      `<div class="shape-overlay top-left-wave"></div><div class="shape-overlay bottom-right-wave"></div>`,
-      `<div class="shape-overlay mid-circle"></div><div class="shape-overlay diagonal-stripe"></div>`,
-      `<div class="shape-overlay top-left-wave"></div><div class="shape-overlay mid-circle"></div>`,
-      `<div class="shape-overlay bottom-right-wave"></div><div class="shape-overlay mid-circle"></div>`
-    ];
-    
-    return shapeVariations[slideNumber % shapeVariations.length];
-  };
-
-  const generateHeader = (slideType: string, title: string): string => {
-    const headerTitle = slideType === 'title' ? 'APRESENTAÇÃO' : 
-                       slideType === 'conclusion' ? 'FIM' : 
-                       slideType === 'question' ? 'INTERAÇÃO' : 
-                       'SLIDES';
-
-    return `
-      <div class="slide-header">
-        <div class="logo-container">
-          <div class="logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-            </svg>
-          </div>
-          <div class="brand-text">
-            <h1>AulagIA</h1>
+          <div className="text-lg font-bold text-coral-500">
+            {slideType === 'title' ? 'APRESENTAÇÃO' : 
+             slideType === 'conclusion' ? 'FIM' : 
+             slideType === 'question' ? 'INTERAÇÃO' : 
+             'SLIDES'}
           </div>
         </div>
-        <div class="slide-title-header">${headerTitle}</div>
+
+        {/* Content */}
+        <div className="flex-1 p-8 flex flex-col justify-center relative z-10">
+          {slideType === 'title' && (
+            <div className="text-center space-y-6">
+              <h2 className="text-5xl font-bold text-gray-800 leading-tight">{slide.title}</h2>
+              <h3 className="text-2xl font-semibold text-teal-600">Apresentação Educativa</h3>
+              <div className="mt-8 space-y-3">
+                <p className="text-lg text-gray-600">Apresentado por:</p>
+                <p className="text-xl font-bold text-gray-800">Professor(a)</p>
+                <p className="text-sm text-gray-500">AulagIA - Material Educativo</p>
+              </div>
+            </div>
+          )}
+
+          {slideType === 'conclusion' && (
+            <div className="text-center space-y-6">
+              <h2 className="text-5xl font-bold text-gray-800">OBRIGADO(A)!</h2>
+              <p className="text-xl text-gray-600 mt-6">Para mais materiais educativos, visite:</p>
+              <p className="text-2xl font-bold text-coral-500 mt-3">aulagia.com.br</p>
+              <p className="text-base text-gray-500 mt-8">
+                Slides gerados pela AulagIA<br/>
+                Sua aula com toque mágico
+              </p>
+            </div>
+          )}
+
+          {slideType === 'table' && (
+            <div className="text-center space-y-6">
+              <h3 className="text-3xl font-bold text-teal-600 mb-6">{slide.title}</h3>
+              <div className="overflow-hidden rounded-xl shadow-md" dangerouslySetInnerHTML={{ __html: slide.table }} />
+              <p className="text-sm text-gray-500 mt-4">Fonte: Material educativo AulagIA</p>
+            </div>
+          )}
+
+          {slideType === 'image' && slide.imageUrl && (
+            <div className="flex gap-8 items-center h-full">
+              <div className="flex-1 space-y-4">
+                <h3 className="text-3xl font-bold text-teal-600">{slide.title}</h3>
+                <div className="text-lg text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: slide.content }} />
+              </div>
+              <div className="flex-1 max-w-md">
+                <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-100">
+                  <img 
+                    src={slide.imageUrl} 
+                    alt={slide.imageAlt}
+                    className="w-full h-64 object-cover"
+                  />
+                  <div className="absolute bottom-3 left-3 bg-black bg-opacity-70 text-white px-3 py-1 rounded-lg text-sm">
+                    {slide.imageAlt || 'Imagem educativa'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {slideType === 'process' && (
+            <div className="text-center space-y-8">
+              <h3 className="text-3xl font-bold text-teal-600">{slide.title}</h3>
+              <div className="flex justify-center items-center gap-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 bg-coral-500 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">1</div>
+                  <span className="mt-3 text-sm font-medium">Primeira etapa</span>
+                </div>
+                <div className="text-3xl text-teal-600">→</div>
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 bg-coral-500 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">2</div>
+                  <span className="mt-3 text-sm font-medium">Segunda etapa</span>
+                </div>
+                <div className="text-3xl text-teal-600">→</div>
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 bg-coral-500 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">3</div>
+                  <span className="mt-3 text-sm font-medium">Terceira etapa</span>
+                </div>
+              </div>
+              <div className="text-lg text-gray-700" dangerouslySetInnerHTML={{ __html: slide.content }} />
+            </div>
+          )}
+
+          {slideType === 'question' && (
+            <div className="text-center bg-blue-50 border-2 border-dashed border-blue-300 rounded-2xl p-12 space-y-6">
+              <h3 className="text-4xl font-bold text-blue-600">Vamos Pensar?</h3>
+              <p className="text-xl text-gray-700 leading-relaxed max-w-4xl mx-auto" dangerouslySetInnerHTML={{ __html: slide.content }} />
+              <button className="bg-coral-500 text-white px-8 py-3 rounded-xl font-bold text-lg shadow-md hover:bg-coral-600 transition-colors">
+                Clique para pensar!
+              </button>
+            </div>
+          )}
+
+          {slideType === 'normal' && (
+            <div className="space-y-6">
+              <h3 className="text-3xl font-bold text-teal-600 text-center">{slide.title}</h3>
+              <div className="text-lg text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: slide.content }} />
+              {slide.grid && <div dangerouslySetInnerHTML={{ __html: slide.grid }} />}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-between items-center p-4 border-t border-gray-100 text-sm text-gray-600">
+          <span>{today}</span>
+          <span className="font-semibold text-teal-600">Slide {slideNumber}</span>
+        </div>
       </div>
-    `;
-  };
-
-  const generateFooter = (date: string, slideNumber: number): string => {
-    return `
-      <div class="slide-footer">
-        <span class="date">${date}</span>
-        <span class="page-number">Slide ${slideNumber}</span>
-      </div>
-    `;
-  };
-
-  const getAdvancedSlideTemplate = (): string => {
-    return `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Slides AulagIA - Design Avançado e Interativo</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Lato:wght@300;400;700&display=swap');
-    
-    /* Global Styles */
-    body {
-      margin: 0;
-      padding: 0;
-      background: #f0f2f5;
-      font-family: 'Lato', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      padding: 30px 0;
-      box-sizing: border-box;
-    }
-
-    /* Slide Page - 4:3 Aspect Ratio */
-    .slide-page {
-      position: relative;
-      width: 1024px;
-      height: 768px;
-      background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
-      overflow: hidden;
-      margin: 0 auto 40px auto;
-      box-sizing: border-box;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.18);
-      border-radius: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      page-break-after: always;
-      border: 1px solid #e0e0e0;
-    }
-
-    .slide-page:last-of-type {
-      page-break-after: auto;
-      margin-bottom: 0;
-    }
-
-    /* Decorative Shapes/Elements */
-    .shape-overlay {
-      position: absolute;
-      opacity: 0.1;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .shape-overlay.top-left-wave {
-      width: 250px;
-      height: 250px;
-      background: #00C9B1;
-      border-radius: 50%;
-      top: -120px;
-      left: -100px;
-      transform: rotate(20deg);
-    }
-    .shape-overlay.bottom-right-wave {
-      width: 300px;
-      height: 300px;
-      background: #FF6B6B;
-      border-radius: 50%;
-      bottom: -150px;
-      right: -130px;
-      transform: rotate(-30deg);
-    }
-    .shape-overlay.mid-circle {
-      width: 150px;
-      height: 150px;
-      background: #00C9B1;
-      border-radius: 50%;
-      top: 40%;
-      left: -80px;
-      opacity: 0.08;
-    }
-    .shape-overlay.diagonal-stripe {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        background: linear-gradient(45deg, rgba(0,201,177,0.1) 25%, transparent 25%, transparent 50%, rgba(0,201,177,0.1) 50%, rgba(0,201,177,0.1) 75%, transparent 75%, transparent);
-        background-size: 50px 50px;
-        z-index: 0;
-        opacity: 0.2;
-    }
-
-    /* Slide Header */
-    .slide-header {
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      padding: 25px 40px;
-      flex-shrink: 0;
-      z-index: 1;
-      position: relative;
-    }
-    .slide-header .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .slide-header .logo {
-      width: 50px;
-      height: 50px;
-      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 15px rgba(0,123,255,0.4);
-    }
-    .slide-header .logo svg {
-      width: 28px;
-      height: 28px;
-      stroke: white;
-      fill: none;
-      stroke-width: 2;
-    }
-    .slide-header .brand-text h1 {
-      font-family: 'Poppins', sans-serif;
-      font-size: 32px;
-      color: #333333;
-      margin: 0;
-      font-weight: 800;
-      letter-spacing: -1px;
-    }
-    .slide-header .slide-title-header {
-      position: absolute;
-      right: 40px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 26px;
-      color: #FF6B6B;
-      font-weight: 700;
-      text-align: right;
-    }
-
-    /* Slide Content */
-    .slide-content {
-      flex-grow: 1;
-      padding: 0 80px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: flex-start;
-      text-align: left;
-      color: #333333;
-      z-index: 1;
-      font-size: 1.2rem;
-    }
-
-    .slide-content.centered-content {
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
-
-    .slide-content h2 {
-      font-family: 'Poppins', sans-serif;
-      font-size: 4.5rem;
-      color: #333333;
-      margin-bottom: 25px;
-      font-weight: 800;
-      text-align: center;
-      width: 100%;
-      line-height: 1.2;
-    }
-    .slide-content h3 {
-      font-family: 'Poppins', sans-serif;
-      font-size: 2.8rem;
-      color: #00C9B1;
-      margin-top: 30px;
-      margin-bottom: 20px;
-      font-weight: 700;
-      width: 100%;
-      text-align: center;
-    }
-    .slide-content p {
-      line-height: 1.7;
-      margin-bottom: 18px;
-      font-size: 1.15rem;
-    }
-    .slide-content ul {
-      list-style-type: none;
-      padding-left: 0;
-      margin-bottom: 18px;
-    }
-    .slide-content ul li {
-      position: relative;
-      padding-left: 35px;
-      margin-bottom: 12px;
-      font-size: 1.15rem;
-    }
-    .slide-content ul li::before {
-      content: '✔';
-      position: absolute;
-      left: 0;
-      color: #FF6B6B;
-      font-size: 1.3rem;
-      top: -2px;
-    }
-
-    /* Specific Layouts */
-    .slide-with-image {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: stretch;
-        gap: 40px;
-    }
-    .slide-with-image .text-section {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 0 20px;
-    }
-    .slide-with-image .image-container-lateral {
-        flex: 0 0 45%;
-        background-color: #f0f2f5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        border-radius: 12px;
-        position: relative;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    .slide-with-image .image-container-lateral img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 12px;
-    }
-    .slide-with-image .image-label {
-        position: absolute;
-        bottom: 15px;
-        left: 15px;
-        background-color: rgba(0,0,0,0.7);
-        color: white;
-        padding: 8px 15px;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-family: 'Poppins', sans-serif;
-    }
-
-    /* Tables */
-    .slide-content table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 25px 0;
-      font-size: 1.05rem;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-    }
-    .slide-content th, .slide-content td {
-      padding: 15px 22px;
-      text-align: left;
-      border-bottom: 1px solid #e5e5e5;
-    }
-    .slide-content th {
-      background-color: #00C9B1;
-      color: white;
-      font-weight: 600;
-      font-family: 'Poppins', sans-serif;
-    }
-    .slide-content tr:nth-child(even) {
-      background-color: #fdfdfd;
-    }
-    .slide-content tr:hover {
-      background-color: #e6f7f5;
-    }
-
-    /* Process Flow / Steps */
-    .process-flow {
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        width: 100%;
-        margin-top: 30px;
-    }
-    .process-step {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        flex: 1;
-        padding: 15px;
-        text-align: center;
-    }
-    .process-icon {
-        width: 80px;
-        height: 80px;
-        background-color: #FF6B6B;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-family: 'Poppins', sans-serif;
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 15px;
-        box-shadow: 0 5px 15px rgba(255,107,107,0.4);
-    }
-    .process-arrow {
-        font-size: 3rem;
-        color: #00C9B1;
-        margin: 0 10px;
-        align-self: center;
-    }
-
-    /* Slide Footer */
-    .slide-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 40px;
-      font-size: 0.95rem;
-      color: #666666;
-      border-top: 1px solid #e0e0e0;
-      flex-shrink: 0;
-      z-index: 1;
-      font-family: 'Lato', sans-serif;
-    }
-    .slide-footer .page-number {
-      font-weight: 600;
-      color: #00C9B1;
-    }
-    .slide-footer .date {
-        font-size: 0.85rem;
-    }
-
-    /* Print Adjustments */
-    @media print {
-      body {
-        background: white;
-      }
-      .slide-page {
-        box-shadow: none;
-        margin: 0;
-        border-radius: 0;
-        border: none;
-      }
-      .shape-overlay {
-        display: none;
-      }
-      .slide-header .logo, .slide-header .brand-text h1, .slide-header .brand-text p,
-      .slide-content h2, .slide-content h3, .slide-content p, .slide-content ul li,
-      .slide-content table, .slide-content th, .slide-content td,
-      .process-icon, .slide-footer .page-number, .slide-footer .date {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-      }
-      .slide-header .logo {
-          background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
-      }
-      .slide-header .brand-text h1, .slide-content h2, .slide-content p, .slide-content ul li {
-          color: #333333 !important;
-      }
-      .slide-header .slide-title-header {
-          color: #FF6B6B !important;
-      }
-      .slide-content h3 {
-          color: #00C9B1 !important;
-      }
-      .slide-content ul li::before {
-          color: #FF6B6B !important;
-      }
-      .slide-content th {
-          background-color: #00C9B1 !important;
-      }
-      .process-icon {
-          background-color: #FF6B6B !important;
-          color: white !important;
-      }
-      .process-arrow {
-          color: #00C9B1 !important;
-      }
-      .slide-footer .page-number { color: #00C9B1 !important; }
-      .slide-footer .date { color: #666666 !important; }
-    }
-  </style>
-</head>
-<body>
-  {{SLIDES_CONTENT}}
-</body>
-</html>`;
-  };
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  };
-
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index);
+    );
   };
 
   if (slides.length === 0) {
@@ -643,13 +199,10 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent }) => {
     );
   }
 
-  // Generate the complete HTML with all slides using the new template
-  const completeSlideHTML = generateAdvancedSlideHTML(slides);
-
   return (
-    <div className="w-full bg-[#e0f2fe] rounded-lg overflow-hidden">
+    <div className="w-full max-w-6xl mx-auto p-6">
       {/* Navigation Header */}
-      <div className="bg-[#1e3a8a] text-white p-4 flex items-center justify-between">
+      <div className="bg-blue-900 text-white p-4 rounded-t-xl flex items-center justify-between">
         <span className="text-sm font-medium">
           Slide {currentSlide + 1} de {slides.length}
         </span>
@@ -657,8 +210,8 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={prevSlide}
-            disabled={slides.length <= 1}
+            onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+            disabled={currentSlide === 0}
             className="text-white hover:bg-blue-700"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -666,8 +219,8 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={nextSlide}
-            disabled={slides.length <= 1}
+            onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+            disabled={currentSlide === slides.length - 1}
             className="text-white hover:bg-blue-700"
           >
             <ChevronRight className="h-4 w-4" />
@@ -676,26 +229,26 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent }) => {
       </div>
 
       {/* Slide Content */}
-      <div className="relative flex justify-center items-center p-4" style={{ minHeight: '576px' }}>
-        <iframe
-          srcDoc={completeSlideHTML}
-          style={{
-            width: '100%',
-            height: '600px',
-            border: 'none',
-            backgroundColor: 'white',
-            borderRadius: '8px'
-          }}
-          title="Slides Preview"
-        />
+      <div className="bg-gray-100 p-6 rounded-b-xl">
+        <Carousel className="w-full">
+          <CarouselContent>
+            {slides.map((slide, index) => (
+              <CarouselItem key={index} className={index === currentSlide ? 'block' : 'hidden'}>
+                <div className="aspect-[16/9] w-full">
+                  {renderSlide(slide, index)}
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
       </div>
 
       {/* Slide Indicators */}
-      <div className="bg-[#1e3a8a] p-4 flex justify-center gap-2">
+      <div className="bg-blue-900 p-4 rounded-b-xl flex justify-center gap-2">
         {slides.map((_, index) => (
           <button
             key={index}
-            onClick={() => goToSlide(index)}
+            onClick={() => setCurrentSlide(index)}
             className={`w-3 h-3 rounded-full transition-colors ${
               index === currentSlide 
                 ? 'bg-white' 
@@ -707,7 +260,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent }) => {
       </div>
 
       {/* Navigation Instructions */}
-      <div className="bg-gray-100 p-3 text-center text-sm text-gray-600">
+      <div className="bg-gray-100 p-3 text-center text-sm text-gray-600 rounded-b-lg">
         Use as setas ou clique nos pontos para navegar entre os slides
       </div>
     </div>
