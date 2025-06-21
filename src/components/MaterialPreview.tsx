@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
@@ -24,6 +25,11 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material }) => {
   }, [material.content]);
 
   const splitContentIntoPages = (content: string): string[] => {
+    // Ensure content is a string
+    if (!content || typeof content !== 'string') {
+      return [''];
+    }
+
     // For slides, let SlideViewer handle pagination
     if (material.type === 'slides') {
       return [content];
@@ -90,7 +96,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material }) => {
       {/* Page indicator - Only show if multiple pages */}
       {hasMultiplePages && (
         <div className={`bg-white border-b px-4 py-3 flex justify-center items-center ${
-          isMobile ? 'text-lg font-semibold' : 'text-sm font-medium'
+          isMobile ? 'text-xl font-bold' : 'text-sm font-medium'
         } text-gray-700`}>
           Página {currentPage + 1} de {pages.length}
         </div>
@@ -109,11 +115,11 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material }) => {
               disabled={currentPage === 0}
               className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm shadow-lg border-2 hover:bg-white disabled:opacity-50 ${
                 isMobile 
-                  ? 'w-14 h-14 rounded-full' 
+                  ? 'w-16 h-16 rounded-full' 
                   : 'w-10 h-10 rounded-full'
               }`}
             >
-              <ChevronLeft className={isMobile ? "h-8 w-8" : "h-5 w-5"} />
+              <ChevronLeft className={isMobile ? "h-10 w-10" : "h-5 w-5"} />
             </Button>
 
             {/* Next page button */}
@@ -124,11 +130,11 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material }) => {
               disabled={currentPage === pages.length - 1}
               className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm shadow-lg border-2 hover:bg-white disabled:opacity-50 ${
                 isMobile 
-                  ? 'w-14 h-14 rounded-full' 
+                  ? 'w-16 h-16 rounded-full' 
                   : 'w-10 h-10 rounded-full'
               }`}
             >
-              <ChevronRight className={isMobile ? "h-8 w-8" : "h-5 w-5"} />
+              <ChevronRight className={isMobile ? "h-10 w-10" : "h-5 w-5"} />
             </Button>
           </>
         )}
@@ -139,7 +145,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material }) => {
             <div className="p-8">
               <div 
                 className="prose prose-slate max-w-none"
-                dangerouslySetInnerHTML={{ __html: pages[currentPage] || material.content }}
+                dangerouslySetInnerHTML={{ __html: pages[currentPage] || material.content || '' }}
               />
             </div>
           </div>
@@ -153,7 +159,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material }) => {
             <button
               key={index}
               onClick={() => setCurrentPage(index)}
-              className={`w-3 h-3 rounded-full transition-colors ${
+              className={`w-4 h-4 rounded-full transition-colors ${
                 index === currentPage 
                   ? 'bg-blue-500' 
                   : 'bg-gray-300 hover:bg-gray-400'
