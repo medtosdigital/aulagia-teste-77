@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Download, Printer, FileCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import MaterialPreview from './MaterialPreview';
 import AnswerKeyModal from './AnswerKeyModal';
+import NextStepsModal from './NextStepsModal';
 import { GeneratedMaterial } from '@/services/materialService';
 import { templateService } from '@/services/templateService';
 import { exportService } from '@/services/exportService';
@@ -21,6 +21,31 @@ interface MaterialModalProps {
 const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }) => {
   const isMobile = useIsMobile();
   const [answerKeyModalOpen, setAnswerKeyModalOpen] = useState(false);
+  const [nextStepsModalOpen, setNextStepsModalOpen] = useState(false);
+  const [showMaterialPreview, setShowMaterialPreview] = useState(false);
+
+  // Quando o modal principal abrir, mostrar primeiro o modal de próximos passos
+  React.useEffect(() => {
+    if (open && material && !showMaterialPreview) {
+      setNextStepsModalOpen(true);
+    }
+  }, [open, material, showMaterialPreview]);
+
+  const handleNextStepsClose = () => {
+    setNextStepsModalOpen(false);
+    onClose();
+    setShowMaterialPreview(false);
+  };
+
+  const handleNextStepsContinue = () => {
+    setNextStepsModalOpen(false);
+    setShowMaterialPreview(true);
+  };
+
+  const handleMainModalClose = () => {
+    onClose();
+    setShowMaterialPreview(false);
+  };
 
   const getTypeLabel = (type: string): string => {
     const labels = {
@@ -92,6 +117,21 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
   const canGenerateAnswerKey = material && (material.type === 'atividade' || material.type === 'avaliacao');
 
   if (!material) return null;
+
+  // Modal de próximos passos
+  if (nextStepsModalOpen) {
+    return (
+      <NextStepsModal
+        open={nextStepsModalOpen}
+        onClose={handleNextStepsClose}
+        onContinue={handleNextStepsContinue}
+        materialType={material.type}
+      />
+    );
+  }
+
+  // Só mostrar o modal principal se showMaterialPreview for true
+  if (!showMaterialPreview) return null;
 
   // Mobile layout
   if (isMobile) {
