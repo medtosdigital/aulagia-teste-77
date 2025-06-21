@@ -24,34 +24,51 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material }) => {
     }
   }, [material.content]);
 
-  const splitContentIntoPages = (content: string): string[] => {
-    // Ensure content is a string
-    if (!content || typeof content !== 'string') {
-      return [''];
+  const splitContentIntoPages = (content: any): string[] => {
+    // Handle different content types
+    let htmlContent = '';
+    
+    if (typeof content === 'string') {
+      htmlContent = content;
+    } else if (content && typeof content === 'object') {
+      // Check if it's an assessment with htmlContent
+      if (content.htmlContent && typeof content.htmlContent === 'string') {
+        htmlContent = content.htmlContent;
+      } else if (content.content && typeof content.content === 'string') {
+        htmlContent = content.content;
+      } else {
+        // Convert object to JSON string as fallback
+        htmlContent = `<pre>${JSON.stringify(content, null, 2)}</pre>`;
+      }
+    }
+
+    // Ensure we have a string to work with
+    if (!htmlContent || typeof htmlContent !== 'string') {
+      return ['<p>Conteúdo não disponível</p>'];
     }
 
     // For slides, let SlideViewer handle pagination
     if (material.type === 'slides') {
-      return [content];
+      return [htmlContent];
     }
 
     // Check for explicit page breaks
-    if (content.includes('<!-- PAGE_BREAK -->')) {
-      return content.split('<!-- PAGE_BREAK -->').filter(page => page.trim());
+    if (htmlContent.includes('<!-- PAGE_BREAK -->')) {
+      return htmlContent.split('<!-- PAGE_BREAK -->').filter(page => page.trim());
     }
 
     // Auto-split long content into pages (approximate A4 page length)
     const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
+    const doc = parser.parseFromString(htmlContent, 'text/html');
     const textContent = doc.body.textContent || '';
     
     // If content is short, keep as single page
     if (textContent.length < 2000) {
-      return [content];
+      return [htmlContent];
     }
 
     // Split by major sections (h1, h2) or every ~2000 characters
-    const sections = content.split(/(?=<h[12][^>]*>)/);
+    const sections = htmlContent.split(/(?=<h[12][^>]*>)/);
     const pageSize = 2000;
     const contentPages: string[] = [];
     let currentPageContent = '';
@@ -69,7 +86,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material }) => {
       contentPages.push(currentPageContent);
     }
 
-    return contentPages.length > 0 ? contentPages : [content];
+    return contentPages.length > 0 ? contentPages : [htmlContent];
   };
 
   const goToNextPage = () => {
@@ -145,7 +162,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material }) => {
             <div className="p-8">
               <div 
                 className="prose prose-slate max-w-none"
-                dangerouslySetInnerHTML={{ __html: pages[currentPage] || material.content || '' }}
+                dangerouslySetInnerHTML={{ __html: pages[currentPage] || '<p>Conteúdo não disponível</p>' }}
               />
             </div>
           </div>
