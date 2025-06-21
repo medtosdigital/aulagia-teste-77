@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, PageBreak } from 'docx';
 import { saveAs } from 'file-saver';
@@ -5,44 +6,6 @@ import { GeneratedMaterial, LessonPlan, Activity, Slide, Assessment } from './ma
 import { templateService } from './templateService';
 
 class ExportService {
-  private wrapPageContentWithTemplate = (content: string, isFirstPage: boolean, material: GeneratedMaterial): string => {
-    const pageClass = isFirstPage ? 'first-page-content' : 'subsequent-page-content';
-    const contentClass = isFirstPage ? 'content' : 'content subsequent-page';
-    
-    return `
-      <div class="page ${pageClass}">
-        <!-- Formas decorativas -->
-        <div class="shape-circle purple"></div>
-        <div class="shape-circle blue"></div>
-
-        <!-- Cabeçalho AulagIA - Visível em todas as páginas -->
-        <div class="header">
-          <div class="logo-container">
-            <div class="logo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-              </svg>
-            </div>
-            <div class="brand-text">
-              <h1>AulagIA</h1>
-              <p>Sua aula com toque mágico</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Rodapé - Visível em todas as páginas -->
-        <div class="footer">
-          ${material.type === 'atividade' ? 'Atividade' : 'Avaliação'} gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br
-        </div>
-
-        <div class="${contentClass}">
-          ${content}
-        </div>
-      </div>
-    `;
-  };
-
   private splitContentIntoPages = (htmlContent: string, material: GeneratedMaterial): string[] => {
     console.log('ExportService: Starting optimized page split for:', material.type);
     
@@ -56,33 +19,27 @@ class ExportService {
       
       if (questions.length === 0) {
         console.log('ExportService: No questions found, returning single page');
-        return [htmlContent];
+        return [this.createPageContent(htmlContent, true, material)];
       }
 
       console.log(`ExportService: Processing ${questions.length} questions for optimized pagination`);
 
-      const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
-      const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
-      const questionsPerPage = 4; // Baseado no MaterialPreview: 4 questões por página
+      const questionsPerPage = 4;
       let questionIndex = 0;
 
       while (questionIndex < questions.length) {
         const isFirstPage = pages.length === 0;
         const questionsForPage = [];
         
-        // Adicionar até 4 questões por página
         for (let i = 0; i < questionsPerPage && questionIndex < questions.length; i++) {
           questionsForPage.push(questions[questionIndex]);
           questionIndex++;
         }
 
-        // Construir conteúdo da página usando o mesmo template do MaterialPreview
         let pageContent = '';
         if (isFirstPage) {
-          // Título do Material
           pageContent += material.type === 'atividade' ? '<h2>ATIVIDADE</h2>' : '<h2>AVALIAÇÃO</h2>';
           
-          // Informações básicas do Material
           pageContent += `
             <table>
               <tr>
@@ -106,11 +63,10 @@ class ExportService {
             </table>
           `;
           
-          // Instruções do Material
           pageContent += `
             <div class="instructions">
               <strong>${material.title}:</strong><br>
-              ${instructions || (material.type === 'avaliacao' ? 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.' : 'Leia atentamente cada questão e responda de acordo com o solicitado.')}
+              ${material.type === 'avaliacao' ? 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.' : 'Leia atentamente cada questão e responda de acordo com o solicitado.'}
             </div>
           `;
         }
@@ -119,61 +75,58 @@ class ExportService {
           pageContent += question.outerHTML;
         });
 
-        pages.push(this.wrapPageContentWithTemplate(pageContent, isFirstPage, material));
+        pages.push(this.createPageContent(pageContent, isFirstPage, material));
       }
       
       console.log(`ExportService: Split into ${pages.length} optimized pages`);
-      return pages.length > 0 ? pages : [htmlContent];
+      return pages;
     }
 
-    // Para planos de aula - manter lógica existente
-    if (material.type === 'plano-de-aula') {
-      const sections = tempDiv.querySelectorAll('.section');
-      if (sections.length <= 1) {
-        return [htmlContent];
-      }
-
-      const pages: string[] = [];
-      const sectionsPerPage = 3;
-      let sectionIndex = 0;
-
-      const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
-      
-      while (sectionIndex < sections.length) {
-        const isFirstPage = pages.length === 0;
-        const sectionsForPage = [];
-        
-        for (let i = 0; i < sectionsPerPage && sectionIndex < sections.length; i++) {
-          sectionsForPage.push(sections[sectionIndex]);
-          sectionIndex++;
-        }
-
-        let pageContent = '';
-        if (isFirstPage) {
-          pageContent += header;
-        }
-        
-        sectionsForPage.forEach(section => {
-          pageContent += section.outerHTML;
-        });
-
-        pages.push(this.wrapPageContentWithTemplate(pageContent, isFirstPage, material));
-      }
-      
-      return pages.length > 0 ? pages : [htmlContent];
-    }
-
-    return [htmlContent];
+    return [this.createPageContent(htmlContent, true, material)];
   };
 
-  private enhanceHtmlWithNewTemplate = (htmlContent: string, material: GeneratedMaterial): string => {
+  private createPageContent = (content: string, isFirstPage: boolean, material: GeneratedMaterial): string => {
+    const pageClass = isFirstPage ? 'first-page-content' : 'subsequent-page-content';
+    const contentClass = isFirstPage ? 'content' : 'content subsequent-page';
+    
+    return `
+      <div class="page ${pageClass}">
+        <div class="shape-circle purple"></div>
+        <div class="shape-circle blue"></div>
+
+        <div class="header">
+          <div class="logo-container">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+            </div>
+            <div class="brand-text">
+              <h1>AulagIA</h1>
+              <p>Sua aula com toque mágico</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          ${material.type === 'atividade' ? 'Atividade' : 'Avaliação'} gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br
+        </div>
+
+        <div class="${contentClass}">
+          ${content}
+        </div>
+      </div>
+    `;
+  };
+
+  private createFullStyledHtml = (content: string): string => {
     return `
       <!DOCTYPE html>
       <html lang="pt-BR">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${material.title}</title>
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
           
@@ -181,6 +134,13 @@ class ExportService {
             size: A4;
             margin: 0;
           }
+          
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
           body {
             margin: 0;
             padding: 0;
@@ -449,7 +409,7 @@ class ExportService {
         </style>
       </head>
       <body>
-        ${htmlContent}
+        ${content}
       </body>
       </html>
     `;
@@ -457,44 +417,67 @@ class ExportService {
 
   async exportToPDF(material: GeneratedMaterial): Promise<void> {
     try {
+      console.log('Iniciando exportação PDF:', material.type);
+      
       if (material.type === 'slides') {
         await this.exportSlidesToPDF(material);
         return;
       }
 
+      // Renderizar template
       const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
+      
+      // Dividir em páginas
       const pages = this.splitContentIntoPages(renderedHtml, material);
       
-      let finalHtml = '';
-      pages.forEach((page) => {
-        finalHtml += page;
+      // Combinar todas as páginas
+      const finalHtml = pages.join('');
+      const styledHtml = this.createFullStyledHtml(finalHtml);
+      
+      // Criar elemento temporário para renderização
+      const element = document.createElement('div');
+      element.innerHTML = styledHtml;
+      element.style.position = 'absolute';
+      element.style.left = '-9999px';
+      element.style.top = '-9999px';
+      document.body.appendChild(element);
+      
+      // Usar jsPDF para criar PDF diretamente
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
       });
+
+      // Processar cada página usando html2canvas via jsPDF
+      const pageElements = element.querySelectorAll('.page');
       
-      const styledHtml = this.enhanceHtmlWithNewTemplate(finalHtml, material);
-      
-      // Criar um iframe oculto para renderizar o HTML
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'absolute';
-      iframe.style.top = '-9999px';
-      iframe.style.left = '-9999px';
-      iframe.style.width = '210mm';
-      iframe.style.height = '297mm';
-      document.body.appendChild(iframe);
-      
-      iframe.contentDocument?.open();
-      iframe.contentDocument?.write(styledHtml);
-      iframe.contentDocument?.close();
-      
-      // Aguardar o carregamento e depois imprimir
-      setTimeout(() => {
-        if (iframe.contentWindow) {
-          iframe.contentWindow.print();
+      for (let i = 0; i < pageElements.length; i++) {
+        if (i > 0) {
+          pdf.addPage();
         }
-        // Remover o iframe após um tempo
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 1000);
-      }, 1000);
+        
+        try {
+          await pdf.html(pageElements[i] as HTMLElement, {
+            callback: () => {},
+            x: 0,
+            y: 0,
+            width: 210,
+            windowWidth: 794, // A4 width in pixels at 96 DPI
+          });
+        } catch (error) {
+          console.warn('Erro ao renderizar página', i + 1, error);
+        }
+      }
+      
+      // Limpar elemento temporário
+      document.body.removeChild(element);
+      
+      // Fazer download direto
+      const fileName = `${material.title.replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'material'}.pdf`;
+      pdf.save(fileName);
+      
+      console.log('PDF exportado com sucesso');
 
     } catch (error) {
       console.error('Erro na exportação PDF:', error);
@@ -506,18 +489,8 @@ class ExportService {
     const doc = new jsPDF('landscape', 'mm', [254, 190.5]);
     const slides = material.content as Slide[];
     
-    const renderedHtml = templateService.renderTemplate('2', slides);
-    
-    const parser = new DOMParser();
-    const htmlDoc = parser.parseFromString(renderedHtml, 'text/html');
-    const slideElements = htmlDoc.querySelectorAll('.slide');
-    
-    slideElements.forEach((slideElement, index) => {
+    slides.forEach((slide, index) => {
       if (index > 0) doc.addPage();
-      
-      const textContent = slideElement.querySelector('.text-content');
-      const title = textContent?.querySelector('.title')?.textContent || `Slide ${index + 1}`;
-      const content = textContent?.querySelector('.content')?.textContent || '';
       
       doc.setFillColor(224, 242, 254);
       doc.rect(0, 0, 254, 190.5, 'F');
@@ -528,18 +501,20 @@ class ExportService {
       doc.setTextColor(15, 23, 42);
       doc.setFontSize(20);
       doc.setFont(undefined, 'bold');
-      doc.text(title, 30, 40);
+      doc.text(slide.titulo || `Slide ${index + 1}`, 30, 40);
       
       doc.setTextColor(30, 41, 59);
       doc.setFontSize(12);
       doc.setFont(undefined, 'normal');
       
       let y = 60;
-      if (content) {
-        const lines = doc.splitTextToSize(content, 120);
-        lines.forEach((line: string) => {
-          doc.text(line, 30, y);
-          y += 8;
+      if (slide.conteudo && Array.isArray(slide.conteudo)) {
+        slide.conteudo.forEach((item: string) => {
+          const lines = doc.splitTextToSize(`• ${item}`, 180);
+          lines.forEach((line: string) => {
+            doc.text(line, 30, y);
+            y += 8;
+          });
         });
       }
     });
@@ -584,7 +559,7 @@ class ExportService {
         })
       );
 
-      // Renderizar conteúdo e dividir em páginas usando o novo sistema
+      // Renderizar conteúdo e dividir em páginas
       const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
       const pages = this.splitContentIntoPages(renderedHtml, material);
       
@@ -690,330 +665,6 @@ class ExportService {
       );
     });
     
-    // Process sections for lesson plans
-    const sections = tempDiv.querySelectorAll('.section');
-    sections.forEach(section => {
-      const title = section.querySelector('.section-title')?.textContent || '';
-      const content = section.textContent?.replace(title, '').trim() || '';
-      
-      if (title) {
-        paragraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: title,
-                bold: true,
-                size: 28,
-                color: '2563EB'
-              })
-            ],
-            spacing: { before: 400, after: 200 }
-          })
-        );
-      }
-      
-      if (content) {
-        paragraphs.push(
-          new Paragraph({
-            children: [new TextRun(content)],
-            spacing: { after: 300 }
-          })
-        );
-      }
-    });
-    
-    return paragraphs;
-  }
-
-  private createLessonPlanContent(content: LessonPlan): any[] {
-    const paragraphs: any[] = [];
-
-    // Informações básicas
-    paragraphs.push(
-      new Paragraph({
-        children: [new TextRun({ text: 'INFORMAÇÕES BÁSICAS', bold: true, size: 28, color: '4F46E5' })],
-        spacing: { before: 400, after: 300 }
-      })
-    );
-
-    if (content.professor) {
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(`Professor(a): ${content.professor}`)],
-        spacing: { after: 150 }
-      }));
-    }
-
-    if (content.disciplina) {
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(`Disciplina: ${content.disciplina}`)],
-        spacing: { after: 150 }
-      }));
-    }
-
-    if (content.tema) {
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(`Tema: ${content.tema}`)],
-        spacing: { after: 150 }
-      }));
-    }
-
-    if (content.duracao) {
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(`Duração: ${content.duracao}`)],
-        spacing: { after: 150 }
-      }));
-    }
-
-    if (content.serie) {
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(`Série: ${content.serie}`)],
-        spacing: { after: 300 }
-      }));
-    }
-
-    // Objetivos
-    if (content.objetivos && Array.isArray(content.objetivos) && content.objetivos.length > 0) {
-      paragraphs.push(
-        new Paragraph({
-          children: [new TextRun({ text: 'OBJETIVOS DE APRENDIZAGEM', bold: true, size: 28, color: '4F46E5' })],
-          spacing: { before: 400, after: 300 }
-        })
-      );
-
-      content.objetivos.forEach(objetivo => {
-        paragraphs.push(new Paragraph({
-          children: [new TextRun(`• ${objetivo}`)],
-          spacing: { after: 150 }
-        }));
-      });
-    }
-
-    // Desenvolvimento
-    if (content.desenvolvimento && Array.isArray(content.desenvolvimento) && content.desenvolvimento.length > 0) {
-      paragraphs.push(
-        new Paragraph({
-          children: [new TextRun({ text: 'DESENVOLVIMENTO DA AULA', bold: true, size: 28, color: '4F46E5' })],
-          spacing: { before: 400, after: 300 }
-        })
-      );
-
-      content.desenvolvimento.forEach((etapa, index) => {
-        if (etapa && typeof etapa === 'object') {
-          paragraphs.push(new Paragraph({
-            children: [new TextRun({ text: `${index + 1}. ${etapa.etapa || 'Etapa'}`, bold: true })],
-            spacing: { before: 200, after: 100 }
-          }));
-          
-          if (etapa.atividade) {
-            paragraphs.push(new Paragraph({
-              children: [new TextRun(`Atividade: ${etapa.atividade}`)],
-              spacing: { after: 100 }
-            }));
-          }
-          
-          if (etapa.tempo) {
-            paragraphs.push(new Paragraph({
-              children: [new TextRun(`Tempo: ${etapa.tempo}`)],
-              spacing: { after: 100 }
-            }));
-          }
-        }
-      });
-    }
-
-    // Recursos
-    if (content.recursos && Array.isArray(content.recursos) && content.recursos.length > 0) {
-      paragraphs.push(
-        new Paragraph({
-          children: [new TextRun({ text: 'RECURSOS NECESSÁRIOS', bold: true, size: 28, color: '4F46E5' })],
-          spacing: { before: 400, after: 300 }
-        })
-      );
-
-      content.recursos.forEach(recurso => {
-        paragraphs.push(new Paragraph({
-          children: [new TextRun(`• ${recurso}`)],
-          spacing: { after: 150 }
-        }));
-      });
-    }
-
-    // Avaliação
-    if (content.avaliacao) {
-      paragraphs.push(
-        new Paragraph({
-          children: [new TextRun({ text: 'AVALIAÇÃO', bold: true, size: 28, color: '4F46E5' })],
-          spacing: { before: 400, after: 300 }
-        })
-      );
-
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(content.avaliacao)],
-        spacing: { after: 200 }
-      }));
-    }
-
-    return paragraphs;
-  }
-
-  private createSlidesContent(slidesContent: any): any[] {
-    const paragraphs: any[] = [];
-    
-    try {
-      const slides = slidesContent.slides || [];
-      
-      if (!Array.isArray(slides)) {
-        return [new Paragraph({
-          children: [new TextRun('Conteúdo de slides inválido')],
-          spacing: { after: 200 }
-        })];
-      }
-
-      slides.forEach((slide, index) => {
-        if (index > 0) {
-          paragraphs.push(new Paragraph({
-            children: [new TextRun('')],
-            pageBreakBefore: true
-          }));
-        }
-
-        paragraphs.push(new Paragraph({
-          children: [new TextRun({ 
-            text: `Slide ${slide.numero || index + 1}: ${slide.titulo || 'Sem título'}`, 
-            bold: true, 
-            size: 32,
-            color: '4F46E5'
-          })],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 400 }
-        }));
-
-        if (slide.conteudo && Array.isArray(slide.conteudo)) {
-          slide.conteudo.forEach((item: string) => {
-            paragraphs.push(new Paragraph({
-              children: [new TextRun(`• ${item}`)],
-              spacing: { after: 200 }
-            }));
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Erro ao processar slides:', error);
-      paragraphs.push(new Paragraph({
-        children: [new TextRun('Erro ao processar slides')],
-        spacing: { after: 200 }
-      }));
-    }
-
-    return paragraphs;
-  }
-
-  private createActivityContent(activity: Activity): any[] {
-    const paragraphs: any[] = [];
-
-    if (activity.instrucoes) {
-      paragraphs.push(
-        new Paragraph({
-          children: [new TextRun({ text: 'INSTRUÇÕES', bold: true, size: 28, color: '4F46E5' })],
-          spacing: { before: 400, after: 300 }
-        })
-      );
-
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(activity.instrucoes)],
-        spacing: { after: 400 }
-      }));
-    }
-
-    if (activity.questoes && Array.isArray(activity.questoes)) {
-      paragraphs.push(
-        new Paragraph({
-          children: [new TextRun({ text: 'QUESTÕES', bold: true, size: 28, color: '4F46E5' })],
-          spacing: { before: 400, after: 300 }
-        })
-      );
-
-      activity.questoes.forEach(questao => {
-        paragraphs.push(new Paragraph({
-          children: [new TextRun({ text: `Questão ${questao.numero}`, bold: true })],
-          spacing: { before: 300, after: 150 }
-        }));
-
-        paragraphs.push(new Paragraph({
-          children: [new TextRun(questao.pergunta)],
-          spacing: { after: 200 }
-        }));
-
-        if (questao.opcoes && Array.isArray(questao.opcoes)) {
-          questao.opcoes.forEach((opcao, index) => {
-            const letra = String.fromCharCode(65 + index);
-            paragraphs.push(new Paragraph({
-              children: [new TextRun(`${letra}) ${opcao}`)],
-              spacing: { after: 100 }
-            }));
-          });
-        }
-      });
-    }
-
-    return paragraphs;
-  }
-
-  private createAssessmentContent(assessment: Assessment): any[] {
-    const paragraphs: any[] = [];
-
-    if (assessment.instrucoes) {
-      paragraphs.push(
-        new Paragraph({
-          children: [new TextRun({ text: 'INSTRUÇÕES DA AVALIAÇÃO', bold: true, size: 28, color: '4F46E5' })],
-          spacing: { before: 400, after: 300 }
-        })
-      );
-
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(assessment.instrucoes)],
-        spacing: { after: 200 }
-      }));
-    }
-
-    if (assessment.tempoLimite) {
-      paragraphs.push(new Paragraph({
-        children: [new TextRun(`Tempo limite: ${assessment.tempoLimite}`)],
-        spacing: { after: 400 }
-      }));
-    }
-
-    if (assessment.questoes && Array.isArray(assessment.questoes)) {
-      paragraphs.push(
-        new Paragraph({
-          children: [new TextRun({ text: 'QUESTÕES', bold: true, size: 28, color: '4F46E5' })],
-          spacing: { before: 400, after: 300 }
-        })
-      );
-
-      assessment.questoes.forEach(questao => {
-        paragraphs.push(new Paragraph({
-          children: [new TextRun({ text: `Questão ${questao.numero} (${questao.pontuacao} pontos)`, bold: true })],
-          spacing: { before: 300, after: 150 }
-        }));
-
-        paragraphs.push(new Paragraph({
-          children: [new TextRun(questao.pergunta)],
-          spacing: { after: 200 }
-        }));
-
-        if (questao.opcoes && Array.isArray(questao.opcoes)) {
-          questao.opcoes.forEach((opcao, index) => {
-            const letra = String.fromCharCode(65 + index);
-            paragraphs.push(new Paragraph({
-              children: [new TextRun(`${letra}) ${opcao}`)],
-              spacing: { after: 100 }
-            }));
-          });
-        }
-      });
-    }
-
     return paragraphs;
   }
 

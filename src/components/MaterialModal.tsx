@@ -486,18 +486,20 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
     if (!material) return;
 
     try {
+      const toastId = toast.loading(`Gerando ${format.toUpperCase()}...`);
+      
       switch (format) {
         case 'pdf':
           await exportService.exportToPDF(material);
-          toast.success('Material exportado para PDF com sucesso!');
+          toast.success('Material exportado para PDF com sucesso!', { id: toastId });
           break;
         case 'word':
           await exportService.exportToWord(material);
-          toast.success('Material exportado para Word com sucesso!');
+          toast.success('Material exportado para Word com sucesso!', { id: toastId });
           break;
         case 'ppt':
           await exportService.exportToPPT(material);
-          toast.success('Material exportado para PowerPoint com sucesso!');
+          toast.success('Material exportado para PowerPoint com sucesso!', { id: toastId });
           break;
       }
     } catch (error) {
