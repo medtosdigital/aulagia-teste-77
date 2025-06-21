@@ -1,4 +1,3 @@
-
 import { templateService } from './templateService';
 import { GrammarService } from './grammarService';
 
@@ -95,6 +94,8 @@ class MaterialService {
       tema: correctedTopic,
       topic: correctedTopic
     };
+
+    console.log('Generating material with form data:', correctedFormData);
 
     let content: any;
 
@@ -200,31 +201,67 @@ class MaterialService {
   }
 
   private generateActivity(formData: any): any {
-    const numQuestoes = formData.numeroQuestoes || 5;
-    const tiposQuestoes = formData.tiposQuestoes || ['multipla_escolha', 'aberta'];
+    // Use the correct field names from form data
+    const numQuestoes = formData.numeroQuestoes || formData.quantidadeQuestoes || 5;
+    const tipoQuestoes = formData.tipoQuestoes || formData.tiposQuestoes || 'mistas';
     const dificuldade = formData.dificuldade || 'medio';
+    
+    console.log('Generating activity with:', { numQuestoes, tipoQuestoes, dificuldade });
+    
+    // Map question type to the types array
+    let tiposQuestoesArray = [];
+    switch (tipoQuestoes) {
+      case 'abertas':
+        tiposQuestoesArray = ['aberta'];
+        break;
+      case 'fechadas':
+        tiposQuestoesArray = ['multipla_escolha', 'verdadeiro_falso'];
+        break;
+      case 'mistas':
+      default:
+        tiposQuestoesArray = ['multipla_escolha', 'aberta', 'verdadeiro_falso'];
+        break;
+    }
     
     return {
       titulo: `Atividade sobre ${formData.tema}`,
       disciplina: formData.disciplina,
       serie: formData.serie,
       instrucoes: `Leia atentamente cada questão e responda de acordo com seus conhecimentos sobre ${formData.tema}.`,
-      questoes: this.generateQuestions(numQuestoes, tiposQuestoes, formData.tema, formData.disciplina, 'atividade', dificuldade)
+      questoes: this.generateQuestions(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, 'atividade', dificuldade)
     };
   }
 
   private generateEvaluation(formData: any): any {
-    const numQuestoes = formData.numeroQuestoes || 4;
-    const tiposQuestoes = formData.tiposQuestoes || ['multipla_escolha', 'dissertativa'];
+    // Use the correct field names from form data
+    const numQuestoes = formData.numeroQuestoes || formData.quantidadeQuestoes || 4;
+    const tipoQuestoes = formData.tipoQuestoes || formData.tiposQuestoes || 'mistas';
     const dificuldade = formData.dificuldade || 'medio';
     const pontuacaoTotal = 10;
     const pontuacaoPorQuestao = pontuacaoTotal / numQuestoes;
+    
+    console.log('Generating evaluation with:', { numQuestoes, tipoQuestoes, dificuldade });
+    
+    // Map question type to the types array for evaluations
+    let tiposQuestoesArray = [];
+    switch (tipoQuestoes) {
+      case 'abertas':
+        tiposQuestoesArray = ['dissertativa'];
+        break;
+      case 'fechadas':
+        tiposQuestoesArray = ['multipla_escolha', 'verdadeiro_falso'];
+        break;
+      case 'mistas':
+      default:
+        tiposQuestoesArray = ['multipla_escolha', 'dissertativa', 'verdadeiro_falso'];
+        break;
+    }
     
     return {
       titulo: `Avaliação de ${formData.tema}`,
       instrucoes: 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.',
       tempoLimite: formData.tempoLimite || '50 minutos',
-      questoes: this.generateQuestions(numQuestoes, tiposQuestoes, formData.tema, formData.disciplina, 'avaliacao', dificuldade, pontuacaoPorQuestao)
+      questoes: this.generateQuestions(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, 'avaliacao', dificuldade, pontuacaoPorQuestao)
     };
   }
 
@@ -238,6 +275,8 @@ class MaterialService {
     pontuacao?: number
   ): any[] {
     const questoes = [];
+    
+    console.log('Generating questions:', { numQuestoes, tiposQuestoes, tema, disciplina });
     
     for (let i = 0; i < numQuestoes; i++) {
       const tipoQuestao = tiposQuestoes[i % tiposQuestoes.length];
@@ -326,6 +365,7 @@ class MaterialService {
       questoes.push(questao);
     }
     
+    console.log('Generated questions:', questoes);
     return questoes;
   }
 

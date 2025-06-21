@@ -149,11 +149,16 @@ const CreateLesson: React.FC = () => {
         subject: formData.subject,
         serie: formData.grade,
         grade: formData.grade,
+        // Correct mapping for question configuration
         ...(selectedType === 'atividade' || selectedType === 'avaliacao' ? {
           tipoQuestoes: formData.questionType,
-          quantidadeQuestoes: formData.questionCount[0]
+          tiposQuestoes: [formData.questionType], // Support both formats
+          numeroQuestoes: formData.questionCount[0],
+          quantidadeQuestoes: formData.questionCount[0] // Support both formats
         } : {})
       };
+      
+      console.log('Material form data being sent:', materialFormData);
       
       const material = await materialService.generateMaterial(selectedType!, materialFormData);
       clearInterval(progressInterval);
@@ -520,7 +525,9 @@ const CreateLesson: React.FC = () => {
               }}></div>
                 <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{
                 animationDelay: '0.2s'
-              }}></div>
+              }}>
+
+                </div>
               </div>
             </div>
           </div>
