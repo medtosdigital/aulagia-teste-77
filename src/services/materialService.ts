@@ -76,10 +76,10 @@ export interface Assessment {
     linhasResposta?: number;
   }[];
   tempoLimite: string;
-  htmlContent?: string; // Nova propriedade para o HTML completo
+  htmlContent?: string;
 }
 
-// Template HTML para avaliações
+// Novo template HTML para avaliações
 const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -100,32 +100,37 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
       background: #f0f4f8;
       font-family: 'Inter', sans-serif;
       display: flex;
-      flex-direction: column;
+      flex-direction: column; /* Permite múltiplas páginas verticais */
       justify-content: flex-start;
       align-items: center;
       min-height: 100vh;
       padding: 20px 0;
     }
+    /* Container no tamanho A4 - Cada .page será uma folha */
     .page {
       position: relative;
       width: 210mm;
-      min-height: 297mm;
+      min-height: 297mm; /* Altura mínima para A4 */
       background: white;
       overflow: hidden;
-      margin: 0 auto 20px auto;
+      margin: 0 auto 20px auto; /* Adiciona margem entre as páginas no navegador */
       box-sizing: border-box;
       padding: 0;
       display: flex;
       flex-direction: column;
       border-radius: 6px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      /* Regra para quebra de página na impressão */
       page-break-after: always;
     }
+
+    /* A última página não deve ter page-break-after */
     .page:last-of-type {
       page-break-after: auto;
       margin-bottom: 0;
     }
     
+    /* Formas decorativas */
     .shape-circle {
       position: absolute;
       border-radius: 50%;
@@ -148,15 +153,16 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
       right: -60px;
     }
     
+    /* Cabeçalho que aparece no topo */
     .header {
-      position: absolute;
+      position: absolute; /* Usado para posicionar no topo da página */
       top: 6mm;
       left: 0;
       right: 0;
       display: flex;
       align-items: center;
       z-index: 999;
-      height: 15mm;
+      height: 15mm; /* Aumenta a altura do cabeçalho */
       background: transparent;
       padding: 0 12mm;
       flex-shrink: 0;
@@ -164,11 +170,11 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
     .header .logo-container {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 6px; /* Aumenta o espaçamento */
     }
     .header .logo {
-      width: 38px;
-      height: 38px;
+      width: 38px; /* Aumenta a largura do círculo da logo */
+      height: 38px; /* Aumenta a altura do círculo da logo */
       background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
       border-radius: 50%;
       display: flex;
@@ -176,11 +182,11 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
       justify-content: center;
       color: white;
       flex-shrink: 0;
-      box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3);
+      box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3); /* Melhora a sombra */
     }
     .header .logo svg {
-      width: 20px;
-      height: 20px;
+      width: 20px; /* Ajusta o tamanho do SVG dentro do círculo */
+      height: 20px; /* Ajusta o tamanho do SVG dentro do círculo */
       stroke: white;
       fill: none;
       stroke-width: 2;
@@ -191,37 +197,41 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
       justify-content: center;
     }
     .header .brand-text h1 {
-      font-size: 24px;
+      font-size: 24px; /* Aumenta o tamanho do título principal */
       color: #0ea5e9;
       margin: 0;
       font-family: 'Inter', sans-serif;
       line-height: 1;
       font-weight: 700;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.5px; /* Ajusta espaçamento de letras */
       text-transform: none;
     }
     .header .brand-text p {
-      font-size: 9px;
+      font-size: 9px; /* Aumenta um pouco o subtítulo */
       color: #6b7280;
-      margin: 1px 0 0 0;
+      margin: 1px 0 0 0; /* Ajusta margem */
       font-family: 'Inter', sans-serif;
       line-height: 1;
       font-weight: 400;
     }
     
+    /* Conteúdo principal com margem para não sobrepor o cabeçalho */
     .content {
-      margin-top: 25mm;
-      margin-bottom: 12mm;
+      margin-top: 25mm; /* Ajustado para acomodar o cabeçalho maior na primeira página */
+      margin-bottom: 12mm; /* Espaço para o rodapé fixo */
       padding: 0 15mm;
       position: relative;
       flex: 1;
       overflow: visible;
       z-index: 1;
     }
+
+    /* Conteúdo para páginas que não são a primeira (sem info do aluno e título da atividade) */
     .content.subsequent-page {
-      margin-top: 40mm;
+      margin-top: 40mm; /* Aumenta a margem superior para ficar abaixo do círculo colorido */
     }
 
+    /* Título principal */
     h2 {
       text-align: center;
       margin: 10px 0 18px 0;
@@ -240,7 +250,7 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
       margin: 6px auto 0;
       border-radius: 2px;
     }
-    
+    /* Tabelas */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -261,7 +271,7 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
       color: #1f2937;
       font-weight: 600;
       text-align: left;
-      width: 18%;
+      width: 18%; /* Ajusta a largura para TH para melhor alinhamento */
     }
     td {
       background: #ffffff;
@@ -270,13 +280,15 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
     td:last-child {
       border-bottom: none;
     }
+    /* Estilo específico para células de informação do aluno na tabela */
     table .student-info-cell {
         width: 32%; 
     }
+    /* Novo estilo para o campo BNCC destacado */
     .bncc-highlight-cell {
-        background-color: #e0f2f7;
-        color: #000000;
-        font-weight: 600;
+        background-color: #e0f2f7; /* Um azul claro para destacar */
+        color: #000000; /* Texto preto */
+        font-weight: 600; /* Manter negrito */
     }
     
     .instructions {
@@ -334,9 +346,9 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
     .answer-lines:last-child {
       margin-bottom: 0;
     }
-    .math-space, .image-space {
+    .math-space, .image-space { /* Aplicado a ambos para manter o container */
       border: 1px solid #e5e7eb;
-      min-height: 80px;
+      min-height: 80px; /* Reduzido levemente para otimizar espaço */
       margin: 10px 0;
       padding: 15px;
       border-radius: 4px;
@@ -349,8 +361,8 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
       font-size: 0.8rem;
     }
     .image-space {
-        min-height: 120px;
-        border: 2px dashed #d1d5db;
+        min-height: 120px; /* Mantém altura para imagens */
+        border: 2px dashed #d1d5db; /* Retorna a borda tracejada para imagem */
     }
     .matching-section {
       display: flex;
@@ -386,6 +398,7 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
       border: 1px solid #e2e8f0;
     }
     
+    /* Rodapé */
     .footer {
       position: absolute; 
       bottom: 6mm;
@@ -405,6 +418,7 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
       flex-shrink: 0;
     }
     
+    /* Ajustes para impressão */
     @media print {
       body { 
         margin: 0; 
@@ -430,6 +444,7 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
         position: fixed; 
         background: transparent; 
       }
+
       .header .logo {
         background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
         -webkit-print-color-adjust: exact;
