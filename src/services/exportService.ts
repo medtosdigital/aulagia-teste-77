@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, PageBreak, Table, TableRow, TableCell, WidthType } from 'docx';
 import { saveAs } from 'file-saver';
@@ -615,20 +614,32 @@ class ExportService {
       iframe.style.height = '297mm';
       document.body.appendChild(iframe);
       
-      iframe.contentDocument?.open();
-      iframe.contentDocument?.write(styledHtml);
-      iframe.contentDocument?.close();
-      
-      // Aguardar o carregamento e depois imprimir
-      setTimeout(() => {
-        if (iframe.contentWindow) {
-          iframe.contentWindow.print();
-        }
-        // Remover o iframe após um tempo
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (iframeDoc) {
+        iframeDoc.open();
+        iframeDoc.write(styledHtml);
+        iframeDoc.close();
+        
+        // Aguardar o carregamento e depois fazer download automático
         setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 1000);
-      }, 1000);
+          if (iframe.contentWindow) {
+            // Configurar para download automático
+            iframe.contentWindow.onbeforeprint = () => {
+              console.log('Iniciando download do PDF...');
+            };
+            
+            // Forçar download automático sem pop-up
+            iframe.contentWindow.print();
+          }
+          
+          // Remover o iframe após um tempo
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 2000);
+        }, 1500);
+      }
 
     } catch (error) {
       console.error('Erro na exportação PDF:', error);
@@ -718,23 +729,18 @@ class ExportService {
         })
       );
 
-      // Renderizar conteúdo e dividir em páginas usando o novo sistema
-      const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
-      const pages = this.splitContentIntoPages(renderedHtml, material);
-      
-      // Processar cada página
-      pages.forEach((pageContent, pageIndex) => {
-        if (pageIndex > 0) {
-          children.push(
-            new Paragraph({
-              children: [new PageBreak()],
-            })
-          );
-        }
-        
-        const pageContentParagraphs = this.processPageContentForWord(pageContent, material);
-        children.push(...pageContentParagraphs);
-      });
+      // Processar conteúdo baseado no tipo de material
+      if (material.type === 'atividade' || material.type === 'avaliacao') {
+        const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
+        const contentParagraphs = this.processActivityContentForWord(renderedHtml, material);
+        children.push(...contentParagraphs);
+      } else if (material.type === 'plano-de-aula') {
+        const lessonPlanContent = this.createLessonPlanContent(material.content as LessonPlan);
+        children.push(...lessonPlanContent);
+      } else if (material.type === 'slides') {
+        const slidesContent = this.createSlidesContent(material.content);
+        children.push(...slidesContent);
+      }
 
       // Criar documento
       const doc = new Document({
@@ -768,26 +774,67 @@ class ExportService {
     }
   }
 
-  private processPageContentForWord(pageContent: string, material: GeneratedMaterial): any[] {
+  private processActivityContentForWord(htmlContent: string, material: GeneratedMaterial): any[] {
     const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = pageContent;
+    tempDiv.innerHTML = htmlContent;
     
     const paragraphs: any[] = [];
     
-    // Process questions if present
+    // Adicionar instruções se existirem
+    const instructions = tempDiv.querySelector('.instructions');
+    if (instructions) {
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'INSTRUÇÕES',
+              bold: true,
+              size: 28,
+              color: '4F46E5'
+            })
+          ],
+          spacing: { before: 400, after: 300 }
+        })
+      );
+      
+      paragraphs.push(
+        new Paragraph({
+          children: [new TextRun(instructions.textContent || '')],
+          spacing: { after: 400 }
+        })
+      );
+    }
+    
+    // Processar questões
     const questions = tempDiv.querySelectorAll('.questao-container, .question');
+    if (questions.length > 0) {
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'QUESTÕES',
+              bold: true,
+              size: 28,
+              color: '4F46E5'
+            })
+          ],
+          spacing: { before: 400, after: 300 }
+        })
+      );
+    }
+    
     questions.forEach((question, index) => {
-      const questionNumber = question.querySelector('.questao-numero, .question-header')?.textContent || `${index + 1}`;
+      const questionNumber = question.querySelector('.questao-numero, .question-header')?.textContent || `Questão ${index + 1}`;
       const questionText = question.querySelector('.questao-enunciado, .question-text')?.textContent || '';
       
-      // Question number and text
+      // Número e texto da questão
       paragraphs.push(
         new Paragraph({
           children: [
             new TextRun({
               text: questionNumber,
               bold: true,
-              size: 28,
+              size: 24,
               color: '3B82F6'
             })
           ],
@@ -795,16 +842,16 @@ class ExportService {
         })
       );
       
-      paragraphs.push(
-        new Paragraph({
-          children: [new TextRun(questionText)],
-          spacing: { after: 200 }
-        })
-      );
+      if (questionText) {
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun(questionText)],
+            spacing: { after: 200 }
+          })
+        );
+      }
       
-      // Handle different question types
-      
-      // Multiple choice options
+      // Processar opções múltipla escolha
       const options = question.querySelectorAll('.opcao, .option');
       if (options.length > 0) {
         options.forEach((option, optIndex) => {
@@ -820,70 +867,78 @@ class ExportService {
         });
       }
       
-      // Matching columns
+      // Processar colunas de associação
       const matchingSection = question.querySelector('.matching-section');
       if (matchingSection) {
         const columnA = matchingSection.querySelector('.matching-column:first-child');
         const columnB = matchingSection.querySelector('.matching-column:last-child');
         
         if (columnA && columnB) {
-          const table = new Table({
-            rows: [
-              new TableRow({
-                children: [
-                  new TableCell({
-                    children: [new Paragraph({
-                      children: [new TextRun({ text: 'Coluna A', bold: true })],
-                      alignment: AlignmentType.CENTER
-                    })],
-                    width: { size: 50, type: WidthType.PERCENTAGE }
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({
-                      children: [new TextRun({ text: 'Coluna B', bold: true })],
-                      alignment: AlignmentType.CENTER
-                    })],
-                    width: { size: 50, type: WidthType.PERCENTAGE }
-                  })
-                ]
-              })
-            ]
-          });
-          
           const itemsA = columnA.querySelectorAll('.matching-item');
           const itemsB = columnB.querySelectorAll('.matching-item');
-          const maxItems = Math.max(itemsA.length, itemsB.length);
           
-          for (let i = 0; i < maxItems; i++) {
-            const itemA = itemsA[i]?.textContent || '';
-            const itemB = itemsB[i]?.textContent || '';
-            
-            table.addChildElement(
-              new TableRow({
-                children: [
-                  new TableCell({
-                    children: [new Paragraph({ children: [new TextRun(itemA)] })],
-                    width: { size: 50, type: WidthType.PERCENTAGE }
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ children: [new TextRun(itemB)] })],
-                    width: { size: 50, type: WidthType.PERCENTAGE }
-                  })
-                ]
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Coluna A',
+                  bold: true,
+                  size: 22
+                })
+              ],
+              spacing: { before: 200, after: 100 }
+            })
+          );
+          
+          itemsA.forEach((item, itemIndex) => {
+            paragraphs.push(
+              new Paragraph({
+                children: [new TextRun(`${itemIndex + 1}) ${item.textContent || ''}`)],
+                spacing: { after: 80 }
               })
             );
-          }
+          });
           
-          paragraphs.push(new Paragraph({
-            children: [table as any],
-            spacing: { after: 300 }
-          }));
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Coluna B',
+                  bold: true,
+                  size: 22
+                })
+              ],
+              spacing: { before: 200, after: 100 }
+            })
+          );
+          
+          itemsB.forEach((item, itemIndex) => {
+            const letter = String.fromCharCode(65 + itemIndex);
+            paragraphs.push(
+              new Paragraph({
+                children: [new TextRun(`${letter}) ${item.textContent || ''}`)],
+                spacing: { after: 80 }
+              })
+            );
+          });
         }
       }
       
-      // Answer lines for open questions
+      // Processar linhas de resposta
       const answerLines = question.querySelectorAll('.answer-lines');
       if (answerLines.length > 0) {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Resposta:',
+                bold: true
+              })
+            ],
+            spacing: { before: 200, after: 100 }
+          })
+        );
+        
         answerLines.forEach(() => {
           paragraphs.push(
             new Paragraph({
@@ -894,89 +949,76 @@ class ExportService {
         });
       }
       
-      // Math space
+      // Processar espaço para cálculos
       const mathSpace = question.querySelector('.math-space');
       if (mathSpace) {
         paragraphs.push(
           new Paragraph({
-            children: [new TextRun({ text: '[Espaço para cálculos]', italics: true, color: '6B7280' })],
-            spacing: { after: 200 }
+            children: [
+              new TextRun({
+                text: '[Espaço para cálculos]',
+                italics: true,
+                color: '6B7280'
+              })
+            ],
+            spacing: { before: 200, after: 300 }
           })
         );
       }
       
-      // Drawing space
+      // Processar espaço para desenho
       const drawingSpace = question.querySelector('.drawing-space, .image-space');
       if (drawingSpace) {
         paragraphs.push(
           new Paragraph({
-            children: [new TextRun({ text: '[Espaço para desenho/imagem]', italics: true, color: '6B7280' })],
-            spacing: { after: 200 }
+            children: [
+              new TextRun({
+                text: '[Espaço para desenho/imagem]',
+                italics: true,
+                color: '6B7280'
+              })
+            ],
+            spacing: { before: 200, after: 300 }
           })
         );
       }
       
-      // Formula display
+      // Processar fórmulas
       const formula = question.querySelector('.formula-display');
       if (formula) {
         paragraphs.push(
           new Paragraph({
-            children: [new TextRun({ text: formula.textContent || '', bold: true })],
+            children: [
+              new TextRun({
+                text: formula.textContent || '',
+                bold: true,
+                size: 24
+              })
+            ],
             alignment: AlignmentType.CENTER,
-            spacing: { after: 200 }
+            spacing: { before: 200, after: 300 }
           })
         );
       }
       
-      // True/False options
+      // Processar Verdadeiro/Falso
       const trueFalseOptions = question.querySelector('.true-false-options');
       if (trueFalseOptions) {
         paragraphs.push(
           new Paragraph({
             children: [new TextRun('( ) Verdadeiro    ( ) Falso')],
-            spacing: { after: 200 }
+            spacing: { before: 200, after: 300 }
           })
         );
       }
       
+      // Espaçamento entre questões
       paragraphs.push(
         new Paragraph({
           children: [new TextRun('')],
-          spacing: { after: 200 }
+          spacing: { after: 400 }
         })
       );
-    });
-    
-    // Process sections for lesson plans
-    const sections = tempDiv.querySelectorAll('.section');
-    sections.forEach(section => {
-      const title = section.querySelector('.section-title')?.textContent || '';
-      const content = section.textContent?.replace(title, '').trim() || '';
-      
-      if (title) {
-        paragraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: title,
-                bold: true,
-                size: 28,
-                color: '2563EB'
-              })
-            ],
-            spacing: { before: 400, after: 200 }
-          })
-        );
-      }
-      
-      if (content) {
-        paragraphs.push(
-          new Paragraph({
-            children: [new TextRun(content)],
-            spacing: { after: 300 }
-          })
-        );
-      }
     });
     
     return paragraphs;
