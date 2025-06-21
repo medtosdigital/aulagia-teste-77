@@ -150,45 +150,45 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
         }
       };
 
-      // Função para adicionar cabeçalho
+      // Função para adicionar cabeçalho com logo AulagIA
       const addHeader = () => {
-        // Elementos decorativos
+        // Formas decorativas
         doc.setFillColor(167, 139, 250, 0.25);
         doc.circle(10, 10, 15, 'F');
         
         doc.setFillColor(96, 165, 250, 0.25);
         doc.circle(pageWidth - 20, pageHeight - 20, 20, 'F');
 
-        // Logo e marca
+        // Logo AulagIA
         doc.setFillColor(14, 165, 233);
-        doc.circle(margin + 6, currentY + 6, 6, 'F');
+        doc.circle(margin + 8, currentY + 8, 8, 'F');
         
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(8);
-        doc.text('✓', margin + 4, currentY + 8);
+        doc.setFontSize(10);
+        doc.text('✓', margin + 6, currentY + 10);
 
-        // Título da marca
+        // Título da marca AulagIA
         doc.setTextColor(14, 165, 233);
-        doc.setFontSize(14);
+        doc.setFontSize(16);
         doc.setFont(undefined, 'bold');
-        doc.text('EduPlanner', margin + 16, currentY + 8);
+        doc.text('AulagIA', margin + 20, currentY + 8);
         
         doc.setTextColor(107, 114, 128);
-        doc.setFontSize(7);
+        doc.setFontSize(8);
         doc.setFont(undefined, 'normal');
-        doc.text('Sistema de Gestão Educacional', margin + 16, currentY + 12);
+        doc.text('Sua aula com toque mágico', margin + 20, currentY + 14);
 
-        currentY += 25;
+        currentY += 30;
       };
 
       // Adicionar cabeçalho inicial
       addHeader();
 
-      // Título principal
+      // Título principal do gabarito
       doc.setTextColor(79, 70, 229);
-      doc.setFontSize(20);
+      doc.setFontSize(24);
       doc.setFont(undefined, 'bold');
-      const titleLines = doc.splitTextToSize(answerKey.titulo, contentWidth);
+      const titleLines = doc.splitTextToSize('GABARITO OFICIAL', contentWidth);
       doc.text(titleLines, pageWidth / 2, currentY, { align: 'center' });
       currentY += titleLines.length * 8 + 5;
 
@@ -198,26 +198,63 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
       doc.line(pageWidth / 2 - 25, currentY, pageWidth / 2 + 25, currentY);
       currentY += 10;
 
-      // Informações do material
+      // Informações da avaliação/atividade
       doc.setTextColor(107, 114, 128);
       doc.setFontSize(12);
       doc.setFont(undefined, 'normal');
       doc.text(`${answerKey.disciplina} • ${answerKey.serie}`, pageWidth / 2, currentY, { align: 'center' });
       currentY += 8;
+      doc.text(`${material?.type === 'avaliacao' ? 'Avaliação' : 'Atividade'}: ${material?.title}`, pageWidth / 2, currentY, { align: 'center' });
+      currentY += 8;
       doc.text(`Total de questões: ${answerKey.totalQuestoes}`, pageWidth / 2, currentY, { align: 'center' });
-      currentY += 15;
+      currentY += 20;
+
+      // Tabela de informações
+      const tableY = currentY;
+      doc.setFillColor(243, 244, 246);
+      doc.rect(margin, tableY, contentWidth, 30, 'F');
+      
+      doc.setDrawColor(229, 231, 235);
+      doc.setLineWidth(1);
+      
+      // Linhas da tabela
+      for (let i = 0; i <= 2; i++) {
+        doc.line(margin, tableY + (i * 10), margin + contentWidth, tableY + (i * 10));
+      }
+      
+      // Colunas da tabela
+      const colWidth = contentWidth / 4;
+      for (let i = 0; i <= 4; i++) {
+        doc.line(margin + (i * colWidth), tableY, margin + (i * colWidth), tableY + 20);
+      }
+
+      // Conteúdo da tabela
+      doc.setTextColor(31, 41, 59);
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      
+      // Primeira linha
+      doc.text('Escola:', margin + 5, tableY + 7);
+      doc.text('Data:', margin + colWidth * 2 + 5, tableY + 7);
+      doc.text(new Date().toLocaleDateString('pt-BR'), margin + colWidth * 3 + 5, tableY + 7);
+      
+      // Segunda linha
+      doc.text('Disciplina:', margin + 5, tableY + 17);
+      doc.text(answerKey.disciplina, margin + colWidth + 5, tableY + 17);
+      doc.text('Série/Ano:', margin + colWidth * 2 + 5, tableY + 17);
+      doc.text(answerKey.serie, margin + colWidth * 3 + 5, tableY + 17);
+
+      currentY += 35;
 
       // Instruções
       if (answerKey.instrucoes) {
         checkPageBreak(20);
-        doc.setFillColor(240, 249, 255);
+        doc.setFillColor(239, 246, 255);
         doc.rect(margin, currentY - 5, contentWidth, 15, 'F');
         
         doc.setDrawColor(14, 165, 233);
-        doc.setLineWidth(1);
+        doc.setLineWidth(2);
         doc.line(margin, currentY - 5, margin, currentY + 10);
-        doc.line(margin, currentY - 5, margin + 3, currentY - 5);
-        doc.line(margin, currentY + 10, margin + 3, currentY + 10);
 
         doc.setTextColor(14, 165, 233);
         doc.setFontSize(11);
@@ -237,23 +274,21 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
       doc.setTextColor(79, 70, 229);
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('GABARITO OFICIAL', margin, currentY);
+      doc.text('RESPOSTAS', margin, currentY);
       currentY += 12;
 
       // Questões e respostas
       answerKey.questoes.forEach((questao: any) => {
-        const questionHeight = questao.tipo === 'dissertativa' || questao.tipo === 'aberta' ? 35 : 25;
+        const questionHeight = questao.tipo === 'dissertativa' || questao.tipo === 'aberta' ? 40 : 30;
         checkPageBreak(questionHeight);
 
         // Container da questão
-        doc.setFillColor(250, 250, 250);
+        doc.setFillColor(249, 250, 251);
         doc.rect(margin, currentY - 3, contentWidth, questionHeight - 5, 'F');
         
         doc.setDrawColor(59, 130, 246);
-        doc.setLineWidth(1);
+        doc.setLineWidth(2);
         doc.line(margin, currentY - 3, margin, currentY + questionHeight - 8);
-        doc.line(margin, currentY - 3, margin + 2, currentY - 3);
-        doc.line(margin, currentY + questionHeight - 8, margin + 2, currentY + questionHeight - 8);
 
         // Número da questão
         doc.setTextColor(59, 130, 246);
@@ -272,18 +307,18 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
         // Tipo da questão
         doc.setTextColor(107, 114, 128);
         doc.setFontSize(9);
-        doc.text(`Tipo: ${questao.tipo}`, margin + 5, currentY + 7);
+        doc.text(`Tipo: ${questao.tipo}`, margin + 5, currentY + 8);
 
         // Resposta
         doc.setTextColor(22, 163, 74);
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
-        doc.text('Resposta:', margin + 5, currentY + 12);
+        doc.text('Resposta:', margin + 5, currentY + 14);
         
         doc.setTextColor(30, 41, 59);
         doc.setFont(undefined, 'normal');
-        const respostaLines = doc.splitTextToSize(questao.resposta, contentWidth - 25);
-        doc.text(respostaLines, margin + 25, currentY + 12);
+        const respostaLines = doc.splitTextToSize(questao.resposta, contentWidth - 30);
+        doc.text(respostaLines, margin + 30, currentY + 14);
 
         currentY += questionHeight;
       });
@@ -292,10 +327,10 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
       const footerY = pageHeight - 10;
       doc.setTextColor(107, 114, 128);
       doc.setFontSize(8);
-      doc.text('Gerado automaticamente pelo EduPlanner - Sistema de Gestão Educacional', pageWidth / 2, footerY, { align: 'center' });
+      doc.text('Gabarito gerado automaticamente pela AulagIA - Sua aula com toque mágico • aulagia.com.br', pageWidth / 2, footerY, { align: 'center' });
 
       // Salvar PDF
-      const fileName = `gabarito-${material?.title?.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-') || 'atividade'}.pdf`;
+      const fileName = `gabarito-${material?.title?.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-') || 'material'}.pdf`;
       doc.save(fileName);
       
       toast.success('Gabarito em PDF baixado com sucesso!');
@@ -377,7 +412,7 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
               <div className="flex justify-center pt-4 space-x-3">
                 <Button 
                   onClick={generateAnswerKeyPDF}
-                  className="flex items-center space-x-2 bg-red-600 hover:bg-red-700"
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
                 >
                   <Download className="h-4 w-4" />
                   <span>Baixar PDF</span>
