@@ -62,12 +62,12 @@ const NextStepsModal: React.FC<NextStepsModalProps> = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className={`${
         isMobile 
-          ? 'w-[95vw] h-[90vh] max-w-none max-h-none m-2' 
-          : 'w-full max-w-md mx-auto'
+          ? 'w-[95vw] h-[85vh] max-w-none max-h-none m-2' 
+          : 'w-full max-w-lg max-h-[80vh] mx-auto'
       } rounded-2xl p-0 overflow-hidden flex flex-col border-0 shadow-2xl`}>
         
         {/* Header fixo */}
-        <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b bg-white rounded-t-2xl">
+        <DialogHeader className="flex-shrink-0 p-5 pb-3 border-b bg-white rounded-t-2xl">
           <DialogTitle className={`text-center text-gray-800 font-bold ${
             isMobile ? 'text-lg' : 'text-xl'
           }`}>
@@ -76,8 +76,8 @@ const NextStepsModal: React.FC<NextStepsModalProps> = ({
         </DialogHeader>
         
         {/* Conteúdo scrollável */}
-        <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-4 pb-2' : 'p-6'}`}>
-          <div className={`space-y-4 ${isMobile ? 'space-y-3' : 'space-y-5'}`}>
+        <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-4 pb-2' : 'p-5'}`}>
+          <div className={`space-y-4 ${isMobile ? 'space-y-3' : 'space-y-4'}`}>
             
             {/* Alert de aviso */}
             <Alert className="border-amber-200 bg-amber-50 rounded-xl">
@@ -89,7 +89,7 @@ const NextStepsModal: React.FC<NextStepsModalProps> = ({
             </Alert>
 
             {/* Tipo do material */}
-            <div className="text-center p-4 bg-blue-50 rounded-xl">
+            <div className="text-center p-3 bg-blue-50 rounded-xl">
               <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                 Tipo de material criado:
               </p>
@@ -100,12 +100,12 @@ const NextStepsModal: React.FC<NextStepsModalProps> = ({
 
             {/* Próximos passos */}
             <div>
-              <h3 className={`font-semibold text-gray-800 mb-4 ${
+              <h3 className={`font-semibold text-gray-800 mb-3 ${
                 isMobile ? 'text-sm' : 'text-base'
               }`}>
                 Próximos Passos
               </h3>
-              <div className={`space-y-4 ${isMobile ? 'space-y-3' : 'space-y-4'}`}>
+              <div className={`space-y-3 ${isMobile ? 'space-y-2' : 'space-y-3'}`}>
                 {steps.map((step) => (
                   <div key={step.number} className="flex items-start space-x-3">
                     <div className={`flex-shrink-0 bg-blue-100 rounded-full flex items-center justify-center ${
@@ -142,7 +142,7 @@ const NextStepsModal: React.FC<NextStepsModalProps> = ({
         </div>
 
         {/* Botões fixos no rodapé */}
-        <DialogFooter className="flex-shrink-0 p-6 pt-4 border-t bg-white rounded-b-2xl">
+        <DialogFooter className="flex-shrink-0 p-5 pt-3 border-t bg-white rounded-b-2xl">
           <div className={`flex gap-3 ${isMobile ? 'flex-col' : 'flex-row justify-end'} w-full`}>
             <Button
               variant="outline"
