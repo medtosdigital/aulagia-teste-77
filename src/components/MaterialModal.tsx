@@ -22,29 +22,22 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
   const isMobile = useIsMobile();
   const [answerKeyModalOpen, setAnswerKeyModalOpen] = useState(false);
   const [nextStepsModalOpen, setNextStepsModalOpen] = useState(false);
-  const [showMaterialPreview, setShowMaterialPreview] = useState(false);
 
-  // Quando o modal principal abrir, mostrar primeiro o modal de próximos passos
+  // Quando o modal principal abrir, mostrar o modal de próximos passos por cima
   React.useEffect(() => {
-    if (open && material && !showMaterialPreview) {
+    if (open && material) {
       setNextStepsModalOpen(true);
     }
-  }, [open, material, showMaterialPreview]);
+  }, [open, material]);
 
   const handleNextStepsClose = () => {
     setNextStepsModalOpen(false);
     onClose();
-    setShowMaterialPreview(false);
   };
 
   const handleNextStepsContinue = () => {
     setNextStepsModalOpen(false);
-    setShowMaterialPreview(true);
-  };
-
-  const handleMainModalClose = () => {
-    onClose();
-    setShowMaterialPreview(false);
+    // Material continua visível
   };
 
   const getTypeLabel = (type: string): string => {
@@ -118,21 +111,6 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
 
   if (!material) return null;
 
-  // Modal de próximos passos
-  if (nextStepsModalOpen) {
-    return (
-      <NextStepsModal
-        open={nextStepsModalOpen}
-        onClose={handleNextStepsClose}
-        onContinue={handleNextStepsContinue}
-        materialType={material.type}
-      />
-    );
-  }
-
-  // Só mostrar o modal principal se showMaterialPreview for true
-  if (!showMaterialPreview) return null;
-
   // Mobile layout
   if (isMobile) {
     return (
@@ -141,7 +119,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
           <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl border-0 p-0 bg-white">
             <div className="h-full flex flex-col">
               {/* Header */}
-              <SheetHeader className="p-4 pb-3 border-b bg-white rounded-t-3xl">
+              <SheetHeader className="p-4 pb-3 border-b bg-white rounded-t-3xl flex-shrink-0">
                 <SheetTitle className="text-lg font-bold text-center">
                   {material.title}
                 </SheetTitle>
@@ -163,13 +141,13 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
               </div>
               
               {/* Export Buttons */}
-              <div className="p-4 space-y-3 bg-white border-t">
+              <div className="p-4 space-y-3 bg-white border-t flex-shrink-0 rounded-b-3xl">
                 <div className="grid grid-cols-3 gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handlePrint}
-                    className="text-xs"
+                    className="text-xs rounded-xl"
                   >
                     <Printer className="h-3 w-3 mr-1" />
                     Imprimir
@@ -179,7 +157,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                     variant="outline"
                     size="sm"
                     onClick={handleExportPDF}
-                    className="text-xs"
+                    className="text-xs rounded-xl"
                   >
                     <Download className="h-3 w-3 mr-1" />
                     PDF
@@ -190,7 +168,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                       variant="outline"
                       size="sm"
                       onClick={handleExportPPT}
-                      className="text-xs"
+                      className="text-xs rounded-xl"
                     >
                       <Download className="h-3 w-3 mr-1" />
                       PPT
@@ -200,7 +178,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                       variant="outline"
                       size="sm"
                       onClick={handleExportWord}
-                      className="text-xs"
+                      className="text-xs rounded-xl"
                     >
                       <Download className="h-3 w-3 mr-1" />
                       Word
@@ -213,7 +191,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                   <Button
                     variant="outline"
                     onClick={() => setAnswerKeyModalOpen(true)}
-                    className="w-full text-green-600 border-green-200 hover:bg-green-50"
+                    className="w-full text-green-600 border-green-200 hover:bg-green-50 rounded-xl"
                   >
                     <FileCheck className="h-4 w-4 mr-2" />
                     Gerar Gabarito
@@ -224,7 +202,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                 <Button
                   variant="default"
                   onClick={onClose}
-                  className="w-full bg-gray-800 hover:bg-gray-900"
+                  className="w-full bg-gray-800 hover:bg-gray-900 rounded-xl"
                 >
                   Fechar
                 </Button>
@@ -232,6 +210,14 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
             </div>
           </SheetContent>
         </Sheet>
+
+        {/* Modal de próximos passos por cima */}
+        <NextStepsModal
+          open={nextStepsModalOpen}
+          onClose={handleNextStepsClose}
+          onContinue={handleNextStepsContinue}
+          materialType={material.type}
+        />
 
         <AnswerKeyModal 
           material={material}
@@ -246,14 +232,14 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex">
-          <div className="flex-1 overflow-hidden">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex rounded-2xl">
+          <div className="flex-1 overflow-hidden rounded-l-2xl">
             <MaterialPreview material={material} />
           </div>
           
           {/* Sidebar com botões */}
-          <div className="w-80 bg-gray-50 border-l flex flex-col">
-            <DialogHeader className="p-6 pb-4 border-b bg-white">
+          <div className="w-80 bg-gray-50 border-l flex flex-col rounded-r-2xl">
+            <DialogHeader className="p-6 pb-4 border-b bg-white rounded-tr-2xl">
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-lg font-bold">
                   Exportar Material
@@ -262,6 +248,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                   variant="outline"
                   size="sm"
                   onClick={onClose}
+                  className="rounded-lg"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -273,7 +260,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                 variant="outline"
                 size="default"
                 onClick={handlePrint}
-                className="w-full justify-start"
+                className="w-full justify-start rounded-lg"
               >
                 <Printer className="h-4 w-4 mr-3" />
                 Imprimir
@@ -283,7 +270,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                 variant="outline"
                 size="default"
                 onClick={handleExportPDF}
-                className="w-full justify-start"
+                className="w-full justify-start rounded-lg"
               >
                 <Download className="h-4 w-4 mr-3" />
                 PDF
@@ -294,7 +281,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                   variant="outline"
                   size="default"
                   onClick={handleExportWord}
-                  className="w-full justify-start"
+                  className="w-full justify-start rounded-lg"
                 >
                   <Download className="h-4 w-4 mr-3" />
                   Microsoft Word
@@ -306,7 +293,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                   variant="outline"
                   size="default"
                   onClick={handleExportPPT}
-                  className="w-full justify-start"
+                  className="w-full justify-start rounded-lg"
                 >
                   <Download className="h-4 w-4 mr-3" />
                   PPT
@@ -319,7 +306,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
                   variant="outline"
                   size="default"
                   onClick={() => setAnswerKeyModalOpen(true)}
-                  className="w-full justify-start text-green-600 border-green-200 hover:bg-green-50"
+                  className="w-full justify-start text-green-600 border-green-200 hover:bg-green-50 rounded-lg"
                 >
                   <FileCheck className="h-4 w-4 mr-3" />
                   Gerar Gabarito
@@ -327,7 +314,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
               )}
             </div>
             
-            <div className="p-6 border-t mt-auto">
+            <div className="p-6 border-t mt-auto rounded-br-2xl">
               <div className="text-sm text-gray-600 space-y-2">
                 <h3 className="font-semibold">Detalhes</h3>
                 <div>
@@ -347,7 +334,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
               <Button
                 variant="default"
                 onClick={onClose}
-                className="w-full mt-6 bg-gray-800 hover:bg-gray-900"
+                className="w-full mt-6 bg-gray-800 hover:bg-gray-900 rounded-lg"
               >
                 Fechar
               </Button>
@@ -355,6 +342,14 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de próximos passos por cima */}
+      <NextStepsModal
+        open={nextStepsModalOpen}
+        onClose={handleNextStepsClose}
+        onContinue={handleNextStepsContinue}
+        materialType={material.type}
+      />
 
       <AnswerKeyModal 
         material={material}
