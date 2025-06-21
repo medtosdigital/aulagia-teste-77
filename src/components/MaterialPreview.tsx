@@ -23,7 +23,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     return typeMap[type as keyof typeof typeMap] || '1';
   };
 
-  // Novo método para criar páginas com o template otimizado
+  // Método para criar páginas com o template atualizado
   const wrapPageContentWithTemplate = (content: string, isFirstPage: boolean): string => {
     const pageClass = isFirstPage ? 'first-page-content' : 'subsequent-page-content';
     const contentClass = isFirstPage ? 'content' : 'content subsequent-page';
@@ -62,7 +62,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     `;
   };
 
-  // Sistema de paginação otimizado baseado no template fornecido
+  // Sistema de paginação otimizado baseado no template atualizado
   const splitContentIntoPages = (htmlContent: string): string[] => {
     console.log('Starting optimized page split for:', material.type);
     
@@ -99,7 +99,40 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         // Construir conteúdo da página
         let pageContent = '';
         if (isFirstPage) {
-          pageContent += header + instructions;
+          // Título da Atividade
+          pageContent += '<h2>ATIVIDADE</h2>';
+          
+          // Informações básicas da Atividade
+          pageContent += `
+            <table>
+              <tr>
+                <th>Escola:</th>
+                <td>_________________________________</td>
+                <th>Data:</th>
+                <td>${new Date().toLocaleDateString('pt-BR')}</td>
+              </tr>
+              <tr>
+                <th>Disciplina:</th>
+                <td>${material.subject || '[DISCIPLINA]'}</td>
+                <th>Série/Ano:</th>
+                <td>${material.grade || '[SERIE_ANO]'}</td>
+              </tr>
+              <tr>
+                <th>Aluno(a):</th>
+                <td class="student-info-cell">____________________________________________</td>
+                <th>BNCC:</th>
+                <td class="student-info-cell">{{Código da BNCC}}</td>
+              </tr>
+            </table>
+          `;
+          
+          // Instruções da Atividade
+          pageContent += `
+            <div class="instructions">
+              <strong>${material.title}:</strong><br>
+              ${instructions || 'Leia atentamente cada questão e responda de acordo com o solicitado.'}
+            </div>
+          `;
         }
         
         questionsForPage.forEach(question => {
@@ -304,7 +337,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             margin-top: 40mm;
           }
 
-          /* Elementos do conteúdo */
+          /* Título principal */
           h2 {
             text-align: center;
             margin: 10px 0 18px 0;
@@ -324,6 +357,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             border-radius: 2px;
           }
           
+          /* Tabelas */
           table {
             width: 100%;
             border-collapse: collapse;
@@ -353,8 +387,11 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           td:last-child {
             border-bottom: none;
           }
+          table .student-info-cell {
+            width: 32%;
+          }
           
-          .instructions-section {
+          .instructions {
             background: #eff6ff;
             padding: 15px;
             border-left: 4px solid #0ea5e9;
@@ -397,6 +434,42 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             color: #4338ca;
             min-width: 25px;
           }
+
+          /* Novos estilos baseados no template */
+          .question {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+          }
+          .question-header {
+            font-weight: 600;
+            color: #4338ca;
+            margin-bottom: 10px;
+            font-size: 1.0rem;
+            font-family: 'Inter', sans-serif;
+          }
+          .question-text {
+            margin-bottom: 15px;
+            text-align: justify;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            line-height: 1.4;
+          }
+          .options {
+            margin-left: 20px;
+          }
+          .option {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+          }
+          .option-letter {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #4338ca;
+            min-width: 25px;
+          }
           
           .answer-lines {
             border-bottom: 1px solid #d1d5db;
@@ -409,6 +482,69 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           }
           .answer-lines:last-child {
             margin-bottom: 0;
+          }
+
+          .math-space {
+            border: 1px solid #e5e7eb;
+            min-height: 80px;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 4px;
+            background: #fafafa;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 0.8rem;
+          }
+
+          .matching-section {
+            display: flex;
+            gap: 30px;
+            margin: 15px 0;
+          }
+          .matching-column {
+            flex: 1;
+          }
+          .matching-item {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            background: #f9fafb;
+          }
+
+          .fill-blank {
+            display: inline-block;
+            border-bottom: 2px solid #4338ca;
+            min-width: 100px;
+            height: 20px;
+            margin: 0 5px;
+          }
+
+          .image-space {
+            border: 2px dashed #d1d5db;
+            min-height: 120px;
+            margin: 15px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 0.8rem;
+            background: #fafafa;
+          }
+
+          .formula-display {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.1rem;
+            border: 1px solid #e2e8f0;
           }
           
           /* Rodapé */
@@ -472,7 +608,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
-            .questao-numero {
+            .questao-numero, .question-header {
               color: #4338ca !important;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
