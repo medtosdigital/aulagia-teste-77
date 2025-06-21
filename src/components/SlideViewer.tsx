@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { exportService } from '@/services/exportService';
 import { GeneratedMaterial } from '@/services/materialService';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SlideViewerProps {
   htmlContent: string;
@@ -12,6 +13,7 @@ interface SlideViewerProps {
 
 const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const isMobile = useIsMobile();
   
   // Generate slides based on content
   const slides = React.useMemo(() => {
@@ -559,109 +561,123 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
     );
   }
 
+  const hasMultipleSlides = slides.length > 1;
+
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
-      {/* Navigation Header */}
-      <div className="bg-blue-900 text-white p-4 rounded-t-xl flex items-center justify-between">
-        <span className="text-sm font-medium">
-          Slide {currentSlide + 1} de {slides.length}
-        </span>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handlePrint}
-            className="text-white hover:bg-blue-700"
-          >
-            <Printer className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleExportPDF}
-            className="text-white hover:bg-blue-700"
-          >
-            <Download className="h-4 w-4" />
-            PDF
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleExportPPT}
-            className="text-white hover:bg-blue-700"
-          >
-            <Download className="h-4 w-4" />
-            PPT
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-            disabled={currentSlide === 0}
-            className="text-white hover:bg-blue-700"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-            disabled={currentSlide === slides.length - 1}
-            className="text-white hover:bg-blue-700"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+      {/* Navigation Header - Only show if multiple slides */}
+      {hasMultipleSlides && (
+        <div className="bg-blue-900 text-white p-4 rounded-t-xl flex items-center justify-between">
+          <span className={`font-medium ${
+            isMobile ? 'text-lg' :  'text-sm'
+          }`}>
+            Slide {currentSlide + 1} de {slides.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handlePrint}
+              className="text-white hover:bg-blue-700"
+            >
+              <Printer className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleExportPDF}
+              className="text-white hover:bg-blue-700"
+            >
+              <Download className="h-4 w-4" />
+              PDF
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleExportPPT}
+              className="text-white hover:bg-blue-700"
+            >
+              <Download className="h-4 w-4" />
+              PPT
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+              disabled={currentSlide === 0}
+              className="text-white hover:bg-blue-700"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+              disabled={currentSlide === slides.length - 1}
+              className="text-white hover:bg-blue-700"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Slide Content with Mobile Navigation Arrows */}
+      {/* Slide Content with Mobile Navigation Arrows - Only show navigation if multiple slides */}
       <div className="bg-gray-100 p-6 rounded-b-xl relative">
         <div className="aspect-[16/9] w-full relative">
           {renderSlide(slides[currentSlide], currentSlide)}
           
-          {/* Mobile Navigation Arrows - Large and positioned on sides */}
-          <div className="md:hidden absolute inset-y-0 left-0 flex items-center">
-            <button
-              onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-              disabled={currentSlide === 0}
-              className="ml-4 w-16 h-16 bg-blue-900 text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
-            >
-              <ChevronLeft className="h-8 w-8" />
-            </button>
-          </div>
-          
-          <div className="md:hidden absolute inset-y-0 right-0 flex items-center">
-            <button
-              onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-              disabled={currentSlide === slides.length - 1}
-              className="mr-4 w-16 h-16 bg-blue-900 text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
-            >
-              <ChevronRight className="h-8 w-8" />
-            </button>
-          </div>
+          {/* Mobile Navigation Arrows - Large and positioned on sides - Only show if multiple slides */}
+          {hasMultipleSlides && (
+            <>
+              <div className="md:hidden absolute inset-y-0 left-0 flex items-center">
+                <button
+                  onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+                  disabled={currentSlide === 0}
+                  className="ml-4 w-16 h-16 bg-blue-900 text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </button>
+              </div>
+              
+              <div className="md:hidden absolute inset-y-0 right-0 flex items-center">
+                <button
+                  onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+                  disabled={currentSlide === slides.length - 1}
+                  className="mr-4 w-16 h-16 bg-blue-900 text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Slide Indicators */}
-      <div className="bg-blue-900 p-4 rounded-b-xl flex justify-center gap-2">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-colors ${
-              index === currentSlide 
-                ? 'bg-white' 
-                : 'bg-blue-300 hover:bg-blue-200'
-            }`}
-            aria-label={`Ir para slide ${index + 1}`}
-          />
-        ))}
-      </div>
+      {/* Slide Indicators - Only show if multiple slides */}
+      {hasMultipleSlides && (
+        <div className="bg-blue-900 p-4 rounded-b-xl flex justify-center gap-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-colors ${
+                index === currentSlide 
+                  ? 'bg-white' 
+                  : 'bg-blue-300 hover:bg-blue-200'
+              }`}
+              aria-label={`Ir para slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* Navigation Instructions */}
-      <div className="bg-gray-100 p-3 text-center text-sm text-gray-600 rounded-b-lg">
-        Use as setas ou clique nos pontos para navegar entre os slides
-      </div>
+      {/* Navigation Instructions - Only show if multiple slides */}
+      {hasMultipleSlides && (
+        <div className="bg-gray-100 p-3 text-center text-sm text-gray-600 rounded-b-lg">
+          Use as setas ou clique nos pontos para navegar entre os slides
+        </div>
+      )}
     </div>
   );
 };
