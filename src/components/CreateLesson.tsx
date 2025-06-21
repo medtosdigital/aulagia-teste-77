@@ -36,7 +36,7 @@ const CreateLesson: React.FC = () => {
     grade: '',
     questionType: 'mistas',
     questionCount: [5],
-    // Novos campos para múltiplos assuntos/conteúdos (específico para avaliações)
+    // Campo para múltiplos assuntos/conteúdos (usado para avaliações)
     subjects: [''] as string[]
   });
   const [isGenerating, setIsGenerating] = useState(false);
@@ -148,16 +148,22 @@ const CreateLesson: React.FC = () => {
 
   const handleFormSubmit = () => {
     // Verificar campos básicos
-    if (!formData.topic || !formData.subject || !formData.grade) {
+    if (!formData.subject || !formData.grade) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    // Verificar assuntos específicos para avaliações
+    // Para avaliações, verificar se há assuntos preenchidos
     if (selectedType === 'avaliacao') {
       const validSubjects = formData.subjects.filter(s => s.trim() !== '');
       if (validSubjects.length === 0) {
         toast.error('Adicione pelo menos um assunto/conteúdo para a avaliação');
+        return;
+      }
+    } else {
+      // Para outros tipos, verificar se o tema foi preenchido
+      if (!formData.topic) {
+        toast.error('Preencha todos os campos obrigatórios');
         return;
       }
     }
@@ -185,10 +191,10 @@ const CreateLesson: React.FC = () => {
     }, 300);
 
     try {
-      // Para avaliações, usar os múltiplos assuntos
+      // Para avaliações, usar os múltiplos assuntos como tema
       const materialFormData = {
-        tema: formData.topic,
-        topic: formData.topic,
+        tema: selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic,
+        topic: selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic,
         disciplina: formData.subject,
         subject: formData.subject,
         serie: formData.grade,
@@ -347,28 +353,84 @@ const CreateLesson: React.FC = () => {
               </div>
 
               <div className="space-y-6">
-                <div>
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                      T
+                {/* Campo de Tema da Aula (apenas para tipos que não são avaliação) */}
+                {selectedType !== 'avaliacao' && (
+                  <div>
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                        T
+                      </div>
+                      <Label className="text-base sm:text-lg font-semibold text-gray-800">Tema da Aula</Label>
                     </div>
-                    <Label className="text-base sm:text-lg font-semibold text-gray-800">Tema da Aula</Label>
+                    <div className="relative">
+                      <Input 
+                        placeholder="Ex: Introdução à Álgebra Linear" 
+                        value={formData.topic} 
+                        onChange={e => setFormData({
+                          ...formData,
+                          topic: e.target.value
+                        })} 
+                        className="pr-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
+                      />
+                      <button className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-2 hover:bg-blue-50 rounded-lg transition-colors">
+                        <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="relative">
-                    <Input 
-                      placeholder="Ex: Introdução à Álgebra Linear" 
-                      value={formData.topic} 
-                      onChange={e => setFormData({
-                        ...formData,
-                        topic: e.target.value
-                      })} 
-                      className="pr-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
-                    />
-                    <button className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-2 hover:bg-blue-50 rounded-lg transition-colors">
-                      <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-                    </button>
+                )}
+
+                {/* Campo para múltiplos assuntos/conteúdos (apenas para avaliações) */}
+                {selectedType === 'avaliacao' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                          C
+                        </div>
+                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Assuntos/Conteúdos da Avaliação</Label>
+                      </div>
+                      <Button 
+                        type="button"
+                        onClick={addSubject}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center space-x-1 hover:bg-blue-50 border-blue-200"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Adicionar</span>
+                      </Button>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Adicione os assuntos ou conteúdos específicos que serão abordados na avaliação. As questões serão baseadas nesses temas.
+                    </p>
+                    
+                    <div className="space-y-3">
+                      {formData.subjects.map((subject, index) => (
+                        <div key={index} className="flex items-center space-x-3">
+                          <div className="flex-1">
+                            <Input
+                              placeholder={`Ex: ${index === 0 ? 'Equações do 1º grau' : index === 1 ? 'Sistemas lineares' : 'Funções quadráticas'}`}
+                              value={subject}
+                              onChange={(e) => updateSubject(index, e.target.value)}
+                              className="h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all"
+                            />
+                          </div>
+                          {formData.subjects.length > 1 && (
+                            <Button
+                              type="button"
+                              onClick={() => removeSubject(index)}
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center justify-center w-12 h-12 hover:bg-red-50 border-red-200 text-red-500"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
@@ -422,59 +484,6 @@ const CreateLesson: React.FC = () => {
                     </Select>
                   </div>
                 </div>
-
-                {/* Campo específico para múltiplos assuntos/conteúdos nas avaliações */}
-                {selectedType === 'avaliacao' && (
-                  <div className="space-y-4 border-t border-gray-200 pt-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                          C
-                        </div>
-                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Assuntos/Conteúdos da Avaliação</Label>
-                      </div>
-                      <Button 
-                        type="button"
-                        onClick={addSubject}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center space-x-1 hover:bg-blue-50 border-blue-200"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Adicionar</span>
-                      </Button>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Adicione os assuntos ou conteúdos específicos que serão abordados na avaliação. As questões serão baseadas nesses temas.
-                    </p>
-                    
-                    <div className="space-y-3">
-                      {formData.subjects.map((subject, index) => (
-                        <div key={index} className="flex items-center space-x-3">
-                          <div className="flex-1">
-                            <Input
-                              placeholder={`Ex: ${index === 0 ? 'Equações do 1º grau' : index === 1 ? 'Sistemas lineares' : 'Funções quadráticas'}`}
-                              value={subject}
-                              onChange={(e) => updateSubject(index, e.target.value)}
-                              className="h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all"
-                            />
-                          </div>
-                          {formData.subjects.length > 1 && (
-                            <Button
-                              type="button"
-                              onClick={() => removeSubject(index)}
-                              variant="outline"
-                              size="sm"
-                              className="flex items-center justify-center w-12 h-12 hover:bg-red-50 border-red-200 text-red-500"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* Campos específicos para atividades e avaliações */}
                 {(selectedType === 'atividade' || selectedType === 'avaliacao') && (
@@ -560,7 +569,12 @@ const CreateLesson: React.FC = () => {
 
                   <Button 
                     onClick={handleFormSubmit} 
-                    disabled={!formData.topic ||!formData.subject || !formData.grade} 
+                    disabled={
+                      !formData.subject || 
+                      !formData.grade || 
+                      (selectedType !== 'avaliacao' && !formData.topic) ||
+                      (selectedType === 'avaliacao' && formData.subjects.filter(s => s.trim() !== '').length === 0)
+                    } 
                     className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -583,7 +597,7 @@ const CreateLesson: React.FC = () => {
         <BNCCValidationModal
           open={showBNCCValidation}
           onClose={() => setShowBNCCValidation(false)}
-          tema={formData.topic}
+          tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic}
           disciplina={formData.subject}
           serie={formData.grade}
           onAccept={handleBNCCValidationAccept}
