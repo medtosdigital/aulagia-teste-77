@@ -62,14 +62,12 @@ const NextStepsModal: React.FC<NextStepsModalProps> = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className={`${
         isMobile 
-          ? 'w-[95vw] h-[90vh] max-w-none max-h-none m-2 rounded-2xl' 
-          : 'max-w-md rounded-xl'
-      } p-0 overflow-hidden flex flex-col`}>
+          ? 'w-[95vw] h-[90vh] max-w-none max-h-none m-2' 
+          : 'w-full max-w-md mx-auto'
+      } rounded-2xl p-0 overflow-hidden flex flex-col border-0 shadow-2xl`}>
         
         {/* Header fixo */}
-        <DialogHeader className={`flex-shrink-0 p-4 pb-3 border-b bg-white ${
-          isMobile ? 'rounded-t-2xl' : 'rounded-t-xl'
-        }`}>
+        <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b bg-white rounded-t-2xl">
           <DialogTitle className={`text-center text-gray-800 font-bold ${
             isMobile ? 'text-lg' : 'text-xl'
           }`}>
@@ -78,8 +76,8 @@ const NextStepsModal: React.FC<NextStepsModalProps> = ({
         </DialogHeader>
         
         {/* Conteúdo scrollável */}
-        <div className={`flex-1 overflow-y-auto p-4 ${isMobile ? 'pb-2' : 'p-6'}`}>
-          <div className={`space-y-4 ${isMobile ? 'space-y-3' : 'space-y-4'}`}>
+        <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-4 pb-2' : 'p-6'}`}>
+          <div className={`space-y-4 ${isMobile ? 'space-y-3' : 'space-y-5'}`}>
             
             {/* Alert de aviso */}
             <Alert className="border-amber-200 bg-amber-50 rounded-xl">
@@ -91,23 +89,23 @@ const NextStepsModal: React.FC<NextStepsModalProps> = ({
             </Alert>
 
             {/* Tipo do material */}
-            <div className="text-center p-3 bg-blue-50 rounded-xl">
+            <div className="text-center p-4 bg-blue-50 rounded-xl">
               <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                 Tipo de material criado:
               </p>
-              <p className={`font-semibold text-blue-700 ${isMobile ? 'text-sm' : 'text-base'}`}>
+              <p className={`font-semibold text-blue-700 ${isMobile ? 'text-sm' : 'text-lg'}`}>
                 {getTypeLabel(materialType)}
               </p>
             </div>
 
             {/* Próximos passos */}
             <div>
-              <h3 className={`font-semibold text-gray-800 mb-3 ${
+              <h3 className={`font-semibold text-gray-800 mb-4 ${
                 isMobile ? 'text-sm' : 'text-base'
               }`}>
                 Próximos Passos
               </h3>
-              <div className={`space-y-3 ${isMobile ? 'space-y-2' : 'space-y-3'}`}>
+              <div className={`space-y-4 ${isMobile ? 'space-y-3' : 'space-y-4'}`}>
                 {steps.map((step) => (
                   <div key={step.number} className="flex items-start space-x-3">
                     <div className={`flex-shrink-0 bg-blue-100 rounded-full flex items-center justify-center ${
@@ -144,23 +142,21 @@ const NextStepsModal: React.FC<NextStepsModalProps> = ({
         </div>
 
         {/* Botões fixos no rodapé */}
-        <DialogFooter className={`flex-shrink-0 p-4 pt-2 border-t bg-white ${
-          isMobile ? 'rounded-b-2xl' : 'rounded-b-xl'
-        }`}>
-          <div className={`flex gap-2 ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'}`}>
+        <DialogFooter className="flex-shrink-0 p-6 pt-4 border-t bg-white rounded-b-2xl">
+          <div className={`flex gap-3 ${isMobile ? 'flex-col' : 'flex-row justify-end'} w-full`}>
             <Button
               variant="outline"
               onClick={onClose}
-              className={`border-gray-300 rounded-lg ${
-                isMobile ? 'w-full h-10 text-sm' : 'w-full sm:w-auto'
+              className={`border-gray-300 rounded-xl hover:bg-gray-50 transition-colors ${
+                isMobile ? 'w-full h-11 text-sm' : 'px-6 h-11'
               }`}
             >
               Cancelar
             </Button>
             <Button
               onClick={onContinue}
-              className={`bg-blue-600 hover:bg-blue-700 text-white rounded-lg ${
-                isMobile ? 'w-full h-10 text-sm' : 'w-full sm:w-auto'
+              className={`bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors ${
+                isMobile ? 'w-full h-11 text-sm' : 'px-6 h-11'
               }`}
             >
               Visualizar Material
