@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { templateService } from '@/services/templateService';
 import { GeneratedMaterial } from '@/services/materialService';
@@ -23,77 +24,14 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     return typeMap[type as keyof typeof typeMap] || '1';
   };
 
-  const wrapPageContent = (content: string, header: string, includeFooter: boolean, isFirstPage: boolean = false): string => {
-    return `
-      <div class="page-content">
-        <div class="page-header-container">
-          <div class="logo-placeholder">
-            <div style="height: 50px; margin-bottom: 25px; background: #f3f4f6; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px; font-weight: 500;">Sistema Educacional</div>
-          </div>
-          ${header}
-        </div>
-        <div class="content-wrapper">
-          ${content}
-        </div>
-        ${includeFooter ? '<div class="page-footer-container"><p>Gerado automaticamente pelo Sistema Educacional</p></div>' : ''}
-      </div>
-    `;
-  };
-
-  const calculateQuestionHeight = (question: Element): number => {
-    const enunciado = question.querySelector('.questao-enunciado')?.textContent || '';
-    const opcoes = question.querySelectorAll('.opcao');
-    
-    // Cálculo mais conservador da altura
-    let height = 80; // Base menor
-    
-    // Altura do texto do enunciado
-    const textLines = Math.ceil(enunciado.length / 65); // Menos caracteres por linha
-    height += textLines * 22;
-    
-    // Altura das opções
-    opcoes.forEach(opcao => {
-      const opcaoText = opcao.textContent || '';
-      const opcaoLines = Math.ceil(opcaoText.length / 60);
-      height += opcaoLines * 20 + 8; // Altura por linha + margem
-    });
-    
-    // Espaçamento adicional para questões complexas
-    if (enunciado.length > 120 || opcoes.length > 3) {
-      height += 40;
-    }
-    
-    // Margem entre questões
-    height += 40;
-    
-    console.log(`Question height calculated: ${height}px for question with ${enunciado.length} chars and ${opcoes.length} options`);
-    return height;
-  };
-
+  // Sistema de paginação otimizado baseado no template fornecido
   const splitContentIntoPages = (htmlContent: string): string[] => {
-    console.log('Starting improved page split for:', material.type);
+    console.log('Starting optimized page split for:', material.type);
     
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
-    // Dimensões de página A4 mais precisas
-    const pageHeight = 1056; // A4 height em pixels (297mm)
-    const headerHeight = 140; // Cabeçalho menor
-    const footerHeight = 50; // Rodapé menor
-    const topMargin = 60; // Margem superior adicional
-    const bottomMargin = 40; // Margem inferior adicional
-    const availableContentHeight = pageHeight - headerHeight - footerHeight - topMargin - bottomMargin;
-    
-    console.log('New page calculation:', { 
-      pageHeight, 
-      headerHeight, 
-      footerHeight, 
-      topMargin, 
-      bottomMargin, 
-      availableContentHeight 
-    });
-
-    // Para atividades e avaliações - dividir por questões
+    // Para atividades e avaliações - usar o novo sistema de paginação
     if (material.type === 'atividade' || material.type === 'avaliacao') {
       const pages: string[] = [];
       const questions = tempDiv.querySelectorAll('.questao-container');
@@ -103,42 +41,41 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         return [htmlContent];
       }
 
-      console.log(`Processing ${questions.length} questions for pagination`);
+      console.log(`Processing ${questions.length} questions for optimized pagination`);
 
-      let currentPageContent = '';
-      let currentPageHeight = 0;
-      
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
-      const combinedHeader = header + instructions;
-      
-      questions.forEach((question, index) => {
-        const questionHeight = calculateQuestionHeight(question);
+      const questionsPerPage = 4; // Baseado no template: 4 questões por página
+      let questionIndex = 0;
+
+      while (questionIndex < questions.length) {
+        const isFirstPage = pages.length === 0;
+        const questionsForPage = [];
         
-        // Verificar se a questão cabe na página atual
-        if (currentPageHeight + questionHeight > availableContentHeight && currentPageContent) {
-          console.log(`Page break at question ${index + 1}, height: ${currentPageHeight}px`);
-          const isFirstPage = pages.length === 0;
-          pages.push(wrapPageContent(currentPageContent, isFirstPage ? combinedHeader : '', true, isFirstPage));
-          currentPageContent = '';
-          currentPageHeight = 0;
+        // Adicionar até 4 questões por página
+        for (let i = 0; i < questionsPerPage && questionIndex < questions.length; i++) {
+          questionsForPage.push(questions[questionIndex]);
+          questionIndex++;
+        }
+
+        // Construir conteúdo da página
+        let pageContent = '';
+        if (isFirstPage) {
+          pageContent += header + instructions;
         }
         
-        currentPageContent += question.outerHTML;
-        currentPageHeight += questionHeight;
-      });
-      
-      // Adicionar última página
-      if (currentPageContent) {
-        const isFirstPage = pages.length === 0;
-        pages.push(wrapPageContent(currentPageContent, isFirstPage ? combinedHeader : '', true, isFirstPage));
+        questionsForPage.forEach(question => {
+          pageContent += question.outerHTML;
+        });
+
+        pages.push(this.wrapPageContentWithTemplate(pageContent, isFirstPage));
       }
       
-      console.log(`Split into ${pages.length} pages`);
+      console.log(`Split into ${pages.length} optimized pages`);
       return pages.length > 0 ? pages : [htmlContent];
     }
 
-    // Para planos de aula - dividir por seções
+    // Para planos de aula - manter lógica existente
     if (material.type === 'plano-de-aula') {
       const sections = tempDiv.querySelectorAll('.section');
       if (sections.length <= 1) {
@@ -146,27 +83,30 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
       }
 
       const pages: string[] = [];
-      let currentPageContent = '';
-      let currentPageHeight = 0;
-      const sectionHeight = 180; // Altura reduzida por seção
+      const sectionsPerPage = 3; // Reduzido para melhor formatação
+      let sectionIndex = 0;
 
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       
-      sections.forEach((section, index) => {
-        if (currentPageHeight + sectionHeight > availableContentHeight && currentPageContent) {
-          const isFirstPage = pages.length === 0;
-          pages.push(wrapPageContent(currentPageContent, isFirstPage ? header : '', false, isFirstPage));
-          currentPageContent = '';
-          currentPageHeight = 0;
+      while (sectionIndex < sections.length) {
+        const isFirstPage = pages.length === 0;
+        const sectionsForPage = [];
+        
+        for (let i = 0; i < sectionsPerPage && sectionIndex < sections.length; i++) {
+          sectionsForPage.push(sections[sectionIndex]);
+          sectionIndex++;
+        }
+
+        let pageContent = '';
+        if (isFirstPage) {
+          pageContent += header;
         }
         
-        currentPageContent += section.outerHTML;
-        currentPageHeight += sectionHeight;
-      });
-      
-      if (currentPageContent) {
-        const isFirstPage = pages.length === 0;
-        pages.push(wrapPageContent(currentPageContent, isFirstPage ? header : '', false, isFirstPage));
+        sectionsForPage.forEach(section => {
+          pageContent += section.outerHTML;
+        });
+
+        pages.push(this.wrapPageContentWithTemplate(pageContent, isFirstPage));
       }
       
       return pages.length > 0 ? pages : [htmlContent];
@@ -175,7 +115,46 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     return [htmlContent];
   };
 
-  const enhanceHtmlWithStyles = (htmlContent: string): string => {
+  // Novo método para criar páginas com o template otimizado
+  const wrapPageContentWithTemplate = (content: string, isFirstPage: boolean): string => {
+    const pageClass = isFirstPage ? 'first-page-content' : 'subsequent-page-content';
+    const contentClass = isFirstPage ? 'content' : 'content subsequent-page';
+    
+    return `
+      <div class="page ${pageClass}">
+        <!-- Formas decorativas -->
+        <div class="shape-circle purple"></div>
+        <div class="shape-circle blue"></div>
+
+        <!-- Cabeçalho AulagIA - Visível em todas as páginas -->
+        <div class="header">
+          <div class="logo-container">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+            </div>
+            <div class="brand-text">
+              <h1>AulagIA</h1>
+              <p>Sua aula com toque mágico</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rodapé - Visível em todas as páginas -->
+        <div class="footer">
+          ${material.type === 'atividade' ? 'Atividade' : 'Avaliação'} gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br
+        </div>
+
+        <div class="${contentClass}">
+          ${content}
+        </div>
+      </div>
+    `;
+  };
+
+  const enhanceHtmlWithOptimizedStyles = (htmlContent: string): string => {
     return `
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -184,165 +163,325 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${material.title}</title>
         <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+          
+          /* Define página A4 para impressão e visualização */
           @page {
             size: A4;
-            margin: 20mm 15mm 20mm 15mm;
+            margin: 0;
           }
-          
-          * {
+          body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-          }
-          
-          body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.5;
-            color: #333;
-            background: white;
-            font-size: 14px;
-          }
-          
-          .page-content {
-            min-height: calc(100vh - 40mm);
+            background: #f0f4f8;
+            font-family: 'Inter', sans-serif;
             display: flex;
             flex-direction: column;
-            page-break-after: always;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 0;
+          }
+          
+          /* Container no tamanho A4 - Cada .page será uma folha */
+          .page {
+            position: relative;
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            overflow: hidden;
+            margin: 0 auto 20px auto;
+            box-sizing: border-box;
             padding: 0;
-            margin: 0;
-          }
-          
-          .page-content:last-child {
-            page-break-after: avoid;
-          }
-          
-          .page-header-container {
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e5e5e5;
-            min-height: 120px;
-            flex-shrink: 0;
-          }
-          
-          .logo-placeholder {
-            text-align: center;
-            margin-bottom: 20px;
-          }
-          
-          .content-wrapper {
-            flex: 1;
-            padding-top: 20px;
-            margin-top: 20px;
-          }
-          
-          .page-footer-container {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #e5e5e5;
-            text-align: center;
-            font-size: 11px;
-            color: #666;
-            flex-shrink: 0;
-          }
-          
-          .questao-container {
-            margin-bottom: 30px;
-            padding: 18px;
-            background: #fafafa;
-            border-left: 4px solid #3b82f6;
-            border-radius: 6px;
-            page-break-inside: avoid;
-            break-inside: avoid;
-          }
-          
-          .questao-numero {
-            font-weight: bold;
-            color: #3b82f6;
-            margin-bottom: 12px;
-            font-size: 15px;
-          }
-          
-          .questao-enunciado {
-            margin-bottom: 16px;
-            line-height: 1.6;
-            font-size: 13px;
-          }
-          
-          .questao-opcoes {
-            margin-left: 16px;
-          }
-          
-          .opcao {
-            margin: 8px 0;
             display: flex;
-            align-items: flex-start;
-            font-size: 13px;
-            line-height: 1.4;
+            flex-direction: column;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            page-break-after: always;
+          }
+
+          .page:last-of-type {
+            page-break-after: auto;
+            margin-bottom: 0;
           }
           
-          .opcao-letra {
-            font-weight: bold;
-            margin-right: 10px;
-            min-width: 20px;
+          /* Formas decorativas */
+          .shape-circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.25;
+            pointer-events: none;
+            z-index: 0;
+          }
+          .shape-circle.purple {
+            width: 180px; 
+            height: 180px;
+            background: #a78bfa;
+            top: -60px; 
+            left: -40px;
+          }
+          .shape-circle.blue {
+            width: 240px; 
+            height: 240px;
+            background: #60a5fa;
+            bottom: -80px; 
+            right: -60px;
           }
           
-          .section {
-            margin-bottom: 30px;
-            page-break-inside: avoid;
-            break-inside: avoid;
+          /* Cabeçalho que aparece no topo */
+          .header {
+            position: absolute;
+            top: 6mm;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            z-index: 999;
+            height: 12mm;
+            background: transparent;
+            padding: 0 12mm;
+            flex-shrink: 0;
+          }
+          .header .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+          }
+          .header .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
+          }
+          .header .logo svg {
+            width: 16px;
+            height: 16px;
+            stroke: white;
+            fill: none;
+            stroke-width: 2;
+          }
+          .header .brand-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+          }
+          .header .brand-text h1 {
+            font-size: 20px;
+            color: #0ea5e9;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            line-height: 1;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+            text-transform: none;
+          }
+          .header .brand-text p {
+            font-size: 8px;
+            color: #6b7280;
+            margin: -1px 0 0 0;
+            font-family: 'Inter', sans-serif;
+            line-height: 1;
+            font-weight: 400;
           }
           
-          .section-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 16px;
-            padding-bottom: 6px;
-            border-bottom: 2px solid #e5e7eb;
+          /* Conteúdo principal com margem para não sobrepor o cabeçalho */
+          .content {
+            margin-top: 20mm;
+            margin-bottom: 12mm;
+            padding: 0 15mm;
+            position: relative;
+            flex: 1;
+            overflow: visible;
+            z-index: 1;
+          }
+
+          .content.subsequent-page {
+            margin-top: 40mm;
+          }
+
+          /* Elementos do conteúdo */
+          h2 {
+            text-align: center;
+            margin: 10px 0 18px 0;
+            font-size: 1.5rem;
+            color: #4f46e5;
+            position: relative;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+          }
+          h2::after {
+            content: '';
+            width: 50px;
+            height: 3px;
+            background: #a78bfa;
+            display: block;
+            margin: 6px auto 0;
+            border-radius: 2px;
+          }
+          
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 18px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          }
+          th, td {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            vertical-align: top;
+          }
+          th {
+            background: #f3f4f6;
+            color: #1f2937;
+            font-weight: 600;
+            text-align: left;
+            width: 18%;
+          }
+          td {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          td:last-child {
+            border-bottom: none;
           }
           
           .instructions-section {
-            background: #f0f9ff;
-            padding: 16px;
-            border-radius: 6px;
-            margin-bottom: 12px;
+            background: #eff6ff;
+            padding: 15px;
             border-left: 4px solid #0ea5e9;
+            margin-bottom: 30px;
+            font-family: 'Inter', sans-serif;
+            border-radius: 6px;
+          }
+
+          .questao-container {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+          }
+          .questao-numero {
+            font-weight: 600;
+            color: #4338ca;
+            margin-bottom: 10px;
+            font-size: 1.0rem;
+            font-family: 'Inter', sans-serif;
+          }
+          .questao-enunciado {
+            margin-bottom: 15px;
+            text-align: justify;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            line-height: 1.4;
+          }
+          .questao-opcoes {
+            margin-left: 20px;
+          }
+          .opcao {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+          }
+          .opcao-letra {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #4338ca;
+            min-width: 25px;
           }
           
+          .answer-lines {
+            border-bottom: 1px solid #d1d5db;
+            margin-bottom: 8px;
+            height: 20px;
+            padding: 0;
+            background: none;
+            border-radius: 0;
+            min-height: 20px;
+          }
+          .answer-lines:last-child {
+            margin-bottom: 0;
+          }
+          
+          /* Rodapé */
+          .footer {
+            position: absolute;
+            bottom: 6mm;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #6b7280;
+            z-index: 999;
+            height: 6mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            padding: 0 15mm;
+            font-family: 'Inter', sans-serif;
+            flex-shrink: 0;
+          }
+          
+          /* Ajustes para impressão */
           @media print {
-            body {
-              margin: 0;
-              padding: 0;
+            body { 
+              margin: 0; 
+              padding: 0; 
+              background: white;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
-            
-            .page-content {
+            .page { 
+              box-shadow: none; 
               margin: 0;
-              padding: 20mm 15mm;
-              max-width: none;
-              height: auto;
-              min-height: calc(100vh - 40mm);
+              border-radius: 0;
+              width: 100%;
+              min-height: 100vh;
+              display: flex;
+              flex-direction: column;
             }
-            
-            .page-header-container {
-              margin-bottom: 35px;
-              padding-bottom: 18px;
-              min-height: 110px;
+            .shape-circle {
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
-            
-            .content-wrapper {
-              margin-top: 18px;
-              padding-top: 18px;
+            .header, .footer {
+              position: fixed;
+              background: transparent;
             }
-            
-            .questao-container {
-              margin-bottom: 25px;
-              padding: 15px;
+            .header .logo {
+              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
-            
-            .section {
-              margin-bottom: 25px;
+            h2 {
+              color: #4f46e5 !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            h2::after {
+              background: #a78bfa !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .questao-numero {
+              color: #4338ca !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            th {
+              background: #f3f4f6 !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
           }
         </style>
@@ -365,14 +504,14 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         return <SlideViewer htmlContent={renderedHtml} />;
       }
       
-      // Split content into pages
+      // Split content into pages com o novo sistema
       const pages = splitContentIntoPages(renderedHtml);
       
       if (pages.length === 1) {
         // Single page - render directly
         return (
           <iframe
-            srcDoc={enhanceHtmlWithStyles(pages[0])}
+            srcDoc={enhanceHtmlWithOptimizedStyles(pages[0])}
             style={{
               width: '100%',
               height: '100%',
@@ -424,7 +563,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
           {/* Page Content */}
           <div className="flex-1 overflow-hidden">
             <iframe
-              srcDoc={enhanceHtmlWithStyles(pages[currentPage])}
+              srcDoc={enhanceHtmlWithOptimizedStyles(pages[currentPage])}
               style={{
                 width: '100%',
                 height: '100%',

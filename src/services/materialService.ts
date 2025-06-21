@@ -219,7 +219,7 @@ class MaterialService {
         break;
       case 'mistas':
       default:
-        tiposQuestoesArray = ['multipla_escolha', 'aberta', 'verdadeiro_falso'];
+        tiposQuestoesArray = ['multipla_escolha', 'aberta', 'verdadeiro_falso', 'completar', 'ligar', 'desenho'];
         break;
     }
     
@@ -228,7 +228,7 @@ class MaterialService {
       disciplina: formData.disciplina,
       serie: formData.serie,
       instrucoes: `Leia atentamente cada questão e responda de acordo com seus conhecimentos sobre ${formData.tema}.`,
-      questoes: this.generateQuestions(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, 'atividade', dificuldade)
+      questoes: this.generateQuestionsOptimized(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, 'atividade', dificuldade)
     };
   }
 
@@ -253,7 +253,7 @@ class MaterialService {
         break;
       case 'mistas':
       default:
-        tiposQuestoesArray = ['multipla_escolha', 'dissertativa', 'verdadeiro_falso'];
+        tiposQuestoesArray = ['multipla_escolha', 'dissertativa', 'verdadeiro_falso', 'completar', 'ligar'];
         break;
     }
     
@@ -261,11 +261,11 @@ class MaterialService {
       titulo: `Avaliação de ${formData.tema}`,
       instrucoes: 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.',
       tempoLimite: formData.tempoLimite || '50 minutos',
-      questoes: this.generateQuestions(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, 'avaliacao', dificuldade, pontuacaoPorQuestao)
+      questoes: this.generateQuestionsOptimized(numQuestoes, tiposQuestoesArray, formData.tema, formData.disciplina, 'avaliacao', dificuldade, pontuacaoPorQuestao)
     };
   }
 
-  private generateQuestions(
+  private generateQuestionsOptimized(
     numQuestoes: number, 
     tiposQuestoes: string[], 
     tema: string, 
@@ -276,7 +276,7 @@ class MaterialService {
   ): any[] {
     const questoes = [];
     
-    console.log('Generating questions:', { numQuestoes, tiposQuestoes, tema, disciplina });
+    console.log('Generating optimized questions:', { numQuestoes, tiposQuestoes, tema, disciplina });
     
     for (let i = 0; i < numQuestoes; i++) {
       const tipoQuestao = tiposQuestoes[i % tiposQuestoes.length];
@@ -288,7 +288,7 @@ class MaterialService {
       };
 
       if (materialType === 'avaliacao' && pontuacao) {
-        questao.pontuacao = pontuacao;
+        questao.pontuacao = Math.round(pontuacao * 10) / 10; // Arredondar para 1 decimal
       }
 
       switch (tipoQuestao) {
@@ -302,16 +302,16 @@ class MaterialService {
 
         case 'aberta':
         case 'dissertativa':
-          const isCalculation = disciplina.toLowerCase().includes('matemática') && Math.random() > 0.5;
+          const isCalculation = disciplina.toLowerCase().includes('matemática') && Math.random() > 0.6;
           questao = {
             ...questao,
             pergunta: this.generateOpenQuestion(tema, disciplina, numeroQuestao, dificuldade),
             isCalculo: isCalculation,
-            linhasResposta: isCalculation ? 1 : this.getResponseLines(dificuldade)
+            linhasResposta: isCalculation ? 2 : this.getResponseLines(dificuldade)
           };
           
           // Adicionar fórmulas para questões de matemática
-          if (disciplina.toLowerCase().includes('matemática') && Math.random() > 0.7) {
+          if (disciplina.toLowerCase().includes('matemática') && isCalculation) {
             questao.formula = this.generateMathFormula(tema);
           }
           break;
@@ -357,15 +357,15 @@ class MaterialService {
           };
       }
 
-      // Adicionar texto de interpretação para algumas questões
-      if (disciplina.toLowerCase().includes('português') && Math.random() > 0.6) {
+      // Adicionar texto de interpretação para algumas questões de português
+      if (disciplina.toLowerCase().includes('português') && Math.random() > 0.7) {
         questao.textoInterpretacao = this.generateInterpretationText(tema);
       }
 
       questoes.push(questao);
     }
     
-    console.log('Generated questions:', questoes);
+    console.log('Generated optimized questions:', questoes);
     return questoes;
   }
 
