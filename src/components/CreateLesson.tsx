@@ -353,17 +353,11 @@ const CreateLesson: React.FC = () => {
 
                 {/* Campo para múltiplos assuntos/conteúdos (apenas para avaliações) */}
                 {selectedType === 'avaliacao' && <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                          C
-                        </div>
-                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Conteúdos da Avaliação</Label>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                        C
                       </div>
-                      <Button type="button" onClick={addSubject} variant="outline" size="sm" className="flex items-center space-x-1 hover:bg-blue-50 border-blue-200">
-                        <Plus className="w-4 h-4" />
-                        <span>Adicionar</span>
-                      </Button>
+                      <Label className="text-base sm:text-lg font-semibold text-gray-800">Conteúdos da Avaliação</Label>
                     </div>
                     <p className="text-sm text-gray-600 mb-4">Adicione os assuntos ou conteúdos específicos que serão abordados na avaliação.
 As questões serão baseadas nesses temas.</p>
@@ -377,6 +371,14 @@ As questões serão baseadas nesses temas.</p>
                               <X className="w-4 h-4" />
                             </Button>}
                         </div>)}
+                    </div>
+                    
+                    {/* Botão Adicionar movido para baixo dos campos */}
+                    <div className="flex justify-center pt-2">
+                      <Button type="button" onClick={addSubject} variant="outline" size="sm" className="flex items-center space-x-2 hover:bg-blue-50 border-blue-200">
+                        <Plus className="w-4 h-4" />
+                        <span>Adicionar Conteúdo</span>
+                      </Button>
                     </div>
                   </div>}
 
