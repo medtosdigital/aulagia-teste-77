@@ -676,19 +676,19 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             </div>
           )}
 
-          {/* Mobile Page Counter - Increased size significantly */}
+          {/* Mobile Page Counter - Increased size even more */}
           {isMobile && (
-            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/95 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border">
-              <div className="flex items-center space-x-3">
-                <FileText className="w-6 h-6 text-blue-600" />
-                <span className="text-lg font-semibold text-gray-700">
+            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/95 backdrop-blur-sm px-8 py-4 rounded-full shadow-xl border-2">
+              <div className="flex items-center space-x-4">
+                <FileText className="w-8 h-8 text-blue-600" />
+                <span className="text-xl font-bold text-gray-700">
                   {currentPage + 1} / {pages.length}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Mobile Floating Navigation Buttons - Increased size significantly */}
+          {/* Mobile Floating Navigation Buttons - Increased size even more */}
           {isMobile && pages.length > 1 && (
             <>
               {/* Previous Button - Much larger */}
@@ -697,9 +697,9 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
                 size="icon"
                 onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                 disabled={currentPage === 0}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-50 w-20 h-20 rounded-full shadow-xl bg-white/95 backdrop-blur-sm disabled:opacity-30 border-2"
+                className="absolute left-6 top-1/2 transform -translate-y-1/2 z-50 w-24 h-24 rounded-full shadow-2xl bg-white/95 backdrop-blur-sm disabled:opacity-30 border-3"
               >
-                <ChevronLeft className="w-10 h-10" />
+                <ChevronLeft className="w-12 h-12" />
               </Button>
 
               {/* Next Button - Much larger */}
@@ -708,9 +708,9 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
                 size="icon"
                 onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
                 disabled={currentPage === pages.length - 1}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-50 w-20 h-20 rounded-full shadow-xl bg-white/95 backdrop-blur-sm disabled:opacity-30 border-2"
+                className="absolute right-6 top-1/2 transform -translate-y-1/2 z-50 w-24 h-24 rounded-full shadow-2xl bg-white/95 backdrop-blur-sm disabled:opacity-30 border-3"
               >
-                <ChevronRight className="w-10 h-10" />
+                <ChevronRight className="w-12 h-12" />
               </Button>
             </>
           )}
