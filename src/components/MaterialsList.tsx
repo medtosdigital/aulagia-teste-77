@@ -1,19 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  BookOpen, 
-  Monitor, 
-  FileText, 
-  ClipboardCheck, 
-  Eye, 
-  Edit3, 
-  Trash2,
-  Download,
-  Search,
-  Filter,
-  Plus
-} from 'lucide-react';
+import { BookOpen, Monitor, FileText, ClipboardCheck, Eye, Edit3, Trash2, Download, Search, Filter, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
-
 const MaterialsList: React.FC = () => {
   const navigate = useNavigate();
   const [materials, setMaterials] = useState<GeneratedMaterial[]>([]);
@@ -29,29 +15,22 @@ const MaterialsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterSubject, setFilterSubject] = useState('all');
-
   useEffect(() => {
     loadMaterials();
   }, []);
-
   useEffect(() => {
     filterMaterials();
   }, [materials, searchTerm, filterType, filterSubject]);
-
   const loadMaterials = () => {
     const allMaterials = materialService.getMaterials();
     setMaterials(allMaterials);
   };
-
   const filterMaterials = () => {
     let filtered = materials;
 
     // Filtro de busca
     if (searchTerm) {
-      filtered = filtered.filter(material =>
-        material.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        material.subject.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter(material => material.title.toLowerCase().includes(searchTerm.toLowerCase()) || material.subject.toLowerCase().includes(searchTerm.toLowerCase()));
     }
 
     // Filtro por tipo
@@ -63,10 +42,8 @@ const MaterialsList: React.FC = () => {
     if (filterSubject !== 'all') {
       filtered = filtered.filter(material => material.subject.toLowerCase() === filterSubject);
     }
-
     setFilteredMaterials(filtered);
   };
-
   const handleDelete = (id: string, title: string) => {
     if (window.confirm(`Tem certeza que deseja excluir "${title}"?`)) {
       const success = materialService.deleteMaterial(id);
@@ -78,7 +55,6 @@ const MaterialsList: React.FC = () => {
       }
     }
   };
-
   const handleExport = async (material: GeneratedMaterial, format: 'pdf' | 'word') => {
     try {
       if (format === 'pdf') {
@@ -93,7 +69,6 @@ const MaterialsList: React.FC = () => {
       console.error('Export error:', error);
     }
   };
-
   const getTypeIcon = (type: string) => {
     const icons = {
       'plano-de-aula': BookOpen,
@@ -103,7 +78,6 @@ const MaterialsList: React.FC = () => {
     };
     return icons[type as keyof typeof icons] || FileText;
   };
-
   const getTypeLabel = (type: string) => {
     const labels = {
       'plano-de-aula': 'Plano de Aula',
@@ -113,7 +87,6 @@ const MaterialsList: React.FC = () => {
     };
     return labels[type as keyof typeof labels] || type;
   };
-
   const getTypeColor = (type: string) => {
     const colors = {
       'plano-de-aula': 'text-blue-600 bg-blue-50',
@@ -123,24 +96,15 @@ const MaterialsList: React.FC = () => {
     };
     return colors[type as keyof typeof colors] || 'text-gray-600 bg-gray-50';
   };
-
   const uniqueSubjects = [...new Set(materials.map(m => m.subject))];
-
-  return (
-    <div className="max-w-7xl mx-auto p-6">
+  return <div className="max-w-7xl mx-auto p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Meus Materiais</h1>
           <p className="text-gray-600">Gerencie seus conteúdos pedagógicos</p>
         </div>
-        <Button
-          onClick={() => navigate('/')}
-          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Criar Novo Material
-        </Button>
+        
       </div>
 
       {/* Filtros */}
@@ -150,12 +114,7 @@ const MaterialsList: React.FC = () => {
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Buscar por título ou disciplina..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                <Input placeholder="Buscar por título ou disciplina..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
             </div>
             <div className="md:w-48">
@@ -180,9 +139,7 @@ const MaterialsList: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas as disciplinas</SelectItem>
-                  {uniqueSubjects.map(subject => (
-                    <SelectItem key={subject} value={subject.toLowerCase()}>{subject}</SelectItem>
-                  ))}
+                  {uniqueSubjects.map(subject => <SelectItem key={subject} value={subject.toLowerCase()}>{subject}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -191,8 +148,7 @@ const MaterialsList: React.FC = () => {
       </Card>
 
       {/* Lista de Materiais */}
-      {filteredMaterials.length === 0 ? (
-        <Card>
+      {filteredMaterials.length === 0 ? <Card>
           <CardContent className="p-12 text-center">
             <div className="text-gray-400 mb-4">
               <FileText className="w-16 h-16 mx-auto" />
@@ -201,28 +157,17 @@ const MaterialsList: React.FC = () => {
               {materials.length === 0 ? 'Nenhum material criado ainda' : 'Nenhum material encontrado'}
             </h3>
             <p className="text-gray-500 mb-6">
-              {materials.length === 0 
-                ? 'Comece criando seu primeiro material pedagógico!' 
-                : 'Tente ajustar os filtros para encontrar o que procura.'
-              }
+              {materials.length === 0 ? 'Comece criando seu primeiro material pedagógico!' : 'Tente ajustar os filtros para encontrar o que procura.'}
             </p>
-            {materials.length === 0 && (
-              <Button
-                onClick={() => navigate('/')}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
-              >
+            {materials.length === 0 && <Button onClick={() => navigate('/')} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Criar Primeiro Material
-              </Button>
-            )}
+              </Button>}
           </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMaterials.map((material) => {
-            const IconComponent = getTypeIcon(material.type);
-            return (
-              <Card key={material.id} className="hover:shadow-lg transition-shadow duration-300">
+        </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredMaterials.map(material => {
+        const IconComponent = getTypeIcon(material.type);
+        return <Card key={material.id} className="hover:shadow-lg transition-shadow duration-300">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
@@ -249,46 +194,24 @@ const MaterialsList: React.FC = () => {
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/material/${material.id}`)}
-                      className="flex-1"
-                    >
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/material/${material.id}`)} className="flex-1">
                       <Eye className="w-4 h-4 mr-1" />
                       Ver
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/material/${material.id}?edit=true`)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/material/${material.id}?edit=true`)}>
                       <Edit3 className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleExport(material, 'pdf')}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => handleExport(material, 'pdf')}>
                       <Download className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(material.id, material.title)}
-                      className="text-red-600 hover:text-red-700"
-                    >
+                    <Button variant="outline" size="sm" onClick={() => handleDelete(material.id, material.title)} className="text-red-600 hover:text-red-700">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+              </Card>;
+      })}
+        </div>}
+    </div>;
 };
-
 export default MaterialsList;
