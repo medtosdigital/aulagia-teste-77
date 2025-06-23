@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X } from 'lucide-react';
+import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X, Book } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -611,39 +611,36 @@ const CreateLesson: React.FC = () => {
   if (step === 'generating') {
     return <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl p-10 max-w-md w-full mx-4 shadow-2xl">
-            <div className="text-center">
-              <div className="relative mb-8">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg animate-pulse">
-                  <Sparkles className="w-10 h-10 text-white animate-bounce" />
+          <div className="bg-white rounded-2xl p-8 max-w-lg w-full mx-4 shadow-xl">
+            <div className="flex items-start space-x-6">
+              {/* Icon with circular background */}
+              <div className="relative flex-shrink-0">
+                <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                  <Book className="w-8 h-8 text-white" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-ping"></div>
-              </div>
-              
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
-                Preparando seu material...
-              </h2>
-              <p className="text-gray-600 mb-8 text-lg">Você ensina, a gente facilita! ✨</p>
-              
-              <div className="mb-6">
-                <Progress value={generationProgress} className="h-3 bg-gray-100" />
-                <div className="flex justify-between items-center mt-3">
-                  <span className="text-sm text-gray-600 font-medium">Gerando conteúdo...</span>
-                  <span className="text-sm font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
-                    {Math.round(generationProgress)}%
-                  </span>
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-3 h-3 text-white" />
                 </div>
               </div>
-
-              <div className="flex justify-center space-x-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{
-                animationDelay: '0.1s'
-              }}></div>
-                <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{
-                animationDelay: '0.2s'
-              }}>
-
+              
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl font-bold text-gray-900 mb-2">
+                  Preparando seu material...
+                </h2>
+                <p className="text-gray-600 mb-6 text-sm">
+                  Você ensina, a gente facilita!
+                </p>
+                
+                {/* Progress section */}
+                <div className="space-y-3">
+                  <Progress value={generationProgress} className="h-2 bg-gray-200" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Gerando material...</span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {Math.round(generationProgress)}%
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
