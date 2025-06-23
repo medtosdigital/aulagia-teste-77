@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X } from 'lucide-react';
@@ -611,76 +610,63 @@ const CreateLesson: React.FC = () => {
 
   if (step === 'generating') {
     return <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 max-w-sm sm:max-w-md w-full mx-4 shadow-2xl border border-gray-100">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl">
             <div className="text-center">
-              {/* Ícone principal animado */}
-              <div className="relative mb-6 sm:mb-8">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto shadow-lg animate-pulse">
-                  <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-white animate-bounce" strokeWidth={1.5} />
+              {/* Main icon */}
+              <div className="relative mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                  <BookOpen className="w-8 h-8 text-white" strokeWidth={1.5} />
                 </div>
-                {/* Elementos decorativos flutuantes */}
-                <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
-                <div className="absolute -bottom-1 -left-1 sm:-bottom-2 sm:-left-2 w-3 h-3 sm:w-4 sm:h-4 bg-green-400 rounded-full animate-pulse"></div>
-                <div className="absolute top-1/2 -left-3 sm:-left-4 w-2 h-2 sm:w-3 sm:h-3 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }}></div>
-                <div className="absolute top-1/4 -right-3 sm:-right-4 w-2 h-2 sm:w-3 sm:h-3 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '1s' }}></div>
+                {/* Decorative dots */}
+                <div className="absolute -top-2 -left-2 w-3 h-3 bg-pink-400 rounded-full"></div>
+                <div className="absolute -top-1 -right-3 w-2 h-2 bg-orange-400 rounded-full"></div>
+                <div className="absolute -bottom-2 -right-1 w-3 h-3 bg-green-400 rounded-full"></div>
               </div>
               
-              {/* Título principal */}
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent mb-2 sm:mb-3">
+              {/* Title */}
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Preparando seu material...
               </h2>
               
-              {/* Subtítulo */}
-              <p className="text-gray-600 mb-6 sm:mb-8 text-base sm:text-lg font-medium">
-                Você ensina, a gente facilita! 
-                <span className="inline-block ml-1 animate-bounce">✨</span>
+              {/* Subtitle */}
+              <p className="text-gray-600 mb-8 text-base">
+                Você ensina, a gente facilita! ✨
               </p>
               
-              {/* Barra de progresso aprimorada */}
-              <div className="mb-6 sm:mb-8">
-                <div className="relative">
-                  <Progress 
-                    value={generationProgress} 
-                    className="h-2 sm:h-3 bg-gray-100 rounded-full overflow-hidden" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-20 animate-pulse"></div>
-                </div>
-                <div className="flex justify-between items-center mt-3 sm:mt-4">
-                  <span className="text-xs sm:text-sm text-gray-600 font-medium">
-                    Criando conteúdo pedagógico...
+              {/* Progress section */}
+              <div className="mb-6">
+                <Progress 
+                  value={generationProgress} 
+                  className="h-2 bg-gray-100 rounded-full mb-4" 
+                />
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    {generationProgress < 30 && "Criando conteúdo pedagógico..."}
+                    {generationProgress >= 30 && generationProgress < 90 && "Finalizando detalhes..."}
+                    {generationProgress >= 90 && "Quase pronto!"}
                   </span>
                   <div className="flex items-center space-x-1">
-                    <span className="text-xs sm:text-sm font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    <span className="text-sm font-semibold text-blue-600">
                       {Math.round(generationProgress)}%
                     </span>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                   </div>
                 </div>
               </div>
 
-              {/* Status text dinâmico */}
-              <div className="mb-6">
-                <p className="text-xs sm:text-sm text-gray-500 font-medium">
-                  {generationProgress < 30 && "Analisando conteúdo BNCC..."}
-                  {generationProgress >= 30 && generationProgress < 60 && "Estruturando material..."}
-                  {generationProgress >= 60 && generationProgress < 90 && "Finalizando detalhes..."}
-                  {generationProgress >= 90 && "Quase pronto!"}
-                </p>
+              {/* Loading dots */}
+              <div className="flex justify-center space-x-2 mb-6">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
               </div>
 
-              {/* Indicadores de loading animados */}
-              <div className="flex justify-center space-x-2 sm:space-x-3">
-                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
-              </div>
-
-              {/* Mensagem motivacional */}
-              <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
-                <p className="text-xs sm:text-sm text-gray-700 font-medium">
-                  <span className="inline-block mr-1">🎯</span>
+              {/* Bottom message */}
+              <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                <p className="text-sm text-gray-700 font-medium flex items-center justify-center">
+                  <span className="mr-2">🎯</span>
                   Criando material alinhado à BNCC
                 </p>
               </div>
