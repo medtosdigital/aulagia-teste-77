@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Printer, Download } from 'lucide-react';
 import { Button } from './ui/button';
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from './ui/pagination';
 import { exportService } from '@/services/exportService';
 import { GeneratedMaterial } from '@/services/materialService';
 import { toast } from 'sonner';
@@ -91,8 +99,8 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       }
       toast.success('Slides enviados para impressão!');
     } catch (error) {
-      console.error('Erro ao imprimir:', error);
       toast.error('Erro ao preparar impressão');
+      console.error('Print error:', error);
     }
   };
 
@@ -458,7 +466,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
     const today = new Date().toLocaleDateString('pt-BR');
     
     return (
-      <div className="relative w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+      <div className="relative w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-lg shadow-lg overflow-hidden border border-gray-200">
         {/* Decorative shapes */}
         <div className="absolute top-0 left-0 w-32 h-32 bg-teal-400 rounded-full opacity-10 -translate-x-16 -translate-y-16 rotate-12"></div>
         <div className="absolute bottom-0 right-0 w-40 h-40 bg-coral-400 rounded-full opacity-10 translate-x-20 translate-y-20 -rotate-12"></div>
@@ -542,10 +550,10 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-between items-center p-4 border-t border-gray-100 text-sm text-gray-600">
+        {/* Footer - Now always visible */}
+        <div className="flex justify-between items-center p-4 bg-blue-900 text-white text-sm">
           <span>{today}</span>
-          <span className="font-semibold text-teal-600">Slide {slideNumber}</span>
+          <span className="font-semibold">Slide {slideNumber}</span>
         </div>
       </div>
     );
@@ -561,106 +569,109 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
-      {/* Navigation Header */}
-      <div className="bg-blue-900 text-white p-4 rounded-t-xl flex items-center justify-between">
-        <span className="text-sm font-medium">
-          Slide {currentSlide + 1} de {slides.length}
-        </span>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handlePrint}
-            className="text-white hover:bg-blue-700"
-          >
-            <Printer className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleExportPDF}
-            className="text-white hover:bg-blue-700"
-          >
-            <Download className="h-4 w-4" />
-            PDF
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleExportPPT}
-            className="text-white hover:bg-blue-700"
-          >
-            <Download className="h-4 w-4" />
-            PPT
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-            disabled={currentSlide === 0}
-            className="text-white hover:bg-blue-700"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-            disabled={currentSlide === slides.length - 1}
-            className="text-white hover:bg-blue-700"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Slide Content with Mobile Navigation Arrows */}
-      <div className="bg-gray-100 p-6 rounded-b-xl relative">
+      {/* Slide Content */}
+      <div className="bg-gray-100 p-6 rounded-lg relative">
         <div className="aspect-[16/9] w-full relative">
           {renderSlide(slides[currentSlide], currentSlide)}
-          
-          {/* Mobile Navigation Arrows - Large and positioned on sides */}
-          <div className="md:hidden absolute inset-y-0 left-0 flex items-center">
-            <button
-              onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-              disabled={currentSlide === 0}
-              className="ml-4 w-16 h-16 bg-blue-900 text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
-            >
-              <ChevronLeft className="h-8 w-8" />
-            </button>
-          </div>
-          
-          <div className="md:hidden absolute inset-y-0 right-0 flex items-center">
-            <button
-              onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-              disabled={currentSlide === slides.length - 1}
-              className="mr-4 w-16 h-16 bg-blue-900 text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
-            >
-              <ChevronRight className="h-8 w-8" />
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* Slide Indicators */}
-      <div className="bg-blue-900 p-4 rounded-b-xl flex justify-center gap-2">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-colors ${
-              index === currentSlide 
-                ? 'bg-white' 
-                : 'bg-blue-300 hover:bg-blue-200'
-            }`}
-            aria-label={`Ir para slide ${index + 1}`}
-          />
-        ))}
+      {/* Desktop Navigation */}
+      <div className="hidden md:flex justify-between items-center mt-6 px-4">
+        <Button
+          variant="outline"
+          onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+          disabled={currentSlide === 0}
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Anterior
+        </Button>
+
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-600">
+            Página {currentSlide + 1} de {slides.length}
+          </span>
+          
+          {/* Export buttons for desktop */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrint}
+              className="flex items-center gap-1"
+            >
+              <Printer className="h-4 w-4" />
+              Imprimir
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              className="flex items-center gap-1"
+            >
+              <Download className="h-4 w-4" />
+              PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPPT}
+              className="flex items-center gap-1"
+            >
+              <Download className="h-4 w-4" />
+              PPT
+            </Button>
+          </div>
+        </div>
+
+        <Button
+          variant="outline"
+          onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+          disabled={currentSlide === slides.length - 1}
+          className="flex items-center gap-2"
+        >
+          Próximo
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
 
-      {/* Navigation Instructions */}
-      <div className="bg-gray-100 p-3 text-center text-sm text-gray-600 rounded-b-lg">
-        Use as setas ou clique nos pontos para navegar entre os slides
+      {/* Mobile Navigation */}
+      <div className="md:hidden mt-6">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+                className={currentSlide === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              />
+            </PaginationItem>
+
+            {slides.map((_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  onClick={() => setCurrentSlide(index)}
+                  isActive={currentSlide === index}
+                  className="cursor-pointer"
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+                className={currentSlide === slides.length - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+
+        {/* Mobile page indicator */}
+        <div className="text-center mt-4 text-sm text-gray-600">
+          Página {currentSlide + 1} de {slides.length}
+        </div>
       </div>
     </div>
   );
