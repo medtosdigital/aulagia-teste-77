@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X, Book } from 'lucide-react';
+import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -609,28 +609,30 @@ const CreateLesson: React.FC = () => {
   }
 
   if (step === 'generating') {
-    return <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full mx-4 shadow-xl">
-            <div className="flex items-start space-x-6">
-              {/* Icon with circular background */}
-              <div className="relative flex-shrink-0">
-                <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Book className="w-8 h-8 text-white" />
+    return <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm sm:max-w-lg w-full shadow-xl">
+            <div className="text-center">
+              {/* Centered icon section */}
+              <div className="relative mb-6">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                  <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                 </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-3 h-3 text-white" />
+                <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
                 </div>
               </div>
               
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-bold text-gray-900 mb-2">
-                  Preparando seu material...
-                </h2>
-                <p className="text-gray-600 mb-6 text-sm">
-                  Você ensina, a gente facilita!
-                </p>
+              {/* Content section */}
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+                    Preparando seu material...
+                  </h2>
+                  <p className="text-sm sm:text-base text-gray-600">
+                    Você ensina, a gente facilita!
+                  </p>
+                </div>
                 
                 {/* Progress section */}
                 <div className="space-y-3">
