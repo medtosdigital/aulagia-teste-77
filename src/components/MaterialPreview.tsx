@@ -676,41 +676,41 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             </div>
           )}
 
-          {/* Mobile Page Counter */}
+          {/* Mobile Page Counter - Increased size significantly */}
           {isMobile && (
-            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-md">
-              <div className="flex items-center space-x-2">
-                <FileText className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-gray-700">
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/95 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border">
+              <div className="flex items-center space-x-3">
+                <FileText className="w-6 h-6 text-blue-600" />
+                <span className="text-lg font-semibold text-gray-700">
                   {currentPage + 1} / {pages.length}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Mobile Floating Navigation Buttons - Increased scale */}
+          {/* Mobile Floating Navigation Buttons - Increased size significantly */}
           {isMobile && pages.length > 1 && (
             <>
-              {/* Previous Button */}
+              {/* Previous Button - Much larger */}
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                 disabled={currentPage === 0}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 z-50 w-16 h-16 rounded-full shadow-lg bg-white/90 backdrop-blur-sm disabled:opacity-30"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-50 w-20 h-20 rounded-full shadow-xl bg-white/95 backdrop-blur-sm disabled:opacity-30 border-2"
               >
-                <ChevronLeft className="w-8 h-8" />
+                <ChevronLeft className="w-10 h-10" />
               </Button>
 
-              {/* Next Button */}
+              {/* Next Button - Much larger */}
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
                 disabled={currentPage === pages.length - 1}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 z-50 w-16 h-16 rounded-full shadow-lg bg-white/90 backdrop-blur-sm disabled:opacity-30"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-50 w-20 h-20 rounded-full shadow-xl bg-white/95 backdrop-blur-sm disabled:opacity-30 border-2"
               >
-                <ChevronRight className="w-8 h-8" />
+                <ChevronRight className="w-10 h-10" />
               </Button>
             </>
           )}
