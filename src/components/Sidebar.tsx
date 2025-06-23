@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   LayoutDashboard, 
   Plus, 
@@ -10,8 +10,7 @@ import {
   Key, 
   FileText, 
   LogOut,
-  Menu,
-  X
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,8 +20,6 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', onItemClick }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'create', label: 'Criar Aula', icon: Plus },
@@ -37,28 +34,22 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', onItemClick
     { id: 'templates', label: 'Templates', icon: FileText },
   ];
 
+  const mobileMenuItems = [
+    { id: 'dashboard', label: 'Início', icon: LayoutDashboard },
+    { id: 'lessons', label: 'Materiais', icon: BookOpen },
+    { id: 'create', label: 'Criar', icon: Plus, isCenter: true },
+    { id: 'calendar', label: 'Agenda', icon: Calendar },
+    { id: 'subscription', label: 'Perfil', icon: User },
+  ];
+
   const handleItemClick = (itemId: string) => {
     onItemClick?.(itemId);
-    setIsOpen(false);
   };
 
   return (
     <>
-      {/* Mobile menu button */}
-      <div className="md:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2 rounded-lg bg-white shadow-md text-primary-600"
-        >
-          {isOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
-
-      {/* Sidebar */}
-      <div className={cn(
-        "fixed left-0 top-0 h-full w-64 bg-white shadow-lg flex flex-col z-40 transition-transform duration-300",
-        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-      )}>
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block fixed left-0 top-0 h-full w-64 bg-white shadow-lg flex flex-col z-40">
         {/* Header */}
         <div className="p-4 flex items-center space-x-2 border-b border-gray-200">
           <div className="bg-primary-500 text-white p-3 rounded-lg">
@@ -144,13 +135,45 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', onItemClick
         </div>
       </div>
 
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div 
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+        <div className="flex items-center justify-around px-2 py-2">
+          {mobileMenuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeItem === item.id;
+            const isCenter = item.isCenter;
+            
+            if (isCenter) {
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleItemClick(item.id)}
+                  className="relative flex flex-col items-center justify-center w-16 h-16 -mt-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full shadow-lg transform transition-transform hover:scale-105"
+                >
+                  <Icon size={24} className="text-white" />
+                  <span className="text-xs text-white font-medium mt-1">{item.label}</span>
+                </button>
+              );
+            }
+            
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleItemClick(item.id)}
+                className={cn(
+                  "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-0 flex-1",
+                  isActive 
+                    ? "text-primary-600" 
+                    : "text-gray-500 hover:text-gray-700"
+                )}
+              >
+                <Icon size={20} />
+                <span className="text-xs font-medium mt-1 truncate">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 };

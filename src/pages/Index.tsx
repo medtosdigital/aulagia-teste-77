@@ -63,7 +63,7 @@ const Index = () => {
         <div className="min-h-screen bg-gray-50 w-full">
           <Sidebar activeItem={activeItem} onItemClick={setActiveItem} />
           
-          <div className="md:ml-64 min-h-screen">
+          <div className="md:ml-64 min-h-screen pb-20 md:pb-0">
             <Header title={getPageTitle()} />
             {renderContent()}
           </div>
