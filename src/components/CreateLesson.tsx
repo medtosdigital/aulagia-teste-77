@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X } from 'lucide-react';
@@ -9,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import MaterialModal from './MaterialModal';
 import BNCCValidationModal from './BNCCValidationModal';
@@ -609,71 +611,79 @@ const CreateLesson: React.FC = () => {
   }
 
   if (step === 'generating') {
-    return <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl">
-            <div className="text-center">
-              {/* Main icon */}
-              <div className="relative mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-                  <BookOpen className="w-8 h-8 text-white" strokeWidth={1.5} />
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
+        {/* Sheet lateral para geração */}
+        <Sheet open={isGenerating} onOpenChange={() => {}}>
+          <SheetContent side="right" className="w-full sm:w-[400px] p-0 border-0 shadow-2xl">
+            <div className="bg-white h-full flex flex-col">
+              {/* Header */}
+              <SheetHeader className="p-6 pb-4 border-b border-gray-100">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
+                    <BookOpen className="w-6 h-6 text-white" strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <SheetTitle className="text-lg font-bold text-gray-900 text-left">
+                      Preparando seu material...
+                    </SheetTitle>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Você ensina, a gente facilita!
+                    </p>
+                  </div>
                 </div>
-                {/* Decorative dots */}
-                <div className="absolute -top-2 -left-2 w-3 h-3 bg-pink-400 rounded-full"></div>
-                <div className="absolute -top-1 -right-3 w-2 h-2 bg-orange-400 rounded-full"></div>
-                <div className="absolute -bottom-2 -right-1 w-3 h-3 bg-green-400 rounded-full"></div>
-              </div>
-              
-              {/* Title */}
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Preparando seu material...
-              </h2>
-              
-              {/* Subtitle */}
-              <p className="text-gray-600 mb-8 text-base">
-                Você ensina, a gente facilita! ✨
-              </p>
-              
-              {/* Progress section */}
-              <div className="mb-6">
-                <Progress 
-                  value={generationProgress} 
-                  className="h-2 bg-gray-100 rounded-full mb-4" 
-                />
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
-                    {generationProgress < 30 && "Criando conteúdo pedagógico..."}
-                    {generationProgress >= 30 && generationProgress < 90 && "Finalizando detalhes..."}
-                    {generationProgress >= 90 && "Quase pronto!"}
-                  </span>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm font-semibold text-blue-600">
-                      {Math.round(generationProgress)}%
-                    </span>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              </SheetHeader>
+
+              {/* Content */}
+              <div className="flex-1 p-6 flex flex-col justify-center">
+                <div className="space-y-6">
+                  {/* Progress */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        {generationProgress < 30 && "Gerando material..."}
+                        {generationProgress >= 30 && generationProgress < 90 && "Finalizando detalhes..."}
+                        {generationProgress >= 90 && "Quase pronto!"}
+                      </span>
+                      <span className="text-sm font-semibold text-blue-600">
+                        {Math.round(generationProgress)}%
+                      </span>
+                    </div>
+                    
+                    <Progress 
+                      value={generationProgress} 
+                      className="h-2 bg-gray-100" 
+                    />
+                  </div>
+
+                  {/* Status message */}
+                  <div className="text-center py-8">
+                    <div className="flex justify-center space-x-1 mb-4">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <p className="text-gray-600 text-sm">
+                      Criando conteúdo pedagógico personalizado
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Loading dots */}
-              <div className="flex justify-center space-x-2 mb-6">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
-              </div>
-
-              {/* Bottom message */}
-              <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <p className="text-sm text-gray-700 font-medium flex items-center justify-center">
-                  <span className="mr-2">🎯</span>
-                  Criando material alinhado à BNCC
-                </p>
+              {/* Footer */}
+              <div className="p-6 pt-0 border-t border-gray-100">
+                <div className="bg-blue-50 rounded-lg p-4 text-center">
+                  <p className="text-xs text-gray-600 flex items-center justify-center">
+                    <Sparkles className="w-3 h-3 mr-1 text-blue-500" />
+                    Material alinhado à BNCC
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </main>;
+          </SheetContent>
+        </Sheet>
+      </main>
+    );
   }
 
   return null;
