@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X } from 'lucide-react';
@@ -10,7 +9,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import MaterialModal from './MaterialModal';
 import BNCCValidationModal from './BNCCValidationModal';
@@ -611,79 +609,47 @@ const CreateLesson: React.FC = () => {
   }
 
   if (step === 'generating') {
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
-        {/* Sheet lateral para geração */}
-        <Sheet open={isGenerating} onOpenChange={() => {}}>
-          <SheetContent side="right" className="w-full sm:w-[400px] p-0 border-0 shadow-2xl">
-            <div className="bg-white h-full flex flex-col">
-              {/* Header */}
-              <SheetHeader className="p-6 pb-4 border-b border-gray-100">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
-                    <BookOpen className="w-6 h-6 text-white" strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <SheetTitle className="text-lg font-bold text-gray-900 text-left">
-                      Preparando seu material...
-                    </SheetTitle>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Você ensina, a gente facilita!
-                    </p>
-                  </div>
+    return <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl p-10 max-w-md w-full mx-4 shadow-2xl">
+            <div className="text-center">
+              <div className="relative mb-8">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg animate-pulse">
+                  <Sparkles className="w-10 h-10 text-white animate-bounce" />
                 </div>
-              </SheetHeader>
-
-              {/* Content */}
-              <div className="flex-1 p-6 flex flex-col justify-center">
-                <div className="space-y-6">
-                  {/* Progress */}
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">
-                        {generationProgress < 30 && "Gerando material..."}
-                        {generationProgress >= 30 && generationProgress < 90 && "Finalizando detalhes..."}
-                        {generationProgress >= 90 && "Quase pronto!"}
-                      </span>
-                      <span className="text-sm font-semibold text-blue-600">
-                        {Math.round(generationProgress)}%
-                      </span>
-                    </div>
-                    
-                    <Progress 
-                      value={generationProgress} 
-                      className="h-2 bg-gray-100" 
-                    />
-                  </div>
-
-                  {/* Status message */}
-                  <div className="text-center py-8">
-                    <div className="flex justify-center space-x-1 mb-4">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                    <p className="text-gray-600 text-sm">
-                      Criando conteúdo pedagógico personalizado
-                    </p>
-                  </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-ping"></div>
+              </div>
+              
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
+                Preparando seu material...
+              </h2>
+              <p className="text-gray-600 mb-8 text-lg">Você ensina, a gente facilita! ✨</p>
+              
+              <div className="mb-6">
+                <Progress value={generationProgress} className="h-3 bg-gray-100" />
+                <div className="flex justify-between items-center mt-3">
+                  <span className="text-sm text-gray-600 font-medium">Gerando conteúdo...</span>
+                  <span className="text-sm font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+                    {Math.round(generationProgress)}%
+                  </span>
                 </div>
               </div>
 
-              {/* Footer */}
-              <div className="p-6 pt-0 border-t border-gray-100">
-                <div className="bg-blue-50 rounded-lg p-4 text-center">
-                  <p className="text-xs text-gray-600 flex items-center justify-center">
-                    <Sparkles className="w-3 h-3 mr-1 text-blue-500" />
-                    Material alinhado à BNCC
-                  </p>
+              <div className="flex justify-center space-x-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{
+                animationDelay: '0.1s'
+              }}></div>
+                <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{
+                animationDelay: '0.2s'
+              }}>
+
                 </div>
               </div>
             </div>
-          </SheetContent>
-        </Sheet>
-      </main>
-    );
+          </div>
+        </div>
+      </main>;
   }
 
   return null;
