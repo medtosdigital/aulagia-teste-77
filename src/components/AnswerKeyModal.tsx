@@ -543,75 +543,75 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
-        <DialogHeader className="pb-4 border-b">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] sm:max-h-[80vh] flex flex-col rounded-2xl sm:rounded-lg p-0">
+        <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b rounded-t-2xl sm:rounded-t-lg">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg font-bold flex items-center">
-              <FileCheck className="h-5 w-5 mr-2 text-green-600" />
+            <DialogTitle className="text-base sm:text-lg font-bold flex items-center">
+              <FileCheck className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-green-600" />
               Gerador de Gabarito
             </DialogTitle>
-            <Button variant="outline" size="sm" onClick={onClose}>
+            <Button variant="outline" size="sm" onClick={onClose} className="rounded-lg">
               <X className="h-4 w-4" />
             </Button>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {!answerKey ? (
-            <div className="text-center py-8">
-              <FileCheck className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Gerar Gabarito</h3>
-              <p className="text-gray-600 mb-6">
+            <div className="text-center py-6 sm:py-8">
+              <FileCheck className="h-12 w-12 sm:h-16 sm:w-16 mx-auto text-gray-400 mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Gerar Gabarito</h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 px-2">
                 Clique no botão abaixo para gerar automaticamente o gabarito das questões com respostas corretas
               </p>
               <Button 
                 onClick={generateAnswerKey} 
                 disabled={isGenerating}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 rounded-xl px-6 py-2 text-sm sm:text-base"
               >
                 {isGenerating ? 'Gerando...' : 'Gerar Gabarito'}
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                <h3 className="font-semibold text-green-800 mb-2">{answerKey.titulo}</h3>
-                <p className="text-sm text-green-700">
+              <div className="bg-green-50 p-3 sm:p-4 rounded-xl border border-green-200">
+                <h3 className="font-semibold text-green-800 mb-1 sm:mb-2 text-sm sm:text-base">{answerKey.titulo}</h3>
+                <p className="text-xs sm:text-sm text-green-700">
                   {answerKey.disciplina} - {answerKey.serie}
                 </p>
-                <p className="text-sm text-green-700">
+                <p className="text-xs sm:text-sm text-green-700">
                   Total: {answerKey.totalQuestoes} questões
                 </p>
               </div>
 
               <div className="space-y-3">
-                <h4 className="font-semibold">Respostas:</h4>
+                <h4 className="font-semibold text-sm sm:text-base">Respostas:</h4>
                 {answerKey.questoes.map((questao: any) => (
-                  <div key={questao.numero} className="p-3 bg-gray-50 rounded-lg">
+                  <div key={questao.numero} className="p-3 bg-gray-50 rounded-xl">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
-                        <span className="font-medium text-blue-600">
+                        <span className="font-medium text-blue-600 text-sm sm:text-base">
                           Questão {questao.numero}:
                         </span>
-                        <span className="ml-2 text-sm text-gray-600">({questao.tipo})</span>
+                        <span className="ml-2 text-xs sm:text-sm text-gray-600">({questao.tipo})</span>
                       </div>
                       {questao.pontuacao && (
-                        <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded">
+                        <span className="text-xs sm:text-sm text-gray-500 bg-white px-2 py-1 rounded-lg">
                           {questao.pontuacao} pt{questao.pontuacao > 1 ? 's' : ''}
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-800 bg-white p-2 rounded border-l-4 border-green-500">
+                    <div className="text-xs sm:text-sm text-gray-800 bg-white p-2 sm:p-3 rounded-lg border-l-4 border-green-500">
                       <strong className="text-green-700">Resposta:</strong> {questao.resposta}
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="flex justify-center pt-4 space-x-3">
+              <div className="flex justify-center pt-4">
                 <Button 
                   onClick={generateAnswerKeyPDF}
-                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 rounded-xl px-6 py-2 text-sm sm:text-base"
                 >
                   <Download className="h-4 w-4" />
                   <span>Baixar PDF</span>
