@@ -30,6 +30,17 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     const pageClass = isFirstPage ? 'first-page-content' : 'subsequent-page-content';
     const contentClass = isFirstPage ? 'content' : 'content subsequent-page';
     
+    // Definir texto do rodapé baseado no tipo de material
+    const getFooterText = () => {
+      if (material.type === 'plano-de-aula') {
+        return `Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br`;
+      } else if (material.type === 'atividade') {
+        return `Atividade gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br`;
+      } else {
+        return `Avaliação gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br`;
+      }
+    };
+    
     return `
       <div class="page ${pageClass}">
         <!-- Formas decorativas -->
@@ -54,7 +65,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
 
         <!-- Rodapé - Visível em todas as páginas -->
         <div class="footer">
-          ${material.type === 'atividade' ? 'Atividade' : 'Avaliação'} gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br
+          ${getFooterText()}
         </div>
 
         <div class="${contentClass}">
