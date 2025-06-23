@@ -88,10 +88,10 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
         <DialogHeader className={`flex-shrink-0 p-4 pb-3 border-b bg-white ${
           isMobile ? 'rounded-t-2xl' : 'rounded-t-xl'
         }`}>
-          <DialogTitle className={`flex items-center space-x-2 text-orange-600 ${
+          <DialogTitle className={`flex items-center space-x-2 text-gray-800 ${
             isMobile ? 'text-base' : 'text-xl'
           }`}>
-            <AlertTriangle className={`w-5 h-5 ${isMobile ? 'w-4 h-4' : 'w-6 h-6'}`} />
+            <AlertTriangle className={`w-5 h-5 text-orange-600 ${isMobile ? 'w-4 h-4' : 'w-6 h-6'}`} />
             <span>Validação do Tema</span>
           </DialogTitle>
         </DialogHeader>
@@ -156,19 +156,19 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
 
             {/* Sugestões */}
             {validation.suggestions.length > 0 && (
-              <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
+              <div className="bg-green-50 border border-green-200 rounded-xl p-3">
                 <div className="flex items-start space-x-2">
-                  <Lightbulb className={`w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0`} />
+                  <Lightbulb className={`w-4 h-4 text-green-600 mt-0.5 flex-shrink-0`} />
                   <div className="flex-1 min-w-0">
-                    <h4 className={`font-semibold text-orange-800 mb-2 ${
+                    <h4 className={`font-semibold text-green-800 mb-2 ${
                       isMobile ? 'text-sm' : 'text-base'
                     }`}>
                       Sugestões de Temas Alternativos:
                     </h4>
                     <ul className={`space-y-1.5 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       {validation.suggestions.map((suggestion, index) => (
-                        <li key={index} className="flex items-start text-orange-700">
-                          <span className="w-1.5 h-1.5 bg-orange-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                        <li key={index} className="flex items-start text-green-700">
+                          <span className="w-1.5 h-1.5 bg-green-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
                           <span className="break-words">{suggestion}</span>
                         </li>
                       ))}
@@ -199,7 +199,7 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
                 onAccept();
                 onClose();
               }}
-              className={`bg-orange-500 hover:bg-orange-600 text-white rounded-lg ${
+              className={`bg-blue-600 hover:bg-blue-700 text-white rounded-lg ${
                 isMobile ? 'w-full h-10 text-sm' : 'px-6'
               }`}
             >
