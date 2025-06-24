@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, Eye, Edit3, Trash2, Download, Search, Filter, Plus, Calendar } from 'lucide-react';
@@ -88,34 +89,42 @@ const MaterialsList: React.FC = () => {
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    const icons = {
-      'plano-de-aula': BookOpen,
-      'slides': Monitor,
-      'atividade': FileText,
-      'avaliacao': ClipboardCheck
+  const getTypeConfig = (type: string) => {
+    const configs = {
+      'plano-de-aula': {
+        icon: BookOpen,
+        label: 'Plano de Aula',
+        bgColor: 'bg-blue-500',
+        textColor: 'text-blue-500',
+        bgGradient: 'bg-gradient-to-r from-blue-500 to-blue-600',
+        badgeColor: 'bg-blue-100 text-blue-700'
+      },
+      'slides': {
+        icon: Monitor,
+        label: 'Slides',
+        bgColor: 'bg-purple-500',
+        textColor: 'text-purple-500',
+        bgGradient: 'bg-gradient-to-r from-purple-500 to-purple-600',
+        badgeColor: 'bg-purple-100 text-purple-700'
+      },
+      'atividade': {
+        icon: FileText,
+        label: 'Atividade',
+        bgColor: 'bg-orange-500',
+        textColor: 'text-orange-500',
+        bgGradient: 'bg-gradient-to-r from-orange-500 to-orange-600',
+        badgeColor: 'bg-orange-100 text-orange-700'
+      },
+      'avaliacao': {
+        icon: ClipboardCheck,
+        label: 'Avaliação',
+        bgColor: 'bg-emerald-500',
+        textColor: 'text-emerald-500',
+        bgGradient: 'bg-gradient-to-r from-emerald-500 to-emerald-600',
+        badgeColor: 'bg-emerald-100 text-emerald-700'
+      }
     };
-    return icons[type as keyof typeof icons] || FileText;
-  };
-
-  const getTypeLabel = (type: string) => {
-    const labels = {
-      'plano-de-aula': 'Plano de Aula',
-      'slides': 'Slides',
-      'atividade': 'Atividade',
-      'avaliacao': 'Avaliação'
-    };
-    return labels[type as keyof typeof labels] || type;
-  };
-
-  const getTypeColor = (type: string) => {
-    const colors = {
-      'plano-de-aula': 'bg-blue-500',
-      'slides': 'bg-slate-500',
-      'atividade': 'bg-emerald-500',
-      'avaliacao': 'bg-purple-500'
-    };
-    return colors[type as keyof typeof colors] || 'bg-gray-500';
+    return configs[type as keyof typeof configs] || configs['atividade'];
   };
 
   const uniqueSubjects = [...new Set(materials.map(m => m.subject))];
@@ -127,11 +136,11 @@ const MaterialsList: React.FC = () => {
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-8 space-y-4 md:space-y-0">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Meus Materiais</h1>
-            <p className="text-gray-600">Gerencie seus conteúdos pedagógicos</p>
+            <p className="text-gray-600">Gerencie e organize seus conteúdos pedagógicos</p>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge variant="secondary" className="px-3 py-1">
-              {filteredMaterials.length} {filteredMaterials.length === 1 ? 'material' : 'materiais'}
+            <Badge variant="secondary" className="px-3 py-1 text-sm">
+              {filteredMaterials.length === 0 ? 'Nenhum' : filteredMaterials.length} {filteredMaterials.length === 1 ? 'material' : 'materiais'}
             </Badge>
           </div>
         </div>
@@ -208,58 +217,63 @@ const MaterialsList: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {filteredMaterials.map(material => {
-              const IconComponent = getTypeIcon(material.type);
+              const typeConfig = getTypeConfig(material.type);
+              const IconComponent = typeConfig.icon;
+              
               return (
                 <Card 
                   key={material.id} 
-                  className="group hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:bg-white hover:scale-[1.02]"
+                  className="group hover:shadow-xl transition-all duration-300 border-0 bg-white hover:scale-[1.02] overflow-hidden"
                 >
-                  <CardHeader className="pb-3 relative">
-                    <div className={`absolute top-4 right-4 w-3 h-3 rounded-full ${getTypeColor(material.type)}`}></div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getTypeColor(material.type)} shadow-lg group-hover:shadow-xl transition-shadow duration-300`}>
-                        <IconComponent className="w-6 h-6 text-white" />
+                  {/* Cabeçalho colorido por tipo */}
+                  <div className={`${typeConfig.bgGradient} p-4 text-white relative`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                          <IconComponent className="w-4 h-4" />
+                        </div>
+                        <span className="font-semibold text-sm">{typeConfig.label}</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base md:text-lg font-semibold line-clamp-2 text-gray-800 group-hover:text-gray-900">
-                          {material.title}
-                        </CardTitle>
-                        <Badge variant="secondary" className="mt-2 text-xs">
-                          {getTypeLabel(material.type)}
-                        </Badge>
-                      </div>
+                      <Badge className={`${typeConfig.badgeColor} border-0 text-xs font-medium`}>
+                        {material.subject}
+                      </Badge>
                     </div>
-                  </CardHeader>
+                  </div>
                   
-                  <CardContent className="pt-0">
-                    <div className="space-y-3 mb-4">
-                      <div className="flex items-center justify-between text-sm text-gray-600">
-                        <span className="font-medium">{material.subject}</span>
-                        <span className="text-xs">{material.grade}</span>
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {/* Título */}
+                      <div>
+                        <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-1">
+                          {material.title}
+                        </h3>
+                        <p className="text-sm text-gray-500">{material.grade}</p>
                       </div>
                       
-                      <div className="flex items-center text-xs text-gray-400">
+                      {/* Data de criação */}
+                      <div className="flex items-center text-xs text-gray-400 border-t pt-3">
                         <Calendar className="w-3 h-3 mr-1" />
-                        {new Date(material.createdAt).toLocaleDateString('pt-BR')}
+                        Criado em {new Date(material.createdAt).toLocaleDateString('pt-BR')}
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between space-x-2">
+                    {/* Botões de ação */}
+                    <div className="flex items-center justify-between space-x-2 mt-4 pt-3 border-t">
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={() => handleViewMaterial(material)}
-                        className="flex-1 text-xs h-8"
+                        className="flex-1 text-xs h-8 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
                       >
                         <Eye className="w-3 h-3 mr-1" />
-                        Ver
+                        Visualizar
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={() => navigate(`/material/${material.id}?edit=true`)}
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                        title="Editar"
                       >
                         <Edit3 className="w-3 h-3" />
                       </Button>
@@ -267,7 +281,8 @@ const MaterialsList: React.FC = () => {
                         variant="outline" 
                         size="sm" 
                         onClick={() => handleExport(material, 'pdf')}
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
+                        title="Exportar PDF"
                       >
                         <Download className="w-3 h-3" />
                       </Button>
@@ -275,7 +290,8 @@ const MaterialsList: React.FC = () => {
                         variant="outline" 
                         size="sm" 
                         onClick={() => handleDelete(material.id, material.title)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-200 h-8 w-8 p-0"
+                        title="Excluir"
                       >
                         <Trash2 className="w-3 h-3" />
                       </Button>
