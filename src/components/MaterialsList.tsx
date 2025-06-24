@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Monitor, FileText, ClipboardCheck, Eye, Edit3, Trash2, Download, Search, Filter, Plus, Calendar } from 'lucide-react';
+import { BookOpen, Monitor, FileText, ClipboardCheck, Eye, Edit3, Trash2, Download, Search, Filter, Plus, Calendar, Printer, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ const MaterialsList: React.FC = () => {
   const [filterSubject, setFilterSubject] = useState('all');
   const [selectedMaterial, setSelectedMaterial] = useState<GeneratedMaterial | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState<string | null>(null);
 
   useEffect(() => {
     loadMaterials();
@@ -74,19 +75,30 @@ const MaterialsList: React.FC = () => {
     }
   };
 
-  const handleExport = async (material: GeneratedMaterial, format: 'pdf' | 'word') => {
+  const handleExport = async (material: GeneratedMaterial, format: 'pdf' | 'word' | 'ppt' | 'print') => {
     try {
       if (format === 'pdf') {
         await exportService.exportToPDF(material);
         toast.success('PDF exportado com sucesso!');
-      } else {
+      } else if (format === 'word') {
         await exportService.exportToWord(material);
         toast.success('Documento Word exportado com sucesso!');
+      } else if (format === 'ppt') {
+        await exportService.exportToPPT(material);
+        toast.success('PowerPoint exportado com sucesso!');
+      } else if (format === 'print') {
+        await exportService.exportToPDF(material);
+        toast.success('Material enviado para impressão!');
       }
     } catch (error) {
       toast.error('Erro ao exportar material');
       console.error('Export error:', error);
     }
+    setExportDropdownOpen(null);
+  };
+
+  const toggleExportDropdown = (materialId: string) => {
+    setExportDropdownOpen(exportDropdownOpen === materialId ? null : materialId);
   };
 
   const getTypeConfig = (type: string) => {
@@ -102,26 +114,26 @@ const MaterialsList: React.FC = () => {
       'slides': {
         icon: Monitor,
         label: 'Slides',
-        bgColor: 'bg-purple-500',
-        textColor: 'text-purple-500',
-        bgGradient: 'bg-gradient-to-r from-purple-500 to-purple-600',
-        badgeColor: 'bg-purple-100 text-purple-700'
+        bgColor: 'bg-gray-500',
+        textColor: 'text-gray-500',
+        bgGradient: 'bg-gradient-to-r from-gray-500 to-gray-600',
+        badgeColor: 'bg-gray-100 text-gray-700'
       },
       'atividade': {
         icon: FileText,
         label: 'Atividade',
-        bgColor: 'bg-orange-500',
-        textColor: 'text-orange-500',
-        bgGradient: 'bg-gradient-to-r from-orange-500 to-orange-600',
-        badgeColor: 'bg-orange-100 text-orange-700'
+        bgColor: 'bg-green-500',
+        textColor: 'text-green-500',
+        bgGradient: 'bg-gradient-to-r from-green-500 to-green-600',
+        badgeColor: 'bg-green-100 text-green-700'
       },
       'avaliacao': {
         icon: ClipboardCheck,
         label: 'Avaliação',
-        bgColor: 'bg-emerald-500',
-        textColor: 'text-emerald-500',
-        bgGradient: 'bg-gradient-to-r from-emerald-500 to-emerald-600',
-        badgeColor: 'bg-emerald-100 text-emerald-700'
+        bgColor: 'bg-purple-500',
+        textColor: 'text-purple-500',
+        bgGradient: 'bg-gradient-to-r from-purple-500 to-purple-600',
+        badgeColor: 'bg-purple-100 text-purple-700'
       }
     };
     return configs[type as keyof typeof configs] || configs['atividade'];
@@ -223,7 +235,7 @@ const MaterialsList: React.FC = () => {
               return (
                 <Card 
                   key={material.id} 
-                  className="group hover:shadow-xl transition-all duration-300 border-0 bg-white hover:scale-[1.02] overflow-hidden"
+                  className="group hover:shadow-xl transition-all duration-300 border-0 bg-white hover:scale-[1.02] overflow-hidden relative"
                 >
                   {/* Cabeçalho colorido por tipo */}
                   <div className={`${typeConfig.bgGradient} p-4 text-white relative`}>
@@ -277,15 +289,56 @@ const MaterialsList: React.FC = () => {
                       >
                         <Edit3 className="w-3 h-3" />
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleExport(material, 'pdf')}
-                        className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
-                        title="Exportar PDF"
-                      >
-                        <Download className="w-3 h-3" />
-                      </Button>
+                      
+                      {/* Dropdown de exportação */}
+                      <div className="relative">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => toggleExportDropdown(material.id)}
+                          className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
+                          title="Exportar"
+                        >
+                          <Download className="w-3 h-3" />
+                        </Button>
+                        
+                        {exportDropdownOpen === material.id && (
+                          <div className="absolute bottom-full mb-1 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]">
+                            <button
+                              onClick={() => handleExport(material, 'print')}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                            >
+                              <Printer className="w-3 h-3 mr-2" />
+                              Imprimir
+                            </button>
+                            <button
+                              onClick={() => handleExport(material, 'pdf')}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                            >
+                              <FileDown className="w-3 h-3 mr-2" />
+                              PDF
+                            </button>
+                            {material.type === 'slides' ? (
+                              <button
+                                onClick={() => handleExport(material, 'ppt')}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                              >
+                                <FileDown className="w-3 h-3 mr-2" />
+                                PPT
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleExport(material, 'word')}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                              >
+                                <FileDown className="w-3 h-3 mr-2" />
+                                Word
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -303,6 +356,14 @@ const MaterialsList: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Fechar dropdown quando clicar fora */}
+      {exportDropdownOpen && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setExportDropdownOpen(null)}
+        />
+      )}
 
       <MaterialModal
         material={selectedMaterial}
