@@ -12,6 +12,7 @@ import {
 import { exportService } from '@/services/exportService';
 import { GeneratedMaterial } from '@/services/materialService';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SlideViewerProps {
   htmlContent: string;
@@ -20,6 +21,7 @@ interface SlideViewerProps {
 
 const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const isMobile = useIsMobile();
   
   // Generate slides based on content
   const slides = React.useMemo(() => {
@@ -538,82 +540,111 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4">
-      {/* Slide Content - Container centralizado e responsivo */}
-      <div className="flex justify-center mb-6">
-        <div className="w-full max-w-5xl bg-white p-4 rounded-xl shadow-lg">
-          <div className="aspect-[16/9] w-full">
+    <div className="w-full h-full flex flex-col">
+      {/* Slide Content */}
+      <div className="flex-1 flex justify-center items-center p-2">
+        <div className={`w-full bg-white rounded-xl shadow-lg ${
+          isMobile 
+            ? 'max-w-full h-48' // Mobile: altura reduzida para orientação horizontal
+            : 'max-w-5xl h-full p-4'
+        }`}>
+          <div className={`w-full h-full ${
+            isMobile 
+              ? 'aspect-[16/9]' // Mobile: aspecto horizontal
+              : 'aspect-[16/9]'
+          }`}>
             {renderSlide(slides[currentSlide], currentSlide)}
           </div>
         </div>
       </div>
 
       {/* Desktop Navigation */}
-      <div className="hidden md:flex justify-between items-center px-4">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-          disabled={currentSlide === 0}
-          className="flex items-center gap-2"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Anterior
-        </Button>
+      {!isMobile && (
+        <div className="flex justify-between items-center px-4 py-4">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+            disabled={currentSlide === 0}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Anterior
+          </Button>
 
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
-            Página {currentSlide + 1} de {slides.length}
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">
+              Página {currentSlide + 1} de {slides.length}
+            </span>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+            disabled={currentSlide === slides.length - 1}
+            className="flex items-center gap-2"
+          >
+            Próximo
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
+      )}
 
-        <Button
-          variant="outline"
-          onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-          disabled={currentSlide === slides.length - 1}
-          className="flex items-center gap-2"
-        >
-          Próximo
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Mobile Navigation - Botões maiores e mais visíveis */}
-      <div className="md:hidden mt-6">
-        <Pagination>
-          <PaginationContent className="gap-4">
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-                className={`${currentSlide === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} h-12 px-6 text-lg font-semibold`}
-              />
-            </PaginationItem>
-
-            {slides.map((_, index) => (
-              <PaginationItem key={index}>
-                <PaginationLink
-                  onClick={() => setCurrentSlide(index)}
-                  isActive={currentSlide === index}
-                  className="cursor-pointer h-12 w-12 text-lg font-bold"
+      {/* Mobile Navigation - Otimizado para orientação horizontal */}
+      {isMobile && (
+        <div className="flex-shrink-0 bg-white border-t">
+          <Pagination className="py-4">
+            <PaginationContent className="gap-6">
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+                  className={`${
+                    currentSlide === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+                  } h-16 px-8 text-xl font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
                 >
-                  {index + 1}
-                </PaginationLink>
+                  <ChevronLeft className="h-8 w-8 mr-2" />
+                  <span>Anterior</span>
+                </PaginationPrevious>
               </PaginationItem>
-            ))}
 
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-                className={`${currentSlide === slides.length - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} h-12 px-6 text-lg font-semibold`}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+              {/* Números das páginas - maiores e mais visíveis */}
+              <div className="flex items-center gap-3">
+                {slides.map((_, index) => (
+                  <PaginationItem key={index}>
+                    <PaginationLink
+                      onClick={() => setCurrentSlide(index)}
+                      isActive={currentSlide === index}
+                      className={`cursor-pointer h-16 w-16 text-2xl font-bold rounded-full shadow-lg ${
+                        currentSlide === index 
+                          ? 'bg-blue-600 text-white border-blue-600' 
+                          : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'
+                      }`}
+                    >
+                      {index + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+              </div>
 
-        {/* Mobile page indicator - Maior e mais visível */}
-        <div className="text-center mt-6 text-lg font-semibold text-gray-700">
-          Página {currentSlide + 1} de {slides.length}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+                  className={`${
+                    currentSlide === slides.length - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+                  } h-16 px-8 text-xl font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
+                >
+                  <span>Próximo</span>
+                  <ChevronRight className="h-8 w-8 ml-2" />
+                </PaginationNext>
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+
+          {/* Indicador de página mobile - maior e mais visível */}
+          <div className="text-center pb-4 text-2xl font-bold text-gray-700">
+            Página {currentSlide + 1} de {slides.length}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
