@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation } from 'lucide-react';
-
 interface DashboardProps {
   onNavigate?: (page: string) => void;
 }
-
-const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
+const Dashboard: React.FC<DashboardProps> = ({
+  onNavigate
+}) => {
   const [activeTab, setActiveTab] = useState('recent-activities');
-  
   const tabs = [{
     id: 'recent-activities',
     label: 'Atividades Recentes',
@@ -21,20 +20,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     label: 'Estatísticas',
     shortLabel: 'Stats'
   }];
-
   const handleNavigate = (page: string) => {
     if (onNavigate) {
       onNavigate(page);
     }
   };
-
   return <main className="p-4">
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl p-6 text-white mb-6">
         <div className="flex flex-col md:flex-row items-center justify-between">
           <div className="mb-4 md:mb-0">
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Bem-vindo de volta, Professor!</h1>
-            <p className="opacity-90">Pronto para criar aulas mágicas hoje?</p>
+            <p className="opacity-90">Sua próxima aula começa aqui. Vamos começar?</p>
           </div>
           <div className="relative w-24 h-24">
             <div className="absolute inset-0 bg-white bg-opacity-20 rounded-full animate-pulse"></div>
@@ -48,10 +45,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div 
-          className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer"
-          onClick={() => handleNavigate('create')}
-        >
+        <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('create')}>
           <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center text-primary-600">
             <Plus size={24} />
           </div>
@@ -61,10 +55,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </div>
         </div>
         
-        <div 
-          className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer"
-          onClick={() => handleNavigate('lessons')}
-        >
+        <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('lessons')}>
           <div className="w-12 h-12 rounded-lg bg-secondary-100 flex items-center justify-center text-secondary-600">
             <BookOpen size={24} />
           </div>
@@ -74,10 +65,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </div>
         </div>
         
-        <div 
-          className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer"
-          onClick={() => handleNavigate('calendar')}
-        >
+        <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('calendar')}>
           <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
             <Calendar size={24} />
           </div>
@@ -87,10 +75,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </div>
         </div>
         
-        <div 
-          className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer"
-          onClick={() => handleNavigate('subscription')}
-        >
+        <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('subscription')}>
           <div className="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600">
             <Crown size={24} />
           </div>
@@ -105,19 +90,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
         <div className="border-b border-gray-200">
           <nav className="grid grid-cols-3">
-            {tabs.map(tab => 
-              <button 
-                key={tab.id} 
-                onClick={() => setActiveTab(tab.id)} 
-                className={`py-3 px-1 text-center border-b-2 font-medium text-xs sm:text-sm transition-colors ${
-                  activeTab === tab.id 
-                    ? 'border-primary-500 text-primary-600' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
+            {tabs.map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`py-3 px-1 text-center border-b-2 font-medium text-xs sm:text-sm transition-colors ${activeTab === tab.id ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
                 {tab.label}
-              </button>
-            )}
+              </button>)}
           </nav>
         </div>
         
@@ -291,10 +266,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button 
-            className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group"
-            onClick={() => handleNavigate('create')}
-          >
+          <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <ClipboardList size={24} />
             </div>
@@ -302,10 +274,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             <p className="text-xs opacity-80 mt-1">Alinhado à BNCC</p>
           </button>
           
-          <button 
-            className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group"
-            onClick={() => handleNavigate('create')}
-          >
+          <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <Users size={24} />
             </div>
@@ -313,10 +282,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             <p className="text-xs opacity-80 mt-1">Com imagens e design</p>
           </button>
           
-          <button 
-            className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group"
-            onClick={() => handleNavigate('create')}
-          >
+          <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <FileText size={24} />
             </div>
@@ -324,10 +290,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             <p className="text-xs opacity-80 mt-1">Questões variadas</p>
           </button>
           
-          <button 
-            className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group"
-            onClick={() => handleNavigate('create')}
-          >
+          <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <FileText size={24} />
             </div>
@@ -338,5 +301,4 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       </div>
     </main>;
 };
-
 export default Dashboard;
