@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   LayoutDashboard, 
@@ -53,11 +52,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', onItemClick
       {/* Desktop Sidebar */}
       <div className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-40 flex-col">
         {/* Logo Section */}
-        <div className="p-4 flex items-center space-x-2 border-b border-gray-200">
-          <div className="bg-primary-500 text-white p-3 rounded-lg">
-            <span className="text-xl font-bold">✨</span>
+        <div className="p-4 flex flex-col items-center justify-center border-b border-gray-200">
+          <div className="bg-primary-500 text-white p-3 rounded-lg mb-2">
+            <BookOpen className="w-6 h-6" />
           </div>
           <h1 className="logo-text text-2xl text-primary-600">AulagIA</h1>
+          <p className="text-sm text-gray-500 text-center mt-1">Sua aula com toque mágico</p>
         </div>
         
         {/* User Info */}
