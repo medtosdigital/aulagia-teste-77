@@ -541,8 +541,8 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Slide Content with 4:3 aspect ratio */}
-      <div className="flex-1 flex justify-center items-center p-2">
+      {/* Slide Content com proporção 4:3 */}
+      <div className="flex-1 flex justify-center items-center p-4">
         {isMobile ? (
           // Mobile: Container horizontal 4:3 aspect ratio
           <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" 
@@ -552,36 +552,34 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
             </div>
           </div>
         ) : (
-          // Desktop: Larger container with 4:3 aspect ratio
-          <div className="w-full bg-white rounded-xl shadow-lg max-w-6xl overflow-hidden border border-gray-200" 
-               style={{ aspectRatio: '4/3' }}>
-            <div className="w-full h-full p-4">
-              <div className="w-full h-full" style={{ aspectRatio: '4/3' }}>
-                {renderSlide(slides[currentSlide], currentSlide)}
-              </div>
+          // Desktop: Container menor com proporção 4:3
+          <div className="w-full bg-white rounded-xl shadow-lg max-w-4xl overflow-hidden border border-gray-200" 
+               style={{ aspectRatio: '4/3', maxHeight: '70vh' }}>
+            <div className="w-full h-full">
+              {renderSlide(slides[currentSlide], currentSlide)}
             </div>
           </div>
         )}
       </div>
 
-      {/* Desktop Navigation - Redesigned with better styling */}
+      {/* Desktop Navigation - Melhor posicionamento */}
       {!isMobile && (
-        <div className="bg-white border-t border-gray-200 px-8 py-6">
-          <div className="flex justify-between items-center max-w-6xl mx-auto">
+        <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
+          <div className="flex justify-between items-center max-w-4xl mx-auto">
             {/* Previous Button */}
             <Button
               variant="outline"
               onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
               disabled={currentSlide === 0}
-              className="flex items-center gap-3 h-14 px-8 text-lg font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 h-12 px-6 text-base font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-5 w-5" />
               Anterior
             </Button>
 
             {/* Page Info and Numbers */}
-            <div className="flex items-center gap-6">
-              <div className="text-xl font-bold text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">
+            <div className="flex items-center gap-4">
+              <div className="text-lg font-bold text-gray-700 bg-gray-100 px-3 py-2 rounded-lg">
                 Página {currentSlide + 1} de {slides.length}
               </div>
               
@@ -591,7 +589,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
                   <button
                     key={index}
                     onClick={() => setCurrentSlide(index)}
-                    className={`w-12 h-12 rounded-full text-lg font-bold transition-all duration-200 ${
+                    className={`w-10 h-10 rounded-full text-sm font-bold transition-all duration-200 ${
                       currentSlide === index 
                         ? 'bg-blue-600 text-white shadow-lg scale-110' 
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105'
@@ -608,10 +606,10 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
               variant="outline"
               onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
               disabled={currentSlide === slides.length - 1}
-              className="flex items-center gap-3 h-14 px-8 text-lg font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 h-12 px-6 text-base font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Próximo
-              <ChevronRight className="h-6 w-6" />
+              <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
         </div>
