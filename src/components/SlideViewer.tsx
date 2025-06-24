@@ -564,90 +564,113 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         )}
       </div>
 
-      {/* Desktop Navigation */}
+      {/* Desktop Navigation - Redesigned with better styling */}
       {!isMobile && (
-        <div className="flex justify-between items-center px-4 py-4">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-            disabled={currentSlide === 0}
-            className="flex items-center gap-2 h-12 px-6 text-lg font-bold"
-          >
-            <ChevronLeft className="h-6 w-6" />
-            Anterior
-          </Button>
+        <div className="bg-white border-t border-gray-200 px-8 py-6">
+          <div className="flex justify-between items-center max-w-6xl mx-auto">
+            {/* Previous Button */}
+            <Button
+              variant="outline"
+              onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+              disabled={currentSlide === 0}
+              className="flex items-center gap-3 h-14 px-8 text-lg font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="h-6 w-6" />
+              Anterior
+            </Button>
 
-          <div className="flex items-center gap-4">
-            <span className="text-lg font-bold text-gray-600">
-              Página {currentSlide + 1} de {slides.length}
-            </span>
+            {/* Page Info and Numbers */}
+            <div className="flex items-center gap-6">
+              <div className="text-xl font-bold text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">
+                Página {currentSlide + 1} de {slides.length}
+              </div>
+              
+              {/* Page Numbers */}
+              <div className="flex items-center gap-2">
+                {slides.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`w-12 h-12 rounded-full text-lg font-bold transition-all duration-200 ${
+                      currentSlide === index 
+                        ? 'bg-blue-600 text-white shadow-lg scale-110' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105'
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Next Button */}
+            <Button
+              variant="outline"
+              onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+              disabled={currentSlide === slides.length - 1}
+              className="flex items-center gap-3 h-14 px-8 text-lg font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Próximo
+              <ChevronRight className="h-6 w-6" />
+            </Button>
           </div>
-
-          <Button
-            variant="outline"
-            onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-            disabled={currentSlide === slides.length - 1}
-            className="flex items-center gap-2 h-12 px-6 text-lg font-bold"
-          >
-            Próximo
-            <ChevronRight className="h-6 w-6" />
-          </Button>
         </div>
       )}
 
-      {/* Mobile Navigation - Optimized for horizontal viewing */}
+      {/* Mobile Navigation - Enhanced with better buttons */}
       {isMobile && (
-        <div className="flex-shrink-0 bg-white border-t">
-          <Pagination className="py-4">
-            <PaginationContent className="gap-4">
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-                  className={`${
-                    currentSlide === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
-                  } h-14 px-8 text-xl font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
+        <div className="flex-shrink-0 bg-white border-t border-gray-200">
+          <div className="px-4 py-6">
+            {/* Main Navigation Buttons */}
+            <div className="flex justify-between items-center mb-4">
+              <Button
+                onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+                disabled={currentSlide === 0}
+                className={`flex items-center gap-2 h-16 px-6 text-xl font-bold rounded-xl shadow-lg transition-all duration-200 ${
+                  currentSlide === 0 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
+                }`}
+              >
+                <ChevronLeft className="h-8 w-8" />
+                Anterior
+              </Button>
+
+              <Button
+                onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+                disabled={currentSlide === slides.length - 1}
+                className={`flex items-center gap-2 h-16 px-6 text-xl font-bold rounded-xl shadow-lg transition-all duration-200 ${
+                  currentSlide === slides.length - 1 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
+                }`}
+              >
+                Próximo
+                <ChevronRight className="h-8 w-8" />
+              </Button>
+            </div>
+
+            {/* Page Numbers for Mobile */}
+            <div className="flex justify-center items-center gap-3 mb-4">
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-14 h-14 rounded-full text-lg font-bold transition-all duration-200 ${
+                    currentSlide === index 
+                      ? 'bg-blue-600 text-white shadow-lg scale-110' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95'
+                  }`}
                 >
-                  <ChevronLeft className="h-8 w-8 mr-2" />
-                  <span>Anterior</span>
-                </PaginationPrevious>
-              </PaginationItem>
+                  {index + 1}
+                </button>
+              ))}
+            </div>
 
-              {/* Slide numbers - compact for mobile horizontal */}
-              <div className="flex items-center gap-3">
-                {slides.map((_, index) => (
-                  <PaginationItem key={index}>
-                    <PaginationLink
-                      onClick={() => setCurrentSlide(index)}
-                      isActive={currentSlide === index}
-                      className={`cursor-pointer h-14 w-14 text-xl font-bold rounded-full shadow-lg ${
-                        currentSlide === index 
-                          ? 'bg-blue-600 text-white border-blue-600' 
-                          : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'
-                      }`}
-                    >
-                      {index + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-              </div>
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-                  className={`${
-                    currentSlide === slides.length - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
-                  } h-14 px-8 text-xl font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
-                >
-                  <span>Próximo</span>
-                  <ChevronRight className="h-8 w-8 ml-2" />
-                </PaginationNext>
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-
-          {/* Page indicator for mobile - compact */}
-          <div className="text-center pb-4 text-xl font-bold text-gray-700">
-            Página {currentSlide + 1} de {slides.length}
+            {/* Page indicator */}
+            <div className="text-center text-xl font-bold text-gray-700 bg-gray-100 py-3 rounded-lg">
+              Página {currentSlide + 1} de {slides.length}
+            </div>
           </div>
         </div>
       )}
