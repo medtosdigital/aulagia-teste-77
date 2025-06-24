@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users } from 'lucide-react';
+import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation } from 'lucide-react';
 
 interface DashboardProps {
   onNavigate?: (page: string) => void;
@@ -11,13 +11,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   
   const tabs = [{
     id: 'recent-activities',
-    label: 'Atividades Recentes'
+    label: 'Atividades Recentes',
+    shortLabel: 'Atividades'
   }, {
     id: 'upcoming-classes',
-    label: 'Próximas Aulas'
+    label: 'Próximas Aulas',
+    shortLabel: 'Aulas'
   }, {
     id: 'quick-stats',
-    label: 'Estatísticas'
+    label: 'Estatísticas',
+    shortLabel: 'Stats'
   }];
 
   const handleNavigate = (page: string) => {
@@ -102,18 +105,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       {/* Main Content Tabs */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
         <div className="border-b border-gray-200">
-          <nav className="flex -mb-px overflow-x-auto scrollbar-hide">
+          <nav className="grid grid-cols-3">
             {tabs.map(tab => 
               <button 
                 key={tab.id} 
                 onClick={() => setActiveTab(tab.id)} 
-                className={`py-4 px-4 md:px-6 text-center border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`py-4 px-2 text-center border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id 
                     ? 'border-primary-500 text-primary-600' 
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                {tab.label}
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.shortLabel}</span>
               </button>
             )}
           </nav>
@@ -200,7 +204,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           {activeTab === 'quick-stats' && <div>
               <h3 className="font-semibold text-lg mb-4">Estatísticas rápidas</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div>
@@ -216,6 +220,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                       <div className="bg-primary-500 h-2 rounded-full w-3/4"></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">+5 na última semana</p>
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500">Slides</p>
+                      <p className="text-2xl font-bold text-gray-800">18</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                      <Presentation size={24} />
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-blue-500 h-2 rounded-full w-4/5"></div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">+3 na última semana</p>
                   </div>
                 </div>
                 
