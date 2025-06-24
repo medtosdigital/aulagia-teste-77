@@ -538,16 +538,18 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6">
-      {/* Slide Content - Otimizado para mobile horizontal */}
-      <div className="bg-gray-100 p-3 md:p-6 rounded-lg relative">
-        <div className="aspect-[16/9] w-full relative">
-          {renderSlide(slides[currentSlide], currentSlide)}
+    <div className="w-full max-w-7xl mx-auto p-4">
+      {/* Slide Content - Container centralizado e responsivo */}
+      <div className="flex justify-center mb-6">
+        <div className="w-full max-w-5xl bg-white p-4 rounded-xl shadow-lg">
+          <div className="aspect-[16/9] w-full">
+            {renderSlide(slides[currentSlide], currentSlide)}
+          </div>
         </div>
       </div>
 
       {/* Desktop Navigation */}
-      <div className="hidden md:flex justify-between items-center mt-6 px-4">
+      <div className="hidden md:flex justify-between items-center px-4">
         <Button
           variant="outline"
           onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
