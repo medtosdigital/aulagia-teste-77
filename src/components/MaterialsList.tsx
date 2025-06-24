@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
 import MaterialModal from './MaterialModal';
+import MaterialEditModal from './MaterialEditModal';
 
 const MaterialsList: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const MaterialsList: React.FC = () => {
   const [filterSubject, setFilterSubject] = useState('all');
   const [selectedMaterial, setSelectedMaterial] = useState<GeneratedMaterial | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [exportDropdownOpen, setExportDropdownOpen] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,9 +59,23 @@ const MaterialsList: React.FC = () => {
     setModalOpen(true);
   };
 
+  const handleEditMaterial = (material: GeneratedMaterial) => {
+    setSelectedMaterial(material);
+    setEditModalOpen(true);
+  };
+
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedMaterial(null);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false);
+    setSelectedMaterial(null);
+  };
+
+  const handleSaveEdit = () => {
+    loadMaterials();
   };
 
   const handleDelete = (id: string, title: string) => {
@@ -282,7 +298,7 @@ const MaterialsList: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => navigate(`/material/${material.id}?edit=true`)}
+                        onClick={() => handleEditMaterial(material)}
                         className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
                         title="Editar"
                       >
@@ -368,6 +384,13 @@ const MaterialsList: React.FC = () => {
         material={selectedMaterial}
         open={modalOpen}
         onClose={handleCloseModal}
+      />
+
+      <MaterialEditModal
+        material={selectedMaterial}
+        open={editModalOpen}
+        onClose={handleCloseEditModal}
+        onSave={handleSaveEdit}
       />
     </>
   );

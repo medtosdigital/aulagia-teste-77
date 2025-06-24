@@ -475,6 +475,7 @@ const ASSESSMENT_HTML_TEMPLATE = `<!DOCTYPE html>
 
 class MaterialService {
   private materials: GeneratedMaterial[] = [];
+  private storageKey = 'materials';
 
   async generateMaterial(type: string, formData: any): Promise<GeneratedMaterial> {
     // Simula chamada para API de IA
@@ -1465,6 +1466,32 @@ class MaterialService {
       return true;
     }
     return false;
+  }
+
+  updateMaterial(id: string, updatedMaterial: GeneratedMaterial): boolean {
+    try {
+      const materials = this.getMaterials();
+      const index = materials.findIndex(material => material.id === id);
+      
+      if (index === -1) {
+        return false;
+      }
+
+      // Manter a data de criação original
+      const originalCreatedAt = materials[index].createdAt;
+      materials[index] = {
+        ...updatedMaterial,
+        id,
+        createdAt: originalCreatedAt,
+        updatedAt: new Date().toISOString()
+      };
+
+      localStorage.setItem(this.storageKey, JSON.stringify(materials));
+      return true;
+    } catch (error) {
+      console.error('Error updating material:', error);
+      return false;
+    }
   }
 }
 
