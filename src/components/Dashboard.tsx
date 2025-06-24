@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
           </div>
           <div>
             <h3 className="font-semibold text-gray-800">Preparar Material</h3>
-            <p className="text-sm text-gray-500">Crie um plano de aula</p>
+            <p className="text-sm text-gray-500">Comece a planejar</p>
           </div>
         </div>
         
