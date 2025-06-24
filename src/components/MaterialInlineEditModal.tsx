@@ -67,7 +67,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     return typeMap[type as keyof typeof typeMap] || '1';
   };
 
-  // USAR EXATAMENTE O MESMO SISTEMA DE TEMPLATE DO MATERIALPREVIEW
   const wrapPageContentWithTemplate = (content: string, isFirstPage: boolean): string => {
     const pageClass = isFirstPage ? 'first-page-content' : 'subsequent-page-content';
     const contentClass = isFirstPage ? 'content' : 'content subsequent-page';
@@ -88,7 +87,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
         <div class="shape-circle purple"></div>
         <div class="shape-circle blue"></div>
 
-        <!-- Cabeçalho AulagIA - Visível em todas as páginas - NÃO EDITÁVEL -->
+        <!-- Cabeçalho AulagIA -->
         <div class="header">
           <div class="logo-container">
             <div class="logo">
@@ -104,7 +103,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
           </div>
         </div>
 
-        <!-- Rodapé - Visível em todas as páginas - NÃO EDITÁVEL -->
+        <!-- Rodapé -->
         <div class="footer">
           ${getFooterText()}
         </div>
@@ -116,47 +115,38 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     `;
   };
 
-  // USAR EXATAMENTE O MESMO SISTEMA DE PAGINAÇÃO DO MATERIALPREVIEW
   const splitContentIntoPages = (htmlContent: string): string[] => {
     console.log('Starting optimized page split for:', editedMaterial?.type);
     
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
-    // Para atividades e avaliações - usar o mesmo sistema do MaterialPreview
     if (editedMaterial?.type === 'atividade' || editedMaterial?.type === 'avaliacao') {
       const pages: string[] = [];
       const questions = tempDiv.querySelectorAll('.questao-container, .question');
       
       if (questions.length === 0) {
-        console.log('No questions found, returning single page');
         return [htmlContent];
       }
 
-      console.log(`Processing ${questions.length} questions for optimized pagination`);
-
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
       const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
-      const questionsPerPage = 4; // Baseado no template: 4 questões por página
+      const questionsPerPage = 4;
       let questionIndex = 0;
 
       while (questionIndex < questions.length) {
         const isFirstPage = pages.length === 0;
         const questionsForPage = [];
         
-        // Adicionar até 4 questões por página
         for (let i = 0; i < questionsPerPage && questionIndex < questions.length; i++) {
           questionsForPage.push(questions[questionIndex]);
           questionIndex++;
         }
 
-        // Construir conteúdo da página
         let pageContent = '';
         if (isFirstPage) {
-          // Título do Material
           pageContent += editedMaterial.type === 'atividade' ? '<h2>ATIVIDADE</h2>' : '<h2>AVALIAÇÃO</h2>';
           
-          // Informações básicas do Material
           pageContent += `
             <table>
               <tr>
@@ -180,7 +170,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             </table>
           `;
           
-          // Instruções do Material
           pageContent += `
             <div class="instructions">
               <strong>${editedMaterial.title}:</strong><br>
@@ -196,11 +185,9 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
         pages.push(wrapPageContentWithTemplate(pageContent, isFirstPage));
       }
       
-      console.log(`Split into ${pages.length} optimized pages`);
       return pages.length > 0 ? pages : [htmlContent];
     }
 
-    // Para planos de aula - manter lógica do MaterialPreview
     if (editedMaterial?.type === 'plano-de-aula') {
       const sections = tempDiv.querySelectorAll('.section');
       if (sections.length <= 1) {
@@ -208,7 +195,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
 
       const pages: string[] = [];
-      const sectionsPerPage = 3; // Reduzido para melhor formatação
+      const sectionsPerPage = 3;
       let sectionIndex = 0;
 
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
@@ -240,7 +227,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     return [htmlContent];
   };
 
-  // USAR EXATAMENTE O MESMO SISTEMA DE TEMPLATE DO MATERIALPREVIEW
   const enhanceHtmlWithNewTemplate = (htmlContent: string): string => {
     return `
       <!DOCTYPE html>
@@ -252,7 +238,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
           
-          /* Define página A4 para impressão e visualização */
           @page {
             size: A4;
             margin: 0;
@@ -270,7 +255,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             padding: 20px 0;
           }
           
-          /* Container no tamanho A4 - Cada .page será uma folha */
           .page {
             position: relative;
             width: 210mm;
@@ -291,8 +275,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             page-break-after: auto;
             margin-bottom: 0;
           }
-          
-          /* ... keep existing code (shape-circle, header, footer, content styling) the same ... */
           
           .shape-circle {
             position: absolute;
@@ -541,7 +523,130 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
           }
           
-          /* ... keep existing code (print styles) the same ... */
+          /* Plano de aula específico */
+          .section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+          }
+          
+          .section h3 {
+            color: #4f46e5;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          
+          .info-table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          }
+          
+          .info-table th {
+            background: #f3f4f6;
+            color: #1f2937;
+            font-weight: 600;
+            text-align: left;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            width: 25%;
+          }
+          
+          .info-table td {
+            background: #ffffff;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.85rem;
+          }
+          
+          .objectives-list, .skills-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+          }
+          
+          .objectives-list li, .skills-list li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.9rem;
+            line-height: 1.4;
+          }
+          
+          .objectives-list li:before {
+            content: "•";
+            color: #3b82f6;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+          }
+          
+          .skills-list li:before {
+            content: "•";
+            color: #10b981;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+          }
+          
+          .development-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          }
+          
+          .development-table th {
+            background: #f3f4f6;
+            color: #1f2937;
+            font-weight: 600;
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 0.85rem;
+          }
+          
+          .development-table td {
+            background: #ffffff;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.85rem;
+            vertical-align: top;
+          }
+          
+          .resources-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+          }
+          
+          .resources-list li {
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.9rem;
+          }
+          
+          .resources-list li:before {
+            content: "•";
+            color: #f59e0b;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+          }
+          
+          .evaluation-text {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            text-align: justify;
+            margin-top: 10px;
+          }
           
           @media print {
             body { 
@@ -586,33 +691,61 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   const makeContentEditable = (htmlContent: string): string => {
     let editableHtml = htmlContent;
 
-    // Tornar conteúdo editável mas EXCLUIR logo e rodapé
+    // Tornar informações básicas editáveis (professor, disciplina, tema, etc.)
+    editableHtml = editableHtml.replace(
+      /<td([^>]*)>([^<]+)<\/td>/g,
+      (match, attrs, content) => {
+        // Não tornar editável se contém data fixa ou elementos não editáveis
+        if (content.includes('aulagia.com.br') || 
+            content.includes('AulagIA') || 
+            content.includes('_____') ||
+            content.includes(new Date().toLocaleDateString('pt-BR'))) {
+          return match;
+        }
+        return `<td${attrs}><span class="editable-field" contenteditable="true">${content}</span></td>`;
+      }
+    );
+
+    // Tornar títulos editáveis (exceto AulagIA)
     editableHtml = editableHtml.replace(
       /<h([1-6])([^>]*)>([^<]*)<\/h([1-6])>/g,
       (match, tag1, attrs, content, tag2) => {
         if (content.includes('AulagIA')) return match;
-        return `<h${tag1}${attrs} class="editable-field" contenteditable="true">${content}</h${tag2}>`;
+        return `<h${tag1}${attrs}><span class="editable-field" contenteditable="true">${content}</span></h${tag2}>`;
       }
     );
 
+    // Tornar objetivos de aprendizagem editáveis
     editableHtml = editableHtml.replace(
-      /<p([^>]*)>([^<]*)<\/p>/g,
+      /<li([^>]*)>([^<]*)<\/li>/g,
       (match, attrs, content) => {
-        if (content.includes('Sua aula com toque mágico') || content.includes('aulagia.com.br')) return match;
-        return `<p${attrs} class="editable-field" contenteditable="true">${content}</p>`;
+        if (content.trim() === '') return match;
+        return `<li${attrs}><span class="editable-field" contenteditable="true">${content}</span></li>`;
       }
+    );
+
+    // Tornar células da tabela de desenvolvimento editáveis
+    editableHtml = editableHtml.replace(
+      /<td([^>]*class="[^"]*development[^"]*"[^>]*)>([^<]*)<\/td>/g,
+      '<td$1><span class="editable-field" contenteditable="true">$2</span></td>'
     );
 
     // Tornar questões editáveis
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*questao-enunciado[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1 class="questao-enunciado editable-field" contenteditable="true">$2</div>'
+      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
     // Tornar opções editáveis
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*opcao[^"]*"[^>]*)>(<span[^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*)<\/div>/g,
       '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
+    );
+
+    // Tornar texto de avaliação editável
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*evaluation-text[^"]*"[^>]*)>([^<]*)<\/div>/g,
+      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
     return editableHtml;
@@ -626,16 +759,13 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     try {
       const renderedHtml = templateService.renderTemplate(selectedTemplateId, editedMaterial.content);
       
-      // Se for slides, usar o SlideViewer IGUAL ao MaterialPreview
       if (editedMaterial.type === 'slides') {
         return <SlideViewer htmlContent={makeContentEditable(renderedHtml)} material={editedMaterial} />;
       }
       
-      // Split content into pages com o MESMO sistema do MaterialPreview
       const pages = splitContentIntoPages(renderedHtml);
       
       if (pages.length === 1) {
-        // Single page - render directly
         return (
           <iframe
             srcDoc={enhanceHtmlWithNewTemplate(makeContentEditable(pages[0]))}
@@ -650,10 +780,8 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
         );
       }
 
-      // Multiple pages - render with navigation IGUAL ao MaterialPreview
       return (
         <div className="multi-page-container h-full flex flex-col relative">
-          {/* Desktop Navigation Bar - IGUAL ao MaterialPreview */}
           {!isMobile && (
             <div className="flex items-center justify-between p-4 bg-white border-b shadow-sm">
               <div className="flex items-center space-x-2">
@@ -689,7 +817,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             </div>
           )}
 
-          {/* Mobile Page Counter - IGUAL ao MaterialPreview */}
           {isMobile && (
             <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/95 backdrop-blur-sm px-8 py-4 rounded-full shadow-xl border-2">
               <div className="flex items-center space-x-4">
@@ -701,7 +828,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             </div>
           )}
 
-          {/* Mobile Floating Navigation Buttons - IGUAL ao MaterialPreview */}
           {isMobile && pages.length > 1 && (
             <>
               <Button
@@ -726,7 +852,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             </>
           )}
 
-          {/* Page Content */}
           <div className="flex-1 overflow-hidden">
             <iframe
               srcDoc={enhanceHtmlWithNewTemplate(makeContentEditable(pages[currentPage]))}
@@ -753,7 +878,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
 
   if (!editedMaterial) return null;
 
-  // Layout Mobile - USANDO O MESMO SISTEMA DO MATERIALPREVIEW
+  // Layout Mobile
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={onClose}>
@@ -797,7 +922,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     );
   }
 
-  // Layout Desktop - USANDO O MESMO SISTEMA DO MATERIALPREVIEW
+  // Layout Desktop
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex rounded-2xl">
