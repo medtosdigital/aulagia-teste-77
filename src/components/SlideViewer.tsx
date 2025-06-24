@@ -544,9 +544,9 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       {/* Slide Content com proporção 4:3 */}
       <div className="flex-1 flex justify-center items-center p-4">
         {isMobile ? (
-          // Mobile: Container horizontal 4:3 aspect ratio - proporção padrão de slides de apresentação
+          // Mobile: Container horizontal 4:3 aspect ratio com altura limitada
           <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" 
-               style={{ aspectRatio: '4/3', maxWidth: '100%', height: 'auto' }}>
+               style={{ aspectRatio: '4/3', maxWidth: '100%', maxHeight: '45vh' }}>
             <div className="w-full h-full">
               {renderSlide(slides[currentSlide], currentSlide)}
             </div>
