@@ -10,7 +10,8 @@ import {
   Key, 
   FileText, 
   LogOut,
-  User
+  User,
+  School
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -30,12 +31,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', onItemClick
 
   const desktopMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'create', label: 'Criar Material', icon: Plus },
+    { id: 'create', label: 'Preparar Aula', icon: Plus },
     { id: 'lessons', label: 'Meus Materiais', icon: BookOpen },
     { id: 'calendar', label: 'Calendário', icon: Calendar },
     { id: 'subscription', label: 'Assinatura', icon: Crown },
-    { id: 'settings', label: 'Configurações', icon: Settings },
-    { id: 'api-keys', label: 'Chaves de API', icon: Key },
+    { id: 'school', label: 'Escola', icon: School },
   ];
 
   const handleItemClick = (itemId: string) => {
@@ -45,17 +45,31 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', onItemClick
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 shadow-sm z-40">
+      <div className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-white shadow-sm z-40">
         <div className="flex flex-col w-full">
           {/* Logo/Brand */}
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-gray-800">EduMagic</h1>
-            <p className="text-sm text-gray-500">Professor Dashboard</p>
+          <div className="p-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-lg">A</span>
+              </div>
+              <span className="text-xl font-bold text-blue-500">AulagIA</span>
+            </div>
+            
+            <div className="flex items-center space-x-3 bg-gray-50 rounded-lg p-3">
+              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                <School className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-gray-900">Medtos Digital</div>
+                <div className="text-xs text-gray-500">Plano Premium</div>
+              </div>
+            </div>
           </div>
           
           {/* Navigation Menu */}
-          <nav className="flex-1 px-4 py-6">
-            <div className="space-y-2">
+          <nav className="flex-1 px-4">
+            <div className="space-y-1">
               {desktopMenuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeItem === item.id;
@@ -67,8 +81,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', onItemClick
                     className={cn(
                       "flex items-center w-full px-4 py-3 text-left rounded-lg transition-colors",
                       isActive 
-                        ? "bg-primary-50 text-primary-700 border-l-4 border-primary-500" 
-                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                        ? "bg-blue-50 text-blue-600" 
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     )}
                   >
                     <Icon size={20} className="mr-3" />
@@ -77,11 +91,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', onItemClick
                 );
               })}
             </div>
+            
+            {/* Administration Section */}
+            <div className="mt-8">
+              <div className="px-4 py-2">
+                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">ADMINISTRAÇÃO</span>
+              </div>
+            </div>
           </nav>
           
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200">
-            <button className="flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+          <div className="p-4">
+            <button className="flex items-center w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
               <LogOut size={20} className="mr-3" />
               <span className="font-medium">Sair</span>
             </button>
@@ -102,7 +123,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', onItemClick
                 <button
                   key={item.id}
                   onClick={() => handleItemClick(item.id)}
-                  className="relative flex flex-col items-center justify-center w-16 h-16 -mt-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg transform transition-transform hover:scale-105"
+                  className="relative flex flex-col items-center justify-center w-14 h-14 -mt-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg transform transition-transform hover:scale-105"
                 >
                   <Icon size={24} className="text-white" />
                   <span className="text-xs text-white font-medium mt-1">{item.label}</span>
