@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Save, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -127,6 +126,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             justify-content: flex-start;
             align-items: center;
             min-height: 100vh;
+            zoom: 0.7;
           }
           
           .page {
@@ -204,6 +204,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             line-height: 1;
             font-weight: 700;
             letter-spacing: -0.2px;
+            pointer-events: none;
           }
           .header .brand-text p {
             font-size: 8px;
@@ -212,6 +213,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             font-family: 'Inter', sans-serif;
             line-height: 1;
             font-weight: 400;
+            pointer-events: none;
           }
           
           .content {
@@ -331,6 +333,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             padding: 0 15mm;
             font-family: 'Inter', sans-serif;
             flex-shrink: 0;
+            pointer-events: none;
           }
 
           /* Estilos para campos editáveis */
@@ -353,6 +356,11 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             border-color: #2563eb !important;
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
           }
+
+          /* Logo não editável */
+          .header .logo, .header .brand-text h1, .header .brand-text p {
+            pointer-events: none !important;
+          }
         </style>
       </head>
       <body>
@@ -365,16 +373,19 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   const makeContentEditable = (htmlContent: string): string => {
     let editableHtml = htmlContent;
 
-    // Tornar campos de tabela editáveis
+    // Tornar campos de tabela editáveis (exceto logo)
     editableHtml = editableHtml.replace(
       /<td>([^<]*)<\/td>/g,
       '<td class="editable-field" contenteditable="true">$1</td>'
     );
 
-    // Tornar títulos editáveis
+    // Tornar títulos editáveis (exceto o da logo)
     editableHtml = editableHtml.replace(
       /<h([1-6])>([^<]*)<\/h([1-6])>/g,
-      '<h$1 class="editable-field" contenteditable="true">$2</h$3>'
+      (match, tag1, content, tag2) => {
+        if (content.includes('AulagIA')) return match; // Não tornar editável
+        return `<h${tag1} class="editable-field" contenteditable="true">${content}</h${tag2}>`;
+      }
     );
 
     // Tornar parágrafos editáveis
@@ -383,16 +394,33 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '<p class="editable-field" contenteditable="true">$1</p>'
     );
 
+    // Tornar listas editáveis (objetivos de aprendizagem)
+    editableHtml = editableHtml.replace(
+      /<li>([^<]*)<\/li>/g,
+      '<li class="editable-field" contenteditable="true">$1</li>'
+    );
+
     // Tornar questões editáveis
     editableHtml = editableHtml.replace(
       /<div class="questao-enunciado">([^<]*)<\/div>/g,
       '<div class="questao-enunciado editable-field" contenteditable="true">$1</div>'
     );
 
+    editableHtml = editableHtml.replace(
+      /<div class="question-text">([^<]*)<\/div>/g,
+      '<div class="question-text editable-field" contenteditable="true">$1</div>'
+    );
+
     // Tornar opções editáveis
     editableHtml = editableHtml.replace(
       /<div class="opcao-texto">([^<]*)<\/div>/g,
       '<div class="opcao-texto editable-field" contenteditable="true">$1</div>'
+    );
+
+    // Tornar opções de múltipla escolha editáveis
+    editableHtml = editableHtml.replace(
+      /<div class="option">(<span class="option-letter">[A-D]\)</span>)\s*([^<]*)<\/div>/g,
+      '<div class="option">$1 <span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
     return editableHtml;
@@ -403,58 +431,79 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
 
     try {
       const selectedTemplateId = getDefaultTemplateId(editedMaterial.type);
-      const renderedHtml = templateService.renderTemplate(selectedTemplateId, editedMaterial.content);
       
-      // Para slides, usar uma renderização especial
+      // Para slides, usar uma renderização especial com template 4:3
       if (editedMaterial.type === 'slides') {
         const slides = editedMaterial.content.slides || [];
         
         return (
           <div className="slides-editor w-full h-full overflow-auto bg-gray-50 p-4">
-            {slides.map((slide: any, index: number) => (
-              <div key={index} className="slide-page mb-8 mx-auto" style={{ width: '210mm', minHeight: '297mm' }}>
-                <div className="bg-white shadow-lg rounded-lg border-2 border-blue-200 p-8">
-                  <div className="slide-header flex justify-between items-center mb-6">
-                    <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold">
-                      Slide {slide.numero}
-                    </span>
-                  </div>
-                  
-                  <div className="slide-title mb-8">
-                    <input
-                      type="text"
-                      value={slide.titulo}
-                      onChange={(e) => updateArrayItem('slides', index, { ...slide, titulo: e.target.value })}
-                      className="w-full text-2xl font-bold text-center p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors"
-                      placeholder="Título do slide"
-                    />
-                  </div>
-                  
-                  <div className="slide-content space-y-4">
-                    {slide.conteudo.map((item: string, itemIndex: number) => (
-                      <div key={itemIndex} className="flex items-start gap-3">
-                        <span className="text-blue-600 font-bold text-xl mt-2">•</span>
-                        <textarea
-                          value={item}
-                          onChange={(e) => {
-                            const newConteudo = [...slide.conteudo];
-                            newConteudo[itemIndex] = e.target.value;
-                            updateArrayItem('slides', index, { ...slide, conteudo: newConteudo });
-                          }}
-                          className="flex-1 text-lg p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors resize-none"
-                          rows={3}
-                        />
+            <div className="slides-container" style={{ zoom: '0.8' }}>
+              {slides.map((slide: any, index: number) => (
+                <div key={index} className="slide-page mb-8 mx-auto" style={{ 
+                  width: '800px', 
+                  height: '600px',
+                  aspectRatio: '4/3'
+                }}>
+                  <div className="bg-white shadow-lg rounded-lg border-2 border-blue-200 p-8 h-full flex flex-col relative overflow-hidden">
+                    {/* Formas decorativas */}
+                    <div className="absolute top-0 left-0 w-32 h-32 bg-purple-300 rounded-full opacity-25 -translate-x-1/2 -translate-y-1/2"></div>
+                    <div className="absolute bottom-0 right-0 w-40 h-40 bg-blue-300 rounded-full opacity-25 translate-x-1/2 translate-y-1/2"></div>
+                    
+                    {/* Header AulagIA */}
+                    <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        A
                       </div>
-                    ))}
+                      <div>
+                        <h1 className="text-blue-500 font-bold text-lg leading-none">AulagIA</h1>
+                        <p className="text-gray-500 text-xs leading-none">Sua aula com toque mágico</p>
+                      </div>
+                    </div>
+                    
+                    <div className="slide-header flex justify-between items-center mb-6 mt-12">
+                      <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold">
+                        Slide {slide.numero}
+                      </span>
+                    </div>
+                    
+                    <div className="slide-title mb-8 flex-shrink-0">
+                      <input
+                        type="text"
+                        value={slide.titulo}
+                        onChange={(e) => updateArrayItem('slides', index, { ...slide, titulo: e.target.value })}
+                        className="w-full text-2xl font-bold text-center p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors"
+                        placeholder="Título do slide"
+                      />
+                    </div>
+                    
+                    <div className="slide-content space-y-4 flex-1 overflow-auto">
+                      {slide.conteudo.map((item: string, itemIndex: number) => (
+                        <div key={itemIndex} className="flex items-start gap-3">
+                          <span className="text-blue-600 font-bold text-xl mt-2 flex-shrink-0">•</span>
+                          <textarea
+                            value={item}
+                            onChange={(e) => {
+                              const newConteudo = [...slide.conteudo];
+                              newConteudo[itemIndex] = e.target.value;
+                              updateArrayItem('slides', index, { ...slide, conteudo: newConteudo });
+                            }}
+                            className="flex-1 text-lg p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors resize-none"
+                            rows={3}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         );
       }
 
       // Para outros tipos, usar template editável
+      const renderedHtml = templateService.renderTemplate(selectedTemplateId, editedMaterial.content);
       const editableHtml = makeContentEditable(renderedHtml);
       
       return (
