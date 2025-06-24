@@ -541,20 +541,20 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Slide Content com proporção 4:3 ajustada */}
+      {/* Slide Content com proporção 4:3 corrigida */}
       <div className="flex-1 flex justify-center items-center p-4">
         {isMobile ? (
-          // Mobile: Container com altura reduzida e proporção 4:3
+          // Mobile: Container com altura adequada e proporção 4:3
           <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" 
-               style={{ aspectRatio: '4/3', maxWidth: '100%', maxHeight: '60vh' }}>
+               style={{ aspectRatio: '4/3', maxWidth: '100%', height: '50vh', minHeight: '300px' }}>
             <div className="w-full h-full">
               {renderSlide(slides[currentSlide], currentSlide)}
             </div>
           </div>
         ) : (
-          // Desktop: Container com altura reduzida e proporção 4:3
-          <div className="w-full bg-white rounded-xl shadow-lg max-w-3xl overflow-hidden border border-gray-200" 
-               style={{ aspectRatio: '4/3', maxHeight: '55vh' }}>
+          // Desktop: Container com largura e altura balanceadas para não cortar
+          <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" 
+               style={{ aspectRatio: '4/3', maxWidth: '800px', height: '60vh', minHeight: '450px' }}>
             <div className="w-full h-full">
               {renderSlide(slides[currentSlide], currentSlide)}
             </div>
@@ -562,10 +562,10 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         )}
       </div>
 
-      {/* Desktop Navigation - Melhor posicionamento */}
+      {/* Desktop Navigation */}
       {!isMobile && (
         <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
-          <div className="flex justify-between items-center max-w-3xl mx-auto">
+          <div className="flex justify-between items-center max-w-4xl mx-auto">
             {/* Previous Button */}
             <Button
               variant="outline"
@@ -615,11 +615,11 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         </div>
       )}
 
-      {/* Mobile Navigation - Melhorado conforme a imagem */}
+      {/* Mobile Navigation */}
       {isMobile && (
         <div className="flex-shrink-0 bg-white border-t border-gray-200">
           <div className="px-6 py-6">
-            {/* Principais botões de navegação - estilo da imagem */}
+            {/* Principais botões de navegação */}
             <div className="flex justify-between items-center mb-6">
               <Button
                 onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
@@ -654,7 +654,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
               Página {currentSlide + 1} de {slides.length}
             </div>
 
-            {/* Números das páginas - estilo da imagem */}
+            {/* Números das páginas */}
             <div className="flex justify-center items-center gap-4">
               {slides.map((_, index) => (
                 <button
