@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Printer, Download } from 'lucide-react';
 import { Button } from './ui/button';
@@ -329,24 +330,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
             top: -2px;
           }
 
-          .slide-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 40px;
-            font-size: 0.95rem;
-            color: #666666;
-            border-top: 1px solid #e0e0e0;
-            flex-shrink: 0;
-            z-index: 1;
-            font-family: 'Lato', sans-serif;
-          }
-          
-          .slide-footer .page-number {
-            font-weight: 600;
-            color: #00C9B1;
-          }
-
           @media print {
             body { 
               margin: 0; 
@@ -409,11 +392,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         <div class="slide-content">
           ${renderSlideContent(slide, index)}
         </div>
-        
-        <div class="slide-footer">
-          <span class="date">${today}</span>
-          <span class="page-number">Slide ${slideNumber}</span>
-        </div>
       </div>
     `;
   };
@@ -463,7 +441,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
 
   const renderSlide = (slide: any, index: number) => {
     const slideNumber = index + 1;
-    const today = new Date().toLocaleDateString('pt-BR');
     
     return (
       <div className="relative w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-lg shadow-lg overflow-hidden border border-gray-200">
@@ -549,12 +526,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
             </div>
           )}
         </div>
-
-        {/* Footer - Now always visible */}
-        <div className="flex justify-between items-center p-4 bg-blue-900 text-white text-sm">
-          <span>{today}</span>
-          <span className="font-semibold">Slide {slideNumber}</span>
-        </div>
       </div>
     );
   };
@@ -569,8 +540,8 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
-      {/* Slide Content */}
-      <div className="bg-gray-100 p-6 rounded-lg relative">
+      {/* Slide Content - Otimizado para mobile horizontal */}
+      <div className="bg-gray-100 p-3 md:p-6 rounded-lg relative">
         <div className="aspect-[16/9] w-full relative">
           {renderSlide(slides[currentSlide], currentSlide)}
         </div>
@@ -593,7 +564,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
             Página {currentSlide + 1} de {slides.length}
           </span>
           
-          {/* Export buttons for desktop */}
+          {/* Export buttons for desktop only */}
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -636,14 +607,14 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         </Button>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation - Botões maiores e mais visíveis */}
       <div className="md:hidden mt-6">
         <Pagination>
-          <PaginationContent>
+          <PaginationContent className="gap-4">
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-                className={currentSlide === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                className={`${currentSlide === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} h-12 px-6 text-lg font-semibold`}
               />
             </PaginationItem>
 
@@ -652,7 +623,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
                 <PaginationLink
                   onClick={() => setCurrentSlide(index)}
                   isActive={currentSlide === index}
-                  className="cursor-pointer"
+                  className="cursor-pointer h-12 w-12 text-lg font-bold"
                 >
                   {index + 1}
                 </PaginationLink>
@@ -662,14 +633,14 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
             <PaginationItem>
               <PaginationNext
                 onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-                className={currentSlide === slides.length - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                className={`${currentSlide === slides.length - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} h-12 px-6 text-lg font-semibold`}
               />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
 
-        {/* Mobile page indicator */}
-        <div className="text-center mt-4 text-sm text-gray-600">
+        {/* Mobile page indicator - Maior e mais visível */}
+        <div className="text-center mt-6 text-lg font-semibold text-gray-700">
           Página {currentSlide + 1} de {slides.length}
         </div>
       </div>
