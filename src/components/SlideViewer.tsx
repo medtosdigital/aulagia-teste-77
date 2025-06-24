@@ -544,9 +544,9 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       {/* Slide Content com proporção 4:3 */}
       <div className="flex-1 flex justify-center items-center p-4">
         {isMobile ? (
-          // Mobile: Container horizontal 4:3 aspect ratio
+          // Mobile: Container horizontal 4:3 aspect ratio - fixo para proporção padrão de slides
           <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" 
-               style={{ aspectRatio: '4/3', maxHeight: '60vh' }}>
+               style={{ aspectRatio: '4/3', maxWidth: '100%', maxHeight: '50vh' }}>
             <div className="w-full h-full">
               {renderSlide(slides[currentSlide], currentSlide)}
             </div>
@@ -615,46 +615,52 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         </div>
       )}
 
-      {/* Mobile Navigation - Enhanced with better buttons */}
+      {/* Mobile Navigation - Melhorado conforme a imagem */}
       {isMobile && (
         <div className="flex-shrink-0 bg-white border-t border-gray-200">
-          <div className="px-4 py-6">
-            {/* Main Navigation Buttons */}
-            <div className="flex justify-between items-center mb-4">
+          <div className="px-6 py-6">
+            {/* Principais botões de navegação - estilo da imagem */}
+            <div className="flex justify-between items-center mb-6">
               <Button
                 onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
                 disabled={currentSlide === 0}
-                className={`flex items-center gap-2 h-16 px-6 text-xl font-bold rounded-xl shadow-lg transition-all duration-200 ${
+                variant="outline"
+                className={`flex items-center gap-3 h-16 px-8 text-lg font-bold rounded-2xl border-2 transition-all duration-200 shadow-lg ${
                   currentSlide === 0 
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                    : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
+                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 active:scale-95'
                 }`}
               >
-                <ChevronLeft className="h-8 w-8" />
+                <ChevronLeft className="h-6 w-6" />
                 Anterior
               </Button>
 
               <Button
                 onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
                 disabled={currentSlide === slides.length - 1}
-                className={`flex items-center gap-2 h-16 px-6 text-xl font-bold rounded-xl shadow-lg transition-all duration-200 ${
+                className={`flex items-center gap-3 h-16 px-8 text-lg font-bold rounded-2xl transition-all duration-200 shadow-lg ${
                   currentSlide === slides.length - 1 
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-200' 
                     : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
                 }`}
               >
                 Próximo
-                <ChevronRight className="h-8 w-8" />
+                <ChevronRight className="h-6 w-6" />
               </Button>
             </div>
 
-            {/* Page Numbers for Mobile */}
-            <div className="flex justify-center items-center gap-3 mb-4">
+            {/* Indicador de página central */}
+            <div className="text-center text-lg font-bold text-gray-700 bg-gray-100 py-4 rounded-2xl mb-6">
+              Página {currentSlide + 1} de {slides.length}
+            </div>
+
+            {/* Números das páginas - estilo da imagem */}
+            <div className="flex justify-center items-center gap-4">
               {slides.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}
-                  className={`w-14 h-14 rounded-full text-lg font-bold transition-all duration-200 ${
+                  className={`w-16 h-16 rounded-full text-xl font-bold transition-all duration-200 shadow-md ${
                     currentSlide === index 
                       ? 'bg-blue-600 text-white shadow-lg scale-110' 
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95'
@@ -663,11 +669,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
                   {index + 1}
                 </button>
               ))}
-            </div>
-
-            {/* Page indicator */}
-            <div className="text-center text-xl font-bold text-gray-700 bg-gray-100 py-3 rounded-lg">
-              Página {currentSlide + 1} de {slides.length}
             </div>
           </div>
         </div>
