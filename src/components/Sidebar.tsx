@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -37,11 +38,11 @@ const Sidebar: React.FC<SidebarProps> = ({
     icon: LayoutDashboard
   }, {
     id: 'create',
-    label: 'Criar Aula',
+    label: 'Criar Material',
     icon: Plus
   }, {
     id: 'lessons',
-    label: 'Minhas Aulas',
+    label: 'Meus Materiais',
     icon: BookOpen
   }, {
     id: 'calendar',
@@ -78,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div>
             <h1 className="logo-text text-2xl text-primary-600">AulagIA</h1>
-            <p className="text-gray-500 text-xs font-normal py-0 px-0 mx-0 my-0">Sua aula com toque mágico</p>
+            <p className="text-gray-500 text-xs font-normal -mt-1">Sua aula com toque mágico</p>
           </div>
         </div>
         
