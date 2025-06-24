@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { materialService, type GeneratedMaterial, type LessonPlan, type Activity, type Assessment } from '@/services/materialService';
+import { templateService } from '@/services/templateService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -91,446 +92,397 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     });
   };
 
-  const EditableField = ({ value, onChange, multiline = false, className = "", placeholder = "" }) => {
-    if (multiline) {
-      return (
-        <Textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={`border-dashed border-2 border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white transition-colors resize-none ${className}`}
-          placeholder={placeholder}
-        />
-      );
-    }
-    
-    return (
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`border-dashed border-2 border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white transition-colors ${className}`}
-        placeholder={placeholder}
-      />
-    );
+  const getDefaultTemplateId = (type: string): string => {
+    const typeMap = {
+      'plano-de-aula': '1',
+      'slides': '2',
+      'atividade': '3',
+      'avaliacao': '4'
+    };
+    return typeMap[type as keyof typeof typeMap] || '1';
   };
 
-  const renderEditableLessonPlan = (content: LessonPlan) => {
-    return (
-      <div className="bg-white p-8 shadow-lg mx-auto" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Arial, sans-serif' }}>
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mr-4">
-              <span className="text-purple-600 font-bold text-xl">📚</span>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-purple-600 mb-2">PLANO DE AULA</h1>
-              <p className="text-sm text-gray-600">Sua aula com toque mágico</p>
-            </div>
-          </div>
-        </div>
+  const makeContentEditable = (htmlContent: string): string => {
+    // Função para tornar o conteúdo editável mantendo o template original
+    let editableHtml = htmlContent;
 
-        {/* Informações básicas em grid */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div>
-            <span className="font-semibold">Professor(a):</span>
-            <EditableField
-              value={content.professor}
-              onChange={(value) => updateContent('professor', value)}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <span className="font-semibold">Data:</span>
-            <EditableField
-              value={content.data}
-              onChange={(value) => updateContent('data', value)}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <span className="font-semibold">Disciplina:</span>
-            <EditableField
-              value={content.disciplina}
-              onChange={(value) => updateContent('disciplina', value)}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <span className="font-semibold">Série/Ano:</span>
-            <EditableField
-              value={content.serie}
-              onChange={(value) => updateContent('serie', value)}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <span className="font-semibold">Tema:</span>
-            <EditableField
-              value={content.tema}
-              onChange={(value) => updateContent('tema', value)}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <span className="font-semibold">Duração:</span>
-            <EditableField
-              value={content.duracao}
-              onChange={(value) => updateContent('duracao', value)}
-              className="mt-1"
-            />
-          </div>
-          <div className="col-span-2">
-            <span className="font-semibold">BNCC:</span>
-            <EditableField
-              value={content.bncc}
-              onChange={(value) => updateContent('bncc', value)}
-              className="mt-1"
-            />
-          </div>
-        </div>
-
-        {/* Objetivos */}
-        <div className="mb-6">
-          <h3 className="text-lg font-bold text-blue-600 mb-3">OBJETIVOS DE APRENDIZAGEM</h3>
-          <div className="space-y-2">
-            {content.objetivos.map((objetivo, index) => (
-              <div key={index} className="flex items-start">
-                <span className="text-blue-500 font-bold mr-2 mt-2">•</span>
-                <EditableField
-                  value={objetivo}
-                  onChange={(value) => updateArrayItem('objetivos', index, value)}
-                  multiline
-                  className="flex-1 min-h-[60px]"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Habilidades BNCC */}
-        <div className="mb-6">
-          <h3 className="text-lg font-bold text-green-600 mb-3">HABILIDADES BNCC</h3>
-          <div className="space-y-2">
-            {content.habilidades.map((habilidade, index) => (
-              <div key={index} className="flex items-start">
-                <span className="text-green-500 font-bold mr-2 mt-2">•</span>
-                <EditableField
-                  value={habilidade}
-                  onChange={(value) => updateArrayItem('habilidades', index, value)}
-                  multiline
-                  className="flex-1 min-h-[60px]"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Desenvolvimento */}
-        <div className="mb-6">
-          <h3 className="text-lg font-bold text-blue-600 mb-3">DESENVOLVIMENTO METODOLÓGICO</h3>
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr>
-                <th className="border border-gray-300 p-2 bg-blue-50 font-semibold">Etapa</th>
-                <th className="border border-gray-300 p-2 bg-blue-50 font-semibold">Atividade</th>
-                <th className="border border-gray-300 p-2 bg-blue-50 font-semibold">Tempo</th>
-                <th className="border border-gray-300 p-2 bg-blue-50 font-semibold">Recursos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {content.desenvolvimento.map((etapa, index) => (
-                <tr key={index}>
-                  <td className="border border-gray-300 p-2">
-                    <EditableField
-                      value={etapa.etapa}
-                      onChange={(value) => updateArrayItem('desenvolvimento', index, { ...etapa, etapa: value })}
-                    />
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    <EditableField
-                      value={etapa.atividade}
-                      onChange={(value) => updateArrayItem('desenvolvimento', index, { ...etapa, atividade: value })}
-                      multiline
-                      className="min-h-[60px]"
-                    />
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    <EditableField
-                      value={etapa.tempo}
-                      onChange={(value) => updateArrayItem('desenvolvimento', index, { ...etapa, tempo: value })}
-                    />
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    <EditableField
-                      value={etapa.recursos}
-                      onChange={(value) => updateArrayItem('desenvolvimento', index, { ...etapa, recursos: value })}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Recursos e Avaliação */}
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <h4 className="font-bold text-orange-600 mb-3">RECURSOS NECESSÁRIOS</h4>
-            <div className="space-y-2">
-              {content.recursos.map((recurso, index) => (
-                <div key={index} className="flex items-center">
-                  <span className="text-orange-500 font-bold mr-2">•</span>
-                  <EditableField
-                    value={recurso}
-                    onChange={(value) => updateArrayItem('recursos', index, value)}
-                    className="flex-1"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h4 className="font-bold text-purple-600 mb-3">AVALIAÇÃO</h4>
-            <EditableField
-              value={content.avaliacao}
-              onChange={(value) => updateContent('avaliacao', value)}
-              multiline
-              className="min-h-[120px]"
-            />
-          </div>
-        </div>
-      </div>
+    // Tornar campos básicos editáveis (inputs de informações gerais)
+    editableHtml = editableHtml.replace(
+      /<td>([^<]*)<\/td>/g,
+      '<td contenteditable="true" class="editable-field bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded px-2 py-1">$1</td>'
     );
-  };
 
-  const renderEditableSlides = (slidesContent: any) => {
-    const slides = slidesContent.slides || [];
-    
-    return (
-      <div className="bg-white p-8 space-y-8" style={{ width: '210mm', fontFamily: 'Arial, sans-serif' }}>
-        {slides.map((slide: any, index: number) => (
-          <div 
-            key={index} 
-            className="border-2 border-blue-200 rounded-lg p-8 bg-gradient-to-br from-blue-50 to-purple-50 shadow-lg"
-            style={{ minHeight: '297mm', pageBreakAfter: index < slides.length - 1 ? 'always' : 'auto' }}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold">
-                Slide {slide.numero}
-              </span>
-              <div className="text-right text-xs text-gray-500">
-                {editedMaterial?.subject} • {editedMaterial?.grade}
-              </div>
-            </div>
-            
-            <div className="mb-8">
-              <EditableField
-                value={slide.titulo}
-                onChange={(value) => updateArrayItem('slides', index, { ...slide, titulo: value })}
-                className="text-2xl font-bold mb-4 text-center p-4"
-                placeholder="Título do slide"
-              />
-            </div>
-            
-            <div className="space-y-4 text-lg">
-              {slide.conteudo.map((item: string, itemIndex: number) => (
-                <div key={itemIndex} className="flex items-start">
-                  <span className="text-blue-600 font-bold mr-3 mt-2 text-xl">•</span>
-                  <EditableField
-                    value={item}
-                    onChange={(value) => {
-                      const newConteudo = [...slide.conteudo];
-                      newConteudo[itemIndex] = value;
-                      updateArrayItem('slides', index, { ...slide, conteudo: newConteudo });
-                    }}
-                    multiline
-                    className="flex-1 min-h-[80px] text-lg"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+    // Tornar textos de questões editáveis
+    editableHtml = editableHtml.replace(
+      /<div class="questao-enunciado">([^<]*)<\/div>/g,
+      '<div class="questao-enunciado editable-field bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded px-2 py-1" contenteditable="true">$1</div>'
     );
-  };
 
-  const renderEditableActivity = (activity: Activity) => {
-    return (
-      <div className="bg-white p-8 shadow-lg mx-auto" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Arial, sans-serif' }}>
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-green-600 mb-2">ATIVIDADE</h1>
-          <div className="text-sm text-gray-600">
-            {editedMaterial?.subject} • {editedMaterial?.grade}
-          </div>
-        </div>
-
-        {/* Instruções */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-          <h4 className="font-semibold text-green-800 mb-2">Instruções</h4>
-          <EditableField
-            value={activity.instrucoes}
-            onChange={(value) => updateContent('instrucoes', value)}
-            multiline
-            className="min-h-[80px]"
-          />
-        </div>
-
-        {/* Questões */}
-        <div className="space-y-6">
-          {activity.questoes.map((questao, index) => (
-            <div key={index} className="border-l-4 border-l-green-500 pl-4">
-              <h4 className="font-bold mb-3 text-green-700">Questão {questao.numero}</h4>
-              
-              <EditableField
-                value={questao.pergunta}
-                onChange={(value) => updateArrayItem('questoes', index, { ...questao, pergunta: value })}
-                multiline
-                className="mb-4 min-h-[80px] font-medium"
-                placeholder="Pergunta da questão"
-              />
-              
-              {questao.opcoes && (
-                <div className="space-y-2 mb-4">
-                  <p className="font-medium text-gray-600">Opções:</p>
-                  {questao.opcoes.map((opcao, opcaoIndex) => (
-                    <div key={opcaoIndex} className="flex items-start gap-2">
-                      <span className="text-green-600 font-bold mt-2">
-                        {String.fromCharCode(65 + opcaoIndex)})
-                      </span>
-                      <EditableField
-                        value={opcao}
-                        onChange={(value) => {
-                          const novasOpcoes = [...questao.opcoes!];
-                          novasOpcoes[opcaoIndex] = value;
-                          updateArrayItem('questoes', index, { ...questao, opcoes: novasOpcoes });
-                        }}
-                        className="flex-1"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {questao.tipo === 'aberta' && (
-                <div className="mt-4">
-                  <div className="border-t border-gray-200 pt-4">
-                    <p className="text-sm text-gray-500 mb-2">Espaço para resposta:</p>
-                    <div className="border border-gray-300 rounded p-4 min-h-[100px] bg-gray-50">
-                      <div className="text-gray-400 text-sm">
-                        {Array.from({length: 5}, (_, i) => (
-                          <div key={i} className="border-b border-gray-200 h-6 mb-2"></div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+    // Tornar opções de questões editáveis
+    editableHtml = editableHtml.replace(
+      /<div class="opcao-texto">([^<]*)<\/div>/g,
+      '<div class="opcao-texto editable-field bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded px-2 py-1" contenteditable="true">$1</div>'
     );
-  };
 
-  const renderEditableAssessment = (assessment: Assessment) => {
-    if (assessment.htmlContent) {
-      // Para avaliações com HTML, criar uma versão editável
-      return (
-        <div className="bg-white p-8 shadow-lg mx-auto" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Arial, sans-serif' }}>
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-purple-600 mb-2">AVALIAÇÃO</h1>
-            <div className="text-sm text-gray-600">
-              {editedMaterial?.subject} • {editedMaterial?.grade}
-            </div>
-          </div>
+    // Tornar títulos editáveis
+    editableHtml = editableHtml.replace(
+      /<h([1-6])>([^<]*)<\/h([1-6])>/g,
+      '<h$1 class="editable-field bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded px-2 py-1" contenteditable="true">$2</h$3>'
+    );
 
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
-            <div className="flex justify-between items-start mb-2">
-              <h4 className="font-semibold text-purple-800">Instruções da Avaliação</h4>
-              <EditableField
-                value={assessment.tempoLimite}
-                onChange={(value) => updateContent('tempoLimite', value)}
-                className="w-32"
-                placeholder="Tempo limite"
-              />
-            </div>
-            <EditableField
-              value={assessment.instrucoes}
-              onChange={(value) => updateContent('instrucoes', value)}
-              multiline
-              className="min-h-[80px]"
-            />
-          </div>
+    // Tornar parágrafos editáveis
+    editableHtml = editableHtml.replace(
+      /<p>([^<]*)<\/p>/g,
+      '<p class="editable-field bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded px-2 py-1" contenteditable="true">$1</p>'
+    );
 
-          <div className="space-y-6">
-            {assessment.questoes.map((questao, index) => (
-              <div key={index} className="border-l-4 border-l-purple-500 pl-4">
-                <div className="flex justify-between items-start mb-3">
-                  <h4 className="font-bold text-purple-700">Questão {questao.numero}</h4>
-                  <EditableField
-                    value={questao.pontuacao?.toString() || '0'}
-                    onChange={(value) => updateArrayItem('questoes', index, { ...questao, pontuacao: parseInt(value) || 0 })}
-                    className="w-20"
-                    placeholder="Pts"
-                  />
-                </div>
-                
-                <EditableField
-                  value={questao.pergunta}
-                  onChange={(value) => updateArrayItem('questoes', index, { ...questao, pergunta: value })}
-                  multiline
-                  className="mb-4 min-h-[80px] font-medium"
-                  placeholder="Pergunta da questão"
-                />
-                
-                {questao.opcoes && (
-                  <div className="space-y-2">
-                    <p className="font-medium text-gray-600">Opções:</p>
-                    {questao.opcoes.map((opcao, opcaoIndex) => (
-                      <div key={opcaoIndex} className="flex items-start gap-2">
-                        <span className="text-purple-600 font-bold mt-2">
-                          {String.fromCharCode(65 + opcaoIndex)})
-                        </span>
-                        <EditableField
-                          value={opcao}
-                          onChange={(value) => {
-                            const novasOpcoes = [...questao.opcoes!];
-                            novasOpcoes[opcaoIndex] = value;
-                            updateArrayItem('questoes', index, { ...questao, opcoes: novasOpcoes });
-                          }}
-                          className="flex-1"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
+    // Adicionar estilos CSS para campos editáveis
+    const editableStyles = `
+      <style>
+        .editable-field {
+          transition: all 0.2s ease;
+          cursor: text;
+          min-height: 24px;
+          outline: none;
+        }
+        .editable-field:hover {
+          background-color: #dbeafe !important;
+          border-color: #3b82f6 !important;
+        }
+        .editable-field:focus {
+          background-color: white !important;
+          border-color: #2563eb !important;
+          box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        .editable-field::before {
+          content: attr(data-placeholder);
+          color: #9ca3af;
+          pointer-events: none;
+        }
+        .editable-field:not(:empty)::before {
+          display: none;
+        }
+      </style>
+    `;
 
-    // Fallback para formato antigo
-    return renderEditableActivity(assessment as any);
+    return editableStyles + editableHtml;
   };
 
   const renderEditableContent = () => {
     if (!editedMaterial) return null;
 
-    switch (editedMaterial.type) {
-      case 'plano-de-aula':
-        return renderEditableLessonPlan(editedMaterial.content as LessonPlan);
-      case 'slides':
-        return renderEditableSlides(editedMaterial.content);
-      case 'atividade':
-        return renderEditableActivity(editedMaterial.content as Activity);
-      case 'avaliacao':
-        return renderEditableAssessment(editedMaterial.content as Assessment);
-      default:
-        return <div>Tipo de material não suportado para edição</div>;
+    try {
+      const selectedTemplateId = getDefaultTemplateId(editedMaterial.type);
+      const renderedHtml = templateService.renderTemplate(selectedTemplateId, editedMaterial.content);
+      
+      // Para slides, usar uma renderização especial
+      if (editedMaterial.type === 'slides') {
+        const slides = editedMaterial.content.slides || [];
+        
+        return (
+          <div className="slides-editor">
+            {slides.map((slide: any, index: number) => (
+              <div key={index} className="slide-page mb-8 p-8 bg-white shadow-lg rounded-lg border-2 border-blue-200">
+                <div className="slide-header flex justify-between items-center mb-6">
+                  <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold">
+                    Slide {slide.numero}
+                  </span>
+                </div>
+                
+                <div className="slide-title mb-8">
+                  <input
+                    type="text"
+                    value={slide.titulo}
+                    onChange={(e) => updateArrayItem('slides', index, { ...slide, titulo: e.target.value })}
+                    className="w-full text-2xl font-bold text-center p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors"
+                    placeholder="Título do slide"
+                  />
+                </div>
+                
+                <div className="slide-content space-y-4">
+                  {slide.conteudo.map((item: string, itemIndex: number) => (
+                    <div key={itemIndex} className="flex items-start gap-3">
+                      <span className="text-blue-600 font-bold text-xl mt-2">•</span>
+                      <textarea
+                        value={item}
+                        onChange={(e) => {
+                          const newConteudo = [...slide.conteudo];
+                          newConteudo[itemIndex] = e.target.value;
+                          updateArrayItem('slides', index, { ...slide, conteudo: newConteudo });
+                        }}
+                        className="flex-1 text-lg p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors resize-none"
+                        rows={3}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      // Para outros tipos, usar o template original com campos editáveis
+      const editableHtml = makeContentEditable(renderedHtml);
+      
+      return (
+        <div className="template-editor">
+          <iframe
+            srcDoc={`
+              <!DOCTYPE html>
+              <html lang="pt-BR">
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Editor - ${editedMaterial.title}</title>
+                <style>
+                  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                  
+                  /* Usar os mesmos estilos do MaterialPreview */
+                  @page {
+                    size: A4;
+                    margin: 0;
+                  }
+                  body {
+                    margin: 0;
+                    padding: 20px;
+                    background: #f0f4f8;
+                    font-family: 'Inter', sans-serif;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: flex-start;
+                    align-items: center;
+                    min-height: 100vh;
+                  }
+                  
+                  .page {
+                    position: relative;
+                    width: 210mm;
+                    min-height: 297mm;
+                    background: white;
+                    overflow: hidden;
+                    margin: 0 auto 20px auto;
+                    box-sizing: border-box;
+                    padding: 0;
+                    display: flex;
+                    flex-direction: column;
+                    border-radius: 6px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                  }
+
+                  /* Manter todos os estilos do MaterialPreview */
+                  .shape-circle {
+                    position: absolute;
+                    border-radius: 50%;
+                    opacity: 0.25;
+                    pointer-events: none;
+                    z-index: 0;
+                  }
+                  .shape-circle.purple {
+                    width: 180px; 
+                    height: 180px;
+                    background: #a78bfa;
+                    top: -60px; 
+                    left: -40px;
+                  }
+                  .shape-circle.blue {
+                    width: 240px; 
+                    height: 240px;
+                    background: #60a5fa;
+                    bottom: -80px; 
+                    right: -60px;
+                  }
+                  
+                  .header {
+                    position: absolute;
+                    top: 6mm;
+                    left: 0;
+                    right: 0;
+                    display: flex;
+                    align-items: center;
+                    z-index: 999;
+                    height: 12mm;
+                    background: transparent;
+                    padding: 0 12mm;
+                    flex-shrink: 0;
+                  }
+                  .header .logo-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                  }
+                  .header .logo {
+                    width: 32px;
+                    height: 32px;
+                    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    flex-shrink: 0;
+                    box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
+                  }
+                  .header .brand-text h1 {
+                    font-size: 20px;
+                    color: #0ea5e9;
+                    margin: 0;
+                    font-family: 'Inter', sans-serif;
+                    line-height: 1;
+                    font-weight: 700;
+                    letter-spacing: -0.2px;
+                  }
+                  .header .brand-text p {
+                    font-size: 8px;
+                    color: #6b7280;
+                    margin: -1px 0 0 0;
+                    font-family: 'Inter', sans-serif;
+                    line-height: 1;
+                    font-weight: 400;
+                  }
+                  
+                  .content {
+                    margin-top: 20mm;
+                    margin-bottom: 12mm;
+                    padding: 0 15mm;
+                    position: relative;
+                    flex: 1;
+                    overflow: visible;
+                    z-index: 1;
+                  }
+
+                  h2 {
+                    text-align: center;
+                    margin: 10px 0 18px 0;
+                    font-size: 1.5rem;
+                    color: #4f46e5;
+                    position: relative;
+                    font-family: 'Inter', sans-serif;
+                    font-weight: 700;
+                  }
+                  h2::after {
+                    content: '';
+                    width: 50px;
+                    height: 3px;
+                    background: #a78bfa;
+                    display: block;
+                    margin: 6px auto 0;
+                    border-radius: 2px;
+                  }
+                  
+                  table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 18px;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                  }
+                  th, td {
+                    padding: 8px 12px;
+                    font-size: 0.85rem;
+                    border: none;
+                    font-family: 'Inter', sans-serif;
+                    vertical-align: top;
+                  }
+                  th {
+                    background: #f3f4f6;
+                    color: #1f2937;
+                    font-weight: 600;
+                    text-align: left;
+                    width: 18%;
+                  }
+                  td {
+                    background: #ffffff;
+                    border-bottom: 1px solid #e5e7eb;
+                  }
+                  
+                  .instructions {
+                    background: #eff6ff;
+                    padding: 15px;
+                    border-left: 4px solid #0ea5e9;
+                    margin-bottom: 30px;
+                    font-family: 'Inter', sans-serif;
+                    border-radius: 6px;
+                  }
+
+                  .questao-container, .question {
+                    margin-bottom: 30px;
+                    page-break-inside: avoid;
+                  }
+                  .questao-numero, .question-header {
+                    font-weight: 600;
+                    color: #4338ca;
+                    margin-bottom: 10px;
+                    font-size: 1.0rem;
+                    font-family: 'Inter', sans-serif;
+                  }
+                  .questao-enunciado, .question-text {
+                    margin-bottom: 15px;
+                    text-align: justify;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 0.9rem;
+                    line-height: 1.4;
+                  }
+                  .questao-opcoes, .options {
+                    margin-left: 20px;
+                  }
+                  .opcao, .option {
+                    margin-bottom: 8px;
+                    display: flex;
+                    align-items: flex-start;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 0.9rem;
+                  }
+                  .opcao-letra, .option-letter {
+                    font-weight: bold;
+                    margin-right: 10px;
+                    color: #4338ca;
+                    min-width: 25px;
+                  }
+                  
+                  .footer {
+                    position: absolute;
+                    bottom: 6mm;
+                    left: 0;
+                    right: 0;
+                    text-align: center;
+                    font-size: 0.7rem;
+                    color: #6b7280;
+                    z-index: 999;
+                    height: 6mm;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: transparent;
+                    padding: 0 15mm;
+                    font-family: 'Inter', sans-serif;
+                    flex-shrink: 0;
+                  }
+                </style>
+              </head>
+              <body>
+                ${editableHtml}
+              </body>
+              </html>
+            `}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              backgroundColor: 'white'
+            }}
+            title="Material Editor"
+          />
+        </div>
+      );
+    } catch (error) {
+      console.error('Erro ao renderizar template editável:', error);
+      return (
+        <div className="error-message p-4 text-center">
+          <p className="text-red-600 text-sm">Erro ao carregar o template editável.</p>
+        </div>
+      );
     }
   };
 
@@ -620,26 +572,26 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
               <h3 className="font-semibold">Material</h3>
               <div>
                 <span className="font-medium">Título:</span>
-                <EditableField
+                <Input
                   value={editedMaterial.title}
-                  onChange={(value) => setEditedMaterial({ ...editedMaterial, title: value })}
-                  className="mt-1"
+                  onChange={(e) => setEditedMaterial({ ...editedMaterial, title: e.target.value })}
+                  className="mt-1 border-dashed border-2 border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white transition-colors"
                 />
               </div>
               <div>
                 <span className="font-medium">Disciplina:</span>
-                <EditableField
+                <Input
                   value={editedMaterial.subject}
-                  onChange={(value) => setEditedMaterial({ ...editedMaterial, subject: value })}
-                  className="mt-1"
+                  onChange={(e) => setEditedMaterial({ ...editedMaterial, subject: e.target.value })}
+                  className="mt-1 border-dashed border-2 border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white transition-colors"
                 />
               </div>
               <div>
                 <span className="font-medium">Turma:</span>
-                <EditableField
+                <Input
                   value={editedMaterial.grade}
-                  onChange={(value) => setEditedMaterial({ ...editedMaterial, grade: value })}
-                  className="mt-1"
+                  onChange={(e) => setEditedMaterial({ ...editedMaterial, grade: e.target.value })}
+                  className="mt-1 border-dashed border-2 border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white transition-colors"
                 />
               </div>
             </div>
