@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, Eye, Edit3, Trash2, Download, Search, Filter, Plus, Calendar, Printer, FileDown } from 'lucide-react';
@@ -257,7 +256,7 @@ const MaterialsList: React.FC = () => {
                       {/* Título */}
                       <div>
                         <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-1">
-                          {material.title}
+                          {material.title.replace(/^(plano-de-aula|slides|atividade|avaliacao)\s*-\s*/i, '')}
                         </h3>
                         <p className="text-sm text-gray-500">{material.grade}</p>
                       </div>
