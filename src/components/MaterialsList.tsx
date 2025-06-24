@@ -37,17 +37,14 @@ const MaterialsList: React.FC = () => {
   const filterMaterials = () => {
     let filtered = materials;
 
-    // Filtro de busca
     if (searchTerm) {
       filtered = filtered.filter(material => material.title.toLowerCase().includes(searchTerm.toLowerCase()) || material.subject.toLowerCase().includes(searchTerm.toLowerCase()));
     }
 
-    // Filtro por tipo
     if (filterType !== 'all') {
       filtered = filtered.filter(material => material.type === filterType);
     }
 
-    // Filtro por disciplina
     if (filterSubject !== 'all') {
       filtered = filtered.filter(material => material.subject.toLowerCase() === filterSubject);
     }
@@ -215,11 +212,9 @@ const MaterialsList: React.FC = () => {
               return (
                 <Card 
                   key={material.id} 
-                  className="group hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:bg-white hover:scale-[1.02] cursor-pointer"
-                  onClick={() => handleViewMaterial(material)}
+                  className="group hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:bg-white hover:scale-[1.02]"
                 >
                   <CardHeader className="pb-3 relative">
-                    {/* Type indicator */}
                     <div className={`absolute top-4 right-4 w-3 h-3 rounded-full ${getTypeColor(material.type)}`}></div>
                     
                     <div className="flex items-start space-x-3">
@@ -238,7 +233,7 @@ const MaterialsList: React.FC = () => {
                   </CardHeader>
                   
                   <CardContent className="pt-0">
-                    <div className="space-y-3">
+                    <div className="space-y-3 mb-4">
                       <div className="flex items-center justify-between text-sm text-gray-600">
                         <span className="font-medium">{material.subject}</span>
                         <span className="text-xs">{material.grade}</span>
@@ -250,14 +245,11 @@ const MaterialsList: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-1 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="flex items-center justify-between space-x-2">
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewMaterial(material);
-                        }}
+                        onClick={() => handleViewMaterial(material)}
                         className="flex-1 text-xs h-8"
                       >
                         <Eye className="w-3 h-3 mr-1" />
@@ -266,10 +258,7 @@ const MaterialsList: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/material/${material.id}?edit=true`);
-                        }}
+                        onClick={() => navigate(`/material/${material.id}?edit=true`)}
                         className="h-8 w-8 p-0"
                       >
                         <Edit3 className="w-3 h-3" />
@@ -277,10 +266,7 @@ const MaterialsList: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleExport(material, 'pdf');
-                        }}
+                        onClick={() => handleExport(material, 'pdf')}
                         className="h-8 w-8 p-0"
                       >
                         <Download className="w-3 h-3" />
@@ -288,10 +274,7 @@ const MaterialsList: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(material.id, material.title);
-                        }}
+                        onClick={() => handleDelete(material.id, material.title)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -305,7 +288,6 @@ const MaterialsList: React.FC = () => {
         )}
       </div>
 
-      {/* Modal de Visualização */}
       <MaterialModal
         material={selectedMaterial}
         open={modalOpen}
