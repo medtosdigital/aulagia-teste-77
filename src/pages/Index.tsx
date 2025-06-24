@@ -32,10 +32,14 @@ const Index = () => {
     }
   };
 
+  const handleNavigate = (page: string) => {
+    setActiveItem(page);
+  };
+
   const renderContent = () => {
     switch (activeItem) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard onNavigate={handleNavigate} />;
       case 'create':
         return <CreateLesson />;
       case 'lessons':
@@ -49,7 +53,7 @@ const Index = () => {
       case 'api-keys':
         return <div className="p-4"><h2>Chaves de API - Em desenvolvimento</h2></div>;
       default:
-        return <Dashboard />;
+        return <Dashboard onNavigate={handleNavigate} />;
     }
   };
 
