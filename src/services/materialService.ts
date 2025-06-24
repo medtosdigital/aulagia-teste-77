@@ -1,3 +1,4 @@
+
 import { templateService } from './templateService';
 import { GrammarService } from './grammarService';
 
@@ -7,6 +8,7 @@ export interface GeneratedMaterial {
   title: string;
   content: any;
   createdAt: string;
+  updatedAt?: string;
   formData: any;
   subject: string;
   grade: string;
