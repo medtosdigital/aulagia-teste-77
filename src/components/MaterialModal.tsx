@@ -16,19 +16,25 @@ interface MaterialModalProps {
   material: GeneratedMaterial | null;
   open: boolean;
   onClose: () => void;
+  showNextSteps?: boolean; // Nova prop para controlar se deve mostrar o modal de próximos passos
 }
 
-const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }) => {
+const MaterialModal: React.FC<MaterialModalProps> = ({ 
+  material, 
+  open, 
+  onClose, 
+  showNextSteps = false 
+}) => {
   const isMobile = useIsMobile();
   const [answerKeyModalOpen, setAnswerKeyModalOpen] = useState(false);
   const [nextStepsModalOpen, setNextStepsModalOpen] = useState(false);
 
-  // Quando o modal principal abrir, mostrar o modal de próximos passos por cima
+  // Só mostrar o modal de próximos passos se explicitamente solicitado
   React.useEffect(() => {
-    if (open && material) {
+    if (open && material && showNextSteps) {
       setNextStepsModalOpen(true);
     }
-  }, [open, material]);
+  }, [open, material, showNextSteps]);
 
   const handleNextStepsClose = () => {
     setNextStepsModalOpen(false);
@@ -211,13 +217,15 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
           </SheetContent>
         </Sheet>
 
-        {/* Modal de próximos passos por cima */}
-        <NextStepsModal
-          open={nextStepsModalOpen}
-          onClose={handleNextStepsClose}
-          onContinue={handleNextStepsContinue}
-          materialType={material.type}
-        />
+        {/* Modal de próximos passos por cima - só se showNextSteps for true */}
+        {showNextSteps && (
+          <NextStepsModal
+            open={nextStepsModalOpen}
+            onClose={handleNextStepsClose}
+            onContinue={handleNextStepsContinue}
+            materialType={material.type}
+          />
+        )}
 
         <AnswerKeyModal 
           material={material}
@@ -343,13 +351,15 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, open, onClose }
         </DialogContent>
       </Dialog>
 
-      {/* Modal de próximos passos por cima */}
-      <NextStepsModal
-        open={nextStepsModalOpen}
-        onClose={handleNextStepsClose}
-        onContinue={handleNextStepsContinue}
-        materialType={material.type}
-      />
+      {/* Modal de próximos passos por cima - só se showNextSteps for true */}
+      {showNextSteps && (
+        <NextStepsModal
+          open={nextStepsModalOpen}
+          onClose={handleNextStepsClose}
+          onContinue={handleNextStepsContinue}
+          materialType={material.type}
+        />
+      )}
 
       <AnswerKeyModal 
         material={material}
