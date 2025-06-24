@@ -538,79 +538,104 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4">
-      {/* Slide Content - Container centralizado e responsivo */}
-      <div className="flex justify-center mb-6">
-        <div className="w-full max-w-5xl bg-white p-4 rounded-xl shadow-lg">
-          <div className="aspect-[16/9] w-full">
-            {renderSlide(slides[currentSlide], currentSlide)}
+    <div className="w-full mx-auto p-4">
+      {/* Desktop - Container com altura fixa para evitar corte */}
+      <div className="hidden md:block">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div className="w-full h-[600px] flex items-center justify-center">
+              <div className="w-full max-w-4xl aspect-[16/9]">
+                {renderSlide(slides[currentSlide], currentSlide)}
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="flex justify-between items-center px-4">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+              disabled={currentSlide === 0}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </Button>
+
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                Página {currentSlide + 1} de {slides.length}
+              </span>
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+              disabled={currentSlide === slides.length - 1}
+              className="flex items-center gap-2"
+            >
+              Próximo
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Desktop Navigation */}
-      <div className="hidden md:flex justify-between items-center px-4">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-          disabled={currentSlide === 0}
-          className="flex items-center gap-2"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Anterior
-        </Button>
-
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
-            Página {currentSlide + 1} de {slides.length}
-          </span>
+      {/* Mobile - Layout horizontal otimizado */}
+      <div className="md:hidden">
+        <div className="bg-white rounded-xl shadow-lg p-3 mb-4">
+          <div className="w-full h-[280px] flex items-center justify-center">
+            <div className="w-full aspect-[16/9] max-h-full">
+              {renderSlide(slides[currentSlide], currentSlide)}
+            </div>
+          </div>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-          disabled={currentSlide === slides.length - 1}
-          className="flex items-center gap-2"
-        >
-          Próximo
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Mobile Navigation - Botões maiores e mais visíveis */}
-      <div className="md:hidden mt-6">
+        {/* Mobile Navigation - Botões maiores em português */}
         <Pagination>
-          <PaginationContent className="gap-4">
+          <PaginationContent className="gap-6 justify-center">
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-                className={`${currentSlide === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} h-12 px-6 text-lg font-semibold`}
-              />
+                className={`${currentSlide === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} h-14 px-8 text-lg font-bold rounded-xl`}
+              >
+                <ChevronLeft className="h-5 w-5 mr-2" />
+                Anterior
+              </PaginationPrevious>
             </PaginationItem>
 
-            {slides.map((_, index) => (
+            {slides.slice(0, 5).map((_, index) => (
               <PaginationItem key={index}>
                 <PaginationLink
                   onClick={() => setCurrentSlide(index)}
                   isActive={currentSlide === index}
-                  className="cursor-pointer h-12 w-12 text-lg font-bold"
+                  className="cursor-pointer h-14 w-14 text-xl font-bold rounded-xl"
                 >
                   {index + 1}
                 </PaginationLink>
               </PaginationItem>
             ))}
 
+            {slides.length > 5 && currentSlide >= 5 && (
+              <PaginationItem>
+                <span className="text-gray-400 px-2">...</span>
+              </PaginationItem>
+            )}
+
             <PaginationItem>
               <PaginationNext
                 onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-                className={`${currentSlide === slides.length - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} h-12 px-6 text-lg font-semibold`}
-              />
+                className={`${currentSlide === slides.length - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} h-14 px-8 text-lg font-bold rounded-xl`}
+              >
+                Próximo
+                <ChevronRight className="h-5 w-5 ml-2" />
+              </PaginationNext>
             </PaginationItem>
           </PaginationContent>
         </Pagination>
 
-        {/* Mobile page indicator - Maior e mais visível */}
-        <div className="text-center mt-6 text-lg font-semibold text-gray-700">
+        {/* Mobile page indicator */}
+        <div className="text-center mt-4 text-lg font-semibold text-gray-700">
           Página {currentSlide + 1} de {slides.length}
         </div>
       </div>
