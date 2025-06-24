@@ -11,7 +11,8 @@ import {
   FileText, 
   LogOut,
   User,
-  School
+  School,
+  Sliders
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,11 +32,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', onItemClick
 
   const desktopMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'create', label: 'Preparar Aula', icon: Plus },
-    { id: 'lessons', label: 'Meus Materiais', icon: BookOpen },
+    { id: 'create', label: 'Criar Aula', icon: Plus },
+    { id: 'lessons', label: 'Minhas Aulas', icon: BookOpen },
     { id: 'calendar', label: 'Calendário', icon: Calendar },
     { id: 'subscription', label: 'Assinatura', icon: Crown },
-    { id: 'school', label: 'Escola', icon: School },
+  ];
+
+  const adminMenuItems = [
+    { id: 'settings', label: 'Configurações', icon: Settings },
+    { id: 'api-keys', label: 'Chaves de API', icon: Key },
+    { id: 'templates', label: 'Templates', icon: FileText },
   ];
 
   const handleItemClick = (itemId: string) => {
@@ -45,68 +51,88 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', onItemClick
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-white shadow-sm z-40">
-        <div className="flex flex-col w-full">
-          {/* Logo/Brand */}
-          <div className="p-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">A</span>
-              </div>
-              <span className="text-xl font-bold text-blue-500">AulagIA</span>
+      <div className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-40 flex-col">
+        {/* Logo Section */}
+        <div className="p-4 flex items-center space-x-2 border-b border-gray-200">
+          <div className="bg-primary-500 text-white p-3 rounded-lg">
+            <span className="text-xl font-bold">✨</span>
+          </div>
+          <h1 className="logo-text text-2xl text-primary-600">AulagIA</h1>
+        </div>
+        
+        {/* User Info */}
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+              <User className="w-5 h-5 text-primary-600" />
             </div>
-            
-            <div className="flex items-center space-x-3 bg-gray-50 rounded-lg p-3">
-              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                <School className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <div className="text-sm font-medium text-gray-900">Medtos Digital</div>
-                <div className="text-xs text-gray-500">Plano Premium</div>
-              </div>
+            <div>
+              <p className="font-semibold">Professor(a)</p>
+              <p className="text-xs text-gray-500">Plano Premium</p>
             </div>
           </div>
-          
-          {/* Navigation Menu */}
-          <nav className="flex-1 px-4">
-            <div className="space-y-1">
-              {desktopMenuItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeItem === item.id;
-                
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleItemClick(item.id)}
-                    className={cn(
-                      "flex items-center w-full px-4 py-3 text-left rounded-lg transition-colors",
-                      isActive 
-                        ? "bg-blue-50 text-blue-600" 
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    )}
-                  >
-                    <Icon size={20} className="mr-3" />
-                    <span className="font-medium">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+        </div>
+        
+        {/* Navigation Menu */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+          {desktopMenuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeItem === item.id;
             
-            {/* Administration Section */}
-            <div className="mt-8">
-              <div className="px-4 py-2">
-                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">ADMINISTRAÇÃO</span>
-              </div>
-            </div>
-          </nav>
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleItemClick(item.id)}
+                className={cn(
+                  "sidebar-item flex items-center space-x-3 p-3 rounded-lg w-full text-left transition-colors",
+                  isActive 
+                    ? "bg-primary-50 text-primary-600 font-medium" 
+                    : "text-gray-700 hover:bg-gray-100"
+                )}
+              >
+                <div className="sidebar-icon w-6 h-6 flex items-center justify-center">
+                  <Icon size={18} />
+                </div>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
           
-          {/* Footer */}
-          <div className="p-4">
-            <button className="flex items-center w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-              <LogOut size={20} className="mr-3" />
-              <span className="font-medium">Sair</span>
-            </button>
+          {/* Administration Section */}
+          <div className="pt-4">
+            <p className="text-xs uppercase text-gray-400 font-semibold px-3 mb-2">ADMINISTRAÇÃO</p>
+            
+            {adminMenuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeItem === item.id;
+              
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleItemClick(item.id)}
+                  className={cn(
+                    "sidebar-item flex items-center space-x-3 p-3 rounded-lg w-full text-left transition-colors",
+                    isActive 
+                      ? "bg-primary-50 text-primary-600 font-medium" 
+                      : "text-gray-700 hover:bg-gray-100"
+                  )}
+                >
+                  <div className="sidebar-icon w-6 h-6 flex items-center justify-center">
+                    <Icon size={18} />
+                  </div>
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </div>
+        </nav>
+        
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-200">
+          <button className="w-full flex items-center justify-center space-x-2 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+            <LogOut size={18} />
+            <span>Sair</span>
+          </button>
         </div>
       </div>
 
