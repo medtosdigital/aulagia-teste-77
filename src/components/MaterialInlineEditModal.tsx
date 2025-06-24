@@ -7,7 +7,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { materialService, type GeneratedMaterial, type LessonPlan, type Activity, type Assessment } from '@/services/materialService';
-import { templateService } from '@/services/templateService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -115,8 +114,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   };
 
   const renderEditableLessonPlan = (content: LessonPlan) => {
-    const html = templateService.generateLessonPlanHTML(content);
-    
     return (
       <div className="bg-white p-8 shadow-lg mx-auto" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Arial, sans-serif' }}>
         {/* Header */}
@@ -359,8 +356,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   };
 
   const renderEditableActivity = (activity: Activity) => {
-    const html = templateService.generateActivityHTML(activity);
-    
     return (
       <div className="bg-white p-8 shadow-lg mx-auto" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Arial, sans-serif' }}>
         {/* Header */}
