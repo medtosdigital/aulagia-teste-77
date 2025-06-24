@@ -11,6 +11,7 @@ import { materialService, GeneratedMaterial } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
 import MaterialModal from './MaterialModal';
 import MaterialEditModal from './MaterialEditModal';
+import MaterialInlineEditModal from './MaterialInlineEditModal';
 
 const MaterialsList: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ const MaterialsList: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [exportDropdownOpen, setExportDropdownOpen] = useState<string | null>(null);
+  const [inlineEditModalOpen, setInlineEditModalOpen] = useState(false);
+  const [materialToEdit, setMaterialToEdit] = useState<GeneratedMaterial | null>(null);
 
   useEffect(() => {
     loadMaterials();
@@ -59,6 +62,11 @@ const MaterialsList: React.FC = () => {
     setModalOpen(true);
   };
 
+  const handleEdit = (material: GeneratedMaterial) => {
+    setMaterialToEdit(material);
+    setInlineEditModalOpen(true);
+  };
+
   const handleEditMaterial = (material: GeneratedMaterial) => {
     setSelectedMaterial(material);
     setEditModalOpen(true);
@@ -76,6 +84,11 @@ const MaterialsList: React.FC = () => {
 
   const handleSaveEdit = () => {
     loadMaterials();
+  };
+
+  const handleInlineEditSave = () => {
+    setMaterials(materialService.getAllMaterials());
+    setMaterialToEdit(null);
   };
 
   const handleDelete = (id: string, title: string) => {
@@ -157,7 +170,7 @@ const MaterialsList: React.FC = () => {
   const uniqueSubjects = [...new Set(materials.map(m => m.subject))];
 
   return (
-    <>
+    <div className="space-y-6">
       <div className="max-w-7xl mx-auto p-4 md:p-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-8 space-y-4 md:space-y-0">
@@ -298,7 +311,7 @@ const MaterialsList: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleEditMaterial(material)}
+                        onClick={() => handleEdit(material)}
                         className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
                         title="Editar"
                       >
@@ -392,7 +405,17 @@ const MaterialsList: React.FC = () => {
         onClose={handleCloseEditModal}
         onSave={handleSaveEdit}
       />
-    </>
+
+      <MaterialInlineEditModal
+        material={materialToEdit}
+        open={inlineEditModalOpen}
+        onClose={() => {
+          setInlineEditModalOpen(false);
+          setMaterialToEdit(null);
+        }}
+        onSave={handleInlineEditSave}
+      />
+    </div>
   );
 };
 
