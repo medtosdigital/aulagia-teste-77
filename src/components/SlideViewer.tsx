@@ -541,20 +541,20 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Slide Content com proporção 4:3 */}
+      {/* Slide Content com proporção 4:3 ajustada */}
       <div className="flex-1 flex justify-center items-center p-4">
         {isMobile ? (
-          // Mobile: Container horizontal 4:3 aspect ratio - proporção padrão de slides de apresentação
+          // Mobile: Container com altura reduzida e proporção 4:3
           <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" 
-               style={{ aspectRatio: '4/3', maxWidth: '100%', height: 'auto' }}>
+               style={{ aspectRatio: '4/3', maxWidth: '100%', maxHeight: '60vh' }}>
             <div className="w-full h-full">
               {renderSlide(slides[currentSlide], currentSlide)}
             </div>
           </div>
         ) : (
-          // Desktop: Container menor com proporção 4:3
-          <div className="w-full bg-white rounded-xl shadow-lg max-w-4xl overflow-hidden border border-gray-200" 
-               style={{ aspectRatio: '4/3', maxHeight: '70vh' }}>
+          // Desktop: Container com altura reduzida e proporção 4:3
+          <div className="w-full bg-white rounded-xl shadow-lg max-w-3xl overflow-hidden border border-gray-200" 
+               style={{ aspectRatio: '4/3', maxHeight: '55vh' }}>
             <div className="w-full h-full">
               {renderSlide(slides[currentSlide], currentSlide)}
             </div>
@@ -565,7 +565,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       {/* Desktop Navigation - Melhor posicionamento */}
       {!isMobile && (
         <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
-          <div className="flex justify-between items-center max-w-4xl mx-auto">
+          <div className="flex justify-between items-center max-w-3xl mx-auto">
             {/* Previous Button */}
             <Button
               variant="outline"
