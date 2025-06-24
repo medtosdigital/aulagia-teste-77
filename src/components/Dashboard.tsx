@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation } from 'lucide-react';
 
@@ -110,14 +109,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               <button 
                 key={tab.id} 
                 onClick={() => setActiveTab(tab.id)} 
-                className={`py-4 px-2 text-center border-b-2 font-medium text-sm transition-colors ${
+                className={`py-3 px-1 text-center border-b-2 font-medium text-xs sm:text-sm transition-colors ${
                   activeTab === tab.id 
                     ? 'border-primary-500 text-primary-600' 
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.shortLabel}</span>
+                {tab.label}
               </button>
             )}
           </nav>
