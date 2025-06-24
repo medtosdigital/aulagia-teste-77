@@ -877,61 +877,60 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
 
   if (!editedMaterial) return null;
 
-  // Layout Mobile - similar ao MaterialViewer
+  // Layout Mobile - igual ao MaterialModal
   if (isMobile) {
     return (
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 m-0 rounded-none">
+      <Sheet open={open} onOpenChange={onClose}>
+        <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl border-0 p-0 bg-white">
           <div className="h-full flex flex-col">
-            {/* Header fixo no topo */}
-            <div className="flex items-center justify-between p-4 bg-white border-b shadow-sm flex-shrink-0">
-              <div className="flex items-center space-x-3">
-                <Edit3 className="h-5 w-5 text-blue-600" />
-                <div>
-                  <h2 className="text-lg font-bold">Editar Material</h2>
-                  <p className="text-sm text-gray-600">{editedMaterial.title}</p>
+            {/* Header */}
+            <SheetHeader className="p-4 pb-3 border-b bg-white rounded-t-3xl flex-shrink-0">
+              <SheetTitle className="text-lg font-bold text-center">
+                {editedMaterial.title}
+              </SheetTitle>
+              <div className="text-sm text-gray-600 text-center">
+                Edição • {editedMaterial.subject} • {editedMaterial.grade}
+              </div>
+            </SheetHeader>
+            
+            {/* Content Preview - Scaled down to fit without scrolling */}
+            <div className="flex-1 p-4 overflow-hidden">
+              <div className="h-full border rounded-2xl bg-gray-50 overflow-hidden shadow-inner">
+                <div 
+                  className="origin-top-left transform scale-[0.3] w-[333%] h-[333%] overflow-hidden"
+                  style={{ transformOrigin: '0 0' }}
+                >
+                  {renderMaterialWithSameSystem()}
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-                className="rounded-lg"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
             
-            {/* Conteúdo principal */}
-            <div className="flex-1 overflow-hidden">
-              {renderMaterialWithSameSystem()}
-            </div>
-            
-            {/* Footer com botões de ação */}
-            <div className="p-4 bg-white border-t flex-shrink-0">
-              <div className="grid grid-cols-2 gap-3">
+            {/* Action Buttons */}
+            <div className="p-4 space-y-3 bg-white border-t flex-shrink-0 rounded-b-3xl">
+              <div className="grid grid-cols-2 gap-2">
                 <Button
                   variant="outline"
                   onClick={onClose}
                   disabled={loading}
-                  className="rounded-xl"
+                  className="text-xs rounded-xl"
                 >
-                  <X className="h-4 w-4 mr-2" />
+                  <X className="h-3 w-3 mr-1" />
                   Cancelar
                 </Button>
+                
                 <Button
                   onClick={handleSave}
                   disabled={loading}
-                  className="rounded-xl bg-blue-600 hover:bg-blue-700"
+                  className="text-xs rounded-xl bg-blue-600 hover:bg-blue-700"
                 >
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-3 w-3 mr-1" />
                   {loading ? 'Salvando...' : 'Salvar'}
                 </Button>
               </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     );
   }
 
