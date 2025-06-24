@@ -102,70 +102,300 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     return typeMap[type as keyof typeof typeMap] || '1';
   };
 
+  const enhanceHtmlWithTemplate = (htmlContent: string): string => {
+    return `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${editedMaterial?.title || 'Material'}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+          
+          @page {
+            size: A4;
+            margin: 0;
+          }
+          body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f4f8;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+          }
+          
+          .page {
+            position: relative;
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            overflow: hidden;
+            margin: 0 auto 20px auto;
+            box-sizing: border-box;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+          }
+
+          .shape-circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.25;
+            pointer-events: none;
+            z-index: 0;
+          }
+          .shape-circle.purple {
+            width: 180px; 
+            height: 180px;
+            background: #a78bfa;
+            top: -60px; 
+            left: -40px;
+          }
+          .shape-circle.blue {
+            width: 240px; 
+            height: 240px;
+            background: #60a5fa;
+            bottom: -80px; 
+            right: -60px;
+          }
+          
+          .header {
+            position: absolute;
+            top: 6mm;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            z-index: 999;
+            height: 12mm;
+            background: transparent;
+            padding: 0 12mm;
+            flex-shrink: 0;
+          }
+          .header .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+          }
+          .header .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
+          }
+          .header .brand-text h1 {
+            font-size: 20px;
+            color: #0ea5e9;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            line-height: 1;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+          }
+          .header .brand-text p {
+            font-size: 8px;
+            color: #6b7280;
+            margin: -1px 0 0 0;
+            font-family: 'Inter', sans-serif;
+            line-height: 1;
+            font-weight: 400;
+          }
+          
+          .content {
+            margin-top: 20mm;
+            margin-bottom: 12mm;
+            padding: 0 15mm;
+            position: relative;
+            flex: 1;
+            overflow: visible;
+            z-index: 1;
+          }
+
+          h2 {
+            text-align: center;
+            margin: 10px 0 18px 0;
+            font-size: 1.5rem;
+            color: #4f46e5;
+            position: relative;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+          }
+          h2::after {
+            content: '';
+            width: 50px;
+            height: 3px;
+            background: #a78bfa;
+            display: block;
+            margin: 6px auto 0;
+            border-radius: 2px;
+          }
+          
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 18px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          }
+          th, td {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            vertical-align: top;
+          }
+          th {
+            background: #f3f4f6;
+            color: #1f2937;
+            font-weight: 600;
+            text-align: left;
+            width: 18%;
+          }
+          td {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          
+          .instructions {
+            background: #eff6ff;
+            padding: 15px;
+            border-left: 4px solid #0ea5e9;
+            margin-bottom: 30px;
+            font-family: 'Inter', sans-serif;
+            border-radius: 6px;
+          }
+
+          .questao-container, .question {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+          }
+          .questao-numero, .question-header {
+            font-weight: 600;
+            color: #4338ca;
+            margin-bottom: 10px;
+            font-size: 1.0rem;
+            font-family: 'Inter', sans-serif;
+          }
+          .questao-enunciado, .question-text {
+            margin-bottom: 15px;
+            text-align: justify;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            line-height: 1.4;
+          }
+          .questao-opcoes, .options {
+            margin-left: 20px;
+          }
+          .opcao, .option {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+          }
+          .opcao-letra, .option-letter {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #4338ca;
+            min-width: 25px;
+          }
+          
+          .footer {
+            position: absolute;
+            bottom: 6mm;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #6b7280;
+            z-index: 999;
+            height: 6mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            padding: 0 15mm;
+            font-family: 'Inter', sans-serif;
+            flex-shrink: 0;
+          }
+
+          /* Estilos para campos editáveis */
+          .editable-field {
+            transition: all 0.2s ease;
+            cursor: text;
+            min-height: 20px;
+            outline: none;
+            background: rgba(59, 130, 246, 0.05) !important;
+            border: 1px dashed rgba(59, 130, 246, 0.3) !important;
+            border-radius: 4px !important;
+            padding: 4px 8px !important;
+          }
+          .editable-field:hover {
+            background: rgba(59, 130, 246, 0.1) !important;
+            border-color: #3b82f6 !important;
+          }
+          .editable-field:focus {
+            background: white !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+          }
+        </style>
+      </head>
+      <body>
+        ${htmlContent}
+      </body>
+      </html>
+    `;
+  };
+
   const makeContentEditable = (htmlContent: string): string => {
-    // Função para tornar o conteúdo editável mantendo o template original
     let editableHtml = htmlContent;
 
-    // Tornar campos básicos editáveis (inputs de informações gerais)
+    // Tornar campos de tabela editáveis
     editableHtml = editableHtml.replace(
       /<td>([^<]*)<\/td>/g,
-      '<td contenteditable="true" class="editable-field bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded px-2 py-1">$1</td>'
-    );
-
-    // Tornar textos de questões editáveis
-    editableHtml = editableHtml.replace(
-      /<div class="questao-enunciado">([^<]*)<\/div>/g,
-      '<div class="questao-enunciado editable-field bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded px-2 py-1" contenteditable="true">$1</div>'
-    );
-
-    // Tornar opções de questões editáveis
-    editableHtml = editableHtml.replace(
-      /<div class="opcao-texto">([^<]*)<\/div>/g,
-      '<div class="opcao-texto editable-field bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded px-2 py-1" contenteditable="true">$1</div>'
+      '<td class="editable-field" contenteditable="true">$1</td>'
     );
 
     // Tornar títulos editáveis
     editableHtml = editableHtml.replace(
       /<h([1-6])>([^<]*)<\/h([1-6])>/g,
-      '<h$1 class="editable-field bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded px-2 py-1" contenteditable="true">$2</h$3>'
+      '<h$1 class="editable-field" contenteditable="true">$2</h$3>'
     );
 
     // Tornar parágrafos editáveis
     editableHtml = editableHtml.replace(
       /<p>([^<]*)<\/p>/g,
-      '<p class="editable-field bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded px-2 py-1" contenteditable="true">$1</p>'
+      '<p class="editable-field" contenteditable="true">$1</p>'
     );
 
-    // Adicionar estilos CSS para campos editáveis
-    const editableStyles = `
-      <style>
-        .editable-field {
-          transition: all 0.2s ease;
-          cursor: text;
-          min-height: 24px;
-          outline: none;
-        }
-        .editable-field:hover {
-          background-color: #dbeafe !important;
-          border-color: #3b82f6 !important;
-        }
-        .editable-field:focus {
-          background-color: white !important;
-          border-color: #2563eb !important;
-          box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-        }
-        .editable-field::before {
-          content: attr(data-placeholder);
-          color: #9ca3af;
-          pointer-events: none;
-        }
-        .editable-field:not(:empty)::before {
-          display: none;
-        }
-      </style>
-    `;
+    // Tornar questões editáveis
+    editableHtml = editableHtml.replace(
+      /<div class="questao-enunciado">([^<]*)<\/div>/g,
+      '<div class="questao-enunciado editable-field" contenteditable="true">$1</div>'
+    );
 
-    return editableStyles + editableHtml;
+    // Tornar opções editáveis
+    editableHtml = editableHtml.replace(
+      /<div class="opcao-texto">([^<]*)<\/div>/g,
+      '<div class="opcao-texto editable-field" contenteditable="true">$1</div>'
+    );
+
+    return editableHtml;
   };
 
   const renderEditableContent = () => {
@@ -180,41 +410,43 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
         const slides = editedMaterial.content.slides || [];
         
         return (
-          <div className="slides-editor">
+          <div className="slides-editor w-full h-full overflow-auto bg-gray-50 p-4">
             {slides.map((slide: any, index: number) => (
-              <div key={index} className="slide-page mb-8 p-8 bg-white shadow-lg rounded-lg border-2 border-blue-200">
-                <div className="slide-header flex justify-between items-center mb-6">
-                  <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold">
-                    Slide {slide.numero}
-                  </span>
-                </div>
-                
-                <div className="slide-title mb-8">
-                  <input
-                    type="text"
-                    value={slide.titulo}
-                    onChange={(e) => updateArrayItem('slides', index, { ...slide, titulo: e.target.value })}
-                    className="w-full text-2xl font-bold text-center p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors"
-                    placeholder="Título do slide"
-                  />
-                </div>
-                
-                <div className="slide-content space-y-4">
-                  {slide.conteudo.map((item: string, itemIndex: number) => (
-                    <div key={itemIndex} className="flex items-start gap-3">
-                      <span className="text-blue-600 font-bold text-xl mt-2">•</span>
-                      <textarea
-                        value={item}
-                        onChange={(e) => {
-                          const newConteudo = [...slide.conteudo];
-                          newConteudo[itemIndex] = e.target.value;
-                          updateArrayItem('slides', index, { ...slide, conteudo: newConteudo });
-                        }}
-                        className="flex-1 text-lg p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors resize-none"
-                        rows={3}
-                      />
-                    </div>
-                  ))}
+              <div key={index} className="slide-page mb-8 mx-auto" style={{ width: '210mm', minHeight: '297mm' }}>
+                <div className="bg-white shadow-lg rounded-lg border-2 border-blue-200 p-8">
+                  <div className="slide-header flex justify-between items-center mb-6">
+                    <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold">
+                      Slide {slide.numero}
+                    </span>
+                  </div>
+                  
+                  <div className="slide-title mb-8">
+                    <input
+                      type="text"
+                      value={slide.titulo}
+                      onChange={(e) => updateArrayItem('slides', index, { ...slide, titulo: e.target.value })}
+                      className="w-full text-2xl font-bold text-center p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors"
+                      placeholder="Título do slide"
+                    />
+                  </div>
+                  
+                  <div className="slide-content space-y-4">
+                    {slide.conteudo.map((item: string, itemIndex: number) => (
+                      <div key={itemIndex} className="flex items-start gap-3">
+                        <span className="text-blue-600 font-bold text-xl mt-2">•</span>
+                        <textarea
+                          value={item}
+                          onChange={(e) => {
+                            const newConteudo = [...slide.conteudo];
+                            newConteudo[itemIndex] = e.target.value;
+                            updateArrayItem('slides', index, { ...slide, conteudo: newConteudo });
+                          }}
+                          className="flex-1 text-lg p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors resize-none"
+                          rows={3}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
@@ -222,250 +454,13 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
         );
       }
 
-      // Para outros tipos, usar o template original com campos editáveis
+      // Para outros tipos, usar template editável
       const editableHtml = makeContentEditable(renderedHtml);
       
       return (
-        <div className="template-editor">
+        <div className="template-editor w-full h-full overflow-auto bg-gray-50">
           <iframe
-            srcDoc={`
-              <!DOCTYPE html>
-              <html lang="pt-BR">
-              <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Editor - ${editedMaterial.title}</title>
-                <style>
-                  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-                  
-                  /* Usar os mesmos estilos do MaterialPreview */
-                  @page {
-                    size: A4;
-                    margin: 0;
-                  }
-                  body {
-                    margin: 0;
-                    padding: 20px;
-                    background: #f0f4f8;
-                    font-family: 'Inter', sans-serif;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: flex-start;
-                    align-items: center;
-                    min-height: 100vh;
-                  }
-                  
-                  .page {
-                    position: relative;
-                    width: 210mm;
-                    min-height: 297mm;
-                    background: white;
-                    overflow: hidden;
-                    margin: 0 auto 20px auto;
-                    box-sizing: border-box;
-                    padding: 0;
-                    display: flex;
-                    flex-direction: column;
-                    border-radius: 6px;
-                    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-                  }
-
-                  /* Manter todos os estilos do MaterialPreview */
-                  .shape-circle {
-                    position: absolute;
-                    border-radius: 50%;
-                    opacity: 0.25;
-                    pointer-events: none;
-                    z-index: 0;
-                  }
-                  .shape-circle.purple {
-                    width: 180px; 
-                    height: 180px;
-                    background: #a78bfa;
-                    top: -60px; 
-                    left: -40px;
-                  }
-                  .shape-circle.blue {
-                    width: 240px; 
-                    height: 240px;
-                    background: #60a5fa;
-                    bottom: -80px; 
-                    right: -60px;
-                  }
-                  
-                  .header {
-                    position: absolute;
-                    top: 6mm;
-                    left: 0;
-                    right: 0;
-                    display: flex;
-                    align-items: center;
-                    z-index: 999;
-                    height: 12mm;
-                    background: transparent;
-                    padding: 0 12mm;
-                    flex-shrink: 0;
-                  }
-                  .header .logo-container {
-                    display: flex;
-                    align-items: center;
-                    gap: 3px;
-                  }
-                  .header .logo {
-                    width: 32px;
-                    height: 32px;
-                    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    flex-shrink: 0;
-                    box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
-                  }
-                  .header .brand-text h1 {
-                    font-size: 20px;
-                    color: #0ea5e9;
-                    margin: 0;
-                    font-family: 'Inter', sans-serif;
-                    line-height: 1;
-                    font-weight: 700;
-                    letter-spacing: -0.2px;
-                  }
-                  .header .brand-text p {
-                    font-size: 8px;
-                    color: #6b7280;
-                    margin: -1px 0 0 0;
-                    font-family: 'Inter', sans-serif;
-                    line-height: 1;
-                    font-weight: 400;
-                  }
-                  
-                  .content {
-                    margin-top: 20mm;
-                    margin-bottom: 12mm;
-                    padding: 0 15mm;
-                    position: relative;
-                    flex: 1;
-                    overflow: visible;
-                    z-index: 1;
-                  }
-
-                  h2 {
-                    text-align: center;
-                    margin: 10px 0 18px 0;
-                    font-size: 1.5rem;
-                    color: #4f46e5;
-                    position: relative;
-                    font-family: 'Inter', sans-serif;
-                    font-weight: 700;
-                  }
-                  h2::after {
-                    content: '';
-                    width: 50px;
-                    height: 3px;
-                    background: #a78bfa;
-                    display: block;
-                    margin: 6px auto 0;
-                    border-radius: 2px;
-                  }
-                  
-                  table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-bottom: 18px;
-                    border-radius: 8px;
-                    overflow: hidden;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                  }
-                  th, td {
-                    padding: 8px 12px;
-                    font-size: 0.85rem;
-                    border: none;
-                    font-family: 'Inter', sans-serif;
-                    vertical-align: top;
-                  }
-                  th {
-                    background: #f3f4f6;
-                    color: #1f2937;
-                    font-weight: 600;
-                    text-align: left;
-                    width: 18%;
-                  }
-                  td {
-                    background: #ffffff;
-                    border-bottom: 1px solid #e5e7eb;
-                  }
-                  
-                  .instructions {
-                    background: #eff6ff;
-                    padding: 15px;
-                    border-left: 4px solid #0ea5e9;
-                    margin-bottom: 30px;
-                    font-family: 'Inter', sans-serif;
-                    border-radius: 6px;
-                  }
-
-                  .questao-container, .question {
-                    margin-bottom: 30px;
-                    page-break-inside: avoid;
-                  }
-                  .questao-numero, .question-header {
-                    font-weight: 600;
-                    color: #4338ca;
-                    margin-bottom: 10px;
-                    font-size: 1.0rem;
-                    font-family: 'Inter', sans-serif;
-                  }
-                  .questao-enunciado, .question-text {
-                    margin-bottom: 15px;
-                    text-align: justify;
-                    font-family: 'Inter', sans-serif;
-                    font-size: 0.9rem;
-                    line-height: 1.4;
-                  }
-                  .questao-opcoes, .options {
-                    margin-left: 20px;
-                  }
-                  .opcao, .option {
-                    margin-bottom: 8px;
-                    display: flex;
-                    align-items: flex-start;
-                    font-family: 'Inter', sans-serif;
-                    font-size: 0.9rem;
-                  }
-                  .opcao-letra, .option-letter {
-                    font-weight: bold;
-                    margin-right: 10px;
-                    color: #4338ca;
-                    min-width: 25px;
-                  }
-                  
-                  .footer {
-                    position: absolute;
-                    bottom: 6mm;
-                    left: 0;
-                    right: 0;
-                    text-align: center;
-                    font-size: 0.7rem;
-                    color: #6b7280;
-                    z-index: 999;
-                    height: 6mm;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    background: transparent;
-                    padding: 0 15mm;
-                    font-family: 'Inter', sans-serif;
-                    flex-shrink: 0;
-                  }
-                </style>
-              </head>
-              <body>
-                ${editableHtml}
-              </body>
-              </html>
-            `}
+            srcDoc={enhanceHtmlWithTemplate(editableHtml)}
             style={{
               width: '100%',
               height: '100%',
@@ -503,13 +498,8 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             </SheetHeader>
             
             {/* Content */}
-            <div className="flex-1 overflow-y-auto">
-              <div 
-                className="origin-top-left transform scale-[0.4] w-[250%] h-[250%] overflow-hidden"
-                style={{ transformOrigin: '0 0' }}
-              >
-                {renderEditableContent()}
-              </div>
+            <div className="flex-1 overflow-hidden">
+              {renderEditableContent()}
             </div>
             
             {/* Action Buttons */}
@@ -544,7 +534,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex rounded-2xl">
-        <div className="flex-1 overflow-y-auto rounded-l-2xl">
+        <div className="flex-1 overflow-hidden rounded-l-2xl">
           {renderEditableContent()}
         </div>
         
