@@ -87,7 +87,7 @@ const MaterialsList: React.FC = () => {
   };
 
   const handleInlineEditSave = () => {
-    setMaterials(materialService.getAllMaterials());
+    setMaterials(materialService.getMaterials());
     setMaterialToEdit(null);
   };
 
