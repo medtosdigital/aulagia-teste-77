@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Save, Edit3, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -878,24 +877,38 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
 
   if (!editedMaterial) return null;
 
-  // Layout Mobile
+  // Layout Mobile - similar ao MaterialViewer
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={onClose}>
-        <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl border-0 p-0 bg-white">
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 m-0 rounded-none">
           <div className="h-full flex flex-col">
-            <SheetHeader className="p-4 pb-3 border-b bg-white rounded-t-3xl flex-shrink-0">
-              <SheetTitle className="text-lg font-bold text-center flex items-center justify-center gap-2">
-                <Edit3 className="h-5 w-5" />
-                Editar Material
-              </SheetTitle>
-            </SheetHeader>
+            {/* Header fixo no topo */}
+            <div className="flex items-center justify-between p-4 bg-white border-b shadow-sm flex-shrink-0">
+              <div className="flex items-center space-x-3">
+                <Edit3 className="h-5 w-5 text-blue-600" />
+                <div>
+                  <h2 className="text-lg font-bold">Editar Material</h2>
+                  <p className="text-sm text-gray-600">{editedMaterial.title}</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClose}
+                className="rounded-lg"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
             
+            {/* Conteúdo principal */}
             <div className="flex-1 overflow-hidden">
               {renderMaterialWithSameSystem()}
             </div>
             
-            <div className="p-4 space-y-3 bg-white border-t flex-shrink-0 rounded-b-3xl">
+            {/* Footer com botões de ação */}
+            <div className="p-4 bg-white border-t flex-shrink-0">
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant="outline"
@@ -909,7 +922,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
                 <Button
                   onClick={handleSave}
                   disabled={loading}
-                  className="rounded-xl"
+                  className="rounded-xl bg-blue-600 hover:bg-blue-700"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {loading ? 'Salvando...' : 'Salvar'}
@@ -917,12 +930,12 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
               </div>
             </div>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     );
   }
 
-  // Layout Desktop
+  // Layout Desktop - mantém o design atual
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex rounded-2xl">
