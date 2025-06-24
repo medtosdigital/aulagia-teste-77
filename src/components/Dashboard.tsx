@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { Plus, Sliders, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users } from 'lucide-react';
-
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('recent-activities');
-
-  const tabs = [
-    { id: 'recent-activities', label: 'Atividades Recentes' },
-    { id: 'upcoming-classes', label: 'Próximas Aulas' },
-    { id: 'quick-stats', label: 'Estatísticas' },
-  ];
-
-  return (
-    <main className="p-4">
+  const tabs = [{
+    id: 'recent-activities',
+    label: 'Atividades Recentes'
+  }, {
+    id: 'upcoming-classes',
+    label: 'Próximas Aulas'
+  }, {
+    id: 'quick-stats',
+    label: 'Estatísticas'
+  }];
+  return <main className="p-4">
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl p-6 text-white mb-6">
         <div className="flex flex-col md:flex-row items-center justify-between">
@@ -36,7 +37,7 @@ const Dashboard: React.FC = () => {
             <Plus size={24} />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-800">Nova Aula</h3>
+            <h3 className="font-semibold text-gray-800">Preparar Material</h3>
             <p className="text-sm text-gray-500">Crie um plano de aula</p>
           </div>
         </div>
@@ -76,25 +77,14 @@ const Dashboard: React.FC = () => {
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
+            {tabs.map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
                 {tab.label}
-              </button>
-            ))}
+              </button>)}
           </nav>
         </div>
         
         <div className="p-6">
-          {activeTab === 'recent-activities' && (
-            <div>
+          {activeTab === 'recent-activities' && <div>
               <h3 className="font-semibold text-lg mb-4">Suas atividades recentes</h3>
               
               <div className="space-y-4">
@@ -137,11 +127,9 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
 
-          {activeTab === 'upcoming-classes' && (
-            <div>
+          {activeTab === 'upcoming-classes' && <div>
               <h3 className="font-semibold text-lg mb-4">Suas próximas aulas</h3>
               
               <div className="space-y-4">
@@ -171,11 +159,9 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
 
-          {activeTab === 'quick-stats' && (
-            <div>
+          {activeTab === 'quick-stats' && <div>
               <h3 className="font-semibold text-lg mb-4">Estatísticas rápidas</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -233,8 +219,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </div>
 
@@ -283,8 +268,6 @@ const Dashboard: React.FC = () => {
           </button>
         </div>
       </div>
-    </main>
-  );
+    </main>;
 };
-
 export default Dashboard;
