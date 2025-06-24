@@ -571,14 +571,14 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
             variant="outline"
             onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
             disabled={currentSlide === 0}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 h-12 px-6 text-lg font-bold"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-6 w-6" />
             Anterior
           </Button>
 
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
+            <span className="text-lg font-bold text-gray-600">
               Página {currentSlide + 1} de {slides.length}
             </span>
           </div>
@@ -587,10 +587,10 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
             variant="outline"
             onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
             disabled={currentSlide === slides.length - 1}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 h-12 px-6 text-lg font-bold"
           >
             Próximo
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-6 w-6" />
           </Button>
         </div>
       )}
@@ -598,28 +598,28 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       {/* Mobile Navigation - Optimized for horizontal viewing */}
       {isMobile && (
         <div className="flex-shrink-0 bg-white border-t">
-          <Pagination className="py-3">
-            <PaginationContent className="gap-3">
+          <Pagination className="py-4">
+            <PaginationContent className="gap-4">
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
                   className={`${
                     currentSlide === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
-                  } h-12 px-6 text-lg font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
+                  } h-14 px-8 text-xl font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
                 >
-                  <ChevronLeft className="h-6 w-6 mr-1" />
+                  <ChevronLeft className="h-8 w-8 mr-2" />
                   <span>Anterior</span>
                 </PaginationPrevious>
               </PaginationItem>
 
               {/* Slide numbers - compact for mobile horizontal */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 {slides.map((_, index) => (
                   <PaginationItem key={index}>
                     <PaginationLink
                       onClick={() => setCurrentSlide(index)}
                       isActive={currentSlide === index}
-                      className={`cursor-pointer h-12 w-12 text-lg font-bold rounded-full shadow-lg ${
+                      className={`cursor-pointer h-14 w-14 text-xl font-bold rounded-full shadow-lg ${
                         currentSlide === index 
                           ? 'bg-blue-600 text-white border-blue-600' 
                           : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'
@@ -636,17 +636,17 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
                   onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
                   className={`${
                     currentSlide === slides.length - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
-                  } h-12 px-6 text-lg font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
+                  } h-14 px-8 text-xl font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
                 >
                   <span>Próximo</span>
-                  <ChevronRight className="h-6 w-6 ml-1" />
+                  <ChevronRight className="h-8 w-8 ml-2" />
                 </PaginationNext>
               </PaginationItem>
             </PaginationContent>
           </Pagination>
 
           {/* Page indicator for mobile - compact */}
-          <div className="text-center pb-3 text-lg font-bold text-gray-700">
+          <div className="text-center pb-4 text-xl font-bold text-gray-700">
             Página {currentSlide + 1} de {slides.length}
           </div>
         </div>
