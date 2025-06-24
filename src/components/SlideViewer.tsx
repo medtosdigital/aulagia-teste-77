@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Printer, Download } from 'lucide-react';
 import { Button } from './ui/button';
@@ -620,51 +618,51 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       {/* Mobile Navigation */}
       {isMobile && (
         <div className="flex-shrink-0 bg-white border-t border-gray-200">
-          <div className="px-4 py-3">
-            {/* Principais botões de navegação */}
-            <div className="flex justify-between items-center mb-3">
+          <div className="px-4 py-4">
+            {/* Principais botões de navegação - AUMENTADOS */}
+            <div className="flex justify-between items-center mb-4">
               <Button
                 onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
                 disabled={currentSlide === 0}
                 variant="outline"
-                className={`flex items-center gap-2 h-10 px-4 text-sm font-bold rounded-xl border-2 transition-all duration-200 shadow-md ${
+                className={`flex items-center gap-3 h-16 px-8 text-lg font-bold rounded-2xl border-3 transition-all duration-200 shadow-lg ${
                   currentSlide === 0 
                     ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 active:scale-95'
                 }`}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-6 w-6" />
                 Anterior
               </Button>
 
               <Button
                 onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
                 disabled={currentSlide === slides.length - 1}
-                className={`flex items-center gap-2 h-10 px-4 text-sm font-bold rounded-xl transition-all duration-200 shadow-md ${
+                className={`flex items-center gap-3 h-16 px-8 text-lg font-bold rounded-2xl transition-all duration-200 shadow-lg ${
                   currentSlide === slides.length - 1 
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-200' 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-3 border-gray-200' 
                     : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
                 }`}
               >
                 Próximo
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-6 w-6" />
               </Button>
             </div>
 
-            {/* Indicador de página central */}
-            <div className="text-center text-sm font-bold text-gray-700 bg-gray-100 py-2 rounded-xl mb-3">
+            {/* Indicador de página central - AUMENTADO */}
+            <div className="text-center text-lg font-bold text-gray-700 bg-gray-100 py-4 rounded-2xl mb-4">
               Página {currentSlide + 1} de {slides.length}
             </div>
 
-            {/* Números das páginas */}
-            <div className="flex justify-center items-center gap-2">
+            {/* Números das páginas - AUMENTADOS */}
+            <div className="flex justify-center items-center gap-3">
               {slides.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}
-                  className={`w-10 h-10 rounded-full text-sm font-bold transition-all duration-200 shadow-md ${
+                  className={`w-14 h-14 rounded-full text-lg font-bold transition-all duration-200 shadow-lg ${
                     currentSlide === index 
-                      ? 'bg-blue-600 text-white shadow-lg scale-110' 
+                      ? 'bg-blue-600 text-white shadow-xl scale-110' 
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95'
                   }`}
                 >
