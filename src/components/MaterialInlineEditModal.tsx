@@ -373,6 +373,14 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   const makeContentEditable = (htmlContent: string): string => {
     let editableHtml = htmlContent;
 
+    // Proteger elementos da logo primeiro (evitar que sejam editáveis)
+    const logoElements = [
+      /(<div[^>]*class="[^"]*logo-container[^"]*"[^>]*>.*?<\/div>)/gs,
+      /(<div[^>]*class="[^"]*logo[^"]*"[^>]*>.*?<\/div>)/gs,
+      /(<h1[^>]*>AulagIA<\/h1>)/g,
+      /(<p[^>]*>Sua aula com toque mágico<\/p>)/g
+    ];
+
     // Tornar campos de tabela editáveis (exceto logo)
     editableHtml = editableHtml.replace(
       /<td>([^<]*)<\/td>/g,
@@ -388,10 +396,13 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
-    // Tornar parágrafos editáveis
+    // Tornar parágrafos editáveis (exceto os da logo)
     editableHtml = editableHtml.replace(
       /<p>([^<]*)<\/p>/g,
-      '<p class="editable-field" contenteditable="true">$1</p>'
+      (match, content) => {
+        if (content.includes('Sua aula com toque mágico')) return match;
+        return '<p class="editable-field" contenteditable="true">' + content + '</p>';
+      }
     );
 
     // Tornar listas editáveis (objetivos de aprendizagem)
@@ -419,7 +430,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
 
     // Tornar opções de múltipla escolha editáveis
     editableHtml = editableHtml.replace(
-      /<div class="option">(<span class="option-letter">[A-D]\)</span>)\s*([^<]*)<\/div>/g,
+      /<div class="option">(<span class="option-letter">[A-E]\)<\/span>)\s*([^<]*)<\/div>/g,
       '<div class="option">$1 <span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
@@ -432,72 +443,207 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     try {
       const selectedTemplateId = getDefaultTemplateId(editedMaterial.type);
       
-      // Para slides, usar uma renderização especial com template 4:3
+      // Para slides, usar renderização com template editável em formato 4:3
       if (editedMaterial.type === 'slides') {
-        const slides = editedMaterial.content.slides || [];
+        const renderedHtml = templateService.renderTemplate(selectedTemplateId, editedMaterial.content);
+        const editableHtml = makeContentEditable(renderedHtml);
+        
+        const slideTemplate = `
+          <!DOCTYPE html>
+          <html lang="pt-BR">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${editedMaterial?.title || 'Slides'}</title>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+              
+              body {
+                margin: 0;
+                padding: 20px;
+                background: #f0f4f8;
+                font-family: 'Inter', sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                min-height: 100vh;
+              }
+              
+              .slide-page {
+                width: 800px;
+                height: 600px;
+                aspect-ratio: 4/3;
+                background: white;
+                margin-bottom: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                position: relative;
+                overflow: hidden;
+                padding: 40px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+              }
+
+              .shape-circle {
+                position: absolute;
+                border-radius: 50%;
+                opacity: 0.25;
+                pointer-events: none;
+                z-index: 0;
+              }
+              .shape-circle.purple {
+                width: 150px; 
+                height: 150px;
+                background: #a78bfa;
+                top: -50px; 
+                left: -30px;
+              }
+              .shape-circle.blue {
+                width: 200px; 
+                height: 200px;
+                background: #60a5fa;
+                bottom: -70px; 
+                right: -50px;
+              }
+
+              .slide-header {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                z-index: 10;
+              }
+              .slide-header .logo {
+                width: 24px;
+                height: 24px;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+              }
+              .slide-header .brand-text h1 {
+                font-size: 16px;
+                color: #0ea5e9;
+                margin: 0;
+                font-weight: 700;
+                line-height: 1;
+              }
+              .slide-header .brand-text p {
+                font-size: 6px;
+                color: #6b7280;
+                margin: 0;
+                line-height: 1;
+              }
+
+              .slide-number {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: #3b82f6;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+                z-index: 10;
+              }
+
+              .slide-title {
+                margin-top: 60px;
+                margin-bottom: 30px;
+                text-align: center;
+                z-index: 1;
+                position: relative;
+              }
+              .slide-title h2 {
+                font-size: 2rem;
+                color: #1e40af;
+                margin: 0;
+                font-weight: 700;
+              }
+
+              .slide-content {
+                flex: 1;
+                z-index: 1;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+              }
+              .slide-content ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+              }
+              .slide-content li {
+                margin-bottom: 15px;
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                font-size: 1.1rem;
+                line-height: 1.4;
+              }
+              .slide-content li::before {
+                content: '●';
+                color: #3b82f6;
+                font-weight: bold;
+                font-size: 1.2rem;
+                flex-shrink: 0;
+                margin-top: 2px;
+              }
+
+              /* Estilos para campos editáveis */
+              .editable-field {
+                transition: all 0.2s ease;
+                cursor: text;
+                min-height: 20px;
+                outline: none;
+                background: rgba(59, 130, 246, 0.05) !important;
+                border: 1px dashed rgba(59, 130, 246, 0.3) !important;
+                border-radius: 4px !important;
+                padding: 4px 8px !important;
+              }
+              .editable-field:hover {
+                background: rgba(59, 130, 246, 0.1) !important;
+                border-color: #3b82f6 !important;
+              }
+              .editable-field:focus {
+                background: white !important;
+                border-color: #2563eb !important;
+                box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+              }
+
+              /* Logo não editável */
+              .slide-header .logo, .slide-header .brand-text h1, .slide-header .brand-text p {
+                pointer-events: none !important;
+              }
+            </style>
+          </head>
+          <body>
+            ${editableHtml}
+          </body>
+          </html>
+        `;
         
         return (
-          <div className="slides-editor w-full h-full overflow-auto bg-gray-50 p-4">
-            <div className="slides-container" style={{ zoom: '0.8' }}>
-              {slides.map((slide: any, index: number) => (
-                <div key={index} className="slide-page mb-8 mx-auto" style={{ 
-                  width: '800px', 
-                  height: '600px',
-                  aspectRatio: '4/3'
-                }}>
-                  <div className="bg-white shadow-lg rounded-lg border-2 border-blue-200 p-8 h-full flex flex-col relative overflow-hidden">
-                    {/* Formas decorativas */}
-                    <div className="absolute top-0 left-0 w-32 h-32 bg-purple-300 rounded-full opacity-25 -translate-x-1/2 -translate-y-1/2"></div>
-                    <div className="absolute bottom-0 right-0 w-40 h-40 bg-blue-300 rounded-full opacity-25 translate-x-1/2 translate-y-1/2"></div>
-                    
-                    {/* Header AulagIA */}
-                    <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                        A
-                      </div>
-                      <div>
-                        <h1 className="text-blue-500 font-bold text-lg leading-none">AulagIA</h1>
-                        <p className="text-gray-500 text-xs leading-none">Sua aula com toque mágico</p>
-                      </div>
-                    </div>
-                    
-                    <div className="slide-header flex justify-between items-center mb-6 mt-12">
-                      <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold">
-                        Slide {slide.numero}
-                      </span>
-                    </div>
-                    
-                    <div className="slide-title mb-8 flex-shrink-0">
-                      <input
-                        type="text"
-                        value={slide.titulo}
-                        onChange={(e) => updateArrayItem('slides', index, { ...slide, titulo: e.target.value })}
-                        className="w-full text-2xl font-bold text-center p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors"
-                        placeholder="Título do slide"
-                      />
-                    </div>
-                    
-                    <div className="slide-content space-y-4 flex-1 overflow-auto">
-                      {slide.conteudo.map((item: string, itemIndex: number) => (
-                        <div key={itemIndex} className="flex items-start gap-3">
-                          <span className="text-blue-600 font-bold text-xl mt-2 flex-shrink-0">•</span>
-                          <textarea
-                            value={item}
-                            onChange={(e) => {
-                              const newConteudo = [...slide.conteudo];
-                              newConteudo[itemIndex] = e.target.value;
-                              updateArrayItem('slides', index, { ...slide, conteudo: newConteudo });
-                            }}
-                            className="flex-1 text-lg p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white rounded-lg outline-none transition-colors resize-none"
-                            rows={3}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="slide-editor w-full h-full overflow-auto bg-gray-50">
+            <iframe
+              srcDoc={slideTemplate}
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                backgroundColor: 'white'
+              }}
+              title="Slide Editor"
+            />
           </div>
         );
       }
