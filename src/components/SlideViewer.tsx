@@ -541,21 +541,27 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Slide Content */}
+      {/* Slide Content with 4:3 aspect ratio */}
       <div className="flex-1 flex justify-center items-center p-2">
-        <div className={`w-full bg-white rounded-xl shadow-lg ${
-          isMobile 
-            ? 'max-w-full h-48' // Mobile: altura reduzida para orientação horizontal
-            : 'max-w-5xl h-full p-4'
-        }`}>
-          <div className={`w-full h-full ${
-            isMobile 
-              ? 'aspect-[16/9]' // Mobile: aspecto horizontal
-              : 'aspect-[16/9]'
-          }`}>
-            {renderSlide(slides[currentSlide], currentSlide)}
+        {isMobile ? (
+          // Mobile: Container horizontal 4:3 aspect ratio
+          <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" 
+               style={{ aspectRatio: '4/3', maxHeight: '60vh' }}>
+            <div className="w-full h-full">
+              {renderSlide(slides[currentSlide], currentSlide)}
+            </div>
           </div>
-        </div>
+        ) : (
+          // Desktop: Larger container with 4:3 aspect ratio
+          <div className="w-full bg-white rounded-xl shadow-lg max-w-6xl overflow-hidden border border-gray-200" 
+               style={{ aspectRatio: '4/3' }}>
+            <div className="w-full h-full p-4">
+              <div className="w-full h-full" style={{ aspectRatio: '4/3' }}>
+                {renderSlide(slides[currentSlide], currentSlide)}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Desktop Navigation */}
@@ -589,31 +595,31 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         </div>
       )}
 
-      {/* Mobile Navigation - Otimizado para orientação horizontal */}
+      {/* Mobile Navigation - Optimized for horizontal viewing */}
       {isMobile && (
         <div className="flex-shrink-0 bg-white border-t">
-          <Pagination className="py-4">
-            <PaginationContent className="gap-6">
+          <Pagination className="py-3">
+            <PaginationContent className="gap-3">
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
                   className={`${
                     currentSlide === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
-                  } h-16 px-8 text-xl font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
+                  } h-12 px-6 text-lg font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
                 >
-                  <ChevronLeft className="h-8 w-8 mr-2" />
+                  <ChevronLeft className="h-6 w-6 mr-1" />
                   <span>Anterior</span>
                 </PaginationPrevious>
               </PaginationItem>
 
-              {/* Números das páginas - maiores e mais visíveis */}
-              <div className="flex items-center gap-3">
+              {/* Slide numbers - compact for mobile horizontal */}
+              <div className="flex items-center gap-2">
                 {slides.map((_, index) => (
                   <PaginationItem key={index}>
                     <PaginationLink
                       onClick={() => setCurrentSlide(index)}
                       isActive={currentSlide === index}
-                      className={`cursor-pointer h-16 w-16 text-2xl font-bold rounded-full shadow-lg ${
+                      className={`cursor-pointer h-12 w-12 text-lg font-bold rounded-full shadow-lg ${
                         currentSlide === index 
                           ? 'bg-blue-600 text-white border-blue-600' 
                           : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'
@@ -630,17 +636,17 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
                   onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
                   className={`${
                     currentSlide === slides.length - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
-                  } h-16 px-8 text-xl font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
+                  } h-12 px-6 text-lg font-bold rounded-full shadow-lg bg-blue-500 text-white hover:bg-blue-600 border-none`}
                 >
                   <span>Próximo</span>
-                  <ChevronRight className="h-8 w-8 ml-2" />
+                  <ChevronRight className="h-6 w-6 ml-1" />
                 </PaginationNext>
               </PaginationItem>
             </PaginationContent>
           </Pagination>
 
-          {/* Indicador de página mobile - maior e mais visível */}
-          <div className="text-center pb-4 text-2xl font-bold text-gray-700">
+          {/* Page indicator for mobile - compact */}
+          <div className="text-center pb-3 text-lg font-bold text-gray-700">
             Página {currentSlide + 1} de {slides.length}
           </div>
         </div>
