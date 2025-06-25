@@ -41,9 +41,10 @@ const SubscriptionPage = () => {
       ],
       limitations: [
         'Sem download em Word/PPT',
-        'Limitado a 3 criações de material',
+        '5 materiais por mês',
         'Sem edição avançada',
-        'Sem Slides e Avaliações'
+        'Sem Slides Interativos',
+        'Sem Avaliações Personalizadas'
       ],
       color: 'from-gray-400 to-gray-600',
       icon: FileText
@@ -88,13 +89,7 @@ const SubscriptionPage = () => {
         'Controle de permissões',
         'Ideal para grupos de professores ou instituições'
       ],
-      materialTypes: [
-        'Planos de Aula colaborativos',
-        'Slides padronizados',
-        'Atividades alinhadas',
-        'Avaliações coordenadas',
-        'Banco de materiais compartilhado'
-      ],
+      materialTypes: [],
       limitations: [],
       color: 'from-green-500 to-emerald-600',
       icon: Users
@@ -333,25 +328,44 @@ const SubscriptionPage = () => {
                     )}
                   </div>
 
-                  {/* Material Types */}
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-                      <Brain className="w-4 h-4 text-blue-600 mr-2" />
-                      Tipos de Materiais
-                    </h4>
-                    <div className="space-y-2">
-                      {plan.materialTypes.map((materialType, index) => {
-                        const MaterialIcon = getMaterialTypeIcon(materialType);
-                        return (
-                          <div key={index} className="flex items-start">
-                            <MaterialIcon className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700 text-sm">{materialType}</span>
-                          </div>
-                        );
-                      })}
+                  {/* Material Types - only show if plan has materialTypes */}
+                  {plan.materialTypes.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                        <Brain className="w-4 h-4 text-blue-600 mr-2" />
+                        Tipos de Materiais
+                      </h4>
+                      <div className="space-y-2">
+                        {plan.materialTypes.map((materialType, index) => {
+                          const MaterialIcon = getMaterialTypeIcon(materialType);
+                          return (
+                            <div key={index} className="flex items-start">
+                              <MaterialIcon className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
+                              <span className="text-gray-700 text-sm">{materialType}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
+                  {/* Special highlight for Grupo Escolar plan */}
+                  {plan.id === 'grupo-escolar' && (
+                    <div className="mb-4">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
+                          <Crown className="w-4 h-4 text-blue-600 mr-2" />
+                          Todos os recursos do plano Professor
+                        </h4>
+                        <p className="text-blue-700 text-sm">
+                          Inclui todos os tipos de materiais e funcionalidades do plano Professor, 
+                          além dos recursos colaborativos exclusivos para grupos.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Features */}
                   <ul className="space-y-3 mb-6 flex-1">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start">
