@@ -114,7 +114,7 @@ const MonthView: React.FC<MonthViewProps> = ({
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">
               {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
@@ -127,10 +127,10 @@ const MonthView: React.FC<MonthViewProps> = ({
             variant="outline"
             size="sm"
             onClick={onToggleWeekends}
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <Settings className="w-4 h-4" />
-            {showWeekends ? 'Esconder fins de semana' : 'Mostrar fins de semana'}
+            <span className="text-xs sm:text-sm">{showWeekends ? 'Esconder fins de semana' : 'Mostrar fins de semana'}</span>
           </Button>
         </div>
       </div>
