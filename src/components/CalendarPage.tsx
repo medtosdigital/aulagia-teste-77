@@ -175,13 +175,13 @@ const CalendarPage: React.FC = () => {
       <CardContent className={`${compact ? 'p-3' : 'p-4'} pb-0`}>
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <h3 className={`font-bold text-gray-900 truncate ${compact ? 'text-sm' : 'text-base'}`}>
                 {event.title}
               </h3>
             </div>
             
-            {/* Turma logo abaixo do título */}
+            {/* Turma logo abaixo do título com menos espaçamento */}
             <div className="mb-3">
               <p className={`text-gray-600 font-medium ${compact ? 'text-xs' : 'text-sm'}`}>
                 {event.grade}
@@ -228,8 +228,8 @@ const CalendarPage: React.FC = () => {
         
         <Separator className="mb-4" />
         
-        {/* Botões com estilo dos cards de materiais */}
-        <div className="grid grid-cols-2 gap-2 pb-4">
+        {/* Botões com apenas ícones */}
+        <div className="grid grid-cols-4 gap-2 pb-4">
           <Button
             variant="outline"
             size="sm"
@@ -237,10 +237,9 @@ const CalendarPage: React.FC = () => {
               e.stopPropagation();
               handleViewMaterial(event);
             }}
-            className="flex items-center gap-2 h-8 text-xs border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600"
+            className="flex items-center justify-center h-8 w-8 p-0 border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600"
           >
             <Eye className="w-3 h-3" />
-            Visualizar
           </Button>
           
           <Button
@@ -250,20 +249,18 @@ const CalendarPage: React.FC = () => {
               e.stopPropagation();
               handleEditEvent(event);
             }}
-            className="flex items-center gap-2 h-8 text-xs border-gray-200 hover:bg-yellow-50 hover:border-yellow-300 hover:text-yellow-600"
+            className="flex items-center justify-center h-8 w-8 p-0 border-gray-200 hover:bg-yellow-50 hover:border-yellow-300 hover:text-yellow-600"
           >
             <Edit3 className="w-3 h-3" />
-            Editar
           </Button>
           
           <div className="relative group">
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 h-8 text-xs w-full border-gray-200 hover:bg-green-50 hover:border-green-300 hover:text-green-600"
+              className="flex items-center justify-center h-8 w-8 p-0 border-gray-200 hover:bg-green-50 hover:border-green-300 hover:text-green-600"
             >
               <Download className="w-3 h-3" />
-              Exportar
             </Button>
             
             {/* Submenu de exportação */}
@@ -318,10 +315,9 @@ const CalendarPage: React.FC = () => {
               e.stopPropagation();
               handleDeleteEvent(event);
             }}
-            className="flex items-center gap-2 h-8 text-xs border-gray-200 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+            className="flex items-center justify-center h-8 w-8 p-0 border-gray-200 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
           >
             <Trash2 className="w-3 h-3" />
-            Excluir
           </Button>
         </div>
       </CardContent>
