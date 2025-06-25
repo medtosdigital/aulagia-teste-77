@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -7,6 +6,7 @@ import Dashboard from '@/components/Dashboard';
 import CreateLesson from '@/components/CreateLesson';
 import MaterialsList from '@/components/MaterialsList';
 import MaterialViewer from '@/components/MaterialViewer';
+import CalendarPage from '@/components/CalendarPage';
 
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
@@ -45,7 +45,7 @@ const Index = () => {
       case 'lessons':
         return <MaterialsList />;
       case 'calendar':
-        return <div className="p-4"><h2>Calendário - Em desenvolvimento</h2></div>;
+        return <CalendarPage />;
       case 'subscription':
         return <div className="p-4"><h2>Assinatura - Em desenvolvimento</h2></div>;
       case 'settings':
