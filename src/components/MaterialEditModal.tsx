@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -30,6 +29,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   useEffect(() => {
     if (material && open) {
+      // Create a deep copy to avoid reference issues
       setEditedMaterial(JSON.parse(JSON.stringify(material)));
     }
   }, [material, open]);
@@ -39,9 +39,11 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
     setLoading(true);
     try {
+      console.log('Saving material:', editedMaterial);
       const success = materialService.updateMaterial(editedMaterial.id, editedMaterial);
       if (success) {
         toast.success('Material atualizado com sucesso!');
+        // Force a re-render by calling onSave
         onSave();
         onClose();
       } else {
@@ -57,15 +59,17 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   const updateBasicInfo = (field: string, value: string) => {
     if (!editedMaterial) return;
-    setEditedMaterial({
+    const updatedMaterial = {
       ...editedMaterial,
       [field]: value
-    });
+    };
+    console.log('Updating basic info:', field, value);
+    setEditedMaterial(updatedMaterial);
   };
 
   const updateContent = (path: string, value: any) => {
     if (!editedMaterial) return;
-    const content = { ...editedMaterial.content };
+    const content = JSON.parse(JSON.stringify(editedMaterial.content));
     const keys = path.split('.');
     let current = content;
     
@@ -75,6 +79,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     }
     
     current[keys[keys.length - 1]] = value;
+    console.log('Updating content:', path, value);
     
     setEditedMaterial({
       ...editedMaterial,
@@ -84,7 +89,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   const addArrayItem = (path: string, defaultItem: any) => {
     if (!editedMaterial) return;
-    const content = { ...editedMaterial.content };
+    const content = JSON.parse(JSON.stringify(editedMaterial.content));
     const keys = path.split('.');
     let current = content;
     
@@ -106,7 +111,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   const removeArrayItem = (path: string, index: number) => {
     if (!editedMaterial) return;
-    const content = { ...editedMaterial.content };
+    const content = JSON.parse(JSON.stringify(editedMaterial.content));
     const keys = path.split('.');
     let current = content;
     
@@ -124,7 +129,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   const updateArrayItem = (path: string, index: number, value: any) => {
     if (!editedMaterial) return;
-    const content = { ...editedMaterial.content };
+    const content = JSON.parse(JSON.stringify(editedMaterial.content));
     const keys = path.split('.');
     let current = content;
     
@@ -133,6 +138,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     }
     
     current[keys[keys.length - 1]][index] = value;
+    console.log('Updating array item:', path, index, value);
     
     setEditedMaterial({
       ...editedMaterial,
@@ -536,9 +542,13 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
               <div>
                 <Label>Pergunta</Label>
                 <Textarea
-                  value={questao.pergunta}
-                  onChange={(e) => updateArrayItem('questoes', index, { ...questao, pergunta: e.target.value })}
-                  className="min-h-[60px]"
+                  value={questao.pergunta || ''}
+                  onChange={(e) => {
+                    console.log('Updating question text:', e.target.value);
+                    updateArrayItem('questoes', index, { ...questao, pergunta: e.target.value });
+                  }}
+                  className="min-h-[80px]"
+                  placeholder="Digite a pergunta aqui..."
                 />
               </div>
               
@@ -552,10 +562,11 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
                           {String.fromCharCode(65 + opcaoIndex)})
                         </span>
                         <Input
-                          value={opcao}
+                          value={opcao || ''}
                           onChange={(e) => {
                             const novasOpcoes = [...questao.opcoes!];
                             novasOpcoes[opcaoIndex] = e.target.value;
+                            console.log('Updating option:', opcaoIndex, e.target.value);
                             updateArrayItem('questoes', index, { ...questao, opcoes: novasOpcoes });
                           }}
                           placeholder={`Opção ${String.fromCharCode(65 + opcaoIndex)}`}
@@ -566,12 +577,13 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
                 </div>
               )}
 
-              {questao.resposta && (
+              {questao.resposta !== undefined && (
                 <div>
                   <Label>Resposta</Label>
                   <Input
-                    value={questao.resposta}
+                    value={questao.resposta || ''}
                     onChange={(e) => updateArrayItem('questoes', index, { ...questao, resposta: e.target.value })}
+                    placeholder="Resposta correta"
                   />
                 </div>
               )}
@@ -655,9 +667,13 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
               <div>
                 <Label>Pergunta</Label>
                 <Textarea
-                  value={questao.pergunta}
-                  onChange={(e) => updateArrayItem('questoes', index, { ...questao, pergunta: e.target.value })}
-                  className="min-h-[60px]"
+                  value={questao.pergunta || ''}
+                  onChange={(e) => {
+                    console.log('Updating assessment question text:', e.target.value);
+                    updateArrayItem('questoes', index, { ...questao, pergunta: e.target.value });
+                  }}
+                  className="min-h-[80px]"
+                  placeholder="Digite a pergunta aqui..."
                 />
               </div>
               
@@ -671,10 +687,11 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
                           {String.fromCharCode(65 + opcaoIndex)})
                         </span>
                         <Input
-                          value={opcao}
+                          value={opcao || ''}
                           onChange={(e) => {
                             const novasOpcoes = [...questao.opcoes!];
                             novasOpcoes[opcaoIndex] = e.target.value;
+                            console.log('Updating assessment option:', opcaoIndex, e.target.value);
                             updateArrayItem('questoes', index, { ...questao, opcoes: novasOpcoes });
                           }}
                           placeholder={`Opção ${String.fromCharCode(65 + opcaoIndex)}`}

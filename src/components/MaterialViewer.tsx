@@ -9,20 +9,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { materialService, type GeneratedMaterial, type LessonPlan, type Activity, type Slide, type Assessment } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
+import MaterialEditModal from './MaterialEditModal';
 
 const MaterialViewer = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [material, setMaterial] = React.useState<GeneratedMaterial | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
 
-  React.useEffect(() => {
+  const loadMaterial = React.useCallback(() => {
     if (id) {
       const foundMaterial = materialService.getMaterialById(id);
+      console.log('Loading material:', foundMaterial);
       setMaterial(foundMaterial || null);
       setLoading(false);
     }
   }, [id]);
+
+  React.useEffect(() => {
+    loadMaterial();
+  }, [loadMaterial]);
 
   const handleExport = async (format: 'pdf' | 'word' | 'ppt') => {
     if (!material) return;
@@ -61,6 +68,12 @@ const MaterialViewer = () => {
     } else {
       toast.error('Erro ao excluir material');
     }
+  };
+
+  const handleEditSave = () => {
+    // Reload the material to reflect changes
+    loadMaterial();
+    toast.success('Material atualizado com sucesso!');
   };
 
   const getTypeIcon = (type: string) => {
@@ -402,6 +415,14 @@ const MaterialViewer = () => {
           
           <div className="flex items-center space-x-2">
             <Button
+              onClick={() => setEditModalOpen(true)}
+              variant="outline"
+              size="sm"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+            <Button
               onClick={() => handleExport('pdf')}
               variant="outline"
               size="sm"
@@ -476,6 +497,14 @@ const MaterialViewer = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Modal */}
+      <MaterialEditModal
+        material={material}
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onSave={handleEditSave}
+      />
     </div>
   );
 };
