@@ -20,8 +20,9 @@ const MaterialViewer = () => {
 
   const loadMaterial = React.useCallback(() => {
     if (id) {
+      console.log('Loading material with ID:', id);
       const foundMaterial = materialService.getMaterialById(id);
-      console.log('Loading material:', foundMaterial);
+      console.log('Found material:', foundMaterial);
       setMaterial(foundMaterial || null);
       setLoading(false);
     }
@@ -71,8 +72,10 @@ const MaterialViewer = () => {
   };
 
   const handleEditSave = () => {
-    // Reload the material to reflect changes
+    console.log('Edit saved, reloading material...');
+    // Force reload the material from storage to reflect changes
     loadMaterial();
+    setEditModalOpen(false);
     toast.success('Material atualizado com sucesso!');
   };
 

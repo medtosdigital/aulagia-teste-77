@@ -29,8 +29,10 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   useEffect(() => {
     if (material && open) {
-      // Create a deep copy to avoid reference issues
-      setEditedMaterial(JSON.parse(JSON.stringify(material)));
+      // Create a proper deep copy to avoid reference issues
+      const deepCopy = JSON.parse(JSON.stringify(material));
+      console.log('Setting edited material:', deepCopy);
+      setEditedMaterial(deepCopy);
     }
   }, [material, open]);
 
@@ -39,19 +41,23 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
     setLoading(true);
     try {
-      console.log('Saving material:', editedMaterial);
+      console.log('Attempting to save material:', editedMaterial);
+      
+      // Use the material service to update
       const success = materialService.updateMaterial(editedMaterial.id, editedMaterial);
+      
       if (success) {
+        console.log('Material saved successfully');
         toast.success('Material atualizado com sucesso!');
-        // Force a re-render by calling onSave
         onSave();
         onClose();
       } else {
+        console.error('Failed to save material');
         toast.error('Erro ao atualizar material');
       }
     } catch (error) {
-      toast.error('Erro ao salvar material');
       console.error('Save error:', error);
+      toast.error('Erro ao salvar material');
     } finally {
       setLoading(false);
     }
@@ -59,19 +65,23 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   const updateBasicInfo = (field: string, value: string) => {
     if (!editedMaterial) return;
-    const updatedMaterial = {
-      ...editedMaterial,
+    
+    console.log(`Updating basic info ${field}:`, value);
+    setEditedMaterial(prev => ({
+      ...prev!,
       [field]: value
-    };
-    console.log('Updating basic info:', field, value);
-    setEditedMaterial(updatedMaterial);
+    }));
   };
 
   const updateContent = (path: string, value: any) => {
     if (!editedMaterial) return;
-    const content = JSON.parse(JSON.stringify(editedMaterial.content));
+    
+    console.log(`Updating content at path ${path}:`, value);
+    const newMaterial = { ...editedMaterial };
+    const content = { ...newMaterial.content };
+    
     const keys = path.split('.');
-    let current = content;
+    let current: any = content;
     
     for (let i = 0; i < keys.length - 1; i++) {
       if (!current[keys[i]]) current[keys[i]] = {};
@@ -79,21 +89,23 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     }
     
     current[keys[keys.length - 1]] = value;
-    console.log('Updating content:', path, value);
     
-    setEditedMaterial({
-      ...editedMaterial,
-      content
-    });
+    newMaterial.content = content;
+    setEditedMaterial(newMaterial);
   };
 
   const addArrayItem = (path: string, defaultItem: any) => {
     if (!editedMaterial) return;
-    const content = JSON.parse(JSON.stringify(editedMaterial.content));
+    
+    console.log(`Adding array item to path ${path}:`, defaultItem);
+    const newMaterial = { ...editedMaterial };
+    const content = { ...newMaterial.content };
+    
     const keys = path.split('.');
-    let current = content;
+    let current: any = content;
     
     for (let i = 0; i < keys.length - 1; i++) {
+      if (!current[keys[i]]) current[keys[i]] = {};
       current = current[keys[i]];
     }
     
@@ -103,17 +115,19 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     
     current[keys[keys.length - 1]].push(defaultItem);
     
-    setEditedMaterial({
-      ...editedMaterial,
-      content
-    });
+    newMaterial.content = content;
+    setEditedMaterial(newMaterial);
   };
 
   const removeArrayItem = (path: string, index: number) => {
     if (!editedMaterial) return;
-    const content = JSON.parse(JSON.stringify(editedMaterial.content));
+    
+    console.log(`Removing array item from path ${path} at index ${index}`);
+    const newMaterial = { ...editedMaterial };
+    const content = { ...newMaterial.content };
+    
     const keys = path.split('.');
-    let current = content;
+    let current: any = content;
     
     for (let i = 0; i < keys.length - 1; i++) {
       current = current[keys[i]];
@@ -121,29 +135,68 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     
     current[keys[keys.length - 1]].splice(index, 1);
     
-    setEditedMaterial({
-      ...editedMaterial,
-      content
-    });
+    newMaterial.content = content;
+    setEditedMaterial(newMaterial);
   };
 
   const updateArrayItem = (path: string, index: number, value: any) => {
     if (!editedMaterial) return;
-    const content = JSON.parse(JSON.stringify(editedMaterial.content));
+    
+    console.log(`Updating array item at path ${path}, index ${index}:`, value);
+    const newMaterial = { ...editedMaterial };
+    const content = { ...newMaterial.content };
+    
     const keys = path.split('.');
-    let current = content;
+    let current: any = content;
     
     for (let i = 0; i < keys.length - 1; i++) {
       current = current[keys[i]];
     }
     
     current[keys[keys.length - 1]][index] = value;
-    console.log('Updating array item:', path, index, value);
     
-    setEditedMaterial({
-      ...editedMaterial,
-      content
-    });
+    newMaterial.content = content;
+    setEditedMaterial(newMaterial);
+  };
+
+  // Specialized update function for question options
+  const updateQuestionOption = (questionIndex: number, optionIndex: number, value: string, isActivity = false) => {
+    if (!editedMaterial) return;
+    
+    console.log(`Updating question ${questionIndex} option ${optionIndex}:`, value);
+    const newMaterial = { ...editedMaterial };
+    const content = { ...newMaterial.content } as any;
+    
+    if (!content.questoes || !content.questoes[questionIndex]) return;
+    
+    const question = { ...content.questoes[questionIndex] };
+    const opcoes = [...(question.opcoes || [])];
+    opcoes[optionIndex] = value;
+    question.opcoes = opcoes;
+    
+    content.questoes[questionIndex] = question;
+    newMaterial.content = content;
+    
+    setEditedMaterial(newMaterial);
+  };
+
+  // Specialized update function for question text
+  const updateQuestionText = (questionIndex: number, value: string) => {
+    if (!editedMaterial) return;
+    
+    console.log(`Updating question ${questionIndex} text:`, value);
+    const newMaterial = { ...editedMaterial };
+    const content = { ...newMaterial.content } as any;
+    
+    if (!content.questoes || !content.questoes[questionIndex]) return;
+    
+    const question = { ...content.questoes[questionIndex] };
+    question.pergunta = value;
+    
+    content.questoes[questionIndex] = question;
+    newMaterial.content = content;
+    
+    setEditedMaterial(newMaterial);
   };
 
   const renderLessonPlanEditor = (content: LessonPlan) => (
@@ -494,7 +547,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
         <Label htmlFor="instrucoes">Instruções</Label>
         <Textarea
           id="instrucoes"
-          value={activity.instrucoes}
+          value={activity.instrucoes || ''}
           onChange={(e) => updateContent('instrucoes', e.target.value)}
           className="min-h-[80px]"
         />
@@ -522,8 +575,8 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
           </Button>
         </div>
         
-        {activity.questoes.map((questao, index) => (
-          <Card key={index} className="border-l-4 border-l-green-500 mb-4">
+        {activity.questoes && activity.questoes.map((questao, questionIndex) => (
+          <Card key={questionIndex} className="border-l-4 border-l-green-500 mb-4">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Questão {questao.numero}</CardTitle>
@@ -531,7 +584,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => removeArrayItem('questoes', index)}
+                  onClick={() => removeArrayItem('questoes', questionIndex)}
                   className="h-8 w-8 p-0 text-red-600"
                 >
                   <Trash2 className="w-3 h-3" />
@@ -543,33 +596,26 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
                 <Label>Pergunta</Label>
                 <Textarea
                   value={questao.pergunta || ''}
-                  onChange={(e) => {
-                    console.log('Updating question text:', e.target.value);
-                    updateArrayItem('questoes', index, { ...questao, pergunta: e.target.value });
-                  }}
+                  onChange={(e) => updateQuestionText(questionIndex, e.target.value)}
                   className="min-h-[80px]"
                   placeholder="Digite a pergunta aqui..."
                 />
               </div>
               
-              {questao.opcoes && (
+              {questao.opcoes && Array.isArray(questao.opcoes) && (
                 <div>
                   <Label>Opções</Label>
                   <div className="space-y-2">
-                    {questao.opcoes.map((opcao, opcaoIndex) => (
-                      <div key={opcaoIndex} className="flex items-center gap-2">
-                        <span className="text-green-500 font-bold">
-                          {String.fromCharCode(65 + opcaoIndex)})
+                    {questao.opcoes.map((opcao, optionIndex) => (
+                      <div key={optionIndex} className="flex items-center gap-2">
+                        <span className="text-green-500 font-bold min-w-[25px]">
+                          {String.fromCharCode(65 + optionIndex)})
                         </span>
                         <Input
                           value={opcao || ''}
-                          onChange={(e) => {
-                            const novasOpcoes = [...questao.opcoes!];
-                            novasOpcoes[opcaoIndex] = e.target.value;
-                            console.log('Updating option:', opcaoIndex, e.target.value);
-                            updateArrayItem('questoes', index, { ...questao, opcoes: novasOpcoes });
-                          }}
-                          placeholder={`Opção ${String.fromCharCode(65 + opcaoIndex)}`}
+                          onChange={(e) => updateQuestionOption(questionIndex, optionIndex, e.target.value, true)}
+                          placeholder={`Opção ${String.fromCharCode(65 + optionIndex)}`}
+                          className="flex-1"
                         />
                       </div>
                     ))}
@@ -582,7 +628,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
                   <Label>Resposta</Label>
                   <Input
                     value={questao.resposta || ''}
-                    onChange={(e) => updateArrayItem('questoes', index, { ...questao, resposta: e.target.value })}
+                    onChange={(e) => updateArrayItem('questoes', questionIndex, { ...questao, resposta: e.target.value })}
                     placeholder="Resposta correta"
                   />
                 </div>
@@ -600,7 +646,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
         <Label htmlFor="instrucoes">Instruções da Avaliação</Label>
         <Textarea
           id="instrucoes"
-          value={assessment.instrucoes}
+          value={assessment.instrucoes || ''}
           onChange={(e) => updateContent('instrucoes', e.target.value)}
           className="min-h-[80px]"
         />
@@ -610,7 +656,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
         <Label htmlFor="tempoLimite">Tempo Limite</Label>
         <Input
           id="tempoLimite"
-          value={assessment.tempoLimite}
+          value={assessment.tempoLimite || ''}
           onChange={(e) => updateContent('tempoLimite', e.target.value)}
         />
       </div>
@@ -637,16 +683,16 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
           </Button>
         </div>
         
-        {assessment.questoes.map((questao, index) => (
-          <Card key={index} className="border-l-4 border-l-purple-500 mb-4">
+        {assessment.questoes && assessment.questoes.map((questao, questionIndex) => (
+          <Card key={questionIndex} className="border-l-4 border-l-purple-500 mb-4">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Questão {questao.numero}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
-                    value={questao.pontuacao}
-                    onChange={(e) => updateArrayItem('questoes', index, { ...questao, pontuacao: parseInt(e.target.value) || 0 })}
+                    value={questao.pontuacao || 0}
+                    onChange={(e) => updateArrayItem('questoes', questionIndex, { ...questao, pontuacao: parseInt(e.target.value) || 0 })}
                     className="w-20 h-8"
                     min="0"
                   />
@@ -655,7 +701,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => removeArrayItem('questoes', index)}
+                    onClick={() => removeArrayItem('questoes', questionIndex)}
                     className="h-8 w-8 p-0 text-red-600"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -668,33 +714,26 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
                 <Label>Pergunta</Label>
                 <Textarea
                   value={questao.pergunta || ''}
-                  onChange={(e) => {
-                    console.log('Updating assessment question text:', e.target.value);
-                    updateArrayItem('questoes', index, { ...questao, pergunta: e.target.value });
-                  }}
+                  onChange={(e) => updateQuestionText(questionIndex, e.target.value)}
                   className="min-h-[80px]"
                   placeholder="Digite a pergunta aqui..."
                 />
               </div>
               
-              {questao.opcoes && (
+              {questao.opcoes && Array.isArray(questao.opcoes) && (
                 <div>
                   <Label>Opções</Label>
                   <div className="space-y-2">
-                    {questao.opcoes.map((opcao, opcaoIndex) => (
-                      <div key={opcaoIndex} className="flex items-center gap-2">
-                        <span className="text-purple-500 font-bold">
-                          {String.fromCharCode(65 + opcaoIndex)})
+                    {questao.opcoes.map((opcao, optionIndex) => (
+                      <div key={optionIndex} className="flex items-center gap-2">
+                        <span className="text-purple-500 font-bold min-w-[25px]">
+                          {String.fromCharCode(65 + optionIndex)})
                         </span>
                         <Input
                           value={opcao || ''}
-                          onChange={(e) => {
-                            const novasOpcoes = [...questao.opcoes!];
-                            novasOpcoes[opcaoIndex] = e.target.value;
-                            console.log('Updating assessment option:', opcaoIndex, e.target.value);
-                            updateArrayItem('questoes', index, { ...questao, opcoes: novasOpcoes });
-                          }}
-                          placeholder={`Opção ${String.fromCharCode(65 + opcaoIndex)}`}
+                          onChange={(e) => updateQuestionOption(questionIndex, optionIndex, e.target.value, false)}
+                          placeholder={`Opção ${String.fromCharCode(65 + optionIndex)}`}
+                          className="flex-1"
                         />
                       </div>
                     ))}
