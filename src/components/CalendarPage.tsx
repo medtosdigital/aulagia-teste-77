@@ -105,6 +105,14 @@ const CalendarPage: React.FC = () => {
     }
   };
 
+  const handleViewMaterial = (event: ScheduleEvent) => {
+    const material = materialService.getMaterials().find(m => m.id === event.materialId);
+    if (material) {
+      // Aqui você pode implementar a abertura do material para visualização
+      toast.success(`Abrindo material: ${material.title}`);
+    }
+  };
+
   const getDateRangeText = () => {
     switch (view) {
       case 'day':
@@ -189,6 +197,18 @@ const CalendarPage: React.FC = () => {
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
+                handleViewMaterial(event);
+              }}
+              className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
+              title="Visualizar Material"
+            >
+              <Eye className="w-3 h-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
                 handleEventClick(event);
               }}
               className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
@@ -260,11 +280,13 @@ const CalendarPage: React.FC = () => {
         ) : (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Materiais do dia</h3>
-            {dayEvents
-              .sort((a, b) => a.startTime.localeCompare(b.startTime))
-              .map(event => (
-                <EventCard key={event.id} event={event} />
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {dayEvents
+                .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                .map(event => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+            </div>
           </div>
         )}
       </div>
