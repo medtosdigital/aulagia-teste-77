@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, Eye, Edit3, Trash2, Download, Search, Filter, Plus, Calendar, Printer, FileDown } from 'lucide-react';
@@ -175,13 +176,13 @@ const MaterialsList: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-8 space-y-4 md:space-y-0">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Meus Materiais</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Meus Materiais</h1>
+              <Badge variant="secondary" className="px-3 py-1 text-sm">
+                {filteredMaterials.length === 0 ? 'Nenhum' : filteredMaterials.length} {filteredMaterials.length === 1 ? 'material' : 'materiais'}
+              </Badge>
+            </div>
             <p className="text-gray-600">Gerencie e organize seus conteúdos pedagógicos</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Badge variant="secondary" className="px-3 py-1 text-sm">
-              {filteredMaterials.length === 0 ? 'Nenhum' : filteredMaterials.length} {filteredMaterials.length === 1 ? 'material' : 'materiais'}
-            </Badge>
           </div>
         </div>
 
