@@ -1,16 +1,33 @@
 
 import React from 'react';
-import { Bell, HelpCircle } from 'lucide-react';
+import { Bell, HelpCircle, BookOpen } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface HeaderProps {
   title: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ title }) => {
+  const isMobile = useIsMobile();
+
   return (
     <header className="bg-white shadow-sm p-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+        {isMobile ? (
+          // Mobile: Show AulagIA logo and tagline
+          <div className="flex items-center space-x-3">
+            <div className="bg-primary-500 text-white p-2 rounded-lg">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="logo-text text-lg text-primary-600 font-bold">AulagIA</h1>
+              <p className="text-gray-500 text-xs font-normal -mt-1">Sua aula com toque mágico</p>
+            </div>
+          </div>
+        ) : (
+          // Desktop: Show page title
+          <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+        )}
         
         <div className="flex items-center space-x-4">
           <div className="relative">
