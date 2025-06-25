@@ -480,6 +480,66 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             min-width: 25px;
             pointer-events: none !important;
           }
+
+          /* Linhas de resposta para questões abertas */
+          .answer-lines {
+            border-bottom: 1px solid #d1d5db;
+            margin-bottom: 8px;
+            height: 20px;
+            width: 100%;
+            display: block;
+          }
+          .answer-lines:last-child {
+            margin-bottom: 0;
+          }
+
+          /* Caixas para correspondência */
+          .matching-section {
+            display: flex;
+            gap: 30px;
+            margin: 15px 0;
+          }
+          .matching-column {
+            flex: 1;
+          }
+          .matching-item {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            background: #f9fafb;
+            font-size: 0.9rem;
+          }
+
+          /* Espaços para preenchimento */
+          .fill-blank {
+            display: inline-block;
+            border-bottom: 2px solid #4338ca;
+            min-width: 100px;
+            height: 20px;
+            margin: 0 5px;
+          }
+
+          /* Espaços para desenho */
+          .image-space, .math-space {
+            border: 2px dashed #d1d5db;
+            min-height: 120px;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 6px;
+            background: #fafafa;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 0.85rem;
+          }
+          .math-space {
+            min-height: 80px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+          }
           
           .footer {
             position: absolute;
@@ -690,7 +750,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   const makeContentEditable = (htmlContent: string): string => {
     let editableHtml = htmlContent;
 
-    // Tornar informações básicas editáveis (professor, disciplina, tema, etc.)
+    // Tornar informações básicas editáveis (mas permitir datas)
     editableHtml = editableHtml.replace(
       /<td([^>]*)>([^<]+)<\/td>/g,
       (match, attrs, content) => {
@@ -729,28 +789,38 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '<td$1><span class="editable-field" contenteditable="true">$2</span></td>'
     );
 
-    // Tornar questões editáveis - melhor pattern matching
+    // QUESTÕES - Tornar enunciados editáveis (múltiplos padrões)
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*questao-enunciado[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
-    // Tornar texto de questões editáveis
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*question-text[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
-    // Tornar opções editáveis
+    // QUESTÕES - Tornar perguntas diretamente editáveis (texto direto após o cabeçalho)
+    editableHtml = editableHtml.replace(
+      /(<div[^>]*class="[^"]*question-header[^"]*"[^>]*>Questão \d+<\/div>\s*)([^<]+)(<\/div>|<div)/g,
+      '$1<span class="editable-field" contenteditable="true">$2</span>$3'
+    );
+
+    // OPÇÕES - Tornar opções de múltipla escolha editáveis
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*opcao[^"]*"[^>]*)>(<span[^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*)<\/div>/g,
       '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
     );
 
-    // Tornar opções de questões editáveis (padrão option)
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*option[^"]*"[^>]*)>(<span[^>]*class="[^"]*option-letter[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*)<\/div>/g,
       '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
+    );
+
+    // COLUNAS - Tornar itens das colunas editáveis
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*matching-item[^"]*"[^>]*)>([^<]*)<\/div>/g,
+      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
     // Tornar texto de avaliação editável
@@ -825,6 +895,17 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     // Escola em slides
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*escola[^"]*"[^>]*)>([^<]*)<\/div>/g,
+      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
+    );
+
+    // Keywords e conteúdo de slides
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*keywords[^"]*"[^>]*)>([^<]*)<\/div>/g,
+      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
+    );
+
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*slide-content[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
