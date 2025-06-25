@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -130,7 +131,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     const material = materials.find(m => m.id === selectedMaterial);
     if (!material) return;
 
-    const eventData = {
+    const eventData: Omit<ScheduleEvent, 'id' | 'createdAt'> = {
       materialId: selectedMaterial,
       title,
       subject: material.subject,
@@ -143,7 +144,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       description,
       classroom,
       recurrence: type === 'multiple' ? {
-        frequency: 'weekly',
+        frequency: 'weekly' as const,
         days: selectedDays,
         endDate: endDate
       } : undefined
