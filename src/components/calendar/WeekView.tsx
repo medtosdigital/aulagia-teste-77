@@ -56,7 +56,7 @@ const WeekView: React.FC<WeekViewProps> = ({
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Visão Semanal</h2>
             <p className="text-gray-600">
@@ -66,24 +66,24 @@ const WeekView: React.FC<WeekViewProps> = ({
               }
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
               size="sm"
               onClick={onToggleFullWeek}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <CalendarIcon className="w-4 h-4" />
-              {showFullWeek ? 'A partir de hoje' : 'Semana completa'}
+              <span className="text-xs sm:text-sm">{showFullWeek ? 'A partir de hoje' : 'Semana completa'}</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={onToggleWeekends}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <Settings className="w-4 h-4" />
-              {showWeekends ? 'Ocultar fins de semana' : 'Mostrar fins de semana'}
+              <span className="text-xs sm:text-sm">{showWeekends ? 'Ocultar fins de semana' : 'Mostrar fins de semana'}</span>
             </Button>
           </div>
         </div>
