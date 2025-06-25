@@ -262,8 +262,13 @@ const CalendarPage: React.FC = () => {
             <MonthView
               currentDate={currentDate}
               events={events}
+              showWeekends={showWeekends}
               onDateClick={handleDateClick}
               onEventClick={handleEventClick}
+              onEditEvent={handleEditEvent}
+              onDeleteEvent={handleDeleteEvent}
+              onViewMaterial={handleViewMaterial}
+              onToggleWeekends={() => setShowWeekends(!showWeekends)}
               getEventsForDate={getEventsForDate}
             />
           )}
@@ -272,6 +277,9 @@ const CalendarPage: React.FC = () => {
               currentDate={currentDate}
               events={events}
               onMonthClick={handleMonthClick}
+              onEditEvent={handleEditEvent}
+              onDeleteEvent={handleDeleteEvent}
+              onViewMaterial={handleViewMaterial}
             />
           )}
         </div>

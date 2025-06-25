@@ -1,29 +1,30 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent, MaterialCardHeader } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ScheduleEvent } from '@/services/scheduleService';
-import { materialService } from '@/services/materialService';
+import EventCard from './EventCard';
 
 interface YearViewProps {
   currentDate: Date;
   events: ScheduleEvent[];
   onMonthClick: (month: Date, view: 'month') => void;
+  onEditEvent: (event: ScheduleEvent) => void;
+  onDeleteEvent: (event: ScheduleEvent) => void;
+  onViewMaterial: (event: ScheduleEvent) => void;
 }
 
 const YearView: React.FC<YearViewProps> = ({
   currentDate,
   events,
-  onMonthClick
+  onMonthClick,
+  onEditEvent,
+  onDeleteEvent,
+  onViewMaterial
 }) => {
   const year = currentDate.getFullYear();
   const months = Array.from({ length: 12 }, (_, i) => new Date(year, i, 1));
-
-  const getMaterialTypeFromEvent = (event: ScheduleEvent): 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' => {
-    const material = materialService.getMaterials().find(m => m.id === event.materialId);
-    return (material?.type as 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao') || 'atividade';
-  };
 
   return (
     <div className="space-y-6">
@@ -64,17 +65,20 @@ const YearView: React.FC<YearViewProps> = ({
                 
                 {monthEvents.length > 0 && (
                   <div className="space-y-2">
-                    {monthEvents.slice(0, 3).map(event => (
-                      <Card key={event.id} className="overflow-hidden">
-                        <MaterialCardHeader materialType={getMaterialTypeFromEvent(event)} subject={event.subject} />
-                        <CardContent className="p-2">
-                          <div className="text-xs font-medium truncate">{event.title}</div>
-                        </CardContent>
-                      </Card>
+                    {monthEvents.slice(0, 2).map(event => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        compact={true}
+                        showDate={false}
+                        onEdit={onEditEvent}
+                        onDelete={onDeleteEvent}
+                        onViewMaterial={onViewMaterial}
+                      />
                     ))}
-                    {monthEvents.length > 3 && (
+                    {monthEvents.length > 2 && (
                       <div className="text-xs text-blue-600 font-medium text-center bg-blue-100 p-2 rounded-md">
-                        +{monthEvents.length - 3} mais materiais
+                        +{monthEvents.length - 2} mais materiais
                       </div>
                     )}
                   </div>

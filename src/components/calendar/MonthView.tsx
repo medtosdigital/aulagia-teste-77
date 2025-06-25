@@ -1,25 +1,36 @@
 
 import React from 'react';
-import { Plus } from 'lucide-react';
-import { Card, CardContent, MaterialCardHeader } from '@/components/ui/card';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday } from 'date-fns';
+import { Plus, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, isWeekend } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ScheduleEvent } from '@/services/scheduleService';
-import { materialService } from '@/services/materialService';
+import EventCard from './EventCard';
 
 interface MonthViewProps {
   currentDate: Date;
   events: ScheduleEvent[];
+  showWeekends: boolean;
   onDateClick: (date: Date) => void;
   onEventClick: (event: ScheduleEvent) => void;
+  onEditEvent: (event: ScheduleEvent) => void;
+  onDeleteEvent: (event: ScheduleEvent) => void;
+  onViewMaterial: (event: ScheduleEvent) => void;
+  onToggleWeekends: () => void;
   getEventsForDate: (date: Date) => ScheduleEvent[];
 }
 
 const MonthView: React.FC<MonthViewProps> = ({
   currentDate,
   events,
+  showWeekends,
   onDateClick,
   onEventClick,
+  onEditEvent,
+  onDeleteEvent,
+  onViewMaterial,
+  onToggleWeekends,
   getEventsForDate
 }) => {
   const monthStart = startOfMonth(currentDate);
@@ -31,15 +42,19 @@ const MonthView: React.FC<MonthViewProps> = ({
   let days = [];
   let day = startDate;
 
-  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const weekDays = showWeekends 
+    ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    : ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
 
-  const getMaterialTypeFromEvent = (event: ScheduleEvent): 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' => {
-    const material = materialService.getMaterials().find(m => m.id === event.materialId);
-    return (material?.type as 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao') || 'atividade';
-  };
+  const daysToShow = showWeekends ? 7 : 5;
 
   while (day <= endDate) {
     for (let i = 0; i < 7; i++) {
+      if (!showWeekends && isWeekend(day)) {
+        day = addDays(day, 1);
+        continue;
+      }
+
       const dayEvents = getEventsForDate(day);
       const isCurrentMonth = isSameMonth(day, monthStart);
       const isCurrentDay = isToday(day);
@@ -63,52 +78,65 @@ const MonthView: React.FC<MonthViewProps> = ({
             {format(day, 'd')}
           </div>
           <div className="space-y-1">
-            {dayEvents.slice(0, 2).map(event => (
-              <Card
+            {dayEvents.slice(0, 1).map(event => (
+              <EventCard
                 key={event.id}
-                className="cursor-pointer hover:shadow-sm transition-all overflow-hidden"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEventClick(event);
-                }}
-              >
-                <MaterialCardHeader materialType={getMaterialTypeFromEvent(event)} subject={event.subject} />
-                <CardContent className="p-2">
-                  <div className="text-xs font-medium truncate">{event.startTime} {event.title}</div>
-                </CardContent>
-              </Card>
+                event={event}
+                compact={true}
+                onEdit={onEditEvent}
+                onDelete={onDeleteEvent}
+                onViewMaterial={onViewMaterial}
+              />
             ))}
-            {dayEvents.length > 2 && (
+            {dayEvents.length > 1 && (
               <div className="text-xs text-blue-600 font-medium bg-blue-100 p-1 rounded text-center">
-                +{dayEvents.length - 2} mais
+                +{dayEvents.length - 1} mais
               </div>
             )}
           </div>
         </div>
       );
       day = addDays(day, 1);
+
+      if (days.length === daysToShow) break;
     }
-    rows.push(
-      <div key={day.toString()} className="grid grid-cols-7 gap-0">
-        {days}
-      </div>
-    );
-    days = [];
+    
+    if (days.length > 0) {
+      rows.push(
+        <div key={day.toString()} className={`grid gap-0 ${showWeekends ? 'grid-cols-7' : 'grid-cols-5'}`}>
+          {days}
+        </div>
+      );
+      days = [];
+    }
   }
 
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
-          {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
-        </h2>
-        <p className="text-gray-600">
-          {events.length} material{events.length !== 1 ? 'is' : ''} agendado{events.length !== 1 ? 's' : ''} este mês
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
+            </h2>
+            <p className="text-gray-600">
+              {events.length} material{events.length !== 1 ? 'is' : ''} agendado{events.length !== 1 ? 's' : ''} este mês
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onToggleWeekends}
+            className="flex items-center gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            {showWeekends ? 'Esconder fins de semana' : 'Mostrar fins de semana'}
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-        <div className="grid grid-cols-7 gap-0 border-b border-gray-200">
+        <div className={`grid gap-0 border-b border-gray-200 ${showWeekends ? 'grid-cols-7' : 'grid-cols-5'}`}>
           {weekDays.map(dayName => (
             <div key={dayName} className="p-4 text-center font-bold text-gray-700 bg-gray-50 border-r border-gray-200 last:border-r-0">
               {dayName}

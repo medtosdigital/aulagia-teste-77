@@ -2,11 +2,10 @@
 import React from 'react';
 import { CalendarIcon, Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, MaterialCardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { format, startOfWeek, endOfWeek, addDays, isToday, isSameMonth, isWeekend } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ScheduleEvent } from '@/services/scheduleService';
-import { materialService } from '@/services/materialService';
 import EventCard from './EventCard';
 
 interface WeekViewProps {
@@ -53,11 +52,6 @@ const WeekView: React.FC<WeekViewProps> = ({
   if (!showWeekends) {
     weekDays = weekDays.filter(day => !isWeekend(day));
   }
-
-  const getMaterialTypeFromEvent = (event: ScheduleEvent): 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' => {
-    const material = materialService.getMaterials().find(m => m.id === event.materialId);
-    return (material?.type as 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao') || 'atividade';
-  };
 
   return (
     <div className="space-y-6">
@@ -131,17 +125,14 @@ const WeekView: React.FC<WeekViewProps> = ({
                 {dayEvents
                   .sort((a, b) => a.startTime.localeCompare(b.startTime))
                   .map(event => (
-                    <Card
+                    <EventCard
                       key={event.id}
-                      className="cursor-pointer hover:shadow-md hover:border-blue-300 transition-all group overflow-hidden"
-                      onClick={() => onEventClick(event)}
-                    >
-                      <MaterialCardHeader materialType={getMaterialTypeFromEvent(event)} subject={event.subject} />
-                      <CardContent className="p-3">
-                        <div className="font-medium text-gray-900 text-sm truncate mb-1">{event.title}</div>
-                        <div className="text-xs text-gray-600 font-medium">{event.startTime}</div>
-                      </CardContent>
-                    </Card>
+                      event={event}
+                      compact={true}
+                      onEdit={onEditEvent}
+                      onDelete={onDeleteEvent}
+                      onViewMaterial={onViewMaterial}
+                    />
                   ))}
                 
                 <button
