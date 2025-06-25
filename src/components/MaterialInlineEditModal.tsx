@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Save, Edit3, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -750,11 +751,11 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   const makeContentEditable = (htmlContent: string): string => {
     let editableHtml = htmlContent;
 
-    // Tornar informações básicas editáveis (mas permitir datas)
+    // Tornar informações básicas editáveis (incluindo datas)
     editableHtml = editableHtml.replace(
       /<td([^>]*)>([^<]+)<\/td>/g,
       (match, attrs, content) => {
-        // Não tornar editável se contém elementos não editáveis (mas permitir datas)
+        // Não tornar editável se contém elementos não editáveis
         if (content.includes('aulagia.com.br') || 
             content.includes('AulagIA') || 
             content.includes('_____')) {
@@ -769,7 +770,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     editableHtml = editableHtml.replace(
       /<h([1-6])([^>]*)>([^<]*)<\/h([1-6])>/g,
       (match, tag1, attrs, content, tag2) => {
-        if (content.includes('AulagIA') || content.includes('AVALIAÇÃO') || content.includes('ATIVIDADE')) return match;
+        if content.includes('AulagIA') || content.includes('AVALIAÇÃO') || content.includes('ATIVIDADE')) return match;
         return `<h${tag1}${attrs}><span class="editable-field" contenteditable="true">${content}</span></h${tag1}>`;
       }
     );
@@ -806,15 +807,37 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '$1<span class="editable-field" contenteditable="true">$2</span>$3'
     );
 
-    // OPÇÕES - Tornar opções de múltipla escolha editáveis
+    // CORRIGIR - Tornar texto das questões editável (múltiplos formatos)
     editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*opcao[^"]*"[^>]*)>(<span[^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*)<\/div>/g,
+      /(\s*)([^<>]+?)(\s*<div[^>]*class="[^"]*opcao[^"]*")/g,
+      (match, before, questionText, after) => {
+        if (questionText.trim() && !questionText.includes('Questão') && questionText.length > 10) {
+          return `${before}<span class="editable-field" contenteditable="true">${questionText}</span>${after}`;
+        }
+        return match;
+      }
+    );
+
+    // OPÇÕES - Tornar opções de múltipla escolha editáveis (padrão melhorado)
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*opcao[^"]*"[^>]*)>\s*(<span[^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*?)\s*<\/div>/g,
       '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
     );
 
     editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*option[^"]*"[^>]*)>(<span[^>]*class="[^"]*option-letter[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*)<\/div>/g,
+      /<div([^>]*class="[^"]*option[^"]*"[^>]*)>\s*(<span[^>]*class="[^"]*option-letter[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*?)\s*<\/div>/g,
       '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
+    );
+
+    // OPÇÕES - Capturar opções em formato direto (A) texto, B) texto, etc.
+    editableHtml = editableHtml.replace(
+      /([A-E]\))\s*([^<\n]+)/g,
+      (match, letter, text) => {
+        if (text.trim().length > 3) {
+          return `${letter} <span class="editable-field" contenteditable="true">${text.trim()}</span>`;
+        }
+        return match;
+      }
     );
 
     // COLUNAS - Tornar itens das colunas editáveis
@@ -939,14 +962,8 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
 
     // REMOVER editabilidade do texto "Sua aula com toque mágico" especificamente
     editableHtml = editableHtml.replace(
-      /<span class="editable-field" contenteditable="true">Sua aula com toque mágico<\/span>/g,
-      'Sua aula com toque mágico'
-    );
-
-    // REMOVER editabilidade de qualquer elemento que contenha "Sua aula com toque mágico"
-    editableHtml = editableHtml.replace(
-      /<([^>]+)><span class="editable-field" contenteditable="true">([^<]*Sua aula com toque mágico[^<]*)<\/span><\/([^>]+)>/g,
-      '<$1>$2</$3>'
+      /<span class="editable-field" contenteditable="true">([^<]*Sua aula com toque mágico[^<]*)<\/span>/g,
+      '$1'
     );
 
     return editableHtml;
