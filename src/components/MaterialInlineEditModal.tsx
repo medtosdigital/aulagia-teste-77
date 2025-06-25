@@ -82,11 +82,9 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     
     return `
       <div class="page ${pageClass}">
-        <!-- Formas decorativas -->
         <div class="shape-circle purple"></div>
         <div class="shape-circle blue"></div>
 
-        <!-- Cabeçalho AulagIA -->
         <div class="header">
           <div class="logo-container">
             <div class="logo">
@@ -102,7 +100,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
           </div>
         </div>
 
-        <!-- Rodapé -->
         <div class="footer">
           ${getFooterText()}
         </div>
@@ -512,7 +509,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             pointer-events: none !important;
           }
 
-          /* Linhas de resposta para questões abertas */
           .answer-lines {
             border-bottom: 1px solid #d1d5db;
             margin-bottom: 8px;
@@ -524,7 +520,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             margin-bottom: 0;
           }
 
-          /* Caixas para correspondência */
           .matching-section {
             display: flex;
             gap: 30px;
@@ -542,7 +537,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             font-size: 0.9rem;
           }
 
-          /* Espaços para preenchimento */
           .fill-blank {
             display: inline-block;
             border-bottom: 2px solid #4338ca;
@@ -551,7 +545,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             margin: 0 5px;
           }
 
-          /* Espaços para desenho */
           .image-space, .math-space {
             border: 2px dashed #d1d5db;
             min-height: 120px;
@@ -592,7 +585,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             pointer-events: none !important;
           }
 
-          /* Estilos para campos editáveis */
           .editable-field {
             transition: all 0.2s ease;
             cursor: text;
@@ -613,7 +605,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
           }
           
-          /* Plano de aula específico */
           .section {
             margin-bottom: 25px;
             page-break-inside: avoid;
@@ -775,7 +766,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
         </style>
         <script>
           document.addEventListener('DOMContentLoaded', function() {
-            // Add delete buttons to questions
             const questions = document.querySelectorAll('.questao-container, .question');
             questions.forEach((question, index) => {
               const deleteBtn = document.createElement('button');
@@ -787,7 +777,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
                 e.stopPropagation();
                 if (confirm('Tem certeza que deseja excluir esta questão?')) {
                   question.remove();
-                  // Renumber remaining questions
                   const remainingQuestions = document.querySelectorAll('.questao-container, .question');
                   remainingQuestions.forEach((q, i) => {
                     const questionHeader = q.querySelector('.questao-numero, .question-header');
@@ -795,9 +784,28 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
                       questionHeader.textContent = 'Questão ' + (i + 1);
                     }
                   });
+                  
+                  if (window.parent && window.parent.syncContentChanges) {
+                    window.parent.syncContentChanges(document.body.innerHTML);
+                  }
                 }
               };
               question.appendChild(deleteBtn);
+            });
+
+            const editableFields = document.querySelectorAll('.editable-field');
+            editableFields.forEach(field => {
+              field.addEventListener('input', function() {
+                if (window.parent && window.parent.syncContentChanges) {
+                  window.parent.syncContentChanges(document.body.innerHTML);
+                }
+              });
+              
+              field.addEventListener('blur', function() {
+                if (window.parent && window.parent.syncContentChanges) {
+                  window.parent.syncContentChanges(document.body.innerHTML);
+                }
+              });
             });
           });
         </script>
@@ -812,22 +820,18 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   const makeContentEditable = (htmlContent: string): string => {
     let editableHtml = htmlContent;
 
-    // Tornar informações básicas editáveis (incluindo datas)
     editableHtml = editableHtml.replace(
       /<td([^>]*)>([^<]+)<\/td>/g,
       (match, attrs, content) => {
-        // Não tornar editável se contém elementos não editáveis
         if (content.includes('aulagia.com.br') || 
             content.includes('AulagIA') || 
             content.includes('_____')) {
           return match;
         }
-        // Tornar TODAS as células editáveis, incluindo datas
         return `<td${attrs}><span class="editable-field" contenteditable="true">${content}</span></td>`;
       }
     );
 
-    // Tornar títulos editáveis (exceto AulagIA)
     editableHtml = editableHtml.replace(
       /<h([1-6])([^>]*)>([^<]*)<\/h([1-6])>/g,
       (match, tag1, attrs, content, tag2) => {
@@ -836,7 +840,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
-    // Tornar objetivos de aprendizagem editáveis
     editableHtml = editableHtml.replace(
       /<li([^>]*)>([^<]*)<\/li>/g,
       (match, attrs, content) => {
@@ -845,13 +848,11 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
-    // Tornar células da tabela de desenvolvimento editáveis
     editableHtml = editableHtml.replace(
       /<td([^>]*class="[^"]*development[^"]*"[^>]*)>([^<]*)<\/td>/g,
       '<td$1><span class="editable-field" contenteditable="true">$2</span></td>'
     );
 
-    // QUESTÕES - Tornar enunciados editáveis (múltiplos padrões)
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*questao-enunciado[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
@@ -862,62 +863,53 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
-    // QUESTÕES - Tornar perguntas diretamente editáveis (texto direto após o cabeçalho)
     editableHtml = editableHtml.replace(
       /(<div[^>]*class="[^"]*question-header[^"]*"[^>]*>Questão \d+<\/div>\s*)([^<]+)(<\/div>|<div)/g,
       '$1<span class="editable-field" contenteditable="true">$2</span>$3'
     );
 
-    // MELHORAR - Edição de questões dentro de containers
     editableHtml = editableHtml.replace(
       /(<div[^>]*class="[^"]*questao-container[^"]*"[^>]*>[\s\S]*?<div[^>]*class="[^"]*questao-numero[^"]*"[^>]*>Questão \d+<\/div>\s*)([^<]+?)(\s*<div)/g,
       '$1<span class="editable-field" contenteditable="true">$2</span>$3'
     );
 
-    // QUESTÕES V/F - Tornar texto de questões Verdadeiro/Falso editáveis
     editableHtml = editableHtml.replace(
       /(Verdadeiro|Falso)(?=\s*<\/)/g,
       '<span class="editable-field" contenteditable="true">$1</span>'
     );
 
-    // QUESTÕES V/F - Padrão específico para questões com ( )
     editableHtml = editableHtml.replace(
       /(\(\s*\)\s*)(Verdadeiro|Falso)/g,
       '$1<span class="editable-field" contenteditable="true">$2</span>'
     );
 
-    // OPÇÕES MÚLTIPLA ESCOLHA - Padrão mais abrangente e preciso
-    // Primeiro, proteger spans já editáveis para não duplicar
+    console.log('Processing multiple choice options...');
+    
     editableHtml = editableHtml.replace(
       /(<span[^>]*class="[^"]*editable-field[^"]*"[^>]*>[^<]*<\/span>)/g,
-      '{{PROTECTED_SPAN_$1}}'
+      '{{PROTECTED_SPAN}}'
     );
 
-    // Padrão 1: <div class="opcao"><span class="opcao-letra">A)</span> Texto da opção</div>
     editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*opcao[^"]*"[^>]*>)\s*<span([^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]+?)\s*<\/div>/g,
+      /<div([^>]*class="[^"]*opcao[^"]*"[^>]*>)\s*(<span[^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]+?)\s*<\/div>/g,
       '<div$1$2 <span class="editable-field" contenteditable="true">$3</span></div>'
     );
 
-    // Padrão 2: <div class="option"><span class="option-letter">A)</span> Texto da opção</div>
     editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*option[^"]*"[^>]*>)\s*<span([^>]*class="[^"]*option-letter[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]+?)\s*<\/div>/g,
+      /<div([^>]*class="[^"]*option[^"]*"[^>]*>)\s*(<span[^>]*class="[^"]*option-letter[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]+?)\s*<\/div>/g,
       '<div$1$2 <span class="editable-field" contenteditable="true">$3</span></div>'
     );
 
-    // Padrão 3: A) Texto da opção (formato direto sem divs)
     editableHtml = editableHtml.replace(
-      /([A-E]\))\s+([^<\n]+?)(\s*(?:<br|<\/|$))/g,
-      (match, letter, text, after) => {
-        // Só aplicar se o texto não está já em uma tag editable e tem conteúdo substancial
+      /^(\s*)([A-E]\))\s+([^<\n]+?)$/gm,
+      (match, indent, letter, text) => {
         if (text.trim().length > 2 && !text.includes('editable-field') && !text.includes('<span')) {
-          return `${letter} <span class="editable-field" contenteditable="true">${text.trim()}</span>${after}`;
+          return `${indent}${letter} <span class="editable-field" contenteditable="true">${text.trim()}</span>`;
         }
         return match;
       }
     );
 
-    // Padrão 4: <strong>A)</strong> Texto da opção
     editableHtml = editableHtml.replace(
       /(<(?:strong|b)>[A-E]\)<\/(?:strong|b)>)\s*([^<\n]+)/g,
       (match, letter, text) => {
@@ -928,65 +920,64 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
-    // Padrão 5: Formato em parágrafos <p>A) Texto</p>
     editableHtml = editableHtml.replace(
       /<p([^>]*)>([A-E]\))\s*([^<]+)<\/p>/g,
       '<p$1>$2 <span class="editable-field" contenteditable="true">$3</span></p>'
     );
 
-    // Padrão 6: Opções dentro de listas <li>A) Texto</li>
     editableHtml = editableHtml.replace(
       /<li([^>]*)>([A-E]\))\s*([^<]+)<\/li>/g,
       '<li$1>$2 <span class="editable-field" contenteditable="true">$3</span></li>'
     );
 
-    // Restaurar spans protegidos
     editableHtml = editableHtml.replace(
-      /\{\{PROTECTED_SPAN_(.+?)\}\}/g,
-      '$1'
+      /(<br\s*\/?>)\s*([A-E]\))\s+([^<]+?)(?=\s*(?:<br|<\/|$))/g,
+      (match, br, letter, text) => {
+        if (text.trim().length > 2 && !text.includes('editable-field')) {
+          return `${br}${letter} <span class="editable-field" contenteditable="true">${text.trim()}</span>`;
+        }
+        return match;
+      }
     );
 
-    // COLUNAS - Tornar itens das colunas editáveis
+    editableHtml = editableHtml.replace(
+      /\{\{PROTECTED_SPAN\}\}/g,
+      (match, p1) => p1 || match
+    );
+
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*matching-item[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
-    // Tornar texto de avaliação editável
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*evaluation-text[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
-    // INSTRUÇÕES - Tornar instruções de atividades e avaliações editáveis
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*instructions[^"]*"[^>]*)>(<strong>[^<]*<\/strong><br>)([^<]*)<\/div>/g,
       '<div$1>$2<span class="editable-field" contenteditable="true">$3</span></div>'
     );
 
-    // INSTRUÇÕES - Texto direto nas instruções (Leia atentamente...)
     editableHtml = editableHtml.replace(
       /(Leia atentamente cada questão e responda de acordo com o solicitado\.|Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa\.)/g,
       '<span class="editable-field" contenteditable="true">$1</span>'
     );
 
-    // RECURSOS DIDÁTICOS - Tornar texto após o título editável
     editableHtml = editableHtml.replace(
       /(<h3[^>]*>RECURSOS DIDÁTICOS<\/h3>\s*)([^<]+)/g,
       '$1<span class="editable-field" contenteditable="true">$2</span>'
     );
 
-    // AVALIAÇÃO - Tornar texto após o título editável
     editableHtml = editableHtml.replace(
       /(<h3[^>]*>AVALIAÇÃO<\/h3>\s*)([^<]+)/g,
       '$1<span class="editable-field" contenteditable="true">$2</span>'
     );
 
-    // Tornar parágrafos simples editáveis (para seções de recursos e avaliação)
     editableHtml = editableHtml.replace(
       /<p([^>]*)>([^<]+)<\/p>/g,
       (match, attrs, content) => {
-        // Não tornar editável se contém elementos específicos ou "Sua aula com toque mágico"
         if (content.includes('aulagia.com.br') || 
             content.includes('AulagIA') || 
             content.includes('Sua aula com toque mágico')) {
@@ -996,8 +987,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
-    // SLIDES - Tornar todo o conteúdo editável exceto logo AulagIA
-    // Títulos de slides
     editableHtml = editableHtml.replace(
       /<h1([^>]*)>([^<]*)<\/h1>/g,
       (match, attrs, content) => {
@@ -1006,7 +995,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
-    // Subtítulos de slides
     editableHtml = editableHtml.replace(
       /<h2([^>]*)>([^<]*)<\/h2>/g,
       (match, attrs, content) => {
@@ -1015,31 +1003,26 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
-    // Texto de disciplina e série em slides
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*subtitle[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
-    // Texto "Apresentado por:"
     editableHtml = editableHtml.replace(
       /Apresentado por:/g,
       '<span class="editable-field" contenteditable="true">Apresentado por:</span>'
     );
 
-    // Nome do professor em slides
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*professor[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
-    // Escola em slides
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*escola[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
-    // Keywords e conteúdo de slides
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*keywords[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
@@ -1050,7 +1033,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
-    // Texto direto após RECURSOS DIDÁTICOS
     editableHtml = editableHtml.replace(
       /(RECURSOS DIDÁTICOS<\/h3>\s*)([\s\S]*?)(<h3|<div class="footer"|$)/g,
       (match, title, content, after) => {
@@ -1061,7 +1043,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
-    // Texto direto após AVALIAÇÃO
     editableHtml = editableHtml.replace(
       /(AVALIAÇÃO<\/h3>\s*)([\s\S]*?)(<div class="footer"|$)/g,
       (match, title, content, after) => {
@@ -1072,7 +1053,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
-    // REMOVER editabilidade do texto "Sua aula com toque mágico" especificamente
     editableHtml = editableHtml.replace(
       /<span class="editable-field" contenteditable="true">([^<]*Sua aula com toque mágico[^<]*)<\/span>/g,
       '$1'
@@ -1195,8 +1175,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             />
           </div>
         </div>
-      );
-    } catch (error) {
+      } catch (error) {
       console.error('Erro ao renderizar template:', error);
       return (
         <div className="error-message p-4 text-center">
@@ -1208,13 +1187,11 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
 
   if (!editedMaterial) return null;
 
-  // Layout Mobile - igual ao MaterialModal
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={onClose}>
         <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl border-0 p-0 bg-white">
           <div className="h-full flex flex-col">
-            {/* Header */}
             <SheetHeader className="p-4 pb-3 border-b bg-white rounded-t-3xl flex-shrink-0">
               <SheetTitle className="text-lg font-bold text-center">
                 {editedMaterial.title}
@@ -1224,7 +1201,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
               </div>
             </SheetHeader>
             
-            {/* Content Preview - Scaled down to fit without scrolling */}
             <div className="flex-1 p-4 overflow-hidden">
               <div className="h-full border rounded-2xl bg-gray-50 overflow-hidden shadow-inner">
                 <div 
@@ -1236,7 +1212,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
               </div>
             </div>
             
-            {/* Action Buttons */}
             <div className="p-4 space-y-3 bg-white border-t flex-shrink-0 rounded-b-3xl">
               <div className="grid grid-cols-2 gap-2">
                 <Button
@@ -1265,7 +1240,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     );
   }
 
-  // Layout Desktop - mantém o design atual
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex rounded-2xl">
