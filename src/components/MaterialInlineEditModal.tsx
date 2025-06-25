@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, Edit3, ChevronLeft, ChevronRight, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -27,20 +27,76 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   const [editedMaterial, setEditedMaterial] = useState<GeneratedMaterial | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [currentHtmlContent, setCurrentHtmlContent] = useState<string>('');
 
   useEffect(() => {
     if (material && open) {
       setEditedMaterial(JSON.parse(JSON.stringify(material)));
       setCurrentPage(0);
+      setCurrentHtmlContent('');
     }
   }, [material, open]);
+
+  // Function to sync content changes from iframe
+  const syncContentChanges = (htmlContent: string) => {
+    console.log('Syncing content changes from iframe');
+    setCurrentHtmlContent(htmlContent);
+    
+    if (editedMaterial) {
+      // Extract the content from the HTML and update the material
+      const updatedMaterial = { ...editedMaterial };
+      
+      // For now, we'll store the raw HTML content
+      // In a more sophisticated implementation, you might parse this back to structured data
+      if (typeof updatedMaterial.content === 'string') {
+        updatedMaterial.content = htmlContent;
+      } else {
+        // If content is an object, we need to preserve its structure
+        // but update the rendered content
+        updatedMaterial.content = {
+          ...updatedMaterial.content,
+          renderedHtml: htmlContent
+        };
+      }
+      
+      setEditedMaterial(updatedMaterial);
+      console.log('Material content updated with changes');
+    }
+  };
+
+  // Make the sync function available to iframe
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).syncContentChanges = syncContentChanges;
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).syncContentChanges;
+      }
+    };
+  }, [editedMaterial]);
 
   const handleSave = async () => {
     if (!editedMaterial) return;
 
     setLoading(true);
     try {
-      const success = materialService.updateMaterial(editedMaterial.id, editedMaterial);
+      // If we have HTML content changes, make sure they're reflected in the material
+      let materialToSave = editedMaterial;
+      
+      if (currentHtmlContent) {
+        materialToSave = {
+          ...editedMaterial,
+          content: typeof editedMaterial.content === 'string' 
+            ? currentHtmlContent 
+            : { ...editedMaterial.content, renderedHtml: currentHtmlContent }
+        };
+        console.log('Saving material with updated HTML content');
+      }
+
+      const success = materialService.updateMaterial(materialToSave.id, materialToSave);
       if (success) {
         toast.success('Material atualizado com sucesso!');
         onSave();
@@ -1097,6 +1153,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       if (pages.length === 1) {
         return (
           <iframe
+            ref={iframeRef}
             srcDoc={enhanceHtmlWithNewTemplate(makeContentEditable(pages[0]))}
             style={{
               width: '100%',
@@ -1183,6 +1240,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
 
           <div className="flex-1 overflow-hidden">
             <iframe
+              ref={iframeRef}
               srcDoc={enhanceHtmlWithNewTemplate(makeContentEditable(pages[currentPage]))}
               style={{
                 width: '100%',
