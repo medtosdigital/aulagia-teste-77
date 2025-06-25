@@ -1,4 +1,3 @@
-
 export interface ScheduleEvent {
   id: string;
   materialId: string;
@@ -99,42 +98,54 @@ class ScheduleService {
     const expanded: ScheduleEvent[] = [];
     const { frequency, days, endDate: recurrenceEnd } = event.recurrence;
     
-    let currentDate = new Date(event.startDate);
+    // Mapear dias da semana para números (0 = domingo, 1 = segunda, etc.)
+    const dayMap: { [key: string]: number } = {
+      'sunday': 0,
+      'monday': 1,
+      'tuesday': 2,
+      'wednesday': 3,
+      'thursday': 4,
+      'friday': 5,
+      'saturday': 6
+    };
     
-    while (currentDate <= recurrenceEnd && currentDate <= endDate) {
+    // Começar a partir da data de início do evento
+    let currentDate = new Date(event.startDate);
+    currentDate.setHours(0, 0, 0, 0);
+    
+    const endDateLimit = new Date(Math.min(recurrenceEnd.getTime(), endDate.getTime()));
+    
+    while (currentDate <= endDateLimit) {
+      // Verificar se a data atual está dentro do range solicitado
       if (currentDate >= startDate) {
-        const expandedEvent: ScheduleEvent = {
-          ...event,
-          id: `${event.id}-${currentDate.getTime()}`,
-          startDate: new Date(currentDate),
-          endDate: new Date(currentDate)
-        };
-        expanded.push(expandedEvent);
+        // Para aulas semanais com dias específicos
+        if (frequency === 'weekly' && days && days.length > 0) {
+          const currentDayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+          
+          if (days.includes(currentDayName)) {
+            const expandedEvent: ScheduleEvent = {
+              ...event,
+              id: `${event.id}-${currentDate.getTime()}`,
+              startDate: new Date(currentDate),
+              endDate: new Date(currentDate)
+            };
+            expanded.push(expandedEvent);
+          }
+        }
+        // Para outras frequências
+        else if (frequency === 'daily') {
+          const expandedEvent: ScheduleEvent = {
+            ...event,
+            id: `${event.id}-${currentDate.getTime()}`,
+            startDate: new Date(currentDate),
+            endDate: new Date(currentDate)
+          };
+          expanded.push(expandedEvent);
+        }
       }
       
-      // Avançar para a próxima data baseada na frequência
-      if (frequency === 'daily') {
-        currentDate.setDate(currentDate.getDate() + 1);
-      } else if (frequency === 'weekly') {
-        if (days && days.length > 0) {
-          // Lógica para dias específicos da semana
-          let found = false;
-          for (let i = 1; i <= 7 && !found; i++) {
-            const nextDate = new Date(currentDate);
-            nextDate.setDate(currentDate.getDate() + i);
-            const dayName = nextDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-            if (days.includes(dayName)) {
-              currentDate = nextDate;
-              found = true;
-            }
-          }
-          if (!found) break;
-        } else {
-          currentDate.setDate(currentDate.getDate() + 7);
-        }
-      } else if (frequency === 'monthly') {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-      }
+      // Avançar para o próximo dia
+      currentDate.setDate(currentDate.getDate() + 1);
     }
     
     return expanded;

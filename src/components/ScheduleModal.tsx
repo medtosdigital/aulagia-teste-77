@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -123,8 +122,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       return;
     }
 
-    if (type === 'multiple' && isRecurring && selectedDays.length === 0 && frequency === 'weekly') {
-      toast.error('Selecione pelo menos um dia da semana');
+    if (type === 'multiple' && selectedDays.length === 0) {
+      toast.error('Para múltiplas aulas, selecione pelo menos um dia da semana');
       return;
     }
 
@@ -143,10 +142,10 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       endTime,
       description,
       classroom,
-      recurrence: (type === 'multiple' && isRecurring) ? {
-        frequency,
-        days: frequency === 'weekly' ? selectedDays : undefined,
-        endDate: recurrenceEndDate
+      recurrence: type === 'multiple' ? {
+        frequency: 'weekly',
+        days: selectedDays,
+        endDate: endDate
       } : undefined
     };
 
@@ -229,7 +228,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
                 onClick={() => setType('multiple')}
               >
                 <h4 className="font-medium">Múltiplas Aulas</h4>
-                <p className="text-sm text-gray-600">Série de aulas com período definido</p>
+                <p className="text-sm text-gray-600">Série de aulas em dias específicos da semana</p>
               </div>
             </div>
           </div>
@@ -257,28 +256,26 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
               </Popover>
             </div>
 
-            {type === 'multiple' && (
-              <div className="space-y-2">
-                <Label>Data de Fim</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(endDate, "dd/MM/yyyy")}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={(date) => date && setEndDate(date)}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Data de Fim</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(endDate, "dd/MM/yyyy")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={(date) => date && setEndDate(date)}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
           {/* Horários */}
@@ -311,78 +308,38 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             </div>
           </div>
 
-          {/* Recorrência para múltiplas aulas */}
+          {/* Dias da Semana para Múltiplas Aulas */}
           {type === 'multiple' && (
             <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="recurring"
-                  checked={isRecurring}
-                  onCheckedChange={setIsRecurring}
-                />
-                <Label htmlFor="recurring">Aulas recorrentes</Label>
-              </div>
-
-              {isRecurring && (
-                <div className="space-y-4 pl-6 border-l-2 border-blue-200">
-                  <div className="space-y-2">
-                    <Label>Frequência</Label>
-                    <Select value={frequency} onValueChange={(value: any) => setFrequency(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="daily">Diário</SelectItem>
-                        <SelectItem value="weekly">Semanal</SelectItem>
-                        <SelectItem value="monthly">Mensal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {frequency === 'weekly' && (
-                    <div className="space-y-2">
-                      <Label>Dias da Semana</Label>
-                      <div className="grid grid-cols-4 gap-2">
-                        {weekDays.map(day => (
-                          <div
-                            key={day.value}
-                            className={cn(
-                              "p-2 text-center text-sm rounded cursor-pointer transition-colors",
-                              selectedDays.includes(day.value)
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            )}
-                            onClick={() => handleDayToggle(day.value)}
-                          >
-                            {day.label}
-                          </div>
-                        ))}
-                      </div>
+              <div className="space-y-2">
+                <Label>Dias da Semana</Label>
+                <p className="text-sm text-gray-600">
+                  Selecione os dias da semana que as aulas irão ocorrer
+                </p>
+                <div className="grid grid-cols-4 gap-2">
+                  {weekDays.map(day => (
+                    <div
+                      key={day.value}
+                      className={cn(
+                        "p-3 text-center text-sm rounded-lg cursor-pointer transition-colors border",
+                        selectedDays.includes(day.value)
+                          ? "bg-blue-500 text-white border-blue-500"
+                          : "bg-gray-50 text-gray-600 hover:bg-gray-100 border-gray-200"
+                      )}
+                      onClick={() => handleDayToggle(day.value)}
+                    >
+                      {day.label}
                     </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label>Fim da Recorrência</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {format(recurrenceEndDate, "dd/MM/yyyy")}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={recurrenceEndDate}
-                          onSelect={(date) => date && setRecurrenceEndDate(date)}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                  ))}
                 </div>
-              )}
+                {selectedDays.length > 0 && (
+                  <div className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                    Selecionados: {selectedDays.map(day => 
+                      weekDays.find(d => d.value === day)?.label
+                    ).join(', ')}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
