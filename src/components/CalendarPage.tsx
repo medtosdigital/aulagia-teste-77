@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, MapPin, BookOpen, Edit3, Trash2, GraduationCap, FileText, Eye, Download, Printer } from 'lucide-react';
+import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, MapPin, BookOpen, Edit3, Trash2, GraduationCap, FileText, Eye, Download, Printer, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, MaterialCardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, addYears, isSameMonth, isSameDay, isToday, startOfDay, endOfDay, startOfYear, endOfYear, getWeek, getDaysInMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, addYears, isSameMonth, isSameDay, isToday, startOfDay, endOfDay, startOfYear, endOfYear, getWeek, getDaysInMonth, isWeekend } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { materialService } from '@/services/materialService';
@@ -23,6 +23,8 @@ const CalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [materialModalOpen, setMaterialModalOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
+  const [showFullWeek, setShowFullWeek] = useState(false);
+  const [showWeekends, setShowWeekends] = useState(false);
 
   useEffect(() => {
     loadEvents();
@@ -37,8 +39,14 @@ const CalendarPage: React.FC = () => {
         endDate = endOfDay(currentDate);
         break;
       case 'week':
-        startDate = startOfWeek(currentDate, { locale: ptBR });
-        endDate = endOfWeek(currentDate, { locale: ptBR });
+        if (showFullWeek) {
+          startDate = startOfWeek(currentDate, { locale: ptBR });
+          endDate = endOfWeek(currentDate, { locale: ptBR });
+        } else {
+          const today = new Date();
+          startDate = startOfDay(today);
+          endDate = endOfWeek(today, { locale: ptBR });
+        }
         break;
       case 'month':
         startDate = startOfWeek(startOfMonth(currentDate), { locale: ptBR });
@@ -171,9 +179,15 @@ const CalendarPage: React.FC = () => {
       case 'day':
         return format(currentDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
       case 'week':
-        const weekStart = startOfWeek(currentDate, { locale: ptBR });
-        const weekEnd = endOfWeek(currentDate, { locale: ptBR });
-        return `${format(weekStart, "dd/MM", { locale: ptBR })} - ${format(weekEnd, "dd/MM/yyyy", { locale: ptBR })}`;
+        if (showFullWeek) {
+          const weekStart = startOfWeek(currentDate, { locale: ptBR });
+          const weekEnd = endOfWeek(currentDate, { locale: ptBR });
+          return `${format(weekStart, "dd/MM", { locale: ptBR })} - ${format(weekEnd, "dd/MM/yyyy", { locale: ptBR })}`;
+        } else {
+          const today = new Date();
+          const weekEnd = endOfWeek(today, { locale: ptBR });
+          return `A partir de hoje - ${format(weekEnd, "dd/MM/yyyy", { locale: ptBR })}`;
+        }
       case 'month':
         return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
       case 'year':
@@ -434,19 +448,62 @@ const CalendarPage: React.FC = () => {
   };
 
   const renderWeekView = () => {
-    const weekStart = startOfWeek(currentDate, { locale: ptBR });
-    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    let weekDays: Date[];
+    
+    if (showFullWeek) {
+      // Semana completa tradicional (domingo a sábado)
+      const weekStart = startOfWeek(currentDate, { locale: ptBR });
+      weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    } else {
+      // Semana a partir de hoje
+      const today = new Date();
+      const endOfCurrentWeek = endOfWeek(today, { locale: ptBR });
+      const daysUntilEndOfWeek = Math.ceil((endOfCurrentWeek.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      weekDays = Array.from({ length: daysUntilEndOfWeek }, (_, i) => addDays(today, i));
+    }
+
+    // Filtrar fins de semana se necessário
+    if (!showWeekends) {
+      weekDays = weekDays.filter(day => !isWeekend(day));
+    }
 
     return (
       <div className="space-y-6">
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Visão Semanal</h2>
-          <p className="text-gray-600">
-            {format(weekStart, "dd/MM", { locale: ptBR })} - {format(addDays(weekStart, 6), "dd/MM/yyyy", { locale: ptBR })}
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Visão Semanal</h2>
+              <p className="text-gray-600">
+                {showFullWeek 
+                  ? `${format(weekDays[0], "dd/MM", { locale: ptBR })} - ${format(weekDays[weekDays.length - 1], "dd/MM/yyyy", { locale: ptBR })}`
+                  : `A partir de hoje - ${format(weekDays[weekDays.length - 1], "dd/MM/yyyy", { locale: ptBR })}`
+                }
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFullWeek(!showFullWeek)}
+                className="flex items-center gap-2"
+              >
+                <Calendar className="w-4 h-4" />
+                {showFullWeek ? 'A partir de hoje' : 'Semana completa'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowWeekends(!showWeekends)}
+                className="flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                {showWeekends ? 'Ocultar fins de semana' : 'Mostrar fins de semana'}
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+        <div className={`grid grid-cols-1 gap-4 ${weekDays.length <= 5 ? 'lg:grid-cols-5' : weekDays.length === 6 ? 'lg:grid-cols-6' : 'lg:grid-cols-7'}`}>
           {weekDays.map(day => {
             const dayEvents = getEventsForDate(day);
             const isCurrentDay = isToday(day);
