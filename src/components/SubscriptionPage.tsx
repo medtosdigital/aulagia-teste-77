@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown, Brain, Presentation, ClipboardList, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -37,8 +36,8 @@ const SubscriptionPage = () => {
         'Acesso aos templates básicos'
       ],
       materialTypes: [
-        'Planos de Aula básicos com IA',
-        'Atividades simples com IA'
+        'Planos de Aula básicos',
+        'Atividades simples'
       ],
       limitations: [
         'Sem download em Word/PPT',
@@ -63,10 +62,10 @@ const SubscriptionPage = () => {
         'Histórico completo'
       ],
       materialTypes: [
-        'Planos de Aula completos com IA',
-        'Slides interativos com IA',
-        'Atividades diversificadas com IA',
-        'Avaliações personalizadas com IA'
+        'Planos de Aula completos',
+        'Slides interativos',
+        'Atividades diversificadas',
+        'Avaliações personalizadas'
       ],
       limitations: [],
       color: 'from-blue-500 to-purple-600',
@@ -90,10 +89,10 @@ const SubscriptionPage = () => {
         'Ideal para grupos de professores ou instituições'
       ],
       materialTypes: [
-        'Planos de Aula colaborativos com IA',
-        'Slides padronizados com IA',
-        'Atividades alinhadas com IA',
-        'Avaliações coordenadas com IA',
+        'Planos de Aula colaborativos',
+        'Slides padronizados',
+        'Atividades alinhadas',
+        'Avaliações coordenadas',
         'Banco de materiais compartilhado'
       ],
       limitations: [],
@@ -334,11 +333,11 @@ const SubscriptionPage = () => {
                     )}
                   </div>
 
-                  {/* Material Types with IA */}
+                  {/* Material Types */}
                   <div className="mb-4">
                     <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
                       <Brain className="w-4 h-4 text-blue-600 mr-2" />
-                      Materiais com IA
+                      Tipos de Materiais
                     </h4>
                     <div className="space-y-2">
                       {plan.materialTypes.map((materialType, index) => {
