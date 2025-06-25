@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, MapPin, BookOpen, Edit3, Trash2, GraduationCap, FileText, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, MaterialCardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, addYears, isSameMonth, isSameDay, isToday, startOfDay, endOfDay, startOfYear, endOfYear, getWeek, getDaysInMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
+import { materialService } from '@/services/materialService';
 import ScheduleModal from './ScheduleModal';
 import { toast } from 'sonner';
 
@@ -120,6 +120,11 @@ const CalendarPage: React.FC = () => {
     }
   };
 
+  const getMaterialTypeFromEvent = (event: ScheduleEvent): 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' => {
+    const material = materialService.getMaterials().find(m => m.id === event.materialId);
+    return (material?.type as 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao') || 'atividade';
+  };
+
   const getSubjectColor = (subject: string) => {
     const colors = {
       'Matemática': 'bg-blue-100 text-blue-800 border-blue-200',
@@ -135,22 +140,15 @@ const CalendarPage: React.FC = () => {
   };
 
   const EventCard = ({ event, showDate = false, compact = false }: { event: ScheduleEvent; showDate?: boolean; compact?: boolean }) => (
-    <Card className={`group hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 hover:scale-[1.02] ${compact ? 'text-xs' : ''}`}>
+    <Card className={`group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] overflow-hidden ${compact ? 'text-xs' : ''}`}>
+      <MaterialCardHeader materialType={getMaterialTypeFromEvent(event)} subject={event.subject} />
       <CardContent className={`${compact ? 'p-3' : 'p-4'}`}>
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                  <BookOpen className="w-4 h-4 text-white" />
-                </div>
-                <h3 className={`font-bold text-gray-900 truncate ${compact ? 'text-sm' : 'text-base'}`}>
-                  {event.title}
-                </h3>
-              </div>
-              <Badge variant="secondary" className={`text-xs font-medium ${getSubjectColor(event.subject)}`}>
-                {event.subject}
-              </Badge>
+              <h3 className={`font-bold text-gray-900 truncate ${compact ? 'text-sm' : 'text-base'}`}>
+                {event.title}
+              </h3>
             </div>
             
             <div className={`space-y-2 ${compact ? 'text-xs' : 'text-sm'} text-gray-600`}>
@@ -322,18 +320,17 @@ const CalendarPage: React.FC = () => {
                   {dayEvents
                     .sort((a, b) => a.startTime.localeCompare(b.startTime))
                     .map(event => (
-                      <div
+                      <Card
                         key={event.id}
-                        className="p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:shadow-md hover:border-blue-300 transition-all group"
+                        className="cursor-pointer hover:shadow-md hover:border-blue-300 transition-all group overflow-hidden"
                         onClick={() => handleEventClick(event)}
                       >
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className={`w-3 h-3 rounded-full ${getSubjectColor(event.subject).replace('bg-', 'bg-').replace('text-', '').replace('border-', '').split(' ')[0]}`}></div>
-                          <div className="font-medium text-gray-900 text-sm truncate">{event.title}</div>
-                        </div>
-                        <div className="text-xs text-gray-600 font-medium">{event.startTime}</div>
-                        <div className="text-xs text-gray-500">{event.subject}</div>
-                      </div>
+                        <MaterialCardHeader materialType={getMaterialTypeFromEvent(event)} subject={event.subject} />
+                        <CardContent className="p-3">
+                          <div className="font-medium text-gray-900 text-sm truncate mb-1">{event.title}</div>
+                          <div className="text-xs text-gray-600 font-medium">{event.startTime}</div>
+                        </CardContent>
+                      </Card>
                     ))}
                   
                   <button
@@ -390,17 +387,19 @@ const CalendarPage: React.FC = () => {
             </div>
             <div className="space-y-1">
               {dayEvents.slice(0, 2).map(event => (
-                <div
+                <Card
                   key={event.id}
-                  className={`text-xs p-2 rounded-md cursor-pointer hover:shadow-sm transition-all ${getSubjectColor(event.subject)}`}
+                  className="cursor-pointer hover:shadow-sm transition-all overflow-hidden"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEventClick(event);
                   }}
                 >
-                  <div className="font-medium truncate">{event.startTime} {event.title}</div>
-                  <div className="text-xs opacity-75">{event.subject}</div>
-                </div>
+                  <MaterialCardHeader materialType={getMaterialTypeFromEvent(event)} subject={event.subject} />
+                  <CardContent className="p-2">
+                    <div className="text-xs font-medium truncate">{event.startTime} {event.title}</div>
+                  </CardContent>
+                </Card>
               ))}
               {dayEvents.length > 2 && (
                 <div className="text-xs text-blue-600 font-medium bg-blue-100 p-1 rounded text-center">
@@ -470,7 +469,7 @@ const CalendarPage: React.FC = () => {
             return (
               <Card 
                 key={month.toString()} 
-                className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 hover:border-blue-300"
+                className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 hover:border-blue-300 overflow-hidden"
                 onClick={() => {
                   setCurrentDate(month);
                   setView('month');
@@ -494,10 +493,12 @@ const CalendarPage: React.FC = () => {
                   {monthEvents.length > 0 && (
                     <div className="space-y-2">
                       {monthEvents.slice(0, 3).map(event => (
-                        <div key={event.id} className={`text-xs p-2 rounded-md ${getSubjectColor(event.subject)}`}>
-                          <div className="font-medium truncate">{event.title}</div>
-                          <div className="opacity-75">{event.subject}</div>
-                        </div>
+                        <Card key={event.id} className="overflow-hidden">
+                          <MaterialCardHeader materialType={getMaterialTypeFromEvent(event)} subject={event.subject} />
+                          <CardContent className="p-2">
+                            <div className="text-xs font-medium truncate">{event.title}</div>
+                          </CardContent>
+                        </Card>
                       ))}
                       {monthEvents.length > 3 && (
                         <div className="text-xs text-blue-600 font-medium text-center bg-blue-100 p-2 rounded-md">
