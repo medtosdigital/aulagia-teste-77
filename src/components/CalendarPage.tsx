@@ -9,6 +9,7 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addW
 import { ptBR } from 'date-fns/locale';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { materialService } from '@/services/materialService';
+import { exportService } from '@/services/exportService';
 import ScheduleModal from './ScheduleModal';
 import MaterialModal from './MaterialModal';
 import { toast } from 'sonner';
@@ -125,13 +126,43 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  const handleExportMaterial = (event: ScheduleEvent, format: 'print' | 'pdf' | 'word' | 'ppt') => {
+  const handleExportMaterial = async (event: ScheduleEvent, format: 'print' | 'pdf' | 'word' | 'ppt') => {
     const material = materialService.getMaterials().find(m => m.id === event.materialId);
-    if (material) {
-      // Implementar lógica de exportação baseada no formato
-      toast.success(`Exportando material: ${material.title} em formato ${format.toUpperCase()}`);
-    } else {
+    if (!material) {
       toast.error('Material não encontrado');
+      return;
+    }
+
+    try {
+      switch (format) {
+        case 'print':
+          await exportService.exportToPDF(material);
+          toast.success('Material enviado para impressão!');
+          break;
+        case 'pdf':
+          await exportService.exportToPDF(material);
+          toast.success('PDF baixado com sucesso!');
+          break;
+        case 'word':
+          if (material.type === 'slides') {
+            toast.error('Exportação Word não disponível para slides. Use PPT.');
+            return;
+          }
+          await exportService.exportToWord(material);
+          toast.success('Word baixado com sucesso!');
+          break;
+        case 'ppt':
+          if (material.type !== 'slides') {
+            toast.error('Exportação PPT disponível apenas para slides. Use Word.');
+            return;
+          }
+          await exportService.exportToPPT(material);
+          toast.success('PowerPoint baixado com sucesso!');
+          break;
+      }
+    } catch (error) {
+      console.error('Erro na exportação:', error);
+      toast.error('Erro na exportação');
     }
   };
 
@@ -228,7 +259,7 @@ const CalendarPage: React.FC = () => {
         
         <Separator className="mb-4" />
         
-        {/* Botões com apenas ícones */}
+        {/* Botões com visualizar com texto e outros apenas ícones */}
         <div className="grid grid-cols-4 gap-2 pb-4">
           <Button
             variant="outline"
@@ -237,9 +268,10 @@ const CalendarPage: React.FC = () => {
               e.stopPropagation();
               handleViewMaterial(event);
             }}
-            className="flex items-center justify-center h-8 w-8 p-0 border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600"
+            className="flex items-center gap-2 h-8 text-xs border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600"
           >
             <Eye className="w-3 h-3" />
+            Visualizar
           </Button>
           
           <Button
@@ -254,21 +286,33 @@ const CalendarPage: React.FC = () => {
             <Edit3 className="w-3 h-3" />
           </Button>
           
-          <div className="relative group">
+          <div className="relative">
             <Button
               variant="outline"
               size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Toggle do menu de exportação
+                const menu = e.currentTarget.nextElementSibling as HTMLElement;
+                if (menu) {
+                  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                }
+              }}
               className="flex items-center justify-center h-8 w-8 p-0 border-gray-200 hover:bg-green-50 hover:border-green-300 hover:text-green-600"
             >
               <Download className="w-3 h-3" />
             </Button>
             
             {/* Submenu de exportação */}
-            <div className="absolute bottom-full left-0 mb-1 hidden group-hover:block bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+            <div 
+              style={{ display: 'none' }}
+              className="absolute bottom-full left-0 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]"
+            >
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleExportMaterial(event, 'print');
+                  (e.target as HTMLElement).closest('div')!.style.display = 'none';
                 }}
                 className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 rounded-t-lg"
               >
@@ -279,32 +323,38 @@ const CalendarPage: React.FC = () => {
                 onClick={(e) => {
                   e.stopPropagation();
                   handleExportMaterial(event, 'pdf');
+                  (e.target as HTMLElement).closest('div')!.style.display = 'none';
                 }}
                 className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
               >
                 <FileText className="w-3 h-3" />
                 PDF
               </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleExportMaterial(event, 'word');
-                }}
-                className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
-              >
-                <FileText className="w-3 h-3" />
-                Word
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleExportMaterial(event, 'ppt');
-                }}
-                className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 rounded-b-lg"
-              >
-                <FileText className="w-3 h-3" />
-                PPT
-              </button>
+              {getMaterialTypeFromEvent(event) === 'slides' ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleExportMaterial(event, 'ppt');
+                    (e.target as HTMLElement).closest('div')!.style.display = 'none';
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 rounded-b-lg"
+                >
+                  <FileText className="w-3 h-3" />
+                  PPT
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleExportMaterial(event, 'word');
+                    (e.target as HTMLElement).closest('div')!.style.display = 'none';
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 rounded-b-lg"
+                >
+                  <FileText className="w-3 h-3" />
+                  Word
+                </button>
+              )}
             </div>
           </div>
           
