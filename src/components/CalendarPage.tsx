@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, MapPin, BookOpen, Edit3, Trash2, GraduationCap, FileText, Eye, Download, Edit } from 'lucide-react';
+import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, MapPin, BookOpen, Edit3, Trash2, GraduationCap, FileText, Eye, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, MaterialCardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -95,12 +94,6 @@ const CalendarPage: React.FC = () => {
     setModalOpen(true);
   };
 
-  const handleEditEvent = (event: ScheduleEvent) => {
-    setSelectedEvent(event);
-    setSelectedDate(undefined);
-    setModalOpen(true);
-  };
-
   const handleDeleteEvent = (event: ScheduleEvent) => {
     if (window.confirm(`Tem certeza que deseja excluir "${event.title}"?`)) {
       const success = scheduleService.deleteEvent(event.id.split('-')[0]);
@@ -166,7 +159,7 @@ const CalendarPage: React.FC = () => {
   const EventCard = ({ event, showDate = false, compact = false }: { event: ScheduleEvent; showDate?: boolean; compact?: boolean }) => (
     <Card className={`group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] overflow-hidden ${compact ? 'text-xs' : ''}`}>
       <MaterialCardHeader materialType={getMaterialTypeFromEvent(event)} subject={event.subject} />
-      <CardContent className={`${compact ? 'p-3' : 'p-4'}`}>
+      <CardContent className={`${compact ? 'p-3' : 'p-4'} pb-0`}>
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -177,26 +170,30 @@ const CalendarPage: React.FC = () => {
             
             <div className={`space-y-3 ${compact ? 'text-xs' : 'text-sm'} text-gray-600`}>
               {showDate && (
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-3 h-3 text-blue-500" />
-                  <span className="font-medium">
-                    {format(event.startDate, "dd/MM/yyyy", { locale: ptBR })}
-                  </span>
-                </div>
+                <>
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-3 h-3 text-blue-500" />
+                    <span className="font-medium">
+                      {format(event.startDate, "dd/MM/yyyy", { locale: ptBR })}
+                    </span>
+                  </div>
+                  <Separator className="my-2" />
+                </>
               )}
-              
               <div className="flex items-center gap-2">
                 <Clock className="w-3 h-3 text-green-500" />
                 <span className="font-medium">{event.startTime} - {event.endTime}</span>
               </div>
-              
+              <Separator className="my-2" />
               {event.classroom && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3 h-3 text-purple-500" />
-                  <span className="truncate">{event.classroom}</span>
-                </div>
+                <>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-3 h-3 text-purple-500" />
+                    <span className="truncate">{event.classroom}</span>
+                  </div>
+                  <Separator className="my-2" />
+                </>
               )}
-              
               <div className="flex items-center gap-2">
                 <GraduationCap className="w-3 h-3 text-orange-500" />
                 <span className="font-medium">{event.grade}</span>
@@ -204,16 +201,19 @@ const CalendarPage: React.FC = () => {
             </div>
             
             {event.description && !compact && (
-              <div className="mt-3 p-2 bg-gray-50 rounded-md">
-                <p className="text-sm text-gray-600 italic">
+              <>
+                <Separator className="my-3" />
+                <p className="text-sm text-gray-600 p-2 bg-gray-50 rounded-md italic">
                   "{event.description}"
                 </p>
-              </div>
+              </>
             )}
           </div>
         </div>
         
-        <div className="flex justify-between items-center gap-2 pt-4 border-t border-gray-200">
+        <Separator className="mb-4" />
+        
+        <div className="flex justify-center gap-2 pb-4">
           <Button
             variant="ghost"
             size="sm"
@@ -221,25 +221,11 @@ const CalendarPage: React.FC = () => {
               e.stopPropagation();
               handleViewMaterial(event);
             }}
-            className="flex items-center gap-1 text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-2 py-1"
+            className="flex items-center gap-2 hover:bg-green-50 hover:text-green-600 text-gray-600"
           >
             <Eye className="w-4 h-4" />
             <span className="text-sm">Visualizar</span>
           </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditEvent(event);
-            }}
-            className="flex items-center gap-1 text-gray-600 hover:text-green-600 hover:bg-green-50 px-2 py-1"
-          >
-            <Edit className="w-4 h-4" />
-            <span className="text-sm">Editar</span>
-          </Button>
-          
           <Button
             variant="ghost"
             size="sm"
@@ -247,12 +233,11 @@ const CalendarPage: React.FC = () => {
               e.stopPropagation();
               handleExportMaterial(event);
             }}
-            className="flex items-center gap-1 text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-2 py-1"
+            className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 text-gray-600"
           >
             <Download className="w-4 h-4" />
             <span className="text-sm">Exportar</span>
           </Button>
-          
           <Button
             variant="ghost"
             size="sm"
@@ -260,7 +245,7 @@ const CalendarPage: React.FC = () => {
               e.stopPropagation();
               handleDeleteEvent(event);
             }}
-            className="flex items-center gap-1 text-gray-600 hover:text-red-600 hover:bg-red-50 px-2 py-1"
+            className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 text-gray-600"
           >
             <Trash2 className="w-4 h-4" />
             <span className="text-sm">Excluir</span>
