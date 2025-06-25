@@ -7,7 +7,6 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSa
 import { ptBR } from 'date-fns/locale';
 import { ScheduleEvent } from '@/services/scheduleService';
 import EventCard from './EventCard';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -34,7 +33,6 @@ const MonthView: React.FC<MonthViewProps> = ({
   onToggleWeekends,
   getEventsForDate
 }) => {
-  const isMobile = useIsMobile();
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const startDate = startOfWeek(monthStart, { locale: ptBR });
@@ -45,8 +43,8 @@ const MonthView: React.FC<MonthViewProps> = ({
   let day = startDate;
 
   const weekDays = showWeekends 
-    ? (isMobile ? ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'] : ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'])
-    : (isMobile ? ['S', 'T', 'Q', 'Q', 'S'] : ['Seg', 'Ter', 'Qua', 'Qui', 'Sex']);
+    ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    : ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
 
   const daysToShow = showWeekends ? 7 : 5;
 
@@ -65,12 +63,12 @@ const MonthView: React.FC<MonthViewProps> = ({
       days.push(
         <div
           key={day.toString()}
-          className={`${isMobile ? 'min-h-[100px] p-2' : 'min-h-[120px] p-3'} border border-gray-200 cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
+          className={`min-h-[120px] border border-gray-200 p-3 cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
             !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white hover:shadow-md'
           } ${isCurrentDay ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-200' : ''}`}
           onClick={() => onDateClick(currentDay)}
         >
-          <div className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold mb-2 ${
+          <div className={`text-sm font-bold mb-2 ${
             isCurrentDay 
               ? 'text-blue-600' 
               : isCurrentMonth 
@@ -80,7 +78,7 @@ const MonthView: React.FC<MonthViewProps> = ({
             {format(day, 'd')}
           </div>
           <div className="space-y-1">
-            {dayEvents.slice(0, isMobile ? 1 : 2).map(event => (
+            {dayEvents.slice(0, 1).map(event => (
               <EventCard
                 key={event.id}
                 event={event}
@@ -88,12 +86,11 @@ const MonthView: React.FC<MonthViewProps> = ({
                 onEdit={onEditEvent}
                 onDelete={onDeleteEvent}
                 onViewMaterial={onViewMaterial}
-                isMobile={isMobile}
               />
             ))}
-            {dayEvents.length > (isMobile ? 1 : 2) && (
-              <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-blue-600 font-medium bg-blue-100 p-1 rounded text-center`}>
-                +{dayEvents.length - (isMobile ? 1 : 2)} mais
+            {dayEvents.length > 1 && (
+              <div className="text-xs text-blue-600 font-medium bg-blue-100 p-1 rounded text-center">
+                +{dayEvents.length - 1} mais
               </div>
             )}
           </div>
@@ -115,38 +112,33 @@ const MonthView: React.FC<MonthViewProps> = ({
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 md:p-6 border border-blue-100">
-        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
               {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
             </h2>
-            <p className="text-sm md:text-base text-gray-600">
+            <p className="text-gray-600">
               {events.length} material{events.length !== 1 ? 'is' : ''} agendado{events.length !== 1 ? 's' : ''} este mês
             </p>
           </div>
           <Button
             variant="outline"
-            size={isMobile ? "sm" : "default"}
+            size="sm"
             onClick={onToggleWeekends}
-            className="flex items-center gap-2 text-xs md:text-sm"
+            className="flex items-center gap-2"
           >
-            <Settings className="w-3 h-3 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">
-              {showWeekends ? 'Esconder fins de semana' : 'Mostrar fins de semana'}
-            </span>
-            <span className="sm:hidden">
-              {showWeekends ? 'Sem FDS' : 'Com FDS'}
-            </span>
+            <Settings className="w-4 h-4" />
+            {showWeekends ? 'Esconder fins de semana' : 'Mostrar fins de semana'}
           </Button>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div className={`grid gap-0 border-b border-gray-200 ${showWeekends ? 'grid-cols-7' : 'grid-cols-5'}`}>
-          {weekDays.map((dayName, index) => (
-            <div key={dayName} className={`${isMobile ? 'p-2' : 'p-4'} text-center font-bold text-gray-700 bg-gray-50 border-r border-gray-200 last:border-r-0 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+          {weekDays.map(dayName => (
+            <div key={dayName} className="p-4 text-center font-bold text-gray-700 bg-gray-50 border-r border-gray-200 last:border-r-0">
               {dayName}
             </div>
           ))}
