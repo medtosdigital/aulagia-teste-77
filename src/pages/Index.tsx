@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -7,6 +8,7 @@ import CreateLesson from '@/components/CreateLesson';
 import MaterialsList from '@/components/MaterialsList';
 import MaterialViewer from '@/components/MaterialViewer';
 import CalendarPage from '@/components/CalendarPage';
+import SchoolPage from '@/components/SchoolPage';
 
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
@@ -21,6 +23,8 @@ const Index = () => {
         return 'Meus Materiais';
       case 'calendar':
         return 'Calendário';
+      case 'school':
+        return 'Escola';
       case 'subscription':
         return 'Assinatura';
       case 'settings':
@@ -46,6 +50,8 @@ const Index = () => {
         return <MaterialsList />;
       case 'calendar':
         return <CalendarPage />;
+      case 'school':
+        return <SchoolPage />;
       case 'subscription':
         return <div className="p-4"><h2>Assinatura - Em desenvolvimento</h2></div>;
       case 'settings':

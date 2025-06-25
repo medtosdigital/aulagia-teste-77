@@ -2,10 +2,12 @@
 import React from 'react';
 import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
 interface SidebarProps {
   activeItem?: string;
   onItemClick?: (item: string) => void;
 }
+
 const Sidebar: React.FC<SidebarProps> = ({
   activeItem = 'dashboard',
   onItemClick
@@ -32,6 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     label: 'Assinatura',
     icon: User
   }];
+
   const desktopMenuItems = [{
     id: 'dashboard',
     label: 'Dashboard',
@@ -49,10 +52,15 @@ const Sidebar: React.FC<SidebarProps> = ({
     label: 'Calendário',
     icon: Calendar
   }, {
+    id: 'school',
+    label: 'Escola',
+    icon: School
+  }, {
     id: 'subscription',
     label: 'Assinatura',
     icon: Crown
   }];
+
   const adminMenuItems = [{
     id: 'settings',
     label: 'Configurações',
@@ -66,9 +74,11 @@ const Sidebar: React.FC<SidebarProps> = ({
     label: 'Templates',
     icon: FileText
   }];
+
   const handleItemClick = (itemId: string) => {
     onItemClick?.(itemId);
   };
+
   return <>
       {/* Desktop Sidebar */}
       <div className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-40 flex-col">
@@ -157,4 +167,5 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
     </>;
 };
+
 export default Sidebar;
