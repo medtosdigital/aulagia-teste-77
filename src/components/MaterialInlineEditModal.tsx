@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { X, Save, Edit3, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { X, Save, Edit3, ChevronLeft, ChevronRight, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -449,7 +448,38 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
           .questao-container, .question {
             margin-bottom: 30px;
             page-break-inside: avoid;
+            position: relative;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            background: #fafafa;
           }
+          
+          .question-delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+            z-index: 10;
+          }
+          
+          .question-delete-btn:hover {
+            opacity: 1;
+            background: #dc2626;
+          }
+          
           .questao-numero, .question-header {
             font-weight: 600;
             color: #4338ca;
@@ -738,8 +768,39 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
+            .question-delete-btn {
+              display: none !important;
+            }
           }
         </style>
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            // Add delete buttons to questions
+            const questions = document.querySelectorAll('.questao-container, .question');
+            questions.forEach((question, index) => {
+              const deleteBtn = document.createElement('button');
+              deleteBtn.className = 'question-delete-btn';
+              deleteBtn.innerHTML = '×';
+              deleteBtn.title = 'Excluir questão';
+              deleteBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (confirm('Tem certeza que deseja excluir esta questão?')) {
+                  question.remove();
+                  // Renumber remaining questions
+                  const remainingQuestions = document.querySelectorAll('.questao-container, .question');
+                  remainingQuestions.forEach((q, i) => {
+                    const questionHeader = q.querySelector('.questao-numero, .question-header');
+                    if (questionHeader) {
+                      questionHeader.textContent = 'Questão ' + (i + 1);
+                    }
+                  });
+                }
+              };
+              question.appendChild(deleteBtn);
+            });
+          });
+        </script>
       </head>
       <body>
         ${htmlContent}
@@ -807,15 +868,22 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '$1<span class="editable-field" contenteditable="true">$2</span>$3'
     );
 
-    // CORRIGIR - Tornar texto das questões editável (múltiplos formatos)
+    // MELHORAR - Edição de questões dentro de containers
     editableHtml = editableHtml.replace(
-      /(\s*)([^<>]+?)(\s*<div[^>]*class="[^"]*opcao[^"]*")/g,
-      (match, before, questionText, after) => {
-        if (questionText.trim() && !questionText.includes('Questão') && questionText.length > 10) {
-          return `${before}<span class="editable-field" contenteditable="true">${questionText}</span>${after}`;
-        }
-        return match;
-      }
+      /(<div[^>]*class="[^"]*questao-container[^"]*"[^>]*>[\s\S]*?<div[^>]*class="[^"]*questao-numero[^"]*"[^>]*>Questão \d+<\/div>\s*)([^<]+?)(\s*<div)/g,
+      '$1<span class="editable-field" contenteditable="true">$2</span>$3'
+    );
+
+    // QUESTÕES V/F - Tornar texto de questões Verdadeiro/Falso editáveis
+    editableHtml = editableHtml.replace(
+      /(Verdadeiro|Falso)(?=\s*<\/)/g,
+      '<span class="editable-field" contenteditable="true">$1</span>'
+    );
+
+    // QUESTÕES V/F - Padrão específico para questões com ( )
+    editableHtml = editableHtml.replace(
+      /(\(\s*\)\s*)(Verdadeiro|Falso)/g,
+      '$1<span class="editable-field" contenteditable="true">$2</span>'
     );
 
     // OPÇÕES - Tornar opções de múltipla escolha editáveis (padrão melhorado)
@@ -829,15 +897,21 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
     );
 
-    // OPÇÕES - Capturar opções em formato direto (A) texto, B) texto, etc.
+    // OPÇÕES - Capturar opções em formato direto ([A-E]) seguido de texto
     editableHtml = editableHtml.replace(
       /([A-E]\))\s*([^<\n]+)/g,
       (match, letter, text) => {
-        if (text.trim().length > 3) {
+        if (text.trim().length > 3 && !text.includes('span')) {
           return `${letter} <span class="editable-field" contenteditable="true">${text.trim()}</span>`;
         }
         return match;
       }
+    );
+
+    // MELHORAR - Opções em formato <strong>A)</strong> Texto
+    editableHtml = editableHtml.replace(
+      /(<strong>[A-E]\)<\/strong>)\s*([^<\n]+)/g,
+      '$1 <span class="editable-field" contenteditable="true">$2</span>'
     );
 
     // COLUNAS - Tornar itens das colunas editáveis
@@ -850,6 +924,18 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*evaluation-text[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
+    );
+
+    // INSTRUÇÕES - Tornar instruções de atividades e avaliações editáveis
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*instructions[^"]*"[^>]*)>(<strong>[^<]*<\/strong><br>)([^<]*)<\/div>/g,
+      '<div$1>$2<span class="editable-field" contenteditable="true">$3</span></div>'
+    );
+
+    // INSTRUÇÕES - Texto direto nas instruções (Leia atentamente...)
+    editableHtml = editableHtml.replace(
+      /(Leia atentamente cada questão e responda de acordo com o solicitado\.|Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa\.)/g,
+      '<span class="editable-field" contenteditable="true">$1</span>'
     );
 
     // RECURSOS DIDÁTICOS - Tornar texto após o título editável
@@ -930,12 +1016,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*slide-content[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    // Instruções de atividades e avaliações
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*instructions[^"]*"[^>]*)>(<strong>[^<]*<\/strong><br>)([^<]*)<\/div>/g,
-      '<div$1>$2<span class="editable-field" contenteditable="true">$3</span></div>'
     );
 
     // Texto direto após RECURSOS DIDÁTICOS
