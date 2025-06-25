@@ -174,15 +174,17 @@ const MaterialsList: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 space-y-2 sm:space-y-0">
-                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  Meus Materiais
-                </h1>
-                <Badge 
-                  variant="secondary" 
-                  className="py-1 text-sm px-3 bg-blue-100 text-blue-700 border-blue-200 w-fit"
-                >
-                  {filteredMaterials.length} {filteredMaterials.length === 1 ? 'material' : 'materiais'}
-                </Badge>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    Meus Materiais
+                  </h1>
+                  <Badge 
+                    variant="secondary" 
+                    className="py-1 text-sm px-3 bg-blue-100 text-blue-700 border-blue-200 w-fit"
+                  >
+                    {filteredMaterials.length} {filteredMaterials.length === 1 ? 'material' : 'materiais'}
+                  </Badge>
+                </div>
               </div>
               <p className="text-gray-600 text-lg">Gerencie e organize seus conteúdos pedagógicos com elegância</p>
             </div>
