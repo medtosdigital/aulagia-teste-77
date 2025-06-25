@@ -694,184 +694,22 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     editableHtml = editableHtml.replace(
       /<td([^>]*)>([^<]+)<\/td>/g,
       (match, attrs, content) => {
-        // NÃO tornar editável se contém "Sua aula com toque mágico", "aulagia.com.br", "AulagIA", ou linhas vazias
+        // Não tornar editável se contém data fixa ou elementos não editáveis
         if (content.includes('aulagia.com.br') || 
             content.includes('AulagIA') || 
-            content.includes('Sua aula com toque mágico') ||
-            content.includes('_____')) {
+            content.includes('_____') ||
+            content.includes(new Date().toLocaleDateString('pt-BR'))) {
           return match;
         }
-        
-        // TORNAR EDITÁVEL se é uma data (formato dd/mm/yyyy)
-        if (/^\d{2}\/\d{2}\/\d{4}$/.test(content.trim())) {
-          return `<td${attrs}><span class="editable-field" contenteditable="true">${content}</span></td>`;
-        }
-        
-        // Tornar outros campos editáveis normalmente
         return `<td${attrs}><span class="editable-field" contenteditable="true">${content}</span></td>`;
       }
     );
-
-    // SLIDES - Tornar TODO o conteúdo editável exceto logo AulagIA e "Sua aula com toque mágico"
-    
-    // Títulos principais de slides
-    editableHtml = editableHtml.replace(
-      /<h1([^>]*)>([^<]*)<\/h1>/g,
-      (match, attrs, content) => {
-        if (content.includes('AulagIA') || content.includes('Sua aula com toque mágico')) return match;
-        return `<h1${attrs}><span class="editable-field" contenteditable="true">${content}</span></h1>`;
-      }
-    );
-
-    // Subtítulos de slides
-    editableHtml = editableHtml.replace(
-      /<h2([^>]*)>([^<]*)<\/h2>/g,
-      (match, attrs, content) => {
-        if (content.includes('AulagIA') || content.includes('APRESENTAÇÃO') || content.includes('Sua aula com toque mágico')) return match;
-        return `<h2${attrs}><span class="editable-field" contenteditable="true">${content}</span></h2>`;
-      }
-    );
-
-    // Todos os outros títulos de slides (h3, h4, h5, h6)
-    editableHtml = editableHtml.replace(
-      /<h([3-6])([^>]*)>([^<]*)<\/h([3-6])>/g,
-      (match, tag1, attrs, content, tag2) => {
-        if (content.includes('AulagIA') || content.includes('Sua aula com toque mágico')) return match;
-        return `<h${tag1}${attrs}><span class="editable-field" contenteditable="true">${content}</span></h${tag1}>`;
-      }
-    );
-
-    // Disciplina e série em slides (keywords)
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*subtitle[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    // Professor em slides
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*professor[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    // Escola em slides
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*escola[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    // Texto "Apresentado por:" em slides
-    editableHtml = editableHtml.replace(
-      /Apresentado por:/g,
-      '<span class="editable-field" contenteditable="true">Apresentado por:</span>'
-    );
-
-    // Todos os parágrafos em slides (exceto logo)
-    editableHtml = editableHtml.replace(
-      /<p([^>]*)>([^<]+)<\/p>/g,
-      (match, attrs, content) => {
-        if (content.includes('aulagia.com.br') || content.includes('AulagIA') || content.includes('Sua aula com toque mágico')) {
-          return match;
-        }
-        return `<p${attrs}><span class="editable-field" contenteditable="true">${content}</span></p>`;
-      }
-    );
-
-    // Qualquer div com texto em slides
-    editableHtml = editableHtml.replace(
-      /<div([^>]*(?:slide|content)[^>]*)>([^<]+)<\/div>/g,
-      (match, attrs, content) => {
-        if (content.includes('aulagia.com.br') || content.includes('AulagIA') || content.includes('Sua aula com toque mágico')) {
-          return match;
-        }
-        return `<div${attrs}><span class="editable-field" contenteditable="true">${content}</span></div>`;
-      }
-    );
-
-    // ATIVIDADES E AVALIAÇÕES - Melhorar renderização e editabilidade
-
-    // Instruções de atividades/avaliações
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*instructions[^"]*"[^>]*)>(.*?)<\/div>/gs,
-      (match, attrs, content) => {
-        // Extrair o título em bold e o resto do conteúdo
-        const boldMatch = content.match(/(<strong>[^<]*<\/strong><br\s*\/?>)(.*)/s);
-        if (boldMatch) {
-          const title = boldMatch[1];
-          const text = boldMatch[2].trim();
-          return `<div${attrs}>${title}<span class="editable-field" contenteditable="true">${text}</span></div>`;
-        }
-        return match;
-      }
-    );
-
-    // Questões - Números das questões (não editáveis) e textos (editáveis)
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*questao-numero[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1>$2</div>' // Manter número da questão não editável
-    );
-
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*question-header[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1>$2</div>' // Manter cabeçalho da questão não editável
-    );
-
-    // Enunciados das questões - TORNAR EDITÁVEIS
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*questao-enunciado[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*question-text[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    // Perguntas simples (texto direto)
-    editableHtml = editableHtml.replace(
-      /<p([^>]*)>([^<]*\?[^<]*)<\/p>/g,
-      (match, attrs, content) => {
-        if (content.includes('aulagia.com.br') || content.includes('AulagIA') || content.includes('Sua aula com toque mágico')) {
-          return match;
-        }
-        return `<p${attrs}><span class="editable-field" contenteditable="true">${content}</span></p>`;
-      }
-    );
-
-    // Opções de múltipla escolha - manter letras, tornar texto editável
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*opcao[^"]*"[^>]*)>(<span[^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*)<\/div>/g,
-      '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*option[^"]*"[^>]*)>(<span[^>]*class="[^"]*option-letter[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*)<\/div>/g,
-      '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
-    );
-
-    // Colunas A e B - títulos e itens
-    editableHtml = editableHtml.replace(
-      /(Coluna [AB])/g,
-      '<span class="editable-field" contenteditable="true">$1</span>'
-    );
-
-    // Itens de colunas (números/letras seguidos de texto)
-    editableHtml = editableHtml.replace(
-      /([1-4]\)) ([^<\n]+)/g,
-      '$1 <span class="editable-field" contenteditable="true">$2</span>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /([A-D]\)) ([^<\n]+)/g,
-      '$1 <span class="editable-field" contenteditable="true">$2</span>'
-    );
-
-    // PLANO DE AULA - Seções específicas
 
     // Tornar títulos editáveis (exceto AulagIA)
     editableHtml = editableHtml.replace(
       /<h([1-6])([^>]*)>([^<]*)<\/h([1-6])>/g,
       (match, tag1, attrs, content, tag2) => {
-        if (content.includes('AulagIA') || content.includes('AVALIAÇÃO') || content.includes('ATIVIDADE') || content.includes('Sua aula com toque mágico')) return match;
+        if (content.includes('AulagIA') || content.includes('AVALIAÇÃO') || content.includes('ATIVIDADE')) return match;
         return `<h${tag1}${attrs}><span class="editable-field" contenteditable="true">${content}</span></h${tag1}>`;
       }
     );
@@ -885,31 +723,135 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
-    // RECURSOS DIDÁTICOS e AVALIAÇÃO - Melhorar editabilidade
+    // Tornar células da tabela de desenvolvimento editáveis
     editableHtml = editableHtml.replace(
-      /(<h3[^>]*>RECURSOS DIDÁTICOS<\/h3>\s*)([\s\S]*?)(?=<h3|<div class="footer"|$)/g,
-      (match, title, content) => {
-        if (content.trim() && !content.includes('<div') && !content.includes('<p')) {
-          return title + '<span class="editable-field" contenteditable="true">' + content.trim() + '</span>';
-        }
-        return match;
-      }
+      /<td([^>]*class="[^"]*development[^"]*"[^>]*)>([^<]*)<\/td>/g,
+      '<td$1><span class="editable-field" contenteditable="true">$2</span></td>'
     );
 
+    // Tornar questões editáveis - melhor pattern matching
     editableHtml = editableHtml.replace(
-      /(<h3[^>]*>AVALIAÇÃO<\/h3>\s*)([\s\S]*?)(?=<div class="footer"|$)/g,
-      (match, title, content) => {
-        if (content.trim() && !content.includes('<div') && !content.includes('<p')) {
-          return title + '<span class="editable-field" contenteditable="true">' + content.trim() + '</span>';
-        }
-        return match;
-      }
+      /<div([^>]*class="[^"]*questao-enunciado[^"]*"[^>]*)>([^<]*)<\/div>/g,
+      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
-    // Texto de avaliação editável
+    // Tornar texto de questões editáveis
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*question-text[^"]*"[^>]*)>([^<]*)<\/div>/g,
+      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
+    );
+
+    // Tornar opções editáveis
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*opcao[^"]*"[^>]*)>(<span[^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*)<\/div>/g,
+      '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
+    );
+
+    // Tornar opções de questões editáveis (padrão option)
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*option[^"]*"[^>]*)>(<span[^>]*class="[^"]*option-letter[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*)<\/div>/g,
+      '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
+    );
+
+    // Tornar texto de avaliação editável
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*evaluation-text[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
+    );
+
+    // RECURSOS DIDÁTICOS - Tornar texto após o título editável
+    editableHtml = editableHtml.replace(
+      /(<h3[^>]*>RECURSOS DIDÁTICOS<\/h3>\s*)([^<]+)/g,
+      '$1<span class="editable-field" contenteditable="true">$2</span>'
+    );
+
+    // AVALIAÇÃO - Tornar texto após o título editável
+    editableHtml = editableHtml.replace(
+      /(<h3[^>]*>AVALIAÇÃO<\/h3>\s*)([^<]+)/g,
+      '$1<span class="editable-field" contenteditable="true">$2</span>'
+    );
+
+    // Tornar parágrafos simples editáveis (para seções de recursos e avaliação)
+    editableHtml = editableHtml.replace(
+      /<p([^>]*)>([^<]+)<\/p>/g,
+      (match, attrs, content) => {
+        // Não tornar editável se contém elementos específicos
+        if (content.includes('aulagia.com.br') || content.includes('AulagIA')) {
+          return match;
+        }
+        return `<p${attrs}><span class="editable-field" contenteditable="true">${content}</span></p>`;
+      }
+    );
+
+    // SLIDES - Tornar todo o conteúdo editável exceto logo AulagIA
+    // Títulos de slides
+    editableHtml = editableHtml.replace(
+      /<h1([^>]*)>([^<]*)<\/h1>/g,
+      (match, attrs, content) => {
+        if (content.includes('AulagIA')) return match;
+        return `<h1${attrs}><span class="editable-field" contenteditable="true">${content}</span></h1>`;
+      }
+    );
+
+    // Subtítulos de slides
+    editableHtml = editableHtml.replace(
+      /<h2([^>]*)>([^<]*)<\/h2>/g,
+      (match, attrs, content) => {
+        if (content.includes('AulagIA') || content.includes('APRESENTAÇÃO')) return match;
+        return `<h2${attrs}><span class="editable-field" contenteditable="true">${content}</span></h2>`;
+      }
+    );
+
+    // Texto de disciplina e série em slides
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*subtitle[^"]*"[^>]*)>([^<]*)<\/div>/g,
+      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
+    );
+
+    // Texto "Apresentado por:"
+    editableHtml = editableHtml.replace(
+      /Apresentado por:/g,
+      '<span class="editable-field" contenteditable="true">Apresentado por:</span>'
+    );
+
+    // Nome do professor em slides
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*professor[^"]*"[^>]*)>([^<]*)<\/div>/g,
+      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
+    );
+
+    // Escola em slides
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*escola[^"]*"[^>]*)>([^<]*)<\/div>/g,
+      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
+    );
+
+    // Instruções de atividades e avaliações
+    editableHtml = editableHtml.replace(
+      /<div([^>]*class="[^"]*instructions[^"]*"[^>]*)>(<strong>[^<]*<\/strong><br>)([^<]*)<\/div>/g,
+      '<div$1>$2<span class="editable-field" contenteditable="true">$3</span></div>'
+    );
+
+    // Texto direto após RECURSOS DIDÁTICOS
+    editableHtml = editableHtml.replace(
+      /(RECURSOS DIDÁTICOS<\/h3>\s*)([\s\S]*?)(<h3|<div class="footer"|$)/g,
+      (match, title, content, after) => {
+        if (content.trim() && !content.includes('<')) {
+          return title + '<span class="editable-field" contenteditable="true">' + content.trim() + '</span>' + after;
+        }
+        return match;
+      }
+    );
+
+    // Texto direto após AVALIAÇÃO
+    editableHtml = editableHtml.replace(
+      /(AVALIAÇÃO<\/h3>\s*)([\s\S]*?)(<div class="footer"|$)/g,
+      (match, title, content, after) => {
+        if (content.trim() && !content.includes('<')) {
+          return title + '<span class="editable-field" contenteditable="true">' + content.trim() + '</span>' + after;
+        }
+        return match;
+      }
     );
 
     return editableHtml;
