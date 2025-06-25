@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown, Brain, Presentation, ClipboardList, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,7 @@ interface Plan {
     yearly: number;
   };
   features: string[];
+  materialTypes: string[];
   limitations: string[];
   color: string;
   icon: React.ComponentType<any>;
@@ -34,10 +36,15 @@ const SubscriptionPage = () => {
         'Suporte básico',
         'Acesso aos templates básicos'
       ],
+      materialTypes: [
+        'Planos de Aula básicos com IA',
+        'Atividades simples com IA'
+      ],
       limitations: [
         'Sem download em Word/PPT',
         'Limitado a 3 criações de material',
-        'Sem edição avançada'
+        'Sem edição avançada',
+        'Sem Slides e Avaliações'
       ],
       color: 'from-gray-400 to-gray-600',
       icon: FileText
@@ -54,6 +61,12 @@ const SubscriptionPage = () => {
         'Suporte por e-mail',
         'Calendário de aulas',
         'Histórico completo'
+      ],
+      materialTypes: [
+        'Planos de Aula completos com IA',
+        'Slides interativos com IA',
+        'Atividades diversificadas com IA',
+        'Avaliações personalizadas com IA'
       ],
       limitations: [],
       color: 'from-blue-500 to-purple-600',
@@ -76,6 +89,13 @@ const SubscriptionPage = () => {
         'Controle de permissões',
         'Ideal para grupos de professores ou instituições'
       ],
+      materialTypes: [
+        'Planos de Aula colaborativos com IA',
+        'Slides padronizados com IA',
+        'Atividades alinhadas com IA',
+        'Avaliações coordenadas com IA',
+        'Banco de materiais compartilhado'
+      ],
       limitations: [],
       color: 'from-green-500 to-emerald-600',
       icon: Users
@@ -93,6 +113,14 @@ const SubscriptionPage = () => {
     const monthlyTotal = plan.price.monthly * 12;
     if (monthlyTotal === 0) return 0;
     return Math.round(((monthlyTotal - plan.price.yearly) / monthlyTotal) * 100);
+  };
+
+  const getMaterialTypeIcon = (materialType: string) => {
+    if (materialType.includes('Planos de Aula')) return GraduationCap;
+    if (materialType.includes('Slides')) return Presentation;
+    if (materialType.includes('Atividades')) return ClipboardList;
+    if (materialType.includes('Avaliações')) return FileText;
+    return Brain;
   };
 
   return (
@@ -304,6 +332,25 @@ const SubscriptionPage = () => {
                         ou {formatPrice(plan.price.monthly)}/mês ({yearlyDiscount}% off)
                       </span>
                     )}
+                  </div>
+
+                  {/* Material Types with IA */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                      <Brain className="w-4 h-4 text-blue-600 mr-2" />
+                      Materiais com IA
+                    </h4>
+                    <div className="space-y-2">
+                      {plan.materialTypes.map((materialType, index) => {
+                        const MaterialIcon = getMaterialTypeIcon(materialType);
+                        return (
+                          <div key={index} className="flex items-start">
+                            <MaterialIcon className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span className="text-gray-700 text-sm">{materialType}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <ul className="space-y-3 mb-6 flex-1">
