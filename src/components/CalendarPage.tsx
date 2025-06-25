@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, MapPin, BookOpen, Edit3, Trash2, GraduationCap, FileText, Eye, Download } from 'lucide-react';
+import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, MapPin, BookOpen, Edit3, Trash2, GraduationCap, FileText, Eye, Download, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, MaterialCardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { ptBR } from 'date-fns/locale';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { materialService } from '@/services/materialService';
 import ScheduleModal from './ScheduleModal';
+import MaterialModal from './MaterialModal';
 import { toast } from 'sonner';
 
 const CalendarPage: React.FC = () => {
@@ -19,6 +20,8 @@ const CalendarPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [materialModalOpen, setMaterialModalOpen] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
 
   useEffect(() => {
     loadEvents();
@@ -94,6 +97,12 @@ const CalendarPage: React.FC = () => {
     setModalOpen(true);
   };
 
+  const handleEditEvent = (event: ScheduleEvent) => {
+    setSelectedEvent(event);
+    setSelectedDate(undefined);
+    setModalOpen(true);
+  };
+
   const handleDeleteEvent = (event: ScheduleEvent) => {
     if (window.confirm(`Tem certeza que deseja excluir "${event.title}"?`)) {
       const success = scheduleService.deleteEvent(event.id.split('-')[0]);
@@ -109,16 +118,20 @@ const CalendarPage: React.FC = () => {
   const handleViewMaterial = (event: ScheduleEvent) => {
     const material = materialService.getMaterials().find(m => m.id === event.materialId);
     if (material) {
-      // Aqui você pode implementar a abertura do material para visualização
-      toast.success(`Abrindo material: ${material.title}`);
+      setSelectedMaterial(material);
+      setMaterialModalOpen(true);
+    } else {
+      toast.error('Material não encontrado');
     }
   };
 
-  const handleExportMaterial = (event: ScheduleEvent) => {
+  const handleExportMaterial = (event: ScheduleEvent, format: 'print' | 'pdf' | 'word' | 'ppt') => {
     const material = materialService.getMaterials().find(m => m.id === event.materialId);
     if (material) {
-      // Aqui você pode implementar a exportação do material
-      toast.success(`Exportando material: ${material.title}`);
+      // Implementar lógica de exportação baseada no formato
+      toast.success(`Exportando material: ${material.title} em formato ${format.toUpperCase()}`);
+    } else {
+      toast.error('Material não encontrado');
     }
   };
 
@@ -168,6 +181,13 @@ const CalendarPage: React.FC = () => {
               </h3>
             </div>
             
+            {/* Turma logo abaixo do título */}
+            <div className="mb-3">
+              <p className={`text-gray-600 font-medium ${compact ? 'text-xs' : 'text-sm'}`}>
+                {event.grade}
+              </p>
+            </div>
+            
             <div className={`space-y-3 ${compact ? 'text-xs' : 'text-sm'} text-gray-600`}>
               {showDate && (
                 <>
@@ -184,20 +204,15 @@ const CalendarPage: React.FC = () => {
                 <Clock className="w-3 h-3 text-green-500" />
                 <span className="font-medium">{event.startTime} - {event.endTime}</span>
               </div>
-              <Separator className="my-2" />
               {event.classroom && (
                 <>
+                  <Separator className="my-2" />
                   <div className="flex items-center gap-2">
                     <MapPin className="w-3 h-3 text-purple-500" />
                     <span className="truncate">{event.classroom}</span>
                   </div>
-                  <Separator className="my-2" />
                 </>
               )}
-              <div className="flex items-center gap-2">
-                <GraduationCap className="w-3 h-3 text-orange-500" />
-                <span className="font-medium">{event.grade}</span>
-              </div>
             </div>
             
             {event.description && !compact && (
@@ -213,42 +228,100 @@ const CalendarPage: React.FC = () => {
         
         <Separator className="mb-4" />
         
-        <div className="flex justify-center gap-2 pb-4">
+        {/* Botões com estilo dos cards de materiais */}
+        <div className="grid grid-cols-2 gap-2 pb-4">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
               handleViewMaterial(event);
             }}
-            className="flex items-center gap-2 hover:bg-green-50 hover:text-green-600 text-gray-600"
+            className="flex items-center gap-2 h-8 text-xs border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600"
           >
-            <Eye className="w-4 h-4" />
-            <span className="text-sm">Visualizar</span>
+            <Eye className="w-3 h-3" />
+            Visualizar
           </Button>
+          
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              handleExportMaterial(event);
+              handleEditEvent(event);
             }}
-            className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 text-gray-600"
+            className="flex items-center gap-2 h-8 text-xs border-gray-200 hover:bg-yellow-50 hover:border-yellow-300 hover:text-yellow-600"
           >
-            <Download className="w-4 h-4" />
-            <span className="text-sm">Exportar</span>
+            <Edit3 className="w-3 h-3" />
+            Editar
           </Button>
+          
+          <div className="relative group">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 h-8 text-xs w-full border-gray-200 hover:bg-green-50 hover:border-green-300 hover:text-green-600"
+            >
+              <Download className="w-3 h-3" />
+              Exportar
+            </Button>
+            
+            {/* Submenu de exportação */}
+            <div className="absolute bottom-full left-0 mb-1 hidden group-hover:block bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExportMaterial(event, 'print');
+                }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 rounded-t-lg"
+              >
+                <Printer className="w-3 h-3" />
+                Imprimir
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExportMaterial(event, 'pdf');
+                }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
+              >
+                <FileText className="w-3 h-3" />
+                PDF
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExportMaterial(event, 'word');
+                }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
+              >
+                <FileText className="w-3 h-3" />
+                Word
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExportMaterial(event, 'ppt');
+                }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 rounded-b-lg"
+              >
+                <FileText className="w-3 h-3" />
+                PPT
+              </button>
+            </div>
+          </div>
+          
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
               handleDeleteEvent(event);
             }}
-            className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 text-gray-600"
+            className="flex items-center gap-2 h-8 text-xs border-gray-200 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
           >
-            <Trash2 className="w-4 h-4" />
-            <span className="text-sm">Excluir</span>
+            <Trash2 className="w-3 h-3" />
+            Excluir
           </Button>
         </div>
       </CardContent>
@@ -646,6 +719,16 @@ const CalendarPage: React.FC = () => {
         onSave={loadEvents}
         event={selectedEvent}
         selectedDate={selectedDate}
+      />
+
+      <MaterialModal
+        material={selectedMaterial}
+        open={materialModalOpen}
+        onClose={() => {
+          setMaterialModalOpen(false);
+          setSelectedMaterial(null);
+        }}
+        showNextSteps={false}
       />
     </div>
   );
