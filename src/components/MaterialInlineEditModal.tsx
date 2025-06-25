@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Save, Edit3, ChevronLeft, ChevronRight, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -820,6 +821,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   const makeContentEditable = (htmlContent: string): string => {
     let editableHtml = htmlContent;
 
+    // Make table cells editable (excluding footer links and blank fields)
     editableHtml = editableHtml.replace(
       /<td([^>]*)>([^<]+)<\/td>/g,
       (match, attrs, content) => {
@@ -832,6 +834,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
+    // Make headers editable (excluding brand headers)
     editableHtml = editableHtml.replace(
       /<h([1-6])([^>]*)>([^<]*)<\/h([1-6])>/g,
       (match, tag1, attrs, content, tag2) => {
@@ -840,6 +843,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
+    // Make list items editable
     editableHtml = editableHtml.replace(
       /<li([^>]*)>([^<]*)<\/li>/g,
       (match, attrs, content) => {
@@ -848,11 +852,13 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
+    // Make development table cells editable
     editableHtml = editableHtml.replace(
       /<td([^>]*class="[^"]*development[^"]*"[^>]*)>([^<]*)<\/td>/g,
       '<td$1><span class="editable-field" contenteditable="true">$2</span></td>'
     );
 
+    // Make question text editable
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*questao-enunciado[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
@@ -863,6 +869,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
     );
 
+    // Make question headers editable
     editableHtml = editableHtml.replace(
       /(<div[^>]*class="[^"]*question-header[^"]*"[^>]*>Questão \d+<\/div>\s*)([^<]+)(<\/div>|<div)/g,
       '$1<span class="editable-field" contenteditable="true">$2</span>$3'
@@ -873,6 +880,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '$1<span class="editable-field" contenteditable="true">$2</span>$3'
     );
 
+    // Make True/False options editable
     editableHtml = editableHtml.replace(
       /(Verdadeiro|Falso)(?=\s*<\/)/g,
       '<span class="editable-field" contenteditable="true">$1</span>'
@@ -883,13 +891,18 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '$1<span class="editable-field" contenteditable="true">$2</span>'
     );
 
-    console.log('Processing multiple choice options...');
-    
+    // Protect already processed spans
+    const protectedSpans: string[] = [];
     editableHtml = editableHtml.replace(
-      /(<span[^>]*class="[^"]*editable-field[^"]*"[^>]*>[^<]*<\/span>)/g,
-      '{{PROTECTED_SPAN}}'
+      /<span[^>]*class="[^"]*editable-field[^"]*"[^>]*>[^<]*<\/span>/g,
+      (match) => {
+        const index = protectedSpans.length;
+        protectedSpans.push(match);
+        return `{{PROTECTED_SPAN_${index}}}`;
+      }
     );
 
+    // Make multiple choice options editable - structured options
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*opcao[^"]*"[^>]*>)\s*(<span[^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]+?)\s*<\/div>/g,
       '<div$1$2 <span class="editable-field" contenteditable="true">$3</span></div>'
@@ -900,6 +913,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '<div$1$2 <span class="editable-field" contenteditable="true">$3</span></div>'
     );
 
+    // Make multiple choice options editable - simple text patterns
     editableHtml = editableHtml.replace(
       /^(\s*)([A-E]\))\s+([^<\n]+?)$/gm,
       (match, indent, letter, text) => {
@@ -910,6 +924,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
+    // Make bold letter options editable
     editableHtml = editableHtml.replace(
       /(<(?:strong|b)>[A-E]\)<\/(?:strong|b)>)\s*([^<\n]+)/g,
       (match, letter, text) => {
@@ -920,16 +935,19 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
+    // Make paragraph options editable
     editableHtml = editableHtml.replace(
       /<p([^>]*)>([A-E]\))\s*([^<]+)<\/p>/g,
       '<p$1>$2 <span class="editable-field" contenteditable="true">$3</span></p>'
     );
 
+    // Make list item options editable
     editableHtml = editableHtml.replace(
       /<li([^>]*)>([A-E]\))\s*([^<]+)<\/li>/g,
       '<li$1>$2 <span class="editable-field" contenteditable="true">$3</span></li>'
     );
 
+    // Make break-separated options editable
     editableHtml = editableHtml.replace(
       /(<br\s*\/?>)\s*([A-E]\))\s+([^<]+?)(?=\s*(?:<br|<\/|$))/g,
       (match, br, letter, text) => {
@@ -940,11 +958,12 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
-    editableHtml = editableHtml.replace(
-      /\{\{PROTECTED_SPAN\}\}/g,
-      (match, p1) => p1 || match
-    );
+    // Restore protected spans
+    protectedSpans.forEach((span, index) => {
+      editableHtml = editableHtml.replace(`{{PROTECTED_SPAN_${index}}}`, span);
+    });
 
+    // Make other elements editable
     editableHtml = editableHtml.replace(
       /<div([^>]*class="[^"]*matching-item[^"]*"[^>]*)>([^<]*)<\/div>/g,
       '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
@@ -1053,6 +1072,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       }
     );
 
+    // Remove editable spans from footer text
     editableHtml = editableHtml.replace(
       /<span class="editable-field" contenteditable="true">([^<]*Sua aula com toque mágico[^<]*)<\/span>/g,
       '$1'
