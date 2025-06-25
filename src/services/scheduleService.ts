@@ -122,7 +122,7 @@ class ScheduleService {
           for (let i = 1; i <= 7 && !found; i++) {
             const nextDate = new Date(currentDate);
             nextDate.setDate(currentDate.getDate() + i);
-            const dayName = nextDate.toLocaleDateString('en-US', { weekday: 'lowercase' });
+            const dayName = nextDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
             if (days.includes(dayName)) {
               currentDate = nextDate;
               found = true;
