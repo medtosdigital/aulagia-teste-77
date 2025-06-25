@@ -29,7 +29,6 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   useEffect(() => {
     if (material && open) {
-      // Create a proper deep copy to avoid reference issues
       const deepCopy = JSON.parse(JSON.stringify(material));
       console.log('Setting edited material:', deepCopy);
       setEditedMaterial(deepCopy);
@@ -41,14 +40,12 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
     setLoading(true);
     try {
-      console.log('Attempting to save material:', editedMaterial);
+      console.log('Saving material:', editedMaterial);
       
-      // Force update the material in localStorage directly to ensure persistence
       const materials = JSON.parse(localStorage.getItem('generated_materials') || '[]');
       const materialIndex = materials.findIndex((m: any) => m.id === editedMaterial.id);
       
       if (materialIndex !== -1) {
-        // Update the material with current timestamp
         const updatedMaterial = {
           ...editedMaterial,
           updatedAt: new Date().toISOString()
@@ -57,12 +54,12 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
         materials[materialIndex] = updatedMaterial;
         localStorage.setItem('generated_materials', JSON.stringify(materials));
         
-        console.log('Material updated in localStorage:', updatedMaterial);
+        console.log('Material saved successfully');
         toast.success('Material atualizado com sucesso!');
         onSave();
         onClose();
       } else {
-        console.error('Material not found in localStorage');
+        console.error('Material not found');
         toast.error('Erro: Material não encontrado');
       }
     } catch (error) {
@@ -177,93 +174,72 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     });
   };
 
-  // Fixed function for updating question options
-  const updateQuestionOption = (questionIndex: number, optionIndex: number, value: string) => {
+  // Função para atualizar uma questão inteira
+  const updateQuestion = (questionIndex: number, updatedQuestion: any) => {
     if (!editedMaterial) return;
     
-    console.log(`Updating question ${questionIndex} option ${optionIndex}:`, value);
+    console.log(`Updating question ${questionIndex} with:`, updatedQuestion);
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
       const content = { ...newMaterial.content } as any;
       
-      // Ensure questoes array exists
       if (!content.questoes || !Array.isArray(content.questoes)) {
-        console.error('Questoes array not found or invalid');
+        console.error('Questoes array not found');
         return prev!;
       }
       
-      // Ensure question exists
-      if (!content.questoes[questionIndex]) {
-        console.error(`Question at index ${questionIndex} not found`);
-        return prev!;
-      }
-      
-      // Create a deep copy of the question
       const updatedQuestoes = [...content.questoes];
-      const question = { ...updatedQuestoes[questionIndex] };
+      updatedQuestoes[questionIndex] = { ...updatedQuestion };
       
-      // Ensure opcoes array exists
-      if (!question.opcoes || !Array.isArray(question.opcoes)) {
-        question.opcoes = [];
-      }
+      newMaterial.content = {
+        ...content,
+        questoes: updatedQuestoes
+      };
       
-      // Update the specific option
-      const opcoes = [...question.opcoes];
-      opcoes[optionIndex] = value;
-      question.opcoes = opcoes;
-      
-      // Update the question in the array
-      updatedQuestoes[questionIndex] = question;
-      
-      // Update the content
-      const updatedContent = { ...content };
-      updatedContent.questoes = updatedQuestoes;
-      
-      newMaterial.content = updatedContent;
-      console.log('Updated material with new option:', newMaterial);
+      console.log('Question updated successfully:', newMaterial);
       return newMaterial;
     });
   };
 
-  // Fixed function for updating question text
+  // Função simplificada para atualizar opção de questão
+  const updateQuestionOption = (questionIndex: number, optionIndex: number, value: string) => {
+    if (!editedMaterial) return;
+    
+    const content = editedMaterial.content as any;
+    if (!content.questoes || !content.questoes[questionIndex]) {
+      console.error('Question not found');
+      return;
+    }
+    
+    const question = content.questoes[questionIndex];
+    const updatedOpcoes = [...(question.opcoes || [])];
+    updatedOpcoes[optionIndex] = value;
+    
+    const updatedQuestion = {
+      ...question,
+      opcoes: updatedOpcoes
+    };
+    
+    updateQuestion(questionIndex, updatedQuestion);
+  };
+
+  // Função simplificada para atualizar texto da questão
   const updateQuestionText = (questionIndex: number, value: string) => {
     if (!editedMaterial) return;
     
-    console.log(`Updating question ${questionIndex} text:`, value);
-    setEditedMaterial(prev => {
-      const newMaterial = { ...prev! };
-      const content = { ...newMaterial.content } as any;
-      
-      // Ensure questoes array exists
-      if (!content.questoes || !Array.isArray(content.questoes)) {
-        console.error('Questoes array not found or invalid');
-        return prev!;
-      }
-      
-      // Ensure question exists
-      if (!content.questoes[questionIndex]) {
-        console.error(`Question at index ${questionIndex} not found`);
-        return prev!;
-      }
-      
-      // Create a deep copy of the questoes array
-      const updatedQuestoes = [...content.questoes];
-      const question = { ...updatedQuestoes[questionIndex] };
-      
-      // Update the question text
-      question.pergunta = value;
-      
-      // Update the question in the array
-      updatedQuestoes[questionIndex] = question;
-      
-      // Update the content
-      const updatedContent = { ...content };
-      updatedContent.questoes = updatedQuestoes;
-      
-      newMaterial.content = updatedContent;
-      console.log('Updated material with new question text:', newMaterial);
-      return newMaterial;
-    });
+    const content = editedMaterial.content as any;
+    if (!content.questoes || !content.questoes[questionIndex]) {
+      console.error('Question not found');
+      return;
+    }
+    
+    const question = content.questoes[questionIndex];
+    const updatedQuestion = {
+      ...question,
+      pergunta: value
+    };
+    
+    updateQuestion(questionIndex, updatedQuestion);
   };
 
   const renderLessonPlanEditor = (content: LessonPlan) => (
@@ -695,7 +671,13 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
                   <Label>Resposta</Label>
                   <Input
                     value={questao.resposta || ''}
-                    onChange={(e) => updateArrayItem('questoes', questionIndex, { ...questao, resposta: e.target.value })}
+                    onChange={(e) => {
+                      const updatedQuestion = {
+                        ...questao,
+                        resposta: e.target.value
+                      };
+                      updateQuestion(questionIndex, updatedQuestion);
+                    }}
                     placeholder="Resposta correta"
                   />
                 </div>
@@ -759,7 +741,13 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
                   <Input
                     type="number"
                     value={questao.pontuacao || 0}
-                    onChange={(e) => updateArrayItem('questoes', questionIndex, { ...questao, pontuacao: parseInt(e.target.value) || 0 })}
+                    onChange={(e) => {
+                      const updatedQuestion = {
+                        ...questao,
+                        pontuacao: parseInt(e.target.value) || 0
+                      };
+                      updateQuestion(questionIndex, updatedQuestion);
+                    }}
                     className="w-20 h-8"
                     min="0"
                   />
@@ -845,7 +833,6 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
         
         <div className="flex-1 overflow-y-auto pr-2">
           <div className="space-y-6">
-            {/* Informações básicas */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Informações Básicas</CardTitle>
@@ -880,7 +867,6 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
               </CardContent>
             </Card>
 
-            {/* Conteúdo específico do material */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Conteúdo do Material</CardTitle>
