@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, MapPin, BookOpen, Edit3, Trash2 } from 'lucide-react';
+import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, MapPin, BookOpen, Edit3, Trash2, GraduationCap, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, addYears, isSameMonth, isSameDay, isToday, startOfDay, endOfDay, startOfYear, endOfYear } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, addYears, isSameMonth, isSameDay, isToday, startOfDay, endOfDay, startOfYear, endOfYear, getWeek, getDaysInMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import ScheduleModal from './ScheduleModal';
@@ -47,7 +47,6 @@ const CalendarPage: React.FC = () => {
 
     const rangeEvents = scheduleService.getEventsByDateRange(startDate, endDate);
     
-    // Expandir eventos recorrentes
     const expandedEvents: ScheduleEvent[] = [];
     rangeEvents.forEach(event => {
       const expanded = scheduleService.expandRecurringEvents(event, startDate, endDate);
@@ -96,7 +95,7 @@ const CalendarPage: React.FC = () => {
 
   const handleDeleteEvent = (event: ScheduleEvent) => {
     if (window.confirm(`Tem certeza que deseja excluir "${event.title}"?`)) {
-      const success = scheduleService.deleteEvent(event.id.split('-')[0]); // Remove suffix from recurring events
+      const success = scheduleService.deleteEvent(event.id.split('-')[0]);
       if (success) {
         toast.success('Agendamento excluído com sucesso!');
         loadEvents();
@@ -121,74 +120,148 @@ const CalendarPage: React.FC = () => {
     }
   };
 
+  const EventCard = ({ event, showDate = false }: { event: ScheduleEvent; showDate?: boolean }) => (
+    <Card className="group hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <BookOpen className="w-4 h-4 text-blue-500 flex-shrink-0" />
+              <h3 className="font-semibold text-gray-900 truncate">{event.title}</h3>
+              <Badge variant="secondary" className="text-xs">{event.subject}</Badge>
+            </div>
+            
+            <div className="space-y-1 text-sm text-gray-600">
+              {showDate && (
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="w-3 h-3 flex-shrink-0" />
+                  {format(event.startDate, "dd/MM/yyyy", { locale: ptBR })}
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Clock className="w-3 h-3 flex-shrink-0" />
+                <span>{event.startTime} - {event.endTime}</span>
+              </div>
+              {event.classroom && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">{event.classroom}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-3 h-3 flex-shrink-0" />
+                <span className="text-xs">{event.grade}</span>
+              </div>
+            </div>
+            
+            {event.description && (
+              <p className="text-sm text-gray-600 mt-2 line-clamp-2">{event.description}</p>
+            )}
+          </div>
+          
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEventClick(event);
+              }}
+              className="h-8 w-8 p-0"
+            >
+              <Edit3 className="w-3 h-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteEvent(event);
+              }}
+              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   const renderDayView = () => {
     const dayEvents = getEventsForDate(currentDate);
 
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4">
-          {dayEvents.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <CalendarIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">Nenhuma aula agendada</h3>
-                <p className="text-gray-500 mb-4">Que tal agendar um material para hoje?</p>
-                <Button onClick={() => handleDateClick(currentDate)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Agendar Material
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            dayEvents.map(event => (
-              <Card key={event.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <BookOpen className="w-4 h-4 text-blue-500" />
-                        <h3 className="font-semibold">{event.title}</h3>
-                        <Badge variant="secondary">{event.subject}</Badge>
-                      </div>
-                      <div className="space-y-1 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-3 h-3" />
-                          {event.startTime} - {event.endTime}
-                        </div>
-                        {event.classroom && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-3 h-3" />
-                            {event.classroom}
-                          </div>
-                        )}
-                        <div className="text-xs text-gray-500">{event.grade}</div>
-                      </div>
-                      {event.description && (
-                        <p className="text-sm text-gray-600 mt-2">{event.description}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEventClick(event)}
-                      >
-                        <Edit3 className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteEvent(event)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
+        {dayEvents.length === 0 ? (
+          <Card className="border-dashed border-2 border-gray-300">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <CalendarIcon className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-600 mb-2">Nenhuma aula agendada</h3>
+              <p className="text-gray-500 mb-4">Que tal agendar um material para hoje?</p>
+              <Button onClick={() => handleDateClick(currentDate)} className="bg-blue-500 hover:bg-blue-600">
+                <Plus className="w-4 h-4 mr-2" />
+                Agendar Material
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {dayEvents.map(event => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderWeekView = () => {
+    const weekStart = startOfWeek(currentDate, { locale: ptBR });
+    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+          {weekDays.map(day => {
+            const dayEvents = getEventsForDate(day);
+            const isCurrentDay = isToday(day);
+            
+            return (
+              <div key={day.toString()} className="space-y-2">
+                <div className={`text-center p-3 rounded-lg ${isCurrentDay ? 'bg-blue-500 text-white' : 'bg-gray-50'}`}>
+                  <div className="text-xs font-medium">
+                    {format(day, 'EEE', { locale: ptBR })}
                   </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+                  <div className={`text-lg font-bold ${isCurrentDay ? 'text-white' : 'text-gray-900'}`}>
+                    {format(day, 'd')}
+                  </div>
+                </div>
+                
+                <div className="space-y-2 min-h-[200px]">
+                  {dayEvents.map(event => (
+                    <div
+                      key={event.id}
+                      className="text-xs p-2 bg-blue-50 border border-blue-200 rounded cursor-pointer hover:bg-blue-100 transition-colors"
+                      onClick={() => handleEventClick(event)}
+                    >
+                      <div className="font-medium text-blue-900 truncate">{event.title}</div>
+                      <div className="text-blue-700">{event.startTime}</div>
+                    </div>
+                  ))}
+                  
+                  <button
+                    onClick={() => handleDateClick(day)}
+                    className="w-full text-xs p-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-blue-300 hover:text-blue-500 transition-colors"
+                  >
+                    + Adicionar
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -204,7 +277,6 @@ const CalendarPage: React.FC = () => {
     let days = [];
     let day = startDate;
 
-    // Header dos dias da semana
     const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
     while (day <= endDate) {
@@ -217,19 +289,19 @@ const CalendarPage: React.FC = () => {
         days.push(
           <div
             key={day.toString()}
-            className={`min-h-[120px] border border-gray-200 p-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-              !isCurrentMonth ? 'bg-gray-100 text-gray-400' : ''
-            } ${isCurrentDay ? 'bg-blue-50 border-blue-200' : ''}`}
+            className={`min-h-[100px] md:min-h-[120px] border border-gray-200 p-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+              !isCurrentMonth ? 'bg-gray-100 text-gray-400' : 'bg-white'
+            } ${isCurrentDay ? 'bg-blue-50 border-blue-300' : ''}`}
             onClick={() => handleDateClick(currentDay)}
           >
-            <div className={`text-sm font-medium mb-1 ${isCurrentDay ? 'text-blue-600' : ''}`}>
+            <div className={`text-sm font-medium mb-1 ${isCurrentDay ? 'text-blue-600' : isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}`}>
               {format(day, 'd')}
             </div>
             <div className="space-y-1">
-              {dayEvents.slice(0, 3).map(event => (
+              {dayEvents.slice(0, 2).map(event => (
                 <div
                   key={event.id}
-                  className="text-xs p-1 bg-blue-100 text-blue-800 rounded truncate cursor-pointer hover:bg-blue-200"
+                  className="text-xs p-1 bg-blue-100 text-blue-800 rounded truncate cursor-pointer hover:bg-blue-200 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEventClick(event);
@@ -238,9 +310,9 @@ const CalendarPage: React.FC = () => {
                   {event.startTime} {event.title}
                 </div>
               ))}
-              {dayEvents.length > 3 && (
-                <div className="text-xs text-gray-500">
-                  +{dayEvents.length - 3} mais
+              {dayEvents.length > 2 && (
+                <div className="text-xs text-gray-500 font-medium">
+                  +{dayEvents.length - 2} mais
                 </div>
               )}
             </div>
@@ -257,10 +329,10 @@ const CalendarPage: React.FC = () => {
     }
 
     return (
-      <div className="space-y-0">
+      <div className="space-y-0 bg-white rounded-lg border overflow-hidden">
         <div className="grid grid-cols-7 gap-0 border-b border-gray-200">
           {weekDays.map(dayName => (
-            <div key={dayName} className="p-4 text-center font-medium text-gray-600 bg-gray-50 border-r border-gray-200 last:border-r-0">
+            <div key={dayName} className="p-3 md:p-4 text-center font-medium text-gray-600 bg-gray-50 border-r border-gray-200 last:border-r-0 text-sm md:text-base">
               {dayName}
             </div>
           ))}
@@ -272,63 +344,119 @@ const CalendarPage: React.FC = () => {
     );
   };
 
+  const renderYearView = () => {
+    const year = currentDate.getFullYear();
+    const months = Array.from({ length: 12 }, (_, i) => new Date(year, i, 1));
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {months.map(month => {
+          const monthEvents = events.filter(event => 
+            event.startDate.getFullYear() === year && 
+            event.startDate.getMonth() === month.getMonth()
+          );
+
+          return (
+            <Card 
+              key={month.toString()} 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => {
+                setCurrentDate(month);
+                setView('month');
+              }}
+            >
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-center">
+                  {format(month, 'MMMM', { locale: ptBR })}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-center mb-3">
+                  <div className="text-2xl font-bold text-blue-500">
+                    {monthEvents.length}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {monthEvents.length === 1 ? 'agendamento' : 'agendamentos'}
+                  </div>
+                </div>
+                
+                {monthEvents.length > 0 && (
+                  <div className="space-y-1">
+                    {monthEvents.slice(0, 3).map(event => (
+                      <div key={event.id} className="text-xs p-1 bg-gray-100 rounded truncate">
+                        {event.title}
+                      </div>
+                    ))}
+                    {monthEvents.length > 3 && (
+                      <div className="text-xs text-gray-500 text-center">
+                        +{monthEvents.length - 3} mais
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-4 md:p-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Calendário de Materiais</h1>
-            <p className="text-gray-600">Organize e acompanhe seus agendamentos pedagógicos</p>
+        <div className="flex flex-col space-y-4 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Calendário de Materiais</h1>
+              <p className="text-gray-600">Organize e acompanhe seus agendamentos pedagógicos</p>
+            </div>
+            <Button 
+              onClick={() => handleDateClick(new Date())} 
+              className="bg-blue-500 hover:bg-blue-600 w-full md:w-auto"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Agendamento
+            </Button>
           </div>
-          <Button onClick={() => handleDateClick(new Date())} className="bg-blue-500 hover:bg-blue-600">
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Agendamento
-          </Button>
+
+          {/* Navigation Controls */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                <div className="flex items-center justify-center md:justify-start space-x-4">
+                  <Button variant="outline" size="sm" onClick={() => navigateDate('prev')}>
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <h2 className="text-lg font-semibold min-w-[200px] text-center">
+                    {getDateRangeText()}
+                  </h2>
+                  <Button variant="outline" size="sm" onClick={() => navigateDate('next')}>
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                <Tabs value={view} onValueChange={(value: any) => setView(value)} className="w-full md:w-auto">
+                  <TabsList className="grid w-full grid-cols-4 md:w-auto">
+                    <TabsTrigger value="day" className="text-xs md:text-sm">Dia</TabsTrigger>
+                    <TabsTrigger value="week" className="text-xs md:text-sm">Semana</TabsTrigger>
+                    <TabsTrigger value="month" className="text-xs md:text-sm">Mês</TabsTrigger>
+                    <TabsTrigger value="year" className="text-xs md:text-sm">Ano</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Controles de Navegação */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm" onClick={() => navigateDate('prev')}>
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <h2 className="text-lg font-semibold min-w-[200px] text-center">
-                  {getDateRangeText()}
-                </h2>
-                <Button variant="outline" size="sm" onClick={() => navigateDate('next')}>
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-              
-              <Tabs value={view} onValueChange={(value: any) => setView(value)}>
-                <TabsList>
-                  <TabsTrigger value="day">Dia</TabsTrigger>
-                  <TabsTrigger value="week">Semana</TabsTrigger>
-                  <TabsTrigger value="month">Mês</TabsTrigger>
-                  <TabsTrigger value="year">Ano</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Conteúdo do Calendário */}
-        <Card>
-          <CardContent className="p-0">
-            {view === 'day' && renderDayView()}
-            {view === 'month' && renderMonthView()}
-            {(view === 'week' || view === 'year') && (
-              <div className="p-8 text-center">
-                <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">Visualização em desenvolvimento</h3>
-                <p className="text-gray-500">A visualização {view === 'week' ? 'semanal' : 'anual'} estará disponível em breve</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Calendar Content */}
+        <div className="space-y-4">
+          {view === 'day' && renderDayView()}
+          {view === 'week' && renderWeekView()}
+          {view === 'month' && renderMonthView()}
+          {view === 'year' && renderYearView()}
+        </div>
       </div>
 
       <ScheduleModal
