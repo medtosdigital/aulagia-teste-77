@@ -9,6 +9,7 @@ import MaterialsList from '@/components/MaterialsList';
 import MaterialViewer from '@/components/MaterialViewer';
 import CalendarPage from '@/components/CalendarPage';
 import SchoolPage from '@/components/SchoolPage';
+import SubscriptionPage from '@/components/SubscriptionPage';
 
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
@@ -53,7 +54,7 @@ const Index = () => {
       case 'school':
         return <SchoolPage />;
       case 'subscription':
-        return <div className="p-4"><h2>Assinatura - Em desenvolvimento</h2></div>;
+        return <SubscriptionPage />;
       case 'settings':
         return <div className="p-4"><h2>Configurações - Em desenvolvimento</h2></div>;
       case 'api-keys':
