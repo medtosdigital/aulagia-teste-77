@@ -12,6 +12,7 @@ import { exportService } from '@/services/exportService';
 import MaterialModal from './MaterialModal';
 import MaterialEditModal from './MaterialEditModal';
 import MaterialInlineEditModal from './MaterialInlineEditModal';
+
 const MaterialsList: React.FC = () => {
   const navigate = useNavigate();
   const [materials, setMaterials] = useState<GeneratedMaterial[]>([]);
@@ -25,16 +26,20 @@ const MaterialsList: React.FC = () => {
   const [exportDropdownOpen, setExportDropdownOpen] = useState<string | null>(null);
   const [inlineEditModalOpen, setInlineEditModalOpen] = useState(false);
   const [materialToEdit, setMaterialToEdit] = useState<GeneratedMaterial | null>(null);
+
   useEffect(() => {
     loadMaterials();
   }, []);
+
   useEffect(() => {
     filterMaterials();
   }, [materials, searchTerm, filterType, filterSubject]);
+
   const loadMaterials = () => {
     const allMaterials = materialService.getMaterials();
     setMaterials(allMaterials);
   };
+
   const filterMaterials = () => {
     let filtered = materials;
     if (searchTerm) {
@@ -48,33 +53,41 @@ const MaterialsList: React.FC = () => {
     }
     setFilteredMaterials(filtered);
   };
+
   const handleViewMaterial = (material: GeneratedMaterial) => {
     setSelectedMaterial(material);
     setModalOpen(true);
   };
+
   const handleEdit = (material: GeneratedMaterial) => {
     setMaterialToEdit(material);
     setInlineEditModalOpen(true);
   };
+
   const handleEditMaterial = (material: GeneratedMaterial) => {
     setSelectedMaterial(material);
     setEditModalOpen(true);
   };
+
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedMaterial(null);
   };
+
   const handleCloseEditModal = () => {
     setEditModalOpen(false);
     setSelectedMaterial(null);
   };
+
   const handleSaveEdit = () => {
     loadMaterials();
   };
+
   const handleInlineEditSave = () => {
     setMaterials(materialService.getMaterials());
     setMaterialToEdit(null);
   };
+
   const handleDelete = (id: string, title: string) => {
     if (window.confirm(`Tem certeza que deseja excluir "${title}"?`)) {
       const success = materialService.deleteMaterial(id);
@@ -86,6 +99,7 @@ const MaterialsList: React.FC = () => {
       }
     }
   };
+
   const handleExport = async (material: GeneratedMaterial, format: 'pdf' | 'word' | 'ppt' | 'print') => {
     try {
       if (format === 'pdf') {
@@ -107,9 +121,11 @@ const MaterialsList: React.FC = () => {
     }
     setExportDropdownOpen(null);
   };
+
   const toggleExportDropdown = (materialId: string) => {
     setExportDropdownOpen(exportDropdownOpen === materialId ? null : materialId);
   };
+
   const getTypeConfig = (type: string) => {
     const configs = {
       'plano-de-aula': {
@@ -147,35 +163,48 @@ const MaterialsList: React.FC = () => {
     };
     return configs[type as keyof typeof configs] || configs['atividade'];
   };
+
   const uniqueSubjects = [...new Set(materials.map(m => m.subject))];
-  return <div className="space-y-6">
+
+  return <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <div className="max-w-7xl mx-auto p-4 md:p-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-8 space-y-4 md:space-y-0">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Meus Materiais</h1>
-              <Badge variant="secondary" className="py-1 text-sm px-[5px]">
-                {filteredMaterials.length === 0 ? 'Nenhum' : filteredMaterials.length} {filteredMaterials.length === 1 ? 'material' : 'materiais'}
-              </Badge>
+        {/* Enhanced Header */}
+        <div className="flex flex-col space-y-6 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3">
+                Meus Materiais
+              </h1>
+              <p className="text-gray-600 text-lg">Gerencie e organize seus conteúdos pedagógicos com elegância</p>
+              <div className="flex items-center gap-3 mt-3">
+                <Badge variant="secondary" className="py-1 text-sm px-3 bg-blue-100 text-blue-700 border-blue-200">
+                  {filteredMaterials.length === 0 ? 'Nenhum' : filteredMaterials.length} {filteredMaterials.length === 1 ? 'material' : 'materiais'}
+                </Badge>
+              </div>
             </div>
-            <p className="text-gray-600">Gerencie e organize seus conteúdos pedagógicos</p>
+            <Button 
+              onClick={() => navigate('/')} 
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all w-full md:w-auto"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Criar Novo Material
+            </Button>
           </div>
         </div>
 
         {/* Filtros */}
-        <Card className="mb-6 shadow-sm border-0 bg-white/50 backdrop-blur">
-          <CardContent className="p-4 md:p-6">
+        <Card className="mb-6 shadow-lg bg-white/80 backdrop-blur-sm border-0">
+          <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input placeholder="Buscar por título ou disciplina..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500" />
+                  <Input placeholder="Buscar por título ou disciplina..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-12" />
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 md:w-auto">
                 <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger className="w-full sm:w-48">
+                  <SelectTrigger className="w-full sm:w-48 h-12">
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
@@ -188,7 +217,7 @@ const MaterialsList: React.FC = () => {
                   </SelectContent>
                 </Select>
                 <Select value={filterSubject} onValueChange={setFilterSubject}>
-                  <SelectTrigger className="w-full sm:w-48">
+                  <SelectTrigger className="w-full sm:w-48 h-12">
                     <SelectValue placeholder="Disciplina" />
                   </SelectTrigger>
                   <SelectContent>
@@ -202,7 +231,7 @@ const MaterialsList: React.FC = () => {
         </Card>
 
         {/* Lista de Materiais */}
-        {filteredMaterials.length === 0 ? <Card className="shadow-sm">
+        {filteredMaterials.length === 0 ? <Card className="shadow-lg bg-white/90 backdrop-blur-sm">
             <CardContent className="p-8 md:p-12 text-center">
               <div className="text-gray-400 mb-4">
                 <FileText className="w-12 h-12 md:w-16 md:h-16 mx-auto" />
@@ -213,7 +242,7 @@ const MaterialsList: React.FC = () => {
               <p className="text-gray-500 mb-6">
                 {materials.length === 0 ? 'Comece criando seu primeiro material pedagógico!' : 'Tente ajustar os filtros para encontrar o que procura.'}
               </p>
-              {materials.length === 0 && <Button onClick={() => navigate('/')} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white">
+              {materials.length === 0 && <Button onClick={() => navigate('/')} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl">
                   <Plus className="w-4 h-4 mr-2" />
                   Criar Primeiro Material
                 </Button>}
@@ -313,4 +342,5 @@ const MaterialsList: React.FC = () => {
     }} onSave={handleInlineEditSave} />
     </div>;
 };
+
 export default MaterialsList;
