@@ -694,13 +694,13 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     editableHtml = editableHtml.replace(
       /<td([^>]*)>([^<]+)<\/td>/g,
       (match, attrs, content) => {
-        // Não tornar editável se contém data fixa ou elementos não editáveis
+        // Não tornar editável se contém elementos não editáveis (mas permitir datas)
         if (content.includes('aulagia.com.br') || 
             content.includes('AulagIA') || 
-            content.includes('_____') ||
-            content.includes(new Date().toLocaleDateString('pt-BR'))) {
+            content.includes('_____')) {
           return match;
         }
+        // Tornar TODAS as células editáveis, incluindo datas
         return `<td${attrs}><span class="editable-field" contenteditable="true">${content}</span></td>`;
       }
     );
@@ -775,8 +775,10 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     editableHtml = editableHtml.replace(
       /<p([^>]*)>([^<]+)<\/p>/g,
       (match, attrs, content) => {
-        // Não tornar editável se contém elementos específicos
-        if (content.includes('aulagia.com.br') || content.includes('AulagIA')) {
+        // Não tornar editável se contém elementos específicos ou "Sua aula com toque mágico"
+        if (content.includes('aulagia.com.br') || 
+            content.includes('AulagIA') || 
+            content.includes('Sua aula com toque mágico')) {
           return match;
         }
         return `<p${attrs}><span class="editable-field" contenteditable="true">${content}</span></p>`;
@@ -852,6 +854,18 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
         }
         return match;
       }
+    );
+
+    // REMOVER editabilidade do texto "Sua aula com toque mágico" especificamente
+    editableHtml = editableHtml.replace(
+      /<span class="editable-field" contenteditable="true">Sua aula com toque mágico<\/span>/g,
+      'Sua aula com toque mágico'
+    );
+
+    // REMOVER editabilidade de qualquer elemento que contenha "Sua aula com toque mágico"
+    editableHtml = editableHtml.replace(
+      /<([^>]+)><span class="editable-field" contenteditable="true">([^<]*Sua aula com toque mágico[^<]*)<\/span><\/([^>]+)>/g,
+      '<$1>$2</$3>'
     );
 
     return editableHtml;
