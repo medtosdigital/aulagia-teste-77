@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, MapPin, BookOpen, Edit3, Trash2, GraduationCap, FileText } from 'lucide-react';
+import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, MapPin, BookOpen, Edit3, Trash2, GraduationCap, FileText, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -120,46 +120,72 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  const EventCard = ({ event, showDate = false }: { event: ScheduleEvent; showDate?: boolean }) => (
-    <Card className="group hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500">
-      <CardContent className="p-4">
+  const getSubjectColor = (subject: string) => {
+    const colors = {
+      'Matemática': 'bg-blue-100 text-blue-800 border-blue-200',
+      'Português': 'bg-green-100 text-green-800 border-green-200',
+      'História': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'Geografia': 'bg-purple-100 text-purple-800 border-purple-200',
+      'Ciências': 'bg-pink-100 text-pink-800 border-pink-200',
+      'Inglês': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+      'Educação Física': 'bg-red-100 text-red-800 border-red-200',
+      'Arte': 'bg-orange-100 text-orange-800 border-orange-200',
+    };
+    return colors[subject as keyof typeof colors] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  const EventCard = ({ event, showDate = false, compact = false }: { event: ScheduleEvent; showDate?: boolean; compact?: boolean }) => (
+    <Card className={`group hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 hover:scale-[1.02] ${compact ? 'text-xs' : ''}`}>
+      <CardContent className={`${compact ? 'p-3' : 'p-4'}`}>
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <BookOpen className="w-4 h-4 text-blue-500 flex-shrink-0" />
-              <h3 className="font-semibold text-gray-900 truncate">{event.title}</h3>
-              <Badge variant="secondary" className="text-xs">{event.subject}</Badge>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 text-white" />
+                </div>
+                <h3 className={`font-bold text-gray-900 truncate ${compact ? 'text-sm' : 'text-base'}`}>
+                  {event.title}
+                </h3>
+              </div>
+              <Badge variant="secondary" className={`text-xs font-medium ${getSubjectColor(event.subject)}`}>
+                {event.subject}
+              </Badge>
             </div>
             
-            <div className="space-y-1 text-sm text-gray-600">
+            <div className={`space-y-2 ${compact ? 'text-xs' : 'text-sm'} text-gray-600`}>
               {showDate && (
                 <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-3 h-3 flex-shrink-0" />
-                  {format(event.startDate, "dd/MM/yyyy", { locale: ptBR })}
+                  <CalendarIcon className="w-3 h-3 text-blue-500" />
+                  <span className="font-medium">
+                    {format(event.startDate, "dd/MM/yyyy", { locale: ptBR })}
+                  </span>
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <Clock className="w-3 h-3 flex-shrink-0" />
-                <span>{event.startTime} - {event.endTime}</span>
+                <Clock className="w-3 h-3 text-green-500" />
+                <span className="font-medium">{event.startTime} - {event.endTime}</span>
               </div>
               {event.classroom && (
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-3 h-3 flex-shrink-0" />
+                  <MapPin className="w-3 h-3 text-purple-500" />
                   <span className="truncate">{event.classroom}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <GraduationCap className="w-3 h-3 flex-shrink-0" />
-                <span className="text-xs">{event.grade}</span>
+                <GraduationCap className="w-3 h-3 text-orange-500" />
+                <span className="font-medium">{event.grade}</span>
               </div>
             </div>
             
-            {event.description && (
-              <p className="text-sm text-gray-600 mt-2 line-clamp-2">{event.description}</p>
+            {event.description && !compact && (
+              <p className="text-sm text-gray-600 mt-3 p-2 bg-gray-50 rounded-md italic">
+                "{event.description}"
+              </p>
             )}
           </div>
           
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
             <Button
               variant="ghost"
               size="sm"
@@ -167,7 +193,8 @@ const CalendarPage: React.FC = () => {
                 e.stopPropagation();
                 handleEventClick(event);
               }}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+              title="Editar"
             >
               <Edit3 className="w-3 h-3" />
             </Button>
@@ -179,6 +206,7 @@ const CalendarPage: React.FC = () => {
                 handleDeleteEvent(event);
               }}
               className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+              title="Excluir"
             >
               <Trash2 className="w-3 h-3" />
             </Button>
@@ -192,26 +220,53 @@ const CalendarPage: React.FC = () => {
     const dayEvents = getEventsForDate(currentDate);
 
     return (
-      <div className="space-y-4">
-        {dayEvents.length === 0 ? (
-          <Card className="border-dashed border-2 border-gray-300">
-            <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <CalendarIcon className="w-8 h-8 text-gray-400" />
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {format(currentDate, "dd 'de' MMMM", { locale: ptBR })}
+              </h2>
+              <p className="text-gray-600">
+                {format(currentDate, "EEEE", { locale: ptBR })}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-blue-600">{dayEvents.length}</div>
+              <div className="text-sm text-gray-600">
+                {dayEvents.length === 1 ? 'material agendado' : 'materiais agendados'}
               </div>
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">Nenhuma aula agendada</h3>
-              <p className="text-gray-500 mb-4">Que tal agendar um material para hoje?</p>
-              <Button onClick={() => handleDateClick(currentDate)} className="bg-blue-500 hover:bg-blue-600">
-                <Plus className="w-4 h-4 mr-2" />
+            </div>
+          </div>
+        </div>
+
+        {dayEvents.length === 0 ? (
+          <Card className="border-dashed border-2 border-gray-300 hover:border-blue-300 transition-colors">
+            <CardContent className="p-12 text-center">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                <CalendarIcon className="w-10 h-10 text-blue-500" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-600 mb-3">Nenhum material agendado</h3>
+              <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                Que tal agendar um material pedagógico para hoje? Organize suas aulas de forma eficiente.
+              </p>
+              <Button 
+                onClick={() => handleDateClick(currentDate)} 
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all"
+              >
+                <Plus className="w-5 h-5 mr-2" />
                 Agendar Material
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
-            {dayEvents.map(event => (
-              <EventCard key={event.id} event={event} />
-            ))}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Materiais do dia</h3>
+            {dayEvents
+              .sort((a, b) => a.startTime.localeCompare(b.startTime))
+              .map(event => (
+                <EventCard key={event.id} event={event} />
+              ))}
           </div>
         )}
       </div>
@@ -223,40 +278,70 @@ const CalendarPage: React.FC = () => {
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Visão Semanal</h2>
+          <p className="text-gray-600">
+            {format(weekStart, "dd/MM", { locale: ptBR })} - {format(addDays(weekStart, 6), "dd/MM/yyyy", { locale: ptBR })}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
           {weekDays.map(day => {
             const dayEvents = getEventsForDate(day);
             const isCurrentDay = isToday(day);
+            const isCurrentMonth = isSameMonth(day, currentDate);
             
             return (
-              <div key={day.toString()} className="space-y-2">
-                <div className={`text-center p-3 rounded-lg ${isCurrentDay ? 'bg-blue-500 text-white' : 'bg-gray-50'}`}>
-                  <div className="text-xs font-medium">
+              <div key={day.toString()} className="space-y-3">
+                <div className={`text-center p-4 rounded-xl transition-all cursor-pointer hover:scale-105 ${
+                  isCurrentDay 
+                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg' 
+                    : isCurrentMonth 
+                      ? 'bg-white border-2 border-gray-200 hover:border-blue-300' 
+                      : 'bg-gray-100 text-gray-400'
+                }`}>
+                  <div className="text-xs font-medium uppercase tracking-wide">
                     {format(day, 'EEE', { locale: ptBR })}
                   </div>
-                  <div className={`text-lg font-bold ${isCurrentDay ? 'text-white' : 'text-gray-900'}`}>
+                  <div className={`text-2xl font-bold mt-1 ${
+                    isCurrentDay ? 'text-white' : isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+                  }`}>
                     {format(day, 'd')}
                   </div>
+                  {dayEvents.length > 0 && (
+                    <div className={`text-xs mt-2 px-2 py-1 rounded-full ${
+                      isCurrentDay ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600'
+                    }`}>
+                      {dayEvents.length} material{dayEvents.length !== 1 ? 'is' : ''}
+                    </div>
+                  )}
                 </div>
                 
-                <div className="space-y-2 min-h-[200px]">
-                  {dayEvents.map(event => (
-                    <div
-                      key={event.id}
-                      className="text-xs p-2 bg-blue-50 border border-blue-200 rounded cursor-pointer hover:bg-blue-100 transition-colors"
-                      onClick={() => handleEventClick(event)}
-                    >
-                      <div className="font-medium text-blue-900 truncate">{event.title}</div>
-                      <div className="text-blue-700">{event.startTime}</div>
-                    </div>
-                  ))}
+                <div className="space-y-2 min-h-[300px]">
+                  {dayEvents
+                    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                    .map(event => (
+                      <div
+                        key={event.id}
+                        className="p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:shadow-md hover:border-blue-300 transition-all group"
+                        onClick={() => handleEventClick(event)}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className={`w-3 h-3 rounded-full ${getSubjectColor(event.subject).replace('bg-', 'bg-').replace('text-', '').replace('border-', '').split(' ')[0]}`}></div>
+                          <div className="font-medium text-gray-900 text-sm truncate">{event.title}</div>
+                        </div>
+                        <div className="text-xs text-gray-600 font-medium">{event.startTime}</div>
+                        <div className="text-xs text-gray-500">{event.subject}</div>
+                      </div>
+                    ))}
                   
                   <button
                     onClick={() => handleDateClick(day)}
-                    className="w-full text-xs p-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-blue-300 hover:text-blue-500 transition-colors"
+                    className="w-full text-sm p-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
                   >
-                    + Adicionar
+                    <Plus className="w-4 h-4 mx-auto mb-1" />
+                    <div>Adicionar</div>
                   </button>
                 </div>
               </div>
@@ -289,29 +374,36 @@ const CalendarPage: React.FC = () => {
         days.push(
           <div
             key={day.toString()}
-            className={`min-h-[100px] md:min-h-[120px] border border-gray-200 p-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-              !isCurrentMonth ? 'bg-gray-100 text-gray-400' : 'bg-white'
-            } ${isCurrentDay ? 'bg-blue-50 border-blue-300' : ''}`}
+            className={`min-h-[120px] border border-gray-200 p-3 cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
+              !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white hover:shadow-md'
+            } ${isCurrentDay ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-200' : ''}`}
             onClick={() => handleDateClick(currentDay)}
           >
-            <div className={`text-sm font-medium mb-1 ${isCurrentDay ? 'text-blue-600' : isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}`}>
+            <div className={`text-sm font-bold mb-2 ${
+              isCurrentDay 
+                ? 'text-blue-600' 
+                : isCurrentMonth 
+                  ? 'text-gray-900' 
+                  : 'text-gray-400'
+            }`}>
               {format(day, 'd')}
             </div>
             <div className="space-y-1">
               {dayEvents.slice(0, 2).map(event => (
                 <div
                   key={event.id}
-                  className="text-xs p-1 bg-blue-100 text-blue-800 rounded truncate cursor-pointer hover:bg-blue-200 transition-colors"
+                  className={`text-xs p-2 rounded-md cursor-pointer hover:shadow-sm transition-all ${getSubjectColor(event.subject)}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEventClick(event);
                   }}
                 >
-                  {event.startTime} {event.title}
+                  <div className="font-medium truncate">{event.startTime} {event.title}</div>
+                  <div className="text-xs opacity-75">{event.subject}</div>
                 </div>
               ))}
               {dayEvents.length > 2 && (
-                <div className="text-xs text-gray-500 font-medium">
+                <div className="text-xs text-blue-600 font-medium bg-blue-100 p-1 rounded text-center">
                   +{dayEvents.length - 2} mais
                 </div>
               )}
@@ -329,16 +421,27 @@ const CalendarPage: React.FC = () => {
     }
 
     return (
-      <div className="space-y-0 bg-white rounded-lg border overflow-hidden">
-        <div className="grid grid-cols-7 gap-0 border-b border-gray-200">
-          {weekDays.map(dayName => (
-            <div key={dayName} className="p-3 md:p-4 text-center font-medium text-gray-600 bg-gray-50 border-r border-gray-200 last:border-r-0 text-sm md:text-base">
-              {dayName}
-            </div>
-          ))}
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
+          </h2>
+          <p className="text-gray-600">
+            {events.length} material{events.length !== 1 ? 'is' : ''} agendado{events.length !== 1 ? 's' : ''} este mês
+          </p>
         </div>
-        <div className="space-y-0">
-          {rows}
+
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+          <div className="grid grid-cols-7 gap-0 border-b border-gray-200">
+            {weekDays.map(dayName => (
+              <div key={dayName} className="p-4 text-center font-bold text-gray-700 bg-gray-50 border-r border-gray-200 last:border-r-0">
+                {dayName}
+              </div>
+            ))}
+          </div>
+          <div className="space-y-0">
+            {rows}
+          </div>
         </div>
       </div>
     );
@@ -349,100 +452,130 @@ const CalendarPage: React.FC = () => {
     const months = Array.from({ length: 12 }, (_, i) => new Date(year, i, 1));
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {months.map(month => {
-          const monthEvents = events.filter(event => 
-            event.startDate.getFullYear() === year && 
-            event.startDate.getMonth() === month.getMonth()
-          );
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{year}</h2>
+          <p className="text-gray-600">
+            {events.length} material{events.length !== 1 ? 'is' : ''} agendado{events.length !== 1 ? 's' : ''} este ano
+          </p>
+        </div>
 
-          return (
-            <Card 
-              key={month.toString()} 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => {
-                setCurrentDate(month);
-                setView('month');
-              }}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-center">
-                  {format(month, 'MMMM', { locale: ptBR })}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-center mb-3">
-                  <div className="text-2xl font-bold text-blue-500">
-                    {monthEvents.length}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {months.map(month => {
+            const monthEvents = events.filter(event => 
+              event.startDate.getFullYear() === year && 
+              event.startDate.getMonth() === month.getMonth()
+            );
+
+            return (
+              <Card 
+                key={month.toString()} 
+                className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 hover:border-blue-300"
+                onClick={() => {
+                  setCurrentDate(month);
+                  setView('month');
+                }}
+              >
+                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50">
+                  <CardTitle className="text-lg text-center font-bold text-gray-900">
+                    {format(month, 'MMMM', { locale: ptBR })}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="text-center mb-4">
+                    <div className="text-3xl font-bold text-blue-600 mb-1">
+                      {monthEvents.length}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {monthEvents.length === 1 ? 'material' : 'materiais'}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {monthEvents.length === 1 ? 'agendamento' : 'agendamentos'}
-                  </div>
-                </div>
-                
-                {monthEvents.length > 0 && (
-                  <div className="space-y-1">
-                    {monthEvents.slice(0, 3).map(event => (
-                      <div key={event.id} className="text-xs p-1 bg-gray-100 rounded truncate">
-                        {event.title}
-                      </div>
-                    ))}
-                    {monthEvents.length > 3 && (
-                      <div className="text-xs text-gray-500 text-center">
-                        +{monthEvents.length - 3} mais
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+                  
+                  {monthEvents.length > 0 && (
+                    <div className="space-y-2">
+                      {monthEvents.slice(0, 3).map(event => (
+                        <div key={event.id} className={`text-xs p-2 rounded-md ${getSubjectColor(event.subject)}`}>
+                          <div className="font-medium truncate">{event.title}</div>
+                          <div className="opacity-75">{event.subject}</div>
+                        </div>
+                      ))}
+                      {monthEvents.length > 3 && (
+                        <div className="text-xs text-blue-600 font-medium text-center bg-blue-100 p-2 rounded-md">
+                          +{monthEvents.length - 3} mais materiais
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <div className="max-w-7xl mx-auto p-4 md:p-6">
         {/* Header */}
-        <div className="flex flex-col space-y-4 mb-6">
+        <div className="flex flex-col space-y-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Calendário de Materiais</h1>
-              <p className="text-gray-600">Organize e acompanhe seus agendamentos pedagógicos</p>
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3">
+                Calendário de Materiais
+              </h1>
+              <p className="text-gray-600 text-lg">Organize e acompanhe seus agendamentos pedagógicos com elegância</p>
             </div>
             <Button 
               onClick={() => handleDateClick(new Date())} 
-              className="bg-blue-500 hover:bg-blue-600 w-full md:w-auto"
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all w-full md:w-auto"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-5 h-5 mr-2" />
               Novo Agendamento
             </Button>
           </div>
 
           {/* Navigation Controls */}
-          <Card>
-            <CardContent className="p-4">
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
                 <div className="flex items-center justify-center md:justify-start space-x-4">
-                  <Button variant="outline" size="sm" onClick={() => navigateDate('prev')}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => navigateDate('prev')}
+                    className="hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
-                  <h2 className="text-lg font-semibold min-w-[200px] text-center">
+                  <h2 className="text-xl font-bold min-w-[250px] text-center text-gray-900">
                     {getDateRangeText()}
                   </h2>
-                  <Button variant="outline" size="sm" onClick={() => navigateDate('next')}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => navigateDate('next')}
+                    className="hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  >
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
                 
                 <Tabs value={view} onValueChange={(value: any) => setView(value)} className="w-full md:w-auto">
-                  <TabsList className="grid w-full grid-cols-4 md:w-auto">
-                    <TabsTrigger value="day" className="text-xs md:text-sm">Dia</TabsTrigger>
-                    <TabsTrigger value="week" className="text-xs md:text-sm">Semana</TabsTrigger>
-                    <TabsTrigger value="month" className="text-xs md:text-sm">Mês</TabsTrigger>
-                    <TabsTrigger value="year" className="text-xs md:text-sm">Ano</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-4 md:w-auto bg-gray-100 p-1 rounded-xl">
+                    <TabsTrigger value="day" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                      Dia
+                    </TabsTrigger>
+                    <TabsTrigger value="week" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                      Semana
+                    </TabsTrigger>
+                    <TabsTrigger value="month" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                      Mês
+                    </TabsTrigger>
+                    <TabsTrigger value="year" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                      Ano
+                    </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -451,7 +584,7 @@ const CalendarPage: React.FC = () => {
         </div>
 
         {/* Calendar Content */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {view === 'day' && renderDayView()}
           {view === 'week' && renderWeekView()}
           {view === 'month' && renderMonthView()}
