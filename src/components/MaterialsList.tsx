@@ -166,21 +166,25 @@ const MaterialsList: React.FC = () => {
 
   const uniqueSubjects = [...new Set(materials.map(m => m.subject))];
 
-  return <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="max-w-7xl mx-auto p-4 md:p-6">
         {/* Enhanced Header */}
         <div className="flex flex-col space-y-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3">
-                Meus Materiais
-              </h1>
-              <p className="text-gray-600 text-lg">Gerencie e organize seus conteúdos pedagógicos com elegância</p>
-              <div className="flex items-center gap-3 mt-3">
-                <Badge variant="secondary" className="py-1 text-sm px-3 bg-blue-100 text-blue-700 border-blue-200">
-                  {filteredMaterials.length === 0 ? 'Nenhum' : filteredMaterials.length} {filteredMaterials.length === 1 ? 'material' : 'materiais'}
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 space-y-2 sm:space-y-0">
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  Meus Materiais
+                </h1>
+                <Badge 
+                  variant="secondary" 
+                  className="py-1 text-sm px-3 bg-blue-100 text-blue-700 border-blue-200 w-fit"
+                >
+                  {filteredMaterials.length} {filteredMaterials.length === 1 ? 'material' : 'materiais'}
                 </Badge>
               </div>
+              <p className="text-gray-600 text-lg">Gerencie e organize seus conteúdos pedagógicos com elegância</p>
             </div>
             <Button 
               onClick={() => navigate('/')} 
@@ -340,7 +344,8 @@ const MaterialsList: React.FC = () => {
       setInlineEditModalOpen(false);
       setMaterialToEdit(null);
     }} onSave={handleInlineEditSave} />
-    </div>;
+    </div>
+  );
 };
 
 export default MaterialsList;
