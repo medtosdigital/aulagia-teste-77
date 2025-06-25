@@ -886,32 +886,64 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '$1<span class="editable-field" contenteditable="true">$2</span>'
     );
 
-    // OPÇÕES - Tornar opções de múltipla escolha editáveis (padrão melhorado)
+    // OPÇÕES MÚLTIPLA ESCOLHA - Padrão mais abrangente e preciso
+    // Primeiro, proteger spans já editáveis para não duplicar
     editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*opcao[^"]*"[^>]*)>\s*(<span[^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*?)\s*<\/div>/g,
-      '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
+      /(<span[^>]*class="[^"]*editable-field[^"]*"[^>]*>[^<]*<\/span>)/g,
+      '{{PROTECTED_SPAN_$1}}'
     );
 
+    // Padrão 1: <div class="opcao"><span class="opcao-letra">A)</span> Texto da opção</div>
     editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*option[^"]*"[^>]*)>\s*(<span[^>]*class="[^"]*option-letter[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]*?)\s*<\/div>/g,
-      '<div$1>$2 <span class="editable-field" contenteditable="true">$3</span></div>'
+      /<div([^>]*class="[^"]*opcao[^"]*"[^>]*>)\s*<span([^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]+?)\s*<\/div>/g,
+      '<div$1$2 <span class="editable-field" contenteditable="true">$3</span></div>'
     );
 
-    // OPÇÕES - Capturar opções em formato direto ([A-E]) seguido de texto
+    // Padrão 2: <div class="option"><span class="option-letter">A)</span> Texto da opção</div>
     editableHtml = editableHtml.replace(
-      /([A-E]\))\s*([^<\n]+)/g,
+      /<div([^>]*class="[^"]*option[^"]*"[^>]*>)\s*<span([^>]*class="[^"]*option-letter[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]+?)\s*<\/div>/g,
+      '<div$1$2 <span class="editable-field" contenteditable="true">$3</span></div>'
+    );
+
+    // Padrão 3: A) Texto da opção (formato direto sem divs)
+    editableHtml = editableHtml.replace(
+      /([A-E]\))\s+([^<\n]+?)(\s*(?:<br|<\/|$))/g,
+      (match, letter, text, after) => {
+        // Só aplicar se o texto não está já em uma tag editable e tem conteúdo substancial
+        if (text.trim().length > 2 && !text.includes('editable-field') && !text.includes('<span')) {
+          return `${letter} <span class="editable-field" contenteditable="true">${text.trim()}</span>${after}`;
+        }
+        return match;
+      }
+    );
+
+    // Padrão 4: <strong>A)</strong> Texto da opção
+    editableHtml = editableHtml.replace(
+      /(<(?:strong|b)>[A-E]\)<\/(?:strong|b)>)\s*([^<\n]+)/g,
       (match, letter, text) => {
-        if (text.trim().length > 3 && !text.includes('span')) {
+        if (text.trim().length > 2 && !text.includes('editable-field')) {
           return `${letter} <span class="editable-field" contenteditable="true">${text.trim()}</span>`;
         }
         return match;
       }
     );
 
-    // MELHORAR - Opções em formato <strong>A)</strong> Texto
+    // Padrão 5: Formato em parágrafos <p>A) Texto</p>
     editableHtml = editableHtml.replace(
-      /(<strong>[A-E]\)<\/strong>)\s*([^<\n]+)/g,
-      '$1 <span class="editable-field" contenteditable="true">$2</span>'
+      /<p([^>]*)>([A-E]\))\s*([^<]+)<\/p>/g,
+      '<p$1>$2 <span class="editable-field" contenteditable="true">$3</span></p>'
+    );
+
+    // Padrão 6: Opções dentro de listas <li>A) Texto</li>
+    editableHtml = editableHtml.replace(
+      /<li([^>]*)>([A-E]\))\s*([^<]+)<\/li>/g,
+      '<li$1>$2 <span class="editable-field" contenteditable="true">$3</span></li>'
+    );
+
+    // Restaurar spans protegidos
+    editableHtml = editableHtml.replace(
+      /\{\{PROTECTED_SPAN_(.+?)\}\}/g,
+      '$1'
     );
 
     // COLUNAS - Tornar itens das colunas editáveis
