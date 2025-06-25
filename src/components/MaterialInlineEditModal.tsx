@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Save, Edit3, ChevronLeft, ChevronRight, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -947,7 +946,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       '<li$1>$2 <span class="editable-field" contenteditable="true">$3</span></li>'
     );
 
-    // Make break-separated options editable
+    // Make break-separated options editable - FIXED REGEX
     editableHtml = editableHtml.replace(
       /(<br\s*\/?>)\s*([A-E]\))\s+([^<]+?)(?=\s*(?:<br|<\/|$))/g,
       (match, br, letter, text) => {
@@ -1195,7 +1194,8 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             />
           </div>
         </div>
-      } catch (error) {
+      );
+    } catch (error) {
       console.error('Erro ao renderizar template:', error);
       return (
         <div className="error-message p-4 text-center">
