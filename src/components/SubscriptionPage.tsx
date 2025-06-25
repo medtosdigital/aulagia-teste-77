@@ -61,18 +61,20 @@ const SubscriptionPage = () => {
       popular: true
     },
     {
-      id: 'escola',
-      name: 'Escola',
+      id: 'grupo-escolar',
+      name: 'Grupo Escolar',
       price: { monthly: 89.90, yearly: 849 },
       features: [
         'Até 5 professores',
         '60 materiais por professor/mês',
         'Todos os recursos do plano Professor',
-        'Dashboard de gestão escolar',
-        'Relatórios detalhados',
+        'Dashboard de gestão colaborativa',
+        'Compartilhamento de materiais entre professores',
+        'Relatórios detalhados de uso',
         'Suporte prioritário',
-        'Gestão centralizada',
-        'Controle de permissões'
+        'Gestão centralizada de usuários',
+        'Controle de permissões',
+        'Ideal para grupos de professores ou instituições'
       ],
       limitations: [],
       color: 'from-green-500 to-emerald-600',
@@ -286,7 +288,7 @@ const SubscriptionPage = () => {
                     <p className="text-gray-600 text-sm">
                       {plan.id === 'gratuito' && 'Ideal para quem quer testar a plataforma'}
                       {plan.id === 'professor' && 'Para professores que querem mais recursos'}
-                      {plan.id === 'escola' && 'Para instituições com múltiplos professores'}
+                      {plan.id === 'grupo-escolar' && 'Para grupos de professores e instituições de ensino'}
                     </p>
                   </div>
 
@@ -325,8 +327,8 @@ const SubscriptionPage = () => {
                         ? 'bg-gray-100 text-gray-600 cursor-not-allowed'
                         : plan.popular
                         ? 'bg-blue-600 hover:bg-blue-700'
-                        : plan.id === 'escola'
-                        ? 'bg-purple-600 hover:bg-purple-700'
+                        : plan.id === 'grupo-escolar'
+                        ? 'bg-green-600 hover:bg-green-700'
                         : 'bg-gray-900 hover:bg-gray-800'
                     }`}
                     disabled={isCurrentPlan}
@@ -359,10 +361,10 @@ const SubscriptionPage = () => {
               
               <AccordionItem value="item-2">
                 <AccordionTrigger className="text-left">
-                  Como funciona o plano Escola?
+                  Como funciona o plano Grupo Escolar?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600">
-                  O plano Escola permite que você adicione até 5 professores, cada um com acesso individual à plataforma com todos os benefícios do plano Professor. Você gerencia todos os professores através do painel de gestão escolar.
+                  O plano Grupo Escolar é ideal tanto para grupos independentes de professores quanto para instituições de ensino. Permite adicionar até 5 professores, cada um com acesso individual à plataforma com todos os benefícios do plano Professor, além de recursos colaborativos como compartilhamento de materiais e dashboard de gestão centralizada.
                 </AccordionContent>
               </AccordionItem>
               
