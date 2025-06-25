@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star } from 'lucide-react';
+import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ExchangeAlt, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface Plan {
   id: string;
@@ -21,7 +22,7 @@ interface Plan {
 
 const SubscriptionPage = () => {
   const [billingType, setBillingType] = useState<'monthly' | 'yearly'>('monthly');
-  const [currentPlan] = useState('gratuito'); // Simulando plano atual do usuário
+  const [currentPlan] = useState('professor');
 
   const plans: Plan[] = [
     {
@@ -51,7 +52,7 @@ const SubscriptionPage = () => {
         'Download em PDF, Word e PPT',
         'Edição completa de materiais',
         'Todos os templates disponíveis',
-        'Suporte prioritário',
+        'Suporte por e-mail',
         'Calendário de aulas',
         'Histórico completo'
       ],
@@ -66,10 +67,11 @@ const SubscriptionPage = () => {
       price: { monthly: 89.90, yearly: 849 },
       features: [
         'Até 5 professores',
+        '60 materiais por professor/mês',
         'Todos os recursos do plano Professor',
         'Dashboard de gestão escolar',
         'Relatórios detalhados',
-        'Suporte premium',
+        'Suporte prioritário',
         'Gestão centralizada',
         'Controle de permissões'
       ],
@@ -94,216 +96,304 @@ const SubscriptionPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      {/* Header */}
+      {/* Current Plan Section */}
       <div className="max-w-6xl mx-auto mb-8">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
-            <Crown className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            Escolha seu Plano
-          </h1>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Potencialize suas aulas com a inteligência artificial. Escolha o plano ideal para suas necessidades.
-          </p>
-        </div>
-
-        {/* Billing Toggle */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="bg-white rounded-full p-1 shadow-sm border">
-            <button
-              onClick={() => setBillingType('monthly')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                billingType === 'monthly'
-                  ? 'bg-blue-500 text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Mensal
-            </button>
-            <button
-              onClick={() => setBillingType('yearly')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                billingType === 'yearly'
-                  ? 'bg-blue-500 text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Anual
-            </button>
-          </div>
-          {billingType === 'yearly' && (
-            <Badge className="ml-3 bg-green-100 text-green-800">
-              <Star className="w-3 h-3 mr-1" />
-              Economize até 20%
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      {/* Plans Grid */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {plans.map((plan) => {
-          const Icon = plan.icon;
-          const isCurrentPlan = currentPlan === plan.id;
-          const price = billingType === 'monthly' ? plan.price.monthly : plan.price.yearly;
-          const yearlyDiscount = getYearlyDiscount(plan);
-
-          return (
-            <Card
-              key={plan.id}
-              className={`relative transition-all duration-300 hover:shadow-xl ${
-                plan.popular ? 'ring-2 ring-blue-500 scale-105' : ''
-              } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-blue-500 text-white px-4 py-1">
-                    Mais Popular
-                  </Badge>
-                </div>
-              )}
-
-              {isCurrentPlan && (
-                <div className="absolute -top-3 right-4">
-                  <Badge className="bg-green-500 text-white px-3 py-1">
-                    Plano Atual
-                  </Badge>
-                </div>
-              )}
-
-              <CardHeader className="text-center pb-4">
-                <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-r ${plan.color} flex items-center justify-center mb-4`}>
-                  <Icon className="w-8 h-8 text-white" />
-                </div>
-                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                
-                <div className="space-y-2">
-                  <div className="text-4xl font-bold text-gray-900">
-                    {price === 0 ? 'Grátis' : formatPrice(price)}
-                  </div>
-                  {price > 0 && (
-                    <div className="text-sm text-gray-600">
-                      {billingType === 'monthly' ? 'por mês' : 'por ano'}
-                      {billingType === 'yearly' && yearlyDiscount > 0 && (
-                        <span className="block text-green-600 font-medium">
-                          Economize {yearlyDiscount}%
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-6">
-                {/* Features */}
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Recursos inclusos:</h4>
-                  <ul className="space-y-2">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start">
-                        <Check className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700 text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Limitations */}
-                {plan.limitations.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-gray-600 mb-3">Limitações:</h4>
-                    <ul className="space-y-2">
-                      {plan.limitations.map((limitation, index) => (
-                        <li key={index} className="flex items-start">
-                          <span className="w-5 h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
-                          <span className="text-gray-600 text-sm">{limitation}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* CTA Button */}
-                <Button
-                  className={`w-full py-3 ${
-                    isCurrentPlan
-                      ? 'bg-gray-100 text-gray-600 cursor-not-allowed'
-                      : plan.popular
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
-                      : 'bg-gray-900 hover:bg-gray-800'
-                  }`}
-                  disabled={isCurrentPlan}
-                >
-                  {isCurrentPlan ? 'Plano Atual' : `Escolher ${plan.name}`}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Current Plan Info */}
-      <div className="max-w-4xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-blue-500" />
-              Informações da Sua Assinatura
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="text-sm text-blue-600 font-medium">Plano Atual</div>
-                <div className="text-lg font-bold text-blue-900">Gratuito</div>
+        <Card className="overflow-hidden">
+          {/* Plan Header */}
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-2xl font-bold mb-1">Seu Plano Atual</h1>
+                <p className="opacity-90">Plano Professor - Mensal</p>
               </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <div className="text-sm text-green-600 font-medium">Materiais Restantes</div>
-                <div className="text-lg font-bold text-green-900">3 de 5</div>
+              <div className="bg-white/20 rounded-full px-4 py-1 flex items-center">
+                <Crown className="w-4 h-4 mr-2" />
+                <span className="font-medium">Ativo</span>
               </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <div className="text-sm text-purple-600 font-medium">Próxima Renovação</div>
-                <div className="text-lg font-bold text-purple-900">01/01/2024</div>
+            </div>
+          </div>
+
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Usage Card */}
+              <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-800 flex items-center">
+                    <FileText className="w-5 h-5 text-blue-600 mr-2" />
+                    Materiais gerados
+                  </h3>
+                  <span className="text-blue-600 font-bold">18/60</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div className="bg-gradient-to-r from-blue-400 to-blue-600 h-2.5 rounded-full" style={{ width: '30%' }}></div>
+                </div>
+                <div className="flex justify-between mt-2 text-sm text-gray-500">
+                  <span>0</span>
+                  <span>60</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-3 flex items-center">
+                  <Calendar className="w-3 h-3 mr-1" />
+                  Renova em 12 dias (15/08/2023)
+                </p>
+              </div>
+
+              {/* Payment Card */}
+              <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-800 flex items-center">
+                    <CreditCard className="w-5 h-5 text-blue-600 mr-2" />
+                    Próximo pagamento
+                  </h3>
+                  <span className="text-blue-600 font-bold">R$ 29,90</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-600 mb-3">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  <span>15 de cada mês</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  <span>Cartão finalizado em 1234</span>
+                </div>
               </div>
             </div>
 
-            <div className="border-t pt-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="font-semibold text-gray-900">Precisa de mais recursos?</h3>
-                  <p className="text-gray-600 text-sm">Faça upgrade para desbloquear funcionalidades premium</p>
+            {/* Features */}
+            <div className="border-t border-gray-200 pt-5">
+              <h3 className="font-semibold text-gray-800 mb-3">Recursos incluídos:</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center">
+                  <Check className="w-5 h-5 text-green-500 mr-2" />
+                  <span className="text-gray-700">60 materiais/mês</span>
                 </div>
-                <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
-                  Fazer Upgrade
-                </Button>
+                <div className="flex items-center">
+                  <Check className="w-5 h-5 text-green-500 mr-2" />
+                  <span className="text-gray-700">Downloads ilimitados</span>
+                </div>
+                <div className="flex items-center">
+                  <Check className="w-5 h-5 text-green-500 mr-2" />
+                  <span className="text-gray-700">Word, PPT e PDF</span>
+                </div>
+                <div className="flex items-center">
+                  <Check className="w-5 h-5 text-green-500 mr-2" />
+                  <span className="text-gray-700">Edição completa</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="border-t border-gray-200 mt-6 pt-6">
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
+                <div className="mb-4 lg:mb-0">
+                  <h3 className="font-medium text-gray-800">Gerenciar assinatura</h3>
+                  <p className="text-sm text-gray-500">Altere ou cancele quando quiser</p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button variant="outline" className="flex items-center">
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Alterar cartão
+                  </Button>
+                  <Button variant="outline" className="flex items-center">
+                    <ExchangeAlt className="w-4 h-4 mr-2" />
+                    Alterar plano
+                  </Button>
+                  <Button variant="outline" className="flex items-center text-red-600 border-red-200 hover:bg-red-50">
+                    <Ban className="w-4 h-4 mr-2" />
+                    Cancelar
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Plans Section */}
+      <div className="max-w-6xl mx-auto mb-8">
+        <Card className="p-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800 mb-1">Atualize seu Plano</h1>
+              <p className="text-gray-600">Escolha o plano que melhor atende às suas necessidades</p>
+            </div>
+            
+            {/* Billing Toggle */}
+            <div className="mt-4 md:mt-0 flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-500">Faturamento:</span>
+              <div className="bg-white rounded-full p-1 shadow-sm border">
+                <button
+                  onClick={() => setBillingType('monthly')}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    billingType === 'monthly'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Mensal
+                </button>
+                <button
+                  onClick={() => setBillingType('yearly')}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    billingType === 'yearly'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Anual
+                </button>
+              </div>
+              {billingType === 'yearly' && (
+                <Badge className="bg-green-100 text-green-800">
+                  <Star className="w-3 h-3 mr-1" />
+                  20% off
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Plans Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {plans.map((plan) => {
+              const Icon = plan.icon;
+              const isCurrentPlan = currentPlan === plan.id;
+              const price = billingType === 'monthly' ? plan.price.monthly : plan.price.yearly;
+              const yearlyDiscount = getYearlyDiscount(plan);
+
+              return (
+                <div
+                  key={plan.id}
+                  className={`relative transition-all duration-300 hover:shadow-xl border rounded-xl p-6 flex flex-col ${
+                    plan.popular ? 'ring-2 ring-blue-500 scale-105 border-blue-200' : 'border-gray-200'
+                  } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-blue-500 text-white px-4 py-1">
+                        POPULAR
+                      </Badge>
+                    </div>
+                  )}
+
+                  {isCurrentPlan && (
+                    <div className="absolute -top-3 right-4">
+                      <Badge className="bg-green-500 text-white px-3 py-1">
+                        Plano Atual
+                      </Badge>
+                    </div>
+                  )}
+
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-gray-800 mb-1">{plan.name}</h3>
+                    <p className="text-gray-600 text-sm">
+                      {plan.id === 'gratuito' && 'Ideal para quem quer testar a plataforma'}
+                      {plan.id === 'professor' && 'Para professores que querem mais recursos'}
+                      {plan.id === 'escola' && 'Para instituições com múltiplos professores'}
+                    </p>
+                  </div>
+
+                  <div className="mb-6">
+                    <span className="text-3xl font-bold text-gray-800">
+                      {price === 0 ? 'R$ 0' : formatPrice(price)}
+                    </span>
+                    <span className="text-gray-500">
+                      {billingType === 'monthly' ? '/mês' : '/ano'}
+                    </span>
+                    {price > 0 && billingType === 'yearly' && yearlyDiscount > 0 && (
+                      <span className="block text-sm text-gray-500">
+                        ou {formatPrice(plan.price.monthly)}/mês ({yearlyDiscount}% off)
+                      </span>
+                    )}
+                  </div>
+
+                  <ul className="space-y-3 mb-6 flex-1">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-start">
+                        <Check className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">{feature}</span>
+                      </li>
+                    ))}
+                    {plan.limitations.map((limitation, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="w-5 h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
+                        <span className="text-gray-400 text-sm">{limitation}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    className={`w-full py-3 ${
+                      isCurrentPlan
+                        ? 'bg-gray-100 text-gray-600 cursor-not-allowed'
+                        : plan.popular
+                        ? 'bg-blue-600 hover:bg-blue-700'
+                        : plan.id === 'escola'
+                        ? 'bg-purple-600 hover:bg-purple-700'
+                        : 'bg-gray-900 hover:bg-gray-800'
+                    }`}
+                    disabled={isCurrentPlan}
+                  >
+                    {isCurrentPlan ? 'Plano Atual' : 'Assinar Agora'}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      </div>
+
       {/* FAQ Section */}
-      <div className="max-w-4xl mx-auto mt-12">
+      <div className="max-w-6xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">Perguntas Frequentes</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-800">Perguntas Frequentes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Posso cancelar a qualquer momento?</h3>
-                <p className="text-gray-600">Sim, você pode cancelar sua assinatura a qualquer momento. Seu acesso continuará até o final do período pago.</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">O que acontece se eu exceder o limite de materiais?</h3>
-                <p className="text-gray-600">Você será notificado quando atingir o limite e poderá fazer upgrade do seu plano para continuar criando materiais.</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">O plano Escola inclui suporte técnico?</h3>
-                <p className="text-gray-600">Sim, o plano Escola inclui suporte premium com atendimento prioritário para gestores e professores.</p>
-              </div>
-            </div>
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1">
+                <AccordionTrigger className="text-left">
+                  Posso mudar de plano a qualquer momento?
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600">
+                  Sim, você pode atualizar ou downgradear seu plano a qualquer momento. Qualquer diferença de valor será prorrateada e ajustada na próxima fatura.
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="item-2">
+                <AccordionTrigger className="text-left">
+                  Como funciona o plano Escola?
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600">
+                  O plano Escola permite que você adicione até 5 professores, cada um com acesso individual à plataforma com todos os benefícios do plano Professor. Você gerencia todos os professores através do painel de gestão escolar.
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="item-3">
+                <AccordionTrigger className="text-left">
+                  Posso cancelar minha assinatura a qualquer momento?
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600">
+                  Sim, você pode cancelar sua assinatura a qualquer momento. Seu acesso aos recursos premium permanecerá ativo até o final do período de faturamento atual.
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="item-4">
+                <AccordionTrigger className="text-left">
+                  Quais métodos de pagamento são aceitos?
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600">
+                  Aceitamos todos os principais cartões de crédito (Visa, Mastercard, American Express, Elo) e também pagamentos via PIX. Para planos anuais, oferecemos a opção de boleto bancário.
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="item-5">
+                <AccordionTrigger className="text-left">
+                  Como funciona o período de teste?
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600">
+                  Todos os novos usuários têm direito ao plano Gratuito que permite gerar até 5 materiais por mês. Não oferecemos um período de teste adicional para os planos pagos, mas você pode cancelar a qualquer momento sem custos adicionais.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </CardContent>
         </Card>
       </div>
