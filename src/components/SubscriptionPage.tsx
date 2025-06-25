@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ExchangeAlt, ChevronDown } from 'lucide-react';
+import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -194,7 +193,7 @@ const SubscriptionPage = () => {
                     Alterar cartão
                   </Button>
                   <Button variant="outline" className="flex items-center">
-                    <ExchangeAlt className="w-4 h-4 mr-2" />
+                    <ArrowUpDown className="w-4 h-4 mr-2" />
                     Alterar plano
                   </Button>
                   <Button variant="outline" className="flex items-center text-red-600 border-red-200 hover:bg-red-50">
