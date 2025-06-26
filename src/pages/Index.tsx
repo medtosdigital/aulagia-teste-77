@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -89,11 +90,12 @@ const Index = () => {
         return <Dashboard onNavigate={handleNavigate} />;
         
       case 'create':
+        // Para plano grupo escolar, sempre permitir acesso
         if (!canAccessCreateMaterial()) {
           return (
             <PageBlockedOverlay
               title="Recurso Restrito"
-              description="Para acessar a criação de materiais com o plano Grupo Escolar, você precisa ser adicionado como usuário da escola e ter acesso ao plano Professor."
+              description="Para acessar a criação de materiais, faça upgrade para um plano pago."
               icon="plus"
               onUpgrade={openUpgradeModal}
             >
@@ -107,11 +109,12 @@ const Index = () => {
         return <CreateLesson />;
         
       case 'lessons':
+        // Para plano grupo escolar, sempre permitir acesso
         if (!canAccessMaterials()) {
           return (
             <PageBlockedOverlay
               title="Recurso Restrito"
-              description="Para acessar seus materiais com o plano Grupo Escolar, você precisa ser adicionado como usuário da escola e ter acesso ao plano Professor."
+              description="Para acessar seus materiais, faça upgrade para um plano pago."
               icon="book"
               onUpgrade={openUpgradeModal}
             >
@@ -125,8 +128,6 @@ const Index = () => {
         return <MaterialsList />;
         
       case 'calendar':
-        // Agora todos os planos podem acessar a página do calendário
-        // O bloqueio visual é feito dentro da própria CalendarPage
         return <CalendarPage />;
         
       case 'school':

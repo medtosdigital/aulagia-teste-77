@@ -87,25 +87,11 @@ export const usePlanPermissions = () => {
   };
 
   const hasCalendar = (): boolean => {
-    const plan = currentPlan;
-    
-    // Para plano Professor, acesso normal
-    if (plan.id === 'professor') {
-      return canPerformAction('hasCalendar');
-    }
-    
-    // Para plano Grupo Escolar, precisa ter acesso Professor
-    if (plan.id === 'grupo-escolar') {
-      return planPermissionsService.canAccessProfessorFeaturesWithSchoolPlan();
-    }
-    
-    return false;
+    return canPerformAction('hasCalendar');
   };
 
-  // Nova função para verificar se pode acessar a página do calendário (diferente de usar as funcionalidades)
+  // Todos os planos podem acessar a página do calendário
   const canAccessCalendarPage = (): boolean => {
-    // Todos os planos podem acessar a página do calendário
-    // O bloqueio visual é feito dentro da própria página
     return true;
   };
 
@@ -118,18 +104,18 @@ export const usePlanPermissions = () => {
     return planPermissionsService.isAdminAuthenticated();
   };
 
-  // Novas permissões para plano Grupo Escolar
+  // Para plano Grupo Escolar, o acesso é sempre liberado
   const canAccessCreateMaterial = (): boolean => {
     const plan = currentPlan;
+    
+    // Plano grupo escolar tem acesso total
+    if (plan.id === 'grupo-escolar') {
+      return true;
+    }
     
     // Plano gratuito e professor tem acesso normal
     if (plan.id === 'gratuito' || plan.id === 'professor') {
       return true;
-    }
-    
-    // Plano grupo escolar precisa ter acesso professor
-    if (plan.id === 'grupo-escolar') {
-      return planPermissionsService.canAccessProfessorFeaturesWithSchoolPlan();
     }
     
     return false;
@@ -138,14 +124,14 @@ export const usePlanPermissions = () => {
   const canAccessMaterials = (): boolean => {
     const plan = currentPlan;
     
-    // Plano gratuito e professor tem acesso normal
-    if (plan.id === 'gratuito' || plan.id === 'professor') {
+    // Plano grupo escolar tem acesso total
+    if (plan.id === 'grupo-escolar') {
       return true;
     }
     
-    // Plano grupo escolar precisa ter acesso professor
-    if (plan.id === 'grupo-escolar') {
-      return planPermissionsService.canAccessProfessorFeaturesWithSchoolPlan();
+    // Plano gratuito e professor tem acesso normal
+    if (plan.id === 'gratuito' || plan.id === 'professor') {
+      return true;
     }
     
     return false;
@@ -162,6 +148,35 @@ export const usePlanPermissions = () => {
 
   const logoutAdmin = (): void => {
     planPermissionsService.logoutAdmin();
+  };
+
+  // Novas funções para gerenciamento do plano Grupo Escolar
+  const isSchoolOwner = (): boolean => {
+    return planPermissionsService.isSchoolOwner();
+  };
+
+  const getRemainingMaterialsToDistribute = (): number => {
+    return planPermissionsService.getRemainingMaterialsToDistribute();
+  };
+
+  const getTotalMaterialsUsedBySchool = (): number => {
+    return planPermissionsService.getTotalMaterialsUsedBySchool();
+  };
+
+  const updateUserMaterialLimit = (userId: string, newLimit: number): boolean => {
+    const success = planPermissionsService.updateUserMaterialLimit(userId, newLimit);
+    if (success) {
+      refreshData();
+    }
+    return success;
+  };
+
+  const redistributeMaterialLimits = (distribution: { [userId: string]: number }): boolean => {
+    const success = planPermissionsService.redistributeMaterialLimits(distribution);
+    if (success) {
+      refreshData();
+    }
+    return success;
   };
 
   useEffect(() => {
@@ -198,15 +213,20 @@ export const usePlanPermissions = () => {
     canCreateSlides,
     canCreateAssessments,
     hasCalendar,
-    canAccessCalendarPage, // Nova função para acesso à página
+    canAccessCalendarPage,
     canAccessSchool,
     canAccessSettings,
-    // Novas permissões para Grupo Escolar
     canAccessCreateMaterial,
     canAccessMaterials,
     // Funções de administrador
     isAdminAuthenticated,
     authenticateAdmin,
-    logoutAdmin
+    logoutAdmin,
+    // Novas funções para Grupo Escolar
+    isSchoolOwner,
+    getRemainingMaterialsToDistribute,
+    getTotalMaterialsUsedBySchool,
+    updateUserMaterialLimit,
+    redistributeMaterialLimits
   };
 };

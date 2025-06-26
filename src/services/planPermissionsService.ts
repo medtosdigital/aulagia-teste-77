@@ -27,6 +27,7 @@ export interface UserUsage {
   materialsThisMonth: number;
   lastResetDate: Date;
   totalMaterials: number;
+  materialLimit: number; // Limite específico para este usuário
 }
 
 export interface SchoolUser {
@@ -35,6 +36,8 @@ export interface SchoolUser {
   name: string;
   hasProfessorAccess: boolean;
   addedToSchool: boolean;
+  materialLimit: number; // Limite de materiais atribuído a este usuário
+  materialsUsed: number; // Materiais utilizados por este usuário no mês
 }
 
 class PlanPermissionsService {
@@ -44,7 +47,8 @@ class PlanPermissionsService {
     SUBSCRIPTION_HISTORY: 'subscription_history',
     ADMIN_SESSION: 'admin_session',
     SCHOOL_USERS: 'school_users',
-    CURRENT_USER: 'current_user'
+    CURRENT_USER: 'current_user',
+    SCHOOL_OWNER: 'school_owner'
   };
 
   private readonly ADMIN_CREDENTIALS = {
@@ -112,6 +116,26 @@ class PlanPermissionsService {
     }
   };
 
+  // Verifica se o usuário atual é o dono da escola (quem assinou o plano grupo escolar)
+  isSchoolOwner(): boolean {
+    const currentUser = this.getCurrentUser();
+    const schoolOwner = localStorage.getItem(this.STORAGE_KEYS.SCHOOL_OWNER);
+    
+    if (!currentUser || !schoolOwner) return false;
+    
+    try {
+      const owner = JSON.parse(schoolOwner);
+      return currentUser.id === owner.id;
+    } catch {
+      return false;
+    }
+  }
+
+  // Define o dono da escola (chamado quando alguém assina o plano grupo escolar)
+  setSchoolOwner(user: SchoolUser): void {
+    localStorage.setItem(this.STORAGE_KEYS.SCHOOL_OWNER, JSON.stringify(user));
+  }
+
   isAdminAuthenticated(): boolean {
     const adminSession = localStorage.getItem(this.STORAGE_KEYS.ADMIN_SESSION);
     if (!adminSession) return false;
@@ -167,16 +191,73 @@ class PlanPermissionsService {
     }
   }
 
-  addUserToSchool(user: Omit<SchoolUser, 'id'>): SchoolUser {
+  addUserToSchool(user: Omit<SchoolUser, 'id' | 'materialsUsed'>, materialLimit?: number): SchoolUser {
     const users = this.getSchoolUsers();
+    const plan = this.getCurrentPlan();
+    
+    // Calcular limite padrão se não especificado
+    const defaultLimit = materialLimit || Math.floor(plan.limits.materialsPerMonth / (users.length + 1));
+    
     const newUser: SchoolUser = {
       ...user,
-      id: Date.now().toString()
+      id: Date.now().toString(),
+      materialLimit: defaultLimit,
+      materialsUsed: 0
     };
     
     users.push(newUser);
     localStorage.setItem(this.STORAGE_KEYS.SCHOOL_USERS, JSON.stringify(users));
     return newUser;
+  }
+
+  updateUserMaterialLimit(userId: string, newLimit: number): boolean {
+    const users = this.getSchoolUsers();
+    const userIndex = users.findIndex(u => u.id === userId);
+    
+    if (userIndex === -1) return false;
+    
+    users[userIndex].materialLimit = newLimit;
+    localStorage.setItem(this.STORAGE_KEYS.SCHOOL_USERS, JSON.stringify(users));
+    
+    // Se for o usuário atual, atualizar o usage também
+    const currentUser = this.getCurrentUser();
+    if (currentUser && currentUser.id === userId) {
+      const usage = this.getUserUsage();
+      usage.materialLimit = newLimit;
+      this.saveUsage(usage);
+    }
+    
+    return true;
+  }
+
+  redistributeMaterialLimits(distribution: { [userId: string]: number }): boolean {
+    const users = this.getSchoolUsers();
+    const plan = this.getCurrentPlan();
+    
+    // Verificar se a soma não excede o limite total
+    const totalDistributed = Object.values(distribution).reduce((sum, limit) => sum + limit, 0);
+    if (totalDistributed > plan.limits.materialsPerMonth) {
+      return false;
+    }
+    
+    // Atualizar os limites
+    users.forEach(user => {
+      if (distribution[user.id] !== undefined) {
+        user.materialLimit = distribution[user.id];
+      }
+    });
+    
+    localStorage.setItem(this.STORAGE_KEYS.SCHOOL_USERS, JSON.stringify(users));
+    
+    // Atualizar o usuário atual se necessário
+    const currentUser = this.getCurrentUser();
+    if (currentUser && distribution[currentUser.id] !== undefined) {
+      const usage = this.getUserUsage();
+      usage.materialLimit = distribution[currentUser.id];
+      this.saveUsage(usage);
+    }
+    
+    return true;
   }
 
   isUserAddedToSchool(): boolean {
@@ -186,14 +267,22 @@ class PlanPermissionsService {
 
   hasUserProfessorAccess(): boolean {
     const currentUser = this.getCurrentUser();
+    const plan = this.getCurrentPlan();
+    
+    // Se é plano grupo escolar, o usuário já tem acesso professor automaticamente
+    if (plan.id === 'grupo-escolar') {
+      return true;
+    }
+    
     return currentUser ? currentUser.hasProfessorAccess : false;
   }
 
+  // Para o plano grupo escolar, o acesso às funcionalidades é sempre liberado
   canAccessProfessorFeaturesWithSchoolPlan(): boolean {
     const currentPlan = this.getCurrentPlan();
     if (currentPlan.id !== 'grupo-escolar') return false;
     
-    return this.isUserAddedToSchool() && this.hasUserProfessorAccess();
+    return true; // Sempre verdadeiro para plano grupo escolar
   }
 
   getCurrentPlan(): UserPlan {
@@ -205,21 +294,56 @@ class PlanPermissionsService {
   setCurrentPlan(planId: string): void {
     const currentPlan = this.getCurrentPlan();
     
+    // Se está mudando para plano grupo escolar, configurar o usuário como dono da escola
+    if (planId === 'grupo-escolar' && currentPlan.id !== 'grupo-escolar') {
+      const currentUser = this.getCurrentUser();
+      if (currentUser) {
+        // Definir como dono da escola
+        this.setSchoolOwner(currentUser);
+        
+        // Adicionar como primeiro usuário da escola com acesso professor
+        currentUser.hasProfessorAccess = true;
+        currentUser.addedToSchool = true;
+        currentUser.materialLimit = this.plans['grupo-escolar'].limits.materialsPerMonth;
+        currentUser.materialsUsed = 0;
+        
+        this.setCurrentUser(currentUser);
+        
+        // Adicionar à lista de usuários da escola
+        const schoolUsers = this.getSchoolUsers();
+        if (!schoolUsers.find(u => u.id === currentUser.id)) {
+          schoolUsers.push(currentUser);
+          localStorage.setItem(this.STORAGE_KEYS.SCHOOL_USERS, JSON.stringify(schoolUsers));
+        }
+      }
+    }
+    
     // Se está mudando de plano, resetar o contador de materiais
     if (currentPlan.id !== planId) {
-      this.resetMaterialUsage();
+      this.resetMaterialUsage(planId);
     }
     
     localStorage.setItem(this.STORAGE_KEYS.CURRENT_PLAN, planId);
     this.addToSubscriptionHistory('plan_changed', planId);
   }
 
-  private resetMaterialUsage(): void {
+  private resetMaterialUsage(newPlanId?: string): void {
     const now = new Date();
+    const plan = newPlanId ? this.plans[newPlanId] : this.getCurrentPlan();
+    
+    let materialLimit = plan?.limits.materialsPerMonth || 5;
+    
+    // Para usuários do plano grupo escolar, usar o limite específico
+    const currentUser = this.getCurrentUser();
+    if (currentUser && plan?.id === 'grupo-escolar') {
+      materialLimit = currentUser.materialLimit || materialLimit;
+    }
+    
     const usage: UserUsage = {
       materialsThisMonth: 0,
       lastResetDate: new Date(now.getFullYear(), now.getMonth(), 1),
-      totalMaterials: this.getUserUsage().totalMaterials // Manter o total histórico
+      totalMaterials: this.getUserUsage().totalMaterials,
+      materialLimit: materialLimit
     };
     
     this.saveUsage(usage);
@@ -236,10 +360,20 @@ class PlanPermissionsService {
     }
 
     const now = new Date();
+    const plan = this.getCurrentPlan();
+    let materialLimit = plan.limits.materialsPerMonth;
+    
+    // Para usuários do plano grupo escolar, usar o limite específico
+    const currentUser = this.getCurrentUser();
+    if (currentUser && plan.id === 'grupo-escolar') {
+      materialLimit = currentUser.materialLimit || materialLimit;
+    }
+    
     const usage: UserUsage = {
       materialsThisMonth: 0,
       lastResetDate: new Date(now.getFullYear(), now.getMonth(), 1),
-      totalMaterials: 0
+      totalMaterials: 0,
+      materialLimit: materialLimit
     };
     
     this.saveUsage(usage);
@@ -263,8 +397,8 @@ class PlanPermissionsService {
       usage.lastResetDate = currentMonth;
     }
 
-    // Check if user has reached limit
-    if (usage.materialsThisMonth >= plan.limits.materialsPerMonth) {
+    // Check if user has reached limit (usar o limite específico do usuário)
+    if (usage.materialsThisMonth >= usage.materialLimit) {
       return false; // Cannot create more materials
     }
 
@@ -273,8 +407,24 @@ class PlanPermissionsService {
     usage.totalMaterials++;
     this.saveUsage(usage);
     
+    // Para plano grupo escolar, atualizar também o contador do usuário na escola
+    const currentUser = this.getCurrentUser();
+    if (plan.id === 'grupo-escolar' && currentUser) {
+      this.updateSchoolUserMaterialUsage(currentUser.id);
+    }
+    
     this.addToSubscriptionHistory('material_created');
     return true;
+  }
+
+  private updateSchoolUserMaterialUsage(userId: string): void {
+    const users = this.getSchoolUsers();
+    const userIndex = users.findIndex(u => u.id === userId);
+    
+    if (userIndex !== -1) {
+      users[userIndex].materialsUsed = (users[userIndex].materialsUsed || 0) + 1;
+      localStorage.setItem(this.STORAGE_KEYS.SCHOOL_USERS, JSON.stringify(users));
+    }
   }
 
   canPerformAction(action: keyof PlanLimits): boolean {
@@ -284,8 +434,7 @@ class PlanPermissionsService {
 
   getRemainingMaterials(): number {
     const usage = this.getUserUsage();
-    const plan = this.getCurrentPlan();
-    return Math.max(0, plan.limits.materialsPerMonth - usage.materialsThisMonth);
+    return Math.max(0, usage.materialLimit - usage.materialsThisMonth);
   }
 
   isLimitReached(): boolean {
@@ -354,6 +503,24 @@ class PlanPermissionsService {
     }
     
     return [];
+  }
+
+  // Métodos para gerenciar limites de materiais no plano grupo escolar
+  getTotalMaterialsUsedBySchool(): number {
+    const users = this.getSchoolUsers();
+    return users.reduce((total, user) => total + (user.materialsUsed || 0), 0);
+  }
+
+  getTotalMaterialLimitDistributed(): number {
+    const users = this.getSchoolUsers();
+    return users.reduce((total, user) => total + (user.materialLimit || 0), 0);
+  }
+
+  getRemainingMaterialsToDistribute(): number {
+    const plan = this.getCurrentPlan();
+    if (plan.id !== 'grupo-escolar') return 0;
+    
+    return plan.limits.materialsPerMonth - this.getTotalMaterialLimitDistributed();
   }
 
   // Método específico para verificar se deve mostrar modal de suporte para plano Professor

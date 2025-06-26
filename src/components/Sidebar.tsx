@@ -15,7 +15,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { 
     hasCalendar, 
-    canAccessCalendarPage, // Nova função importada
+    canAccessCalendarPage,
     canAccessSchool, 
     canAccessSettings, 
     canAccessCreateMaterial,
@@ -29,20 +29,20 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Início',
       icon: LayoutDashboard
     },
-    // Materiais só aparece se tiver permissão
+    // Para plano grupo escolar, sempre mostrar materiais
     ...(canAccessMaterials() ? [{
       id: 'lessons',
       label: 'Materiais',
       icon: BookOpen
     }] : []),
-    // Criar só aparece se tiver permissão
+    // Para plano grupo escolar, sempre mostrar criar
     ...(canAccessCreateMaterial() ? [{
       id: 'create',
       label: 'Criar',
       icon: Plus,
       isCenter: true
     }] : []),
-    // Calendário aparece para todos os planos (bloqueio visual é interno)
+    // Calendário aparece para todos os planos
     ...(canAccessCalendarPage() ? [{
       id: 'calendar',
       label: 'Agenda',
@@ -61,25 +61,25 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Dashboard',
       icon: LayoutDashboard
     },
-    // Criar só aparece se tiver permissão
+    // Para plano grupo escolar, sempre mostrar criar
     ...(canAccessCreateMaterial() ? [{
       id: 'create',
       label: 'Criar Material',
       icon: Plus
     }] : []),
-    // Materiais só aparece se tiver permissão
+    // Para plano grupo escolar, sempre mostrar materiais
     ...(canAccessMaterials() ? [{
       id: 'lessons',
       label: 'Meus Materiais',
       icon: BookOpen
     }] : []),
-    // Calendário aparece para todos os planos (bloqueio visual é interno)
+    // Calendário aparece para todos os planos
     ...(canAccessCalendarPage() ? [{
       id: 'calendar',
       label: 'Calendário',
       icon: Calendar
     }] : []),
-    // Escola só aparece para plano grupo-escolar
+    // Escola aparece para plano grupo-escolar
     ...(canAccessSchool() ? [{
       id: 'school',
       label: 'Escola',
