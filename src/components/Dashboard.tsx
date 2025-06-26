@@ -7,38 +7,41 @@ import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { Activity } from '@/services/activityService';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 interface DashboardProps {
   onNavigate?: (page: string) => void;
 }
-
 const Dashboard: React.FC<DashboardProps> = ({
   onNavigate
 }) => {
   const [activeTab, setActiveTab] = useState('recent-activities');
   const [materialStats, setMaterialStats] = useState<MaterialStats | null>(null);
   const [upcomingClasses, setUpcomingClasses] = useState<ScheduleEvent[]>([]);
-  
-  // Usar o hook de rastreamento de atividades e permissões
-  const { activities: recentActivities, refreshActivities } = useActivityTracker();
-  const { canAccessCreateMaterial, canAccessMaterials, hasCalendar, canAccessCalendarPage, canAccessSchool } = usePlanPermissions();
 
+  // Usar o hook de rastreamento de atividades e permissões
+  const {
+    activities: recentActivities,
+    refreshActivities
+  } = useActivityTracker();
+  const {
+    canAccessCreateMaterial,
+    canAccessMaterials,
+    hasCalendar,
+    canAccessCalendarPage,
+    canAccessSchool
+  } = usePlanPermissions();
   useEffect(() => {
     console.log('🏠 Dashboard mounted, recent activities:', recentActivities);
-    
+
     // Carregar dados quando o componente montar
     setMaterialStats(statsService.getMaterialStats());
-    
+
     // Carregar próximas aulas (próximos 7 dias)
     const now = new Date();
     const nextWeek = new Date();
     nextWeek.setDate(now.getDate() + 7);
-    const upcoming = scheduleService.getEventsByDateRange(now, nextWeek)
-      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
-      .slice(0, 5);
+    const upcoming = scheduleService.getEventsByDateRange(now, nextWeek).sort((a, b) => a.startDate.getTime() - b.startDate.getTime()).slice(0, 5);
     setUpcomingClasses(upcoming);
   }, [recentActivities]);
-
   const tabs = [{
     id: 'recent-activities',
     label: 'Atividades Recentes',
@@ -52,13 +55,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     label: 'Estatísticas',
     shortLabel: 'Stats'
   }];
-
   const handleNavigate = (page: string) => {
     if (onNavigate) {
       onNavigate(page);
     }
   };
-
   const getActivityIcon = (type: Activity['type']) => {
     switch (type) {
       case 'created':
@@ -73,7 +74,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         return <FileText size={16} />;
     }
   };
-
   const getActivityIconColor = (type: Activity['type']) => {
     switch (type) {
       case 'created':
@@ -88,11 +88,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         return 'bg-gray-100 text-gray-600';
     }
   };
-
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
     if (diffInHours < 1) {
       const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
       return `${diffInMinutes} min atrás`;
@@ -103,7 +101,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       return `${diffInDays} dia${diffInDays > 1 ? 's' : ''} atrás`;
     }
   };
-
   return <main className="p-4">
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl p-6 text-white mb-6">
@@ -124,8 +121,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {canAccessCreateMaterial() && (
-          <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('create')}>
+        {canAccessCreateMaterial() && <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('create')}>
             <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center text-primary-600">
               <Plus size={24} />
             </div>
@@ -133,11 +129,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               <h3 className="font-semibold text-gray-800">Preparar Material</h3>
               <p className="text-sm text-gray-500">Comece a planejar</p>
             </div>
-          </div>
-        )}
+          </div>}
         
-        {canAccessMaterials() && (
-          <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('lessons')}>
+        {canAccessMaterials() && <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('lessons')}>
             <div className="w-12 h-12 rounded-lg bg-secondary-100 flex items-center justify-center text-secondary-600">
               <BookOpen size={24} />
             </div>
@@ -145,11 +139,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               <h3 className="font-semibold text-gray-800">Meus Materiais</h3>
               <p className="text-sm text-gray-500">Veja seus conteúdos</p>
             </div>
-          </div>
-        )}
+          </div>}
         
-        {canAccessCalendarPage() && (
-          <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('calendar')}>
+        {canAccessCalendarPage() && <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('calendar')}>
             <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
               <Calendar size={24} />
             </div>
@@ -157,20 +149,17 @@ const Dashboard: React.FC<DashboardProps> = ({
               <h3 className="font-semibold text-gray-800">Calendário</h3>
               <p className="text-sm text-gray-500">Veja sua agenda</p>
             </div>
-          </div>
-        )}
+          </div>}
 
-        {canAccessSchool() && (
-          <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('school')}>
+        {canAccessSchool() && <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('school')}>
             <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
               <School size={24} />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-800">Escola</h3>
+              <h3 className="font-semibold text-gray-800">Grupo Escolar</h3>
               <p className="text-sm text-gray-500">Adicionar professores</p>
             </div>
-          </div>
-        )}
+          </div>}
         
         <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('subscription')}>
           <div className="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600">
@@ -200,18 +189,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   <span className="text-xs text-gray-500">Ao vivo</span>
-                  <button 
-                    onClick={refreshActivities}
-                    className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
-                  >
+                  <button onClick={refreshActivities} className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors">
                     Atualizar
                   </button>
                 </div>
               </div>
               
               <div className="space-y-4 max-h-96 overflow-y-auto">
-                {recentActivities.length > 0 ? recentActivities.map((activity, index) => (
-                  <div key={activity.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                {recentActivities.length > 0 ? recentActivities.map((activity, index) => <div key={activity.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition animate-fade-in" style={{
+              animationDelay: `${index * 100}ms`
+            }}>
                     <div className="mt-1">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getActivityIconColor(activity.type)}`}>
                         {getActivityIcon(activity.type)}
@@ -222,37 +209,25 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <p className="text-sm text-gray-500">{activity.description}</p>
                       <div className="flex items-center space-x-3 mt-1">
                         <p className="text-xs text-gray-400">{formatTimeAgo(activity.timestamp)}</p>
-                        {activity.subject && (
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                        {activity.subject && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                             {activity.subject}
-                          </span>
-                        )}
-                        {activity.grade && (
-                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                          </span>}
+                        {activity.grade && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
                             {activity.grade}
-                          </span>
-                        )}
+                          </span>}
                       </div>
                     </div>
-                  </div>
-                )) : (
-                  <div className="text-center py-12">
+                  </div>) : <div className="text-center py-12">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <FileText className="w-8 h-8 text-gray-400" />
                     </div>
                     <h4 className="font-medium text-gray-800 mb-2">Ainda não há atividades</h4>
                     <p className="text-gray-500 mb-4">Suas atividades aparecerão aqui quando você começar a criar materiais</p>
-                    {canAccessCreateMaterial() && (
-                      <button 
-                        onClick={() => handleNavigate('create')}
-                        className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-                      >
+                    {canAccessCreateMaterial() && <button onClick={() => handleNavigate('create')} className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
                         <Plus className="w-4 h-4 mr-2" />
                         Criar Primeiro Material
-                      </button>
-                    )}
-                  </div>
-                )}
+                      </button>}
+                  </div>}
               </div>
             </div>}
 
@@ -260,40 +235,26 @@ const Dashboard: React.FC<DashboardProps> = ({
               <h3 className="font-semibold text-lg mb-4">Suas próximas aulas</h3>
               
               <div className="space-y-4">
-                {upcomingClasses.length > 0 ? upcomingClasses.map(event => (
-                  <div key={event.id} className={`flex items-start space-x-4 p-3 rounded-lg ${
-                    new Date(event.startDate).toDateString() === new Date().toDateString() 
-                      ? 'bg-blue-50 border border-blue-200' 
-                      : 'hover:bg-gray-50'
-                  } transition`}>
+                {upcomingClasses.length > 0 ? upcomingClasses.map(event => <div key={event.id} className={`flex items-start space-x-4 p-3 rounded-lg ${new Date(event.startDate).toDateString() === new Date().toDateString() ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50'} transition`}>
                     <div className="mt-1">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        new Date(event.startDate).toDateString() === new Date().toDateString()
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-green-100 text-green-600'
-                      }`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${new Date(event.startDate).toDateString() === new Date().toDateString() ? 'bg-blue-600 text-white' : 'bg-green-100 text-green-600'}`}>
                         <Users size={16} />
                       </div>
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">{event.title}</p>
                       <p className="text-sm text-gray-700">{event.grade} - {event.subject}</p>
-                      <p className={`text-xs mt-1 font-medium ${
-                        new Date(event.startDate).toDateString() === new Date().toDateString()
-                          ? 'text-blue-600'
-                          : 'text-gray-400'
-                      }`}>
-                        {format(event.startDate, "dd/MM/yyyy", { locale: ptBR })} - {event.startTime} às {event.endTime}
+                      <p className={`text-xs mt-1 font-medium ${new Date(event.startDate).toDateString() === new Date().toDateString() ? 'text-blue-600' : 'text-gray-400'}`}>
+                        {format(event.startDate, "dd/MM/yyyy", {
+                    locale: ptBR
+                  })} - {event.startTime} às {event.endTime}
                       </p>
                     </div>
-                  </div>
-                )) : (
-                  <div className="text-center py-8">
+                  </div>) : <div className="text-center py-8">
                     <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">Nenhuma aula agendada para os próximos dias</p>
                     <p className="text-sm text-gray-400">Vá ao calendário para agendar suas aulas</p>
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>}
 
@@ -313,7 +274,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.planoAula || 0) * 10, 100)}%`}}></div>
+                      <div className="bg-blue-500 h-2 rounded-full" style={{
+                    width: `${Math.min((materialStats?.planoAula || 0) * 10, 100)}%`
+                  }}></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.planoAula || 0} na última semana</p>
                   </div>
@@ -331,7 +294,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-gray-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.slides || 0) * 15, 100)}%`}}></div>
+                      <div className="bg-gray-500 h-2 rounded-full" style={{
+                    width: `${Math.min((materialStats?.slides || 0) * 15, 100)}%`
+                  }}></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.slides || 0} na última semana</p>
                   </div>
@@ -349,7 +314,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.atividades || 0) * 8, 100)}%`}}></div>
+                      <div className="bg-green-500 h-2 rounded-full" style={{
+                    width: `${Math.min((materialStats?.atividades || 0) * 8, 100)}%`
+                  }}></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.atividades || 0} na última semana</p>
                   </div>
@@ -367,7 +334,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-purple-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.avaliacoes || 0) * 20, 100)}%`}}></div>
+                      <div className="bg-purple-500 h-2 rounded-full" style={{
+                    width: `${Math.min((materialStats?.avaliacoes || 0) * 20, 100)}%`
+                  }}></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.avaliacoes || 0} na última semana</p>
                   </div>
@@ -378,8 +347,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Create New Section - só aparece se tiver permissão */}
-      {canAccessCreateMaterial() && (
-        <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6">
+      {canAccessCreateMaterial() && <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6">
           <div className="flex flex-col md:flex-row items-center md:items-start md:justify-between mb-4 text-center md:text-left">
             <h3 className="text-lg font-semibold text-gray-800 mb-2 md:mb-0">Criar novo conteúdo</h3>
             <div className="mt-2 md:mt-0">
@@ -422,9 +390,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <p className="text-xs opacity-80 mt-1">Testes e provas</p>
             </button>
           </div>
-        </div>
-      )}
+        </div>}
     </main>;
 };
-
 export default Dashboard;
