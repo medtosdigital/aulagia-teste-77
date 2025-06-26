@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { planPermissionsService } from '@/services/planPermissionsService';
+import { useToast } from '@/hooks/use-toast';
+import UpgradeModal from './UpgradeModal';
 
 interface Plan {
   id: string;
@@ -22,7 +26,9 @@ interface Plan {
 
 const SubscriptionPage = () => {
   const [billingType, setBillingType] = useState<'monthly' | 'yearly'>('monthly');
-  const [currentPlan] = useState('professor');
+  const { permissions, usagePercentage, remainingMaterials } = usePlanPermissions();
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const { toast } = useToast();
 
   const plans: Plan[] = [
     {
@@ -117,6 +123,21 @@ const SubscriptionPage = () => {
     return Brain;
   };
 
+  const handlePlanUpgrade = (planId: string) => {
+    planPermissionsService.setCurrentPlan(planId);
+    setUpgradeModalOpen(false);
+    toast({
+      title: "Plano atualizado!",
+      description: `Seu plano foi alterado para ${plans.find(p => p.id === planId)?.name}`,
+    });
+    // Aqui você integraria com a API real de pagamento
+    window.location.reload(); // Recarrega para atualizar os dados
+  };
+
+  const getCurrentPlanName = () => {
+    return plans.find(p => p.id === permissions.planId)?.name || 'Desconhecido';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Current Plan Section */}
@@ -127,7 +148,7 @@ const SubscriptionPage = () => {
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-2xl font-bold mb-1">Seu Plano Atual</h1>
-                <p className="opacity-90">Plano Professor - Mensal</p>
+                <p className="opacity-90">Plano {getCurrentPlanName()} - Mensal</p>
               </div>
               <div className="bg-white/20 rounded-full px-4 py-1 flex items-center">
                 <Crown className="w-4 h-4 mr-2" />
@@ -145,18 +166,23 @@ const SubscriptionPage = () => {
                     <FileText className="w-5 h-5 text-blue-600 mr-2" />
                     Materiais gerados
                   </h3>
-                  <span className="text-blue-600 font-bold">18/60</span>
+                  <span className="text-blue-600 font-bold">
+                    {permissions.usage.materialsThisMonth}/{permissions.limits.materialsPerMonth}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-gradient-to-r from-blue-400 to-blue-600 h-2.5 rounded-full" style={{ width: '30%' }}></div>
+                  <div 
+                    className="bg-gradient-to-r from-blue-400 to-blue-600 h-2.5 rounded-full" 
+                    style={{ width: `${usagePercentage}%` }}
+                  ></div>
                 </div>
                 <div className="flex justify-between mt-2 text-sm text-gray-500">
                   <span>0</span>
-                  <span>60</span>
+                  <span>{permissions.limits.materialsPerMonth}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-3 flex items-center">
                   <Calendar className="w-3 h-3 mr-1" />
-                  Renova em 12 dias (15/08/2023)
+                  Restam {remainingMaterials} materiais este mês
                 </p>
               </div>
 
@@ -165,17 +191,22 @@ const SubscriptionPage = () => {
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-gray-800 flex items-center">
                     <CreditCard className="w-5 h-5 text-blue-600 mr-2" />
-                    Próximo pagamento
+                    Recursos Disponíveis
                   </h3>
-                  <span className="text-blue-600 font-bold">R$ 29,90</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-600 mb-3">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  <span>15 de cada mês</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  <span>Cartão finalizado em 1234</span>
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Check className="w-4 h-4 mr-2 text-green-500" />
+                    <span>Formatos: {permissions.limits.downloadFormats.join(', ').toUpperCase()}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Check className="w-4 h-4 mr-2 text-green-500" />
+                    <span>Edição: {permissions.limits.canEditMaterials ? 'Completa' : 'Limitada'}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Check className="w-4 h-4 mr-2 text-green-500" />
+                    <span>Suporte: {permissions.limits.hasSupport}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -186,20 +217,24 @@ const SubscriptionPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex items-center">
                   <Check className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-gray-700">60 materiais/mês</span>
+                  <span className="text-gray-700">{permissions.limits.materialsPerMonth} materiais/mês</span>
                 </div>
                 <div className="flex items-center">
                   <Check className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-gray-700">Downloads ilimitados</span>
+                  <span className="text-gray-700">Downloads em {permissions.limits.downloadFormats.join(', ').toUpperCase()}</span>
                 </div>
-                <div className="flex items-center">
-                  <Check className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-gray-700">Word, PPT e PDF</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-gray-700">Edição completa</span>
-                </div>
+                {permissions.limits.canUseSlides && (
+                  <div className="flex items-center">
+                    <Check className="w-5 h-5 text-green-500 mr-2" />
+                    <span className="text-gray-700">Slides interativos</span>
+                  </div>
+                )}
+                {permissions.limits.canUseEvaluations && (
+                  <div className="flex items-center">
+                    <Check className="w-5 h-5 text-green-500 mr-2" />
+                    <span className="text-gray-700">Avaliações personalizadas</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -216,7 +251,11 @@ const SubscriptionPage = () => {
                     <CreditCard className="w-4 h-4 mr-2" />
                     Alterar cartão
                   </Button>
-                  <Button variant="outline" className="flex items-center">
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center"
+                    onClick={() => setUpgradeModalOpen(true)}
+                  >
                     <ArrowUpDown className="w-4 h-4 mr-2" />
                     Alterar plano
                   </Button>
@@ -278,7 +317,7 @@ const SubscriptionPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {plans.map((plan) => {
               const Icon = plan.icon;
-              const isCurrentPlan = currentPlan === plan.id;
+              const isCurrentPlan = permissions.planId === plan.id;
               const price = billingType === 'monthly' ? plan.price.monthly : plan.price.yearly;
               const yearlyDiscount = getYearlyDiscount(plan);
 
@@ -392,6 +431,7 @@ const SubscriptionPage = () => {
                         : 'bg-gray-900 hover:bg-gray-800'
                     }`}
                     disabled={isCurrentPlan}
+                    onClick={() => !isCurrentPlan && handlePlanUpgrade(plan.id)}
                   >
                     {isCurrentPlan ? 'Plano Atual' : 'Assinar Agora'}
                   </Button>
@@ -458,6 +498,13 @@ const SubscriptionPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        reason="Escolha um plano que atenda melhor às suas necessidades"
+        onUpgrade={handlePlanUpgrade}
+      />
     </div>
   );
 };
