@@ -4,7 +4,8 @@ import { Crown, Check, Users, ArrowUpDown, Star } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,    DialogHeader,
+  DialogDescription,
+  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -102,22 +103,22 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="w-[95vw] max-w-5xl max-h-[95vh] overflow-y-auto rounded-xl border-0 p-4 sm:p-6">
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <ArrowUpDown className="w-5 h-5 text-blue-600" />
             Alterar Plano
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm sm:text-base">
             Escolha o plano que melhor atende às suas necessidades
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 mt-4">
           {/* Billing Toggle */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
             <span className="text-sm font-medium text-gray-500">Faturamento:</span>
-            <div className="bg-white rounded-full p-1 shadow-sm border">
+            <div className="bg-white rounded-full p-1 shadow-sm border-2 w-fit">
               <button
                 onClick={() => setBillingType('monthly')}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
@@ -140,7 +141,7 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
               </button>
             </div>
             {billingType === 'yearly' && (
-              <Badge className="bg-green-100 text-green-800 text-xs">
+              <Badge className="bg-green-100 text-green-800 text-xs rounded-full">
                 <Star className="w-3 h-3 mr-1" />
                 20% off
               </Badge>
@@ -148,7 +149,7 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
           </div>
 
           {/* Plans Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {plans.map((plan) => {
               const isCurrentPlan = currentPlan.id === plan.id;
               const price = billingType === 'monthly' ? plan.price.monthly : plan.price.yearly;
@@ -158,7 +159,7 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
               return (
                 <div
                   key={plan.id}
-                  className={`relative cursor-pointer transition-all duration-300 border rounded-xl p-4 ${
+                  className={`relative cursor-pointer transition-all duration-300 border-2 rounded-xl p-4 sm:p-6 ${
                     plan.popular ? 'ring-2 ring-blue-500 border-blue-200' : 'border-gray-200'
                   } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''} ${
                     isSelected ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:shadow-lg'
@@ -167,7 +168,7 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
                 >
                   {plan.popular && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-blue-500 text-white px-3 py-1 text-xs">
+                      <Badge className="bg-blue-500 text-white px-3 py-1 text-xs rounded-full">
                         POPULAR
                       </Badge>
                     </div>
@@ -175,7 +176,7 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
 
                   {isCurrentPlan && (
                     <div className="absolute -top-3 right-4">
-                      <Badge className="bg-green-500 text-white px-2 py-1 text-xs">
+                      <Badge className="bg-green-500 text-white px-2 py-1 text-xs rounded-full">
                         Atual
                       </Badge>
                     </div>
@@ -224,7 +225,7 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
 
           {/* Current Plan Info */}
           {selectedPlan && selectedPlan !== currentPlan.id && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
               <h4 className="font-medium text-blue-800 mb-2">Mudança de Plano</h4>
               <p className="text-blue-700 text-sm">
                 Você está alterando do plano <strong>{currentPlan.name}</strong> para o plano{' '}
@@ -234,13 +235,19 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              className="w-full sm:w-auto h-12 rounded-xl border-2 text-base"
+            >
               Cancelar
             </Button>
             <Button 
               onClick={handlePlanChange} 
               disabled={!selectedPlan || selectedPlan === currentPlan.id || isLoading}
+              className="w-full sm:w-auto h-12 rounded-xl text-base"
             >
               {isLoading ? 'Alterando...' : 'Confirmar Alteração'}
             </Button>

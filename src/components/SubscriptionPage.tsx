@@ -668,17 +668,17 @@ const SubscriptionPage = () => {
 
       {/* Cancel Subscription Modal */}
       <AlertDialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
+        <AlertDialogContent className="w-[95vw] max-w-md mx-auto rounded-xl border-0">
+          <AlertDialogHeader className="space-y-3">
+            <AlertDialogTitle className="flex items-center gap-2 text-lg">
               <AlertTriangle className="w-5 h-5 text-red-500" />
               Cancelar Assinatura
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-left">
+            <AlertDialogDescription className="text-left text-sm">
               Tem certeza de que deseja cancelar sua assinatura?
               <br /><br />
               <strong>O que acontecerá:</strong>
-              <ul className="list-disc list-inside mt-2 space-y-1">
+              <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
                 <li>Você manterá acesso aos recursos premium até o final do período atual</li>
                 <li>Não será cobrado novamente</li>
                 <li>Após o vencimento, sua conta será alterada para o plano Gratuito</li>
@@ -686,11 +686,13 @@ const SubscriptionPage = () => {
               </ul>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Manter Assinatura</AlertDialogCancel>
+          <AlertDialogFooter className="flex flex-col sm:flex-row gap-3 pt-4">
+            <AlertDialogCancel className="w-full sm:w-auto h-12 rounded-xl border-2 text-base">
+              Manter Assinatura
+            </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleCancelSubscription}
-              className="bg-red-600 hover:bg-red-700"
+              className="w-full sm:w-auto h-12 rounded-xl bg-red-600 hover:bg-red-700 text-base"
             >
               Confirmar Cancelamento
             </AlertDialogAction>

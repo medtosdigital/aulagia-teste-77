@@ -59,20 +59,20 @@ export const ChangeCardModal: React.FC<ChangeCardModalProps> = ({ isOpen, onClos
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="w-[95vw] max-w-md mx-auto rounded-xl border-0 p-4 sm:p-6">
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <CreditCard className="w-5 h-5 text-blue-600" />
             Alterar Cartão de Crédito
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm sm:text-base">
             Adicione um novo cartão de crédito para sua assinatura
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="cardNumber">Número do Cartão</Label>
+            <Label htmlFor="cardNumber" className="text-sm font-medium">Número do Cartão</Label>
             <div className="relative">
               <Input
                 id="cardNumber"
@@ -81,15 +81,15 @@ export const ChangeCardModal: React.FC<ChangeCardModalProps> = ({ isOpen, onClos
                 value={cardData.number}
                 onChange={(e) => setCardData({ ...cardData, number: formatCardNumber(e.target.value) })}
                 maxLength={19}
-                className="pl-10"
+                className="pl-10 h-12 rounded-xl border-2 text-base"
                 required
               />
-              <CreditCard className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <CreditCard className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cardName">Nome no Cartão</Label>
+            <Label htmlFor="cardName" className="text-sm font-medium">Nome no Cartão</Label>
             <div className="relative">
               <Input
                 id="cardName"
@@ -97,16 +97,16 @@ export const ChangeCardModal: React.FC<ChangeCardModalProps> = ({ isOpen, onClos
                 placeholder="Nome como aparece no cartão"
                 value={cardData.name}
                 onChange={(e) => setCardData({ ...cardData, name: e.target.value.toUpperCase() })}
-                className="pl-10"
+                className="pl-10 h-12 rounded-xl border-2 text-base"
                 required
               />
-              <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <User className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="expiry">Validade</Label>
+              <Label htmlFor="expiry" className="text-sm font-medium">Validade</Label>
               <div className="relative">
                 <Input
                   id="expiry"
@@ -115,15 +115,15 @@ export const ChangeCardModal: React.FC<ChangeCardModalProps> = ({ isOpen, onClos
                   value={cardData.expiry}
                   onChange={(e) => setCardData({ ...cardData, expiry: formatExpiry(e.target.value) })}
                   maxLength={5}
-                  className="pl-10"
+                  className="pl-10 h-12 rounded-xl border-2 text-base"
                   required
                 />
-                <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <Calendar className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cvv">CVV</Label>
+              <Label htmlFor="cvv" className="text-sm font-medium">CVV</Label>
               <div className="relative">
                 <Input
                   id="cvv"
@@ -132,29 +132,38 @@ export const ChangeCardModal: React.FC<ChangeCardModalProps> = ({ isOpen, onClos
                   value={cardData.cvv}
                   onChange={(e) => setCardData({ ...cardData, cvv: e.target.value.replace(/\D/g, '') })}
                   maxLength={4}
-                  className="pl-10"
+                  className="pl-10 h-12 rounded-xl border-2 text-base"
                   required
                 />
-                <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <Lock className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
               </div>
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4">
             <div className="flex items-start gap-2">
               <Lock className="w-4 h-4 text-blue-600 mt-0.5" />
-              <div className="text-xs text-blue-700">
+              <div className="text-xs sm:text-sm text-blue-700">
                 <p className="font-medium">Suas informações estão seguras</p>
                 <p>Utilizamos criptografia SSL e não armazenamos dados do cartão</p>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              className="w-full sm:w-auto h-12 rounded-xl border-2 text-base"
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="w-full sm:w-auto h-12 rounded-xl text-base"
+            >
               {isLoading ? 'Salvando...' : 'Salvar Cartão'}
             </Button>
           </div>
