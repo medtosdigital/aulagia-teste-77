@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell, HelpCircle, BookOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useFirstAccess } from '@/hooks/useFirstAccess';
 
 interface HeaderProps {
   title: string;
@@ -16,6 +16,8 @@ const Header: React.FC<HeaderProps> = ({
     name: 'Professor(a)',
     photo: ''
   });
+
+  const { resetFirstAccess } = useFirstAccess();
 
   // Carregar dados do perfil do localStorage
   useEffect(() => {
@@ -68,6 +70,11 @@ const Header: React.FC<HeaderProps> = ({
     window.dispatchEvent(new CustomEvent('navigateToProfile'));
   };
 
+  const handleNotificationClick = () => {
+    // Abrir o modal de primeiro acesso
+    resetFirstAccess();
+  };
+
   return (
     <header className="bg-white shadow-sm p-4">
       <div className="flex justify-between items-center">
@@ -89,7 +96,10 @@ const Header: React.FC<HeaderProps> = ({
         
         <div className="flex items-center space-x-4">
           <div className="relative">
-            <button className="p-2 rounded-full hover:bg-gray-100 text-gray-600">
+            <button 
+              onClick={handleNotificationClick}
+              className="p-2 rounded-full hover:bg-gray-100 text-gray-600"
+            >
               <Bell size={20} />
             </button>
             <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500"></span>
