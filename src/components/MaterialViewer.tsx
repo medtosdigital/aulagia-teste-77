@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { materialService, type GeneratedMaterial, type LessonPlan, type Activity, type Slide, type Assessment } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
-import MaterialInlineEditModal from './MaterialInlineEditModal';
+import MaterialEditModal from './MaterialEditModal';
 
 const MaterialViewer = () => {
   const { id } = useParams<{ id: string }>();
@@ -73,6 +73,7 @@ const MaterialViewer = () => {
 
   const handleEditSave = () => {
     console.log('Edit saved, reloading material...');
+    // Force reload the material from storage to reflect changes
     loadMaterial();
     setEditModalOpen(false);
     toast.success('Material atualizado com sucesso!');
@@ -202,6 +203,7 @@ const MaterialViewer = () => {
   );
 
   const renderSlides = (slidesContent: any) => {
+    // Extract the slides array from the content structure
     const slides = slidesContent.slides || [];
     
     if (!Array.isArray(slides)) {
@@ -284,6 +286,7 @@ const MaterialViewer = () => {
   );
 
   const renderAssessment = (assessment: Assessment) => {
+    // Se a avaliação tem HTML content, renderizar o HTML completo
     if (assessment.htmlContent) {
       return (
         <div className="w-full">
@@ -306,6 +309,7 @@ const MaterialViewer = () => {
       );
     }
 
+    // Fallback para o formato antigo
     return (
       <div className="space-y-6">
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
@@ -497,8 +501,8 @@ const MaterialViewer = () => {
         </Card>
       </div>
 
-      {/* Edit Modal - Using MaterialInlineEditModal for all material types */}
-      <MaterialInlineEditModal
+      {/* Edit Modal */}
+      <MaterialEditModal
         material={material}
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}
