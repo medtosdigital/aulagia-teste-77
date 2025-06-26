@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Users, BookOpen, Calendar, TrendingUp, Search, Filter, MoreVertical } from 'lucide-react';
+import { Plus, Users, BookOpen, Calendar, TrendingUp, Search, MoreVertical, Mail, Edit, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,11 @@ import {
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import UpgradeModal from '@/components/UpgradeModal';
+import ViewMaterialsModal from '@/components/modals/ViewMaterialsModal';
+import EditTeacherModal from '@/components/modals/EditTeacherModal';
+import ResendInviteModal from '@/components/modals/ResendInviteModal';
+import RemoveTeacherModal from '@/components/modals/RemoveTeacherModal';
+import { useToast } from '@/hooks/use-toast';
 
 interface Teacher {
   id: string;
@@ -29,6 +34,7 @@ interface Teacher {
 const SchoolPage = () => {
   const { currentPlan, usage } = usePlanPermissions();
   const { isOpen, openModal, closeModal, handlePlanSelection, availablePlans } = useUpgradeModal();
+  const { toast } = useToast();
   
   const [teachers, setTeachers] = useState<Teacher[]>([
     {
@@ -71,6 +77,13 @@ const SchoolPage = () => {
     grade: ''
   });
 
+  // Modal states
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [viewMaterialsOpen, setViewMaterialsOpen] = useState(false);
+  const [editTeacherOpen, setEditTeacherOpen] = useState(false);
+  const [resendInviteOpen, setResendInviteOpen] = useState(false);
+  const [removeTeacherOpen, setRemoveTeacherOpen] = useState(false);
+
   const handleAddTeacher = () => {
     // Check if current plan allows adding more teachers
     if (teachers.length >= currentPlan.limits.maxUsers) {
@@ -97,7 +110,68 @@ const SchoolPage = () => {
       setTeachers([...teachers, teacher]);
       setNewTeacher({ name: '', email: '', subject: '', grade: '' });
       setShowAddTeacher(false);
+      
+      toast({
+        title: "Professor adicionado!",
+        description: `${teacher.name} foi adicionado à escola. Um convite será enviado para ${teacher.email}.`,
+      });
     }
+  };
+
+  const handleEditTeacher = (teacherId: string, updatedData: Partial<Teacher>) => {
+    setTeachers(prev => prev.map(teacher => 
+      teacher.id === teacherId 
+        ? { ...teacher, ...updatedData }
+        : teacher
+    ));
+    
+    toast({
+      title: "Professor atualizado!",
+      description: "As informações do professor foram atualizadas com sucesso.",
+    });
+  };
+
+  const handleResendInvite = (teacherId: string) => {
+    const teacher = teachers.find(t => t.id === teacherId);
+    if (teacher) {
+      toast({
+        title: "Convite reenviado!",
+        description: `Um novo convite foi enviado para ${teacher.email}.`,
+      });
+    }
+  };
+
+  const handleRemoveTeacher = (teacherId: string) => {
+    const teacher = teachers.find(t => t.id === teacherId);
+    setTeachers(prev => prev.filter(t => t.id !== teacherId));
+    
+    if (teacher) {
+      toast({
+        title: "Professor removido",
+        description: `${teacher.name} foi removido da escola.`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openViewMaterials = (teacher: Teacher) => {
+    setSelectedTeacher(teacher);
+    setViewMaterialsOpen(true);
+  };
+
+  const openEditTeacher = (teacher: Teacher) => {
+    setSelectedTeacher(teacher);
+    setEditTeacherOpen(true);
+  };
+
+  const openResendInvite = (teacher: Teacher) => {
+    setSelectedTeacher(teacher);
+    setResendInviteOpen(true);
+  };
+
+  const openRemoveTeacher = (teacher: Teacher) => {
+    setSelectedTeacher(teacher);
+    setRemoveTeacherOpen(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -113,8 +187,10 @@ const SchoolPage = () => {
     }
   };
 
+  // Calculate real data
   const totalMaterials = teachers.reduce((sum, teacher) => sum + teacher.materialsCount, 0);
   const activeTeachers = teachers.filter(t => t.status === 'active').length;
+  const materialsThisMonth = Math.floor(totalMaterials * 0.3); // Mock calculation
 
   // Check if current plan supports school management
   const isSchoolPlan = currentPlan.id === 'grupo-escolar';
@@ -202,7 +278,7 @@ const SchoolPage = () => {
             <Calendar className="h-3 sm:h-4 w-3 sm:w-4 text-orange-600" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-2xl font-bold">{usage.materialsThisMonth}</div>
+            <div className="text-lg sm:text-2xl font-bold">{materialsThisMonth}</div>
             <p className="text-xs text-muted-foreground">materiais gerados</p>
           </CardContent>
         </Card>
@@ -357,10 +433,23 @@ const SchoolPage = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="text-sm">
-                        <DropdownMenuItem>Ver Materiais</DropdownMenuItem>
-                        <DropdownMenuItem>Editar Professor</DropdownMenuItem>
-                        <DropdownMenuItem>Reenviar Convite</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
+                        <DropdownMenuItem onClick={() => openViewMaterials(teacher)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Ver Materiais
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEditTeacher(teacher)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar Professor
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openResendInvite(teacher)}>
+                          <Mail className="h-4 w-4 mr-2" />
+                          Reenviar Convite
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-red-600"
+                          onClick={() => openRemoveTeacher(teacher)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
                           Remover Professor
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -395,6 +484,34 @@ const SchoolPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <ViewMaterialsModal
+        isOpen={viewMaterialsOpen}
+        onClose={() => setViewMaterialsOpen(false)}
+        teacher={selectedTeacher}
+      />
+
+      <EditTeacherModal
+        isOpen={editTeacherOpen}
+        onClose={() => setEditTeacherOpen(false)}
+        teacher={selectedTeacher}
+        onSave={handleEditTeacher}
+      />
+
+      <ResendInviteModal
+        isOpen={resendInviteOpen}
+        onClose={() => setResendInviteOpen(false)}
+        teacher={selectedTeacher}
+        onConfirm={handleResendInvite}
+      />
+
+      <RemoveTeacherModal
+        isOpen={removeTeacherOpen}
+        onClose={() => setRemoveTeacherOpen(false)}
+        teacher={selectedTeacher}
+        onConfirm={handleRemoveTeacher}
+      />
 
       <UpgradeModal
         isOpen={isOpen}
