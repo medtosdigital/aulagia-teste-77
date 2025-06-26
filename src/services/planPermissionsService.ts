@@ -434,7 +434,40 @@ class PlanPermissionsService {
 
   getRemainingMaterials(): number {
     const usage = this.getUserUsage();
-    return Math.max(0, usage.materialLimit - usage.materialsThisMonth);
+    const plan = this.getCurrentPlan();
+    
+    // Para plano grupo escolar, verificar se o usuário atual tem um limite específico
+    if (plan.id === 'grupo-escolar') {
+      const currentUser = this.getCurrentUser();
+      if (currentUser && currentUser.materialLimit !== undefined) {
+        // Usar o limite específico do usuário
+        const remaining = Math.max(0, currentUser.materialLimit - usage.materialsThisMonth);
+        console.log('Grupo Escolar - Remaining materials calculation:', {
+          userLimit: currentUser.materialLimit,
+          materialsThisMonth: usage.materialsThisMonth,
+          remaining: remaining
+        });
+        return remaining;
+      } else {
+        // Fallback para o limite do plano se não há usuário específico
+        const remaining = Math.max(0, plan.limits.materialsPerMonth - usage.materialsThisMonth);
+        console.log('Grupo Escolar - Fallback calculation:', {
+          planLimit: plan.limits.materialsPerMonth,
+          materialsThisMonth: usage.materialsThisMonth,
+          remaining: remaining
+        });
+        return remaining;
+      }
+    }
+    
+    // Para outros planos, usar o limite normal
+    const remaining = Math.max(0, usage.materialLimit - usage.materialsThisMonth);
+    console.log('Regular plan - Remaining materials calculation:', {
+      materialLimit: usage.materialLimit,
+      materialsThisMonth: usage.materialsThisMonth,
+      remaining: remaining
+    });
+    return remaining;
   }
 
   isLimitReached(): boolean {

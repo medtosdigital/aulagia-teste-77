@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown, Brain, Presentation, ClipboardList, GraduationCap, MoreHorizontal, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,17 +68,15 @@ const SubscriptionPage = () => {
   const isSubscriptionActive = currentPlan.id !== 'gratuito';
   const subscriptionStatus = isSubscriptionActive ? 'Ativo' : 'Inativo';
 
-  // Refresh data when component mounts and at intervals to ensure real-time updates
-  useEffect(() => {
+  // Create a stable callback for refreshData to prevent infinite loops
+  const stableRefreshData = useCallback(() => {
     refreshData();
-    
-    // Set up interval to refresh data every 30 seconds for real-time updates
-    const interval = setInterval(() => {
-      refreshData();
-    }, 30000);
-
-    return () => clearInterval(interval);
   }, [refreshData]);
+
+  // Refresh data when component mounts, but avoid setting up interval that calls refreshData
+  useEffect(() => {
+    stableRefreshData();
+  }, []); // Empty dependency array - only run on mount
 
   const plans: Plan[] = [
     {
