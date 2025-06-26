@@ -85,6 +85,7 @@ const MaterialViewer = () => {
     materialService.updateMaterial(updatedMaterial);
     loadMaterial();
     setSlideEditModalOpen(false);
+    toast.success('Slides atualizados com sucesso!');
   };
 
   const getTypeIcon = (type: string) => {
