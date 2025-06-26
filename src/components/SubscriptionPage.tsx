@@ -341,7 +341,7 @@ const SubscriptionPage = () => {
               </div>
             </div>
 
-            {/* Actions - keep existing code */}
+            {/* Actions */}
             <div className="border-t border-gray-200 mt-6 pt-6">
               <div className="flex flex-col gap-4">
                 <div>
@@ -351,12 +351,12 @@ const SubscriptionPage = () => {
                   </p>
                 </div>
                 
-                {/* Desktop Actions - 3 columns */}
-                <div className="hidden sm:grid sm:grid-cols-3 sm:gap-4">
+                {/* Desktop Actions - 3 columns with improved responsive design */}
+                <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {isSubscriptionActive && (
                     <Button 
                       variant="outline" 
-                      className="flex items-center justify-center text-sm"
+                      className="flex items-center justify-center text-sm rounded-xl border-2 py-3 hover:bg-gray-50 transition-all duration-200"
                       onClick={() => setIsChangeCardModalOpen(true)}
                     >
                       <CreditCard className="w-4 h-4 mr-2" />
@@ -366,7 +366,7 @@ const SubscriptionPage = () => {
                   
                   <Button 
                     variant="outline" 
-                    className="flex items-center justify-center text-sm"
+                    className="flex items-center justify-center text-sm rounded-xl border-2 py-3 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
                     onClick={() => setIsChangePlanModalOpen(true)}
                   >
                     <ArrowUpDown className="w-4 h-4 mr-2" />
@@ -374,53 +374,45 @@ const SubscriptionPage = () => {
                   </Button>
                   
                   {isSubscriptionActive && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="flex items-center justify-center text-sm">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem 
-                          className="text-red-600 focus:text-red-600"
-                          onClick={() => setIsCancelModalOpen(true)}
-                        >
-                          <Ban className="w-4 h-4 mr-2" />
-                          Cancelar assinatura
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </div>
-
-                {/* Mobile Actions */}
-                <div className="flex flex-col gap-2 sm:hidden">
-                  {isSubscriptionActive && (
                     <Button 
                       variant="outline" 
-                      className="flex items-center justify-center w-full text-sm"
-                      onClick={() => setIsChangeCardModalOpen(true)}
-                    >
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      Alterar cartão
-                    </Button>
-                  )}
-                  <Button 
-                    variant="outline" 
-                    className="flex items-center justify-center w-full text-sm"
-                    onClick={() => setIsChangePlanModalOpen(true)}
-                  >
-                    <ArrowUpDown className="w-4 h-4 mr-2" />
-                    {isSubscriptionActive ? 'Alterar plano' : 'Fazer upgrade'}
-                  </Button>
-                  {isSubscriptionActive && (
-                    <Button 
-                      variant="outline" 
-                      className="flex items-center justify-center w-full text-sm text-red-600 border-red-200 hover:bg-red-50"
+                      className="flex items-center justify-center text-sm rounded-xl border-2 py-3 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 transition-all duration-200 sm:col-span-2 lg:col-span-1"
                       onClick={() => setIsCancelModalOpen(true)}
                     >
                       <Ban className="w-4 h-4 mr-2" />
-                      Cancelar
+                      Cancelar assinatura
+                    </Button>
+                  )}
+                </div>
+
+                {/* Mobile Actions - Full width stacked buttons with rounded borders */}
+                <div className="flex flex-col gap-3 sm:hidden">
+                  {isSubscriptionActive && (
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center justify-center w-full text-sm rounded-xl border-2 py-4 hover:bg-gray-50 transition-all duration-200"
+                      onClick={() => setIsChangeCardModalOpen(true)}
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Alterar cartão
+                    </Button>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center justify-center w-full text-sm rounded-xl border-2 py-4 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
+                    onClick={() => setIsChangePlanModalOpen(true)}
+                  >
+                    <ArrowUpDown className="w-4 h-4 mr-2" />
+                    {isSubscriptionActive ? 'Alterar plano' : 'Fazer upgrade'}
+                  </Button>
+                  {isSubscriptionActive && (
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center justify-center w-full text-sm rounded-xl border-2 py-4 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 transition-all duration-200"
+                      onClick={() => setIsCancelModalOpen(true)}
+                    >
+                      <Ban className="w-4 h-4 mr-2" />
+                      Cancelar assinatura
                     </Button>
                   )}
                 </div>
