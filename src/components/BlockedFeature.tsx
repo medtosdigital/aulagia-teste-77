@@ -22,8 +22,8 @@ const BlockedFeature: React.FC<BlockedFeatureProps> = ({
         <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center z-10 p-4">
           <div className="flex items-center justify-between w-full max-w-sm">
             {/* Coluna de texto */}
-            <div className="flex items-center space-x-2 flex-1 rounded-xl px-[18px] py-[4px] bg-[#4c4e4f]/[0.79]">
-              <div className="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center">
+            <div className="flex items-center space-x-2 flex-1 rounded-xl bg-[#4c4e4f]/[0.79] py-[8px] px-[14px] mx-0 my-0">
+              <div className="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center px-[6px]">
                 <Lock className="w-3 h-3 text-gray-600" />
               </div>
               <div className="text-left">
@@ -34,7 +34,7 @@ const BlockedFeature: React.FC<BlockedFeatureProps> = ({
             
             {/* Coluna do botão */}
             <div className="ml-3">
-              <Button onClick={onUpgrade} size="sm" className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white px-2 py-1 rounded-md font-medium shadow-sm hover:shadow-md transition-all text-xs h-6">
+              <Button onClick={onUpgrade} size="sm" className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white rounded-md font-medium shadow-sm hover:shadow-md transition-all text-xs h-6 py-[17px] px-[13px]">
                 <Crown className="w-3 h-3 mr-1" />
                 Upgrade
               </Button>
