@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown, Brain, Presentation, ClipboardList, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 
 interface Plan {
   id: string;
@@ -22,7 +24,13 @@ interface Plan {
 
 const SubscriptionPage = () => {
   const [billingType, setBillingType] = useState<'monthly' | 'yearly'>('monthly');
-  const [currentPlan] = useState('professor');
+  const { 
+    currentPlan, 
+    usage, 
+    getRemainingMaterials, 
+    getNextResetDate,
+    changePlan 
+  } = usePlanPermissions();
 
   const plans: Plan[] = [
     {
@@ -117,6 +125,21 @@ const SubscriptionPage = () => {
     return Brain;
   };
 
+  const handlePlanChange = (planId: string) => {
+    changePlan(planId);
+  };
+
+  // Calculate usage percentage
+  const usagePercentage = currentPlan.limits.materialsPerMonth > 0 
+    ? (usage.materialsThisMonth / currentPlan.limits.materialsPerMonth) * 100 
+    : 0;
+
+  // Format next reset date
+  const nextResetDate = getNextResetDate();
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Current Plan Section */}
@@ -127,7 +150,7 @@ const SubscriptionPage = () => {
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-2xl font-bold mb-1">Seu Plano Atual</h1>
-                <p className="opacity-90">Plano Professor - Mensal</p>
+                <p className="opacity-90">Plano {currentPlan.name} - Mensal</p>
               </div>
               <div className="bg-white/20 rounded-full px-4 py-1 flex items-center">
                 <Crown className="w-4 h-4 mr-2" />
@@ -145,18 +168,23 @@ const SubscriptionPage = () => {
                     <FileText className="w-5 h-5 text-blue-600 mr-2" />
                     Materiais gerados
                   </h3>
-                  <span className="text-blue-600 font-bold">18/60</span>
+                  <span className="text-blue-600 font-bold">
+                    {usage.materialsThisMonth}/{currentPlan.limits.materialsPerMonth}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-gradient-to-r from-blue-400 to-blue-600 h-2.5 rounded-full" style={{ width: '30%' }}></div>
+                  <div 
+                    className="bg-gradient-to-r from-blue-400 to-blue-600 h-2.5 rounded-full" 
+                    style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+                  ></div>
                 </div>
                 <div className="flex justify-between mt-2 text-sm text-gray-500">
                   <span>0</span>
-                  <span>60</span>
+                  <span>{currentPlan.limits.materialsPerMonth}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-3 flex items-center">
                   <Calendar className="w-3 h-3 mr-1" />
-                  Renova em 12 dias (15/08/2023)
+                  Renova em {formatDate(nextResetDate)}
                 </p>
               </div>
 
@@ -167,7 +195,9 @@ const SubscriptionPage = () => {
                     <CreditCard className="w-5 h-5 text-blue-600 mr-2" />
                     Próximo pagamento
                   </h3>
-                  <span className="text-blue-600 font-bold">R$ 29,90</span>
+                  <span className="text-blue-600 font-bold">
+                    {formatPrice(currentPlan.price.monthly)}
+                  </span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600 mb-3">
                   <Calendar className="w-4 h-4 mr-2" />
@@ -186,20 +216,26 @@ const SubscriptionPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex items-center">
                   <Check className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-gray-700">60 materiais/mês</span>
+                  <span className="text-gray-700">{currentPlan.limits.materialsPerMonth} materiais/mês</span>
                 </div>
-                <div className="flex items-center">
-                  <Check className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-gray-700">Downloads ilimitados</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-gray-700">Word, PPT e PDF</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-gray-700">Edição completa</span>
-                </div>
+                {currentPlan.limits.canDownloadWord && (
+                  <div className="flex items-center">
+                    <Check className="w-5 h-5 text-green-500 mr-2" />
+                    <span className="text-gray-700">Downloads ilimitados</span>
+                  </div>
+                )}
+                {currentPlan.limits.canDownloadPPT && (
+                  <div className="flex items-center">
+                    <Check className="w-5 h-5 text-green-500 mr-2" />
+                    <span className="text-gray-700">Word, PPT e PDF</span>
+                  </div>
+                )}
+                {currentPlan.limits.canEditMaterials && (
+                  <div className="flex items-center">
+                    <Check className="w-5 h-5 text-green-500 mr-2" />
+                    <span className="text-gray-700">Edição completa</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -278,7 +314,7 @@ const SubscriptionPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {plans.map((plan) => {
               const Icon = plan.icon;
-              const isCurrentPlan = currentPlan === plan.id;
+              const isCurrentPlan = currentPlan.id === plan.id;
               const price = billingType === 'monthly' ? plan.price.monthly : plan.price.yearly;
               const yearlyDiscount = getYearlyDiscount(plan);
 
@@ -382,6 +418,7 @@ const SubscriptionPage = () => {
                   </ul>
 
                   <Button
+                    onClick={() => handlePlanChange(plan.id)}
                     className={`w-full py-3 ${
                       isCurrentPlan
                         ? 'bg-gray-100 text-gray-600 cursor-not-allowed'

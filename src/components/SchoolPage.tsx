@@ -11,6 +11,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { useUpgradeModal } from '@/hooks/useUpgradeModal';
+import UpgradeModal from '@/components/UpgradeModal';
 
 interface Teacher {
   id: string;
@@ -24,6 +27,9 @@ interface Teacher {
 }
 
 const SchoolPage = () => {
+  const { currentPlan, usage } = usePlanPermissions();
+  const { isOpen, openModal, closeModal, handlePlanSelection, availablePlans } = useUpgradeModal();
+  
   const [teachers, setTeachers] = useState<Teacher[]>([
     {
       id: '1',
@@ -66,8 +72,13 @@ const SchoolPage = () => {
   });
 
   const handleAddTeacher = () => {
-    if (teachers.length >= 5) {
-      alert('Limite de 5 professores atingido para o Plano Escola');
+    // Check if current plan allows adding more teachers
+    if (teachers.length >= currentPlan.limits.maxUsers) {
+      if (currentPlan.id !== 'grupo-escolar') {
+        openModal();
+        return;
+      }
+      alert(`Limite de ${currentPlan.limits.maxUsers} professores atingido para o Plano ${currentPlan.name}`);
       return;
     }
 
@@ -105,20 +116,47 @@ const SchoolPage = () => {
   const totalMaterials = teachers.reduce((sum, teacher) => sum + teacher.materialsCount, 0);
   const activeTeachers = teachers.filter(t => t.status === 'active').length;
 
+  // Check if current plan supports school management
+  const isSchoolPlan = currentPlan.id === 'grupo-escolar';
+  const maxTeachers = currentPlan.limits.maxUsers;
+
   return (
     <div className="p-4 md:p-6 space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-6 text-white">
+      <div className={`bg-gradient-to-r ${
+        isSchoolPlan 
+          ? 'from-green-600 to-emerald-600' 
+          : 'from-blue-600 to-purple-600'
+      } rounded-2xl p-6 text-white`}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Gestão Escolar</h1>
-            <p className="text-purple-100">
-              Gerencie até 5 professores com acesso completo à plataforma
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">
+              {isSchoolPlan ? 'Gestão Escolar' : 'Gestão de Professores'}
+            </h1>
+            <p className={`${isSchoolPlan ? 'text-green-100' : 'text-purple-100'}`}>
+              {isSchoolPlan 
+                ? `Gerencie até ${maxTeachers} professores com acesso completo à plataforma`
+                : `Plano ${currentPlan.name} - Para usar recursos colaborativos, faça upgrade para o Plano Grupo Escolar`
+              }
             </p>
           </div>
           <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 min-w-[200px]">
-            <div className="text-sm text-purple-100 mb-1">Plano Escola Premium</div>
-            <div className="text-lg font-semibold">Professores: {teachers.length}/5</div>
+            <div className={`text-sm ${isSchoolPlan ? 'text-green-100' : 'text-purple-100'} mb-1`}>
+              Plano {currentPlan.name}
+            </div>
+            <div className="text-lg font-semibold">
+              Professores: {teachers.length}/{maxTeachers}
+            </div>
+            {!isSchoolPlan && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2 text-xs"
+                onClick={openModal}
+              >
+                Fazer Upgrade
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -132,7 +170,7 @@ const SchoolPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{teachers.length}</div>
-            <p className="text-xs text-muted-foreground">de 5 disponíveis</p>
+            <p className="text-xs text-muted-foreground">de {maxTeachers} disponíveis</p>
           </CardContent>
         </Card>
 
@@ -164,11 +202,38 @@ const SchoolPage = () => {
             <Calendar className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">novos materiais</p>
+            <div className="text-2xl font-bold">{usage.materialsThisMonth}</div>
+            <p className="text-xs text-muted-foreground">materiais gerados</p>
           </CardContent>
         </Card>
       </div>
+
+      {!isSchoolPlan && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                  Desbloqueie o Plano Grupo Escolar
+                </h3>
+                <p className="text-blue-600 mb-4">
+                  Para gerenciar até 5 professores com recursos colaborativos completos, 
+                  faça upgrade para o Plano Grupo Escolar e tenha acesso a:
+                </p>
+                <ul className="text-blue-600 text-sm space-y-1">
+                  <li>• Dashboard de gestão colaborativa</li>
+                  <li>• Compartilhamento de materiais entre professores</li>
+                  <li>• Relatórios detalhados de uso</li>
+                  <li>• Suporte prioritário</li>
+                </ul>
+              </div>
+              <Button onClick={openModal} className="bg-blue-600 hover:bg-blue-700">
+                Fazer Upgrade
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Teachers Management */}
       <Card>
@@ -187,7 +252,7 @@ const SchoolPage = () => {
               </div>
               <Button
                 onClick={() => setShowAddTeacher(true)}
-                disabled={teachers.length >= 5}
+                disabled={teachers.length >= maxTeachers}
                 className="w-full sm:w-auto"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -303,16 +368,35 @@ const SchoolPage = () => {
               <div className="text-center py-12">
                 <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum professor cadastrado</h3>
-                <p className="text-gray-500 mb-4">Adicione professores para começar a usar o Plano Escola</p>
-                <Button onClick={() => setShowAddTeacher(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Primeiro Professor
-                </Button>
+                <p className="text-gray-500 mb-4">
+                  {isSchoolPlan 
+                    ? 'Adicione professores para começar a usar o Plano Grupo Escolar'
+                    : 'Faça upgrade para o Plano Grupo Escolar para gerenciar professores'
+                  }
+                </p>
+                {isSchoolPlan ? (
+                  <Button onClick={() => setShowAddTeacher(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar Primeiro Professor
+                  </Button>
+                ) : (
+                  <Button onClick={openModal}>
+                    Fazer Upgrade para Plano Escola
+                  </Button>
+                )}
               </div>
             )}
           </div>
         </CardContent>
       </Card>
+
+      <UpgradeModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        onSelectPlan={handlePlanSelection}
+        availablePlans={availablePlans}
+        currentPlanName={currentPlan.name}
+      />
     </div>
   );
 };
