@@ -167,7 +167,20 @@ class PlanPermissionsService {
 
   getCurrentUser(): SchoolUser | null {
     const stored = localStorage.getItem(this.STORAGE_KEYS.CURRENT_USER);
-    if (!stored) return null;
+    if (!stored) {
+      // Se não existe usuário atual, criar um usuário padrão
+      const defaultUser: SchoolUser = {
+        id: 'user-' + Date.now(),
+        email: 'usuario@escola.com',
+        name: 'Usuário Escola',
+        hasProfessorAccess: false,
+        addedToSchool: false,
+        materialLimit: 5,
+        materialsUsed: 0
+      };
+      this.setCurrentUser(defaultUser);
+      return defaultUser;
+    }
     
     try {
       return JSON.parse(stored);
@@ -296,25 +309,36 @@ class PlanPermissionsService {
     
     // Se está mudando para plano grupo escolar, configurar o usuário como dono da escola
     if (planId === 'grupo-escolar' && currentPlan.id !== 'grupo-escolar') {
-      const currentUser = this.getCurrentUser();
-      if (currentUser) {
-        // Definir como dono da escola
-        this.setSchoolOwner(currentUser);
-        
-        // Adicionar como primeiro usuário da escola com acesso professor
+      let currentUser = this.getCurrentUser();
+      
+      // Se não há usuário atual, criar um
+      if (!currentUser) {
+        currentUser = {
+          id: 'user-' + Date.now(),
+          email: 'usuario@escola.com',
+          name: 'Usuário Escola',
+          hasProfessorAccess: true,
+          addedToSchool: true,
+          materialLimit: this.plans['grupo-escolar'].limits.materialsPerMonth,
+          materialsUsed: 0
+        };
+        this.setCurrentUser(currentUser);
+      } else {
+        // Atualizar usuário existente
         currentUser.hasProfessorAccess = true;
         currentUser.addedToSchool = true;
         currentUser.materialLimit = this.plans['grupo-escolar'].limits.materialsPerMonth;
-        currentUser.materialsUsed = 0;
-        
         this.setCurrentUser(currentUser);
-        
-        // Adicionar à lista de usuários da escola
-        const schoolUsers = this.getSchoolUsers();
-        if (!schoolUsers.find(u => u.id === currentUser.id)) {
-          schoolUsers.push(currentUser);
-          localStorage.setItem(this.STORAGE_KEYS.SCHOOL_USERS, JSON.stringify(schoolUsers));
-        }
+      }
+      
+      // Definir como dono da escola
+      this.setSchoolOwner(currentUser);
+      
+      // Adicionar à lista de usuários da escola se não estiver lá
+      const schoolUsers = this.getSchoolUsers();
+      if (!schoolUsers.find(u => u.id === currentUser.id)) {
+        schoolUsers.push(currentUser);
+        localStorage.setItem(this.STORAGE_KEYS.SCHOOL_USERS, JSON.stringify(schoolUsers));
       }
     }
     

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Users, BookOpen, Calendar, TrendingUp, Search, MoreVertical, Mail, Edit, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +19,7 @@ import EditTeacherModal from '@/components/modals/EditTeacherModal';
 import ResendInviteModal from '@/components/modals/ResendInviteModal';
 import RemoveTeacherModal from '@/components/modals/RemoveTeacherModal';
 import { useToast } from '@/hooks/use-toast';
+import { planPermissionsService } from '@/services/planPermissionsService';
 
 interface Teacher {
   id: string;
@@ -29,6 +30,7 @@ interface Teacher {
   status: 'active' | 'pending' | 'inactive';
   materialsCount: number;
   lastAccess: string;
+  isSchoolOwner?: boolean;
 }
 
 const SchoolPage = () => {
@@ -36,39 +38,7 @@ const SchoolPage = () => {
   const { isOpen, openModal, closeModal, handlePlanSelection, availablePlans } = useUpgradeModal();
   const { toast } = useToast();
   
-  const [teachers, setTeachers] = useState<Teacher[]>([
-    {
-      id: '1',
-      name: 'Carlos Mendes',
-      email: 'carlos.mendes@escola.com',
-      subject: 'Matemática',
-      grade: '6º ao 9º ano',
-      status: 'active',
-      materialsCount: 24,
-      lastAccess: '2023-12-15'
-    },
-    {
-      id: '2',
-      name: 'Mariana Costa',
-      email: 'mariana.costa@escola.com',
-      subject: 'Português',
-      grade: 'Fundamental II',
-      status: 'active',
-      materialsCount: 18,
-      lastAccess: '2023-12-14'
-    },
-    {
-      id: '3',
-      name: 'Roberto Almeida',
-      email: 'roberto.almeida@escola.com',
-      subject: 'Ciências',
-      grade: '7º e 8º ano',
-      status: 'pending',
-      materialsCount: 0,
-      lastAccess: 'Nunca'
-    }
-  ]);
-
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [showAddTeacher, setShowAddTeacher] = useState(false);
   const [newTeacher, setNewTeacher] = useState({
     name: '',
@@ -83,6 +53,67 @@ const SchoolPage = () => {
   const [editTeacherOpen, setEditTeacherOpen] = useState(false);
   const [resendInviteOpen, setResendInviteOpen] = useState(false);
   const [removeTeacherOpen, setRemoveTeacherOpen] = useState(false);
+
+  // Initialize teachers list with school owner if plan is grupo-escolar
+  useEffect(() => {
+    if (currentPlan.id === 'grupo-escolar') {
+      const schoolUsers = planPermissionsService.getSchoolUsers();
+      const currentUser = planPermissionsService.getCurrentUser();
+      const isOwner = planPermissionsService.isSchoolOwner();
+      
+      if (isOwner && currentUser) {
+        // Create school owner as first teacher if not already exists
+        const ownerTeacher: Teacher = {
+          id: currentUser.id,
+          name: currentUser.name || 'Usuário Escola',
+          email: currentUser.email || 'usuario@escola.com',
+          subject: 'Múltiplas Disciplinas',
+          grade: 'Ensino Fundamental',
+          status: 'active',
+          materialsCount: currentUser.materialsUsed || 0,
+          lastAccess: new Date().toLocaleDateString('pt-BR'),
+          isSchoolOwner: true
+        };
+
+        // Check if owner is already in the teachers list
+        const existingTeachers = schoolUsers.map(user => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          subject: user.id === currentUser.id ? 'Múltiplas Disciplinas' : 'Disciplina',
+          grade: user.id === currentUser.id ? 'Ensino Fundamental' : 'Série',
+          status: 'active' as const,
+          materialsCount: user.materialsUsed || 0,
+          lastAccess: user.id === currentUser.id ? new Date().toLocaleDateString('pt-BR') : 'Nunca',
+          isSchoolOwner: user.id === currentUser.id
+        }));
+
+        // If owner is not in school users, add them
+        if (!existingTeachers.find(t => t.id === currentUser.id)) {
+          setTeachers([ownerTeacher]);
+        } else {
+          setTeachers(existingTeachers);
+        }
+      } else {
+        // Load existing school users
+        const teachersList = schoolUsers.map(user => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          subject: 'Disciplina',
+          grade: 'Série',
+          status: 'active' as const,
+          materialsCount: user.materialsUsed || 0,
+          lastAccess: 'Nunca',
+          isSchoolOwner: false
+        }));
+        setTeachers(teachersList);
+      }
+    } else {
+      // For non-school plans, show empty state
+      setTeachers([]);
+    }
+  }, [currentPlan.id]);
 
   const handleAddTeacher = () => {
     // Check if current plan allows adding more teachers
@@ -104,8 +135,20 @@ const SchoolPage = () => {
         grade: newTeacher.grade,
         status: 'pending',
         materialsCount: 0,
-        lastAccess: 'Nunca'
+        lastAccess: 'Nunca',
+        isSchoolOwner: false
       };
+
+      // Add to school users if it's a school plan
+      if (currentPlan.id === 'grupo-escolar') {
+        planPermissionsService.addUserToSchool({
+          name: teacher.name,
+          email: teacher.email,
+          hasProfessorAccess: true,
+          addedToSchool: true,
+          materialLimit: Math.floor(currentPlan.limits.materialsPerMonth / (teachers.length + 1))
+        });
+      }
 
       setTeachers([...teachers, teacher]);
       setNewTeacher({ name: '', email: '', subject: '', grade: '' });
@@ -143,6 +186,17 @@ const SchoolPage = () => {
 
   const handleRemoveTeacher = (teacherId: string) => {
     const teacher = teachers.find(t => t.id === teacherId);
+    
+    // Prevent removing school owner
+    if (teacher?.isSchoolOwner) {
+      toast({
+        title: "Não é possível remover",
+        description: "O proprietário da escola não pode ser removido.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setTeachers(prev => prev.filter(t => t.id !== teacherId));
     
     if (teacher) {
@@ -174,7 +228,11 @@ const SchoolPage = () => {
     setRemoveTeacherOpen(true);
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, isOwner?: boolean) => {
+    if (isOwner) {
+      return <Badge className="bg-blue-100 text-blue-800 text-xs">Proprietário</Badge>;
+    }
+    
     switch (status) {
       case 'active':
         return <Badge className="bg-green-100 text-green-800 text-xs">Ativo</Badge>;
@@ -400,8 +458,8 @@ const SchoolPage = () => {
             {teachers.map((teacher) => (
               <div key={teacher.id} className="flex flex-col gap-4 p-3 sm:p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
                 <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Users className="h-5 sm:h-6 w-5 sm:w-6 text-blue-600" />
+                  <div className={`w-10 sm:w-12 h-10 sm:h-12 rounded-full ${teacher.isSchoolOwner ? 'bg-blue-100' : 'bg-gray-100'} flex items-center justify-center flex-shrink-0`}>
+                    <Users className={`h-5 sm:h-6 w-5 sm:w-6 ${teacher.isSchoolOwner ? 'text-blue-600' : 'text-gray-600'}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{teacher.name}</h3>
@@ -424,7 +482,7 @@ const SchoolPage = () => {
                   </div>
                   
                   <div className="flex items-center justify-between sm:justify-end gap-2">
-                    {getStatusBadge(teacher.status)}
+                    {getStatusBadge(teacher.status, teacher.isSchoolOwner)}
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -441,17 +499,21 @@ const SchoolPage = () => {
                           <Edit className="h-4 w-4 mr-2" />
                           Editar Professor
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openResendInvite(teacher)}>
-                          <Mail className="h-4 w-4 mr-2" />
-                          Reenviar Convite
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-red-600"
-                          onClick={() => openRemoveTeacher(teacher)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Remover Professor
-                        </DropdownMenuItem>
+                        {!teacher.isSchoolOwner && (
+                          <>
+                            <DropdownMenuItem onClick={() => openResendInvite(teacher)}>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Reenviar Convite
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-red-600"
+                              onClick={() => openRemoveTeacher(teacher)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Remover Professor
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
