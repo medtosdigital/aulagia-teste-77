@@ -58,7 +58,8 @@ const Index = () => {
   const {
     showFeedbackModal,
     closeFeedbackModal,
-    dontShowAgain
+    dontShowAgain,
+    checkDailyModal
   } = useFeedback();
 
   useEffect(() => {
@@ -73,11 +74,14 @@ const Index = () => {
     window.addEventListener('navigateToProfile', handleNavigateToProfile);
     window.addEventListener('navigateToSubscription', handleNavigateToSubscription);
 
+    // Verificar modal diário de feedback ao montar o componente
+    checkDailyModal();
+
     return () => {
       window.removeEventListener('navigateToProfile', handleNavigateToProfile);
       window.removeEventListener('navigateToSubscription', handleNavigateToSubscription);
     };
-  }, []);
+  }, [checkDailyModal]);
 
   const getPageTitle = () => {
     switch (activeItem) {
