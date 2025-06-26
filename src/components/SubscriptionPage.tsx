@@ -64,6 +64,10 @@ const SubscriptionPage = () => {
     refreshData
   } = usePlanPermissions();
 
+  // Determine subscription status based on real plan data
+  const isSubscriptionActive = currentPlan.id !== 'gratuito';
+  const subscriptionStatus = isSubscriptionActive ? 'Ativo' : 'Inativo';
+
   // Refresh data when component mounts and at intervals to ensure real-time updates
   useEffect(() => {
     refreshData();
@@ -199,16 +203,26 @@ const SubscriptionPage = () => {
       {/* Current Plan Section */}
       <div className="max-w-6xl mx-auto mb-6 sm:mb-8">
         <Card className="overflow-hidden">
-          {/* Plan Header */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 sm:p-6 text-white">
+          {/* Plan Header - Updated with real subscription status */}
+          <div className={`p-4 sm:p-6 text-white ${
+            isSubscriptionActive 
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600' 
+              : 'bg-gradient-to-r from-gray-500 to-gray-600'
+          }`}>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold mb-1">Seu Plano Atual</h1>
-                <p className="opacity-90 text-sm sm:text-base">Plano {currentPlan.name} - Mensal</p>
+                <p className="opacity-90 text-sm sm:text-base">
+                  Plano {currentPlan.name} - {isSubscriptionActive ? 'Mensal' : 'Gratuito'}
+                </p>
               </div>
-              <div className="bg-white/20 rounded-full px-3 sm:px-4 py-1 flex items-center self-start">
+              <div className={`rounded-full px-3 sm:px-4 py-1 flex items-center self-start ${
+                isSubscriptionActive 
+                  ? 'bg-white/20' 
+                  : 'bg-white/20'
+              }`}>
                 <Crown className="w-4 h-4 mr-2" />
-                <span className="font-medium text-sm">Ativo</span>
+                <span className="font-medium text-sm">{subscriptionStatus}</span>
               </div>
             </div>
           </div>
@@ -261,29 +275,38 @@ const SubscriptionPage = () => {
                 )}
               </div>
 
-              {/* Payment Card - keep existing code */}
+              {/* Payment Card - Show real payment info based on plan */}
               <div className="bg-gray-50 rounded-lg p-4 sm:p-5 border border-gray-200">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-gray-800 flex items-center text-sm sm:text-base">
                     <CreditCard className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600 mr-2" />
-                    Próximo pagamento
+                    {isSubscriptionActive ? 'Próximo pagamento' : 'Plano gratuito'}
                   </h3>
                   <span className="text-blue-600 font-bold text-sm sm:text-base">
                     {formatPrice(currentPlan.price.monthly)}
                   </span>
                 </div>
-                <div className="flex items-center text-xs sm:text-sm text-gray-600 mb-3">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  <span>15 de cada mês</span>
-                </div>
-                <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  <span>Cartão finalizado em 1234</span>
-                </div>
+                {isSubscriptionActive ? (
+                  <>
+                    <div className="flex items-center text-xs sm:text-sm text-gray-600 mb-3">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      <span>15 de cada mês</span>
+                    </div>
+                    <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      <span>Cartão finalizado em 1234</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-xs sm:text-sm text-gray-600">
+                    <p>Você está no plano gratuito.</p>
+                    <p className="mt-1">Faça upgrade para desbloquear mais recursos!</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Features - keep existing code */}
+            {/* Features - Updated with real plan features */}
             <div className="border-t border-gray-200 pt-5">
               <h3 className="font-semibold text-gray-800 mb-3 text-sm sm:text-base">Recursos incluídos:</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -309,6 +332,12 @@ const SubscriptionPage = () => {
                     <span className="text-gray-700 text-sm">Edição completa</span>
                   </div>
                 )}
+                {!currentPlan.limits.canDownloadWord && (
+                  <div className="flex items-center">
+                    <span className="w-4 sm:w-5 h-4 sm:h-5 text-red-400 mr-2 flex-shrink-0">×</span>
+                    <span className="text-gray-400 text-sm">Sem download em Word/PPT</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -317,19 +346,23 @@ const SubscriptionPage = () => {
               <div className="flex flex-col gap-4">
                 <div>
                   <h3 className="font-medium text-gray-800 text-sm sm:text-base">Gerenciar assinatura</h3>
-                  <p className="text-xs sm:text-sm text-gray-500">Altere ou cancele quando quiser</p>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    {isSubscriptionActive ? 'Altere ou cancele quando quiser' : 'Faça upgrade para desbloquear todos os recursos'}
+                  </p>
                 </div>
                 
                 {/* Desktop Actions - 3 columns */}
                 <div className="hidden sm:grid sm:grid-cols-3 sm:gap-4">
-                  <Button 
-                    variant="outline" 
-                    className="flex items-center justify-center text-sm"
-                    onClick={() => setIsChangeCardModalOpen(true)}
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Alterar cartão
-                  </Button>
+                  {isSubscriptionActive && (
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center justify-center text-sm"
+                      onClick={() => setIsChangeCardModalOpen(true)}
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Alterar cartão
+                    </Button>
+                  )}
                   
                   <Button 
                     variant="outline" 
@@ -337,53 +370,59 @@ const SubscriptionPage = () => {
                     onClick={() => setIsChangePlanModalOpen(true)}
                   >
                     <ArrowUpDown className="w-4 h-4 mr-2" />
-                    Alterar plano
+                    {isSubscriptionActive ? 'Alterar plano' : 'Fazer upgrade'}
                   </Button>
                   
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="flex items-center justify-center text-sm">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem 
-                        className="text-red-600 focus:text-red-600"
-                        onClick={() => setIsCancelModalOpen(true)}
-                      >
-                        <Ban className="w-4 h-4 mr-2" />
-                        Cancelar assinatura
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {isSubscriptionActive && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="flex items-center justify-center text-sm">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem 
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => setIsCancelModalOpen(true)}
+                        >
+                          <Ban className="w-4 h-4 mr-2" />
+                          Cancelar assinatura
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
 
-                {/* Mobile Actions - keep existing vertical layout */}
+                {/* Mobile Actions */}
                 <div className="flex flex-col gap-2 sm:hidden">
-                  <Button 
-                    variant="outline" 
-                    className="flex items-center justify-center w-full text-sm"
-                    onClick={() => setIsChangeCardModalOpen(true)}
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Alterar cartão
-                  </Button>
+                  {isSubscriptionActive && (
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center justify-center w-full text-sm"
+                      onClick={() => setIsChangeCardModalOpen(true)}
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Alterar cartão
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     className="flex items-center justify-center w-full text-sm"
                     onClick={() => setIsChangePlanModalOpen(true)}
                   >
                     <ArrowUpDown className="w-4 h-4 mr-2" />
-                    Alterar plano
+                    {isSubscriptionActive ? 'Alterar plano' : 'Fazer upgrade'}
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex items-center justify-center w-full text-sm text-red-600 border-red-200 hover:bg-red-50"
-                    onClick={() => setIsCancelModalOpen(true)}
-                  >
-                    <Ban className="w-4 h-4 mr-2" />
-                    Cancelar
-                  </Button>
+                  {isSubscriptionActive && (
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center justify-center w-full text-sm text-red-600 border-red-200 hover:bg-red-50"
+                      onClick={() => setIsCancelModalOpen(true)}
+                    >
+                      <Ban className="w-4 h-4 mr-2" />
+                      Cancelar
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

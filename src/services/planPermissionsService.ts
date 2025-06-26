@@ -1,3 +1,4 @@
+
 export interface PlanLimits {
   materialsPerMonth: number;
   canDownloadWord: boolean;
@@ -98,7 +99,7 @@ class PlanPermissionsService {
 
   getCurrentPlan(): UserPlan {
     const stored = localStorage.getItem(this.STORAGE_KEYS.CURRENT_PLAN);
-    const planId = stored || 'professor'; // Default to professor as shown in UI
+    const planId = stored || 'gratuito'; // Default to gratuito (free plan)
     return this.plans[planId] || this.plans.gratuito;
   }
 
@@ -117,12 +118,12 @@ class PlanPermissionsService {
       };
     }
 
-    // Initialize with default values
+    // Initialize with real zero values for new users
     const now = new Date();
     const usage: UserUsage = {
-      materialsThisMonth: 18, // Current value shown in UI
+      materialsThisMonth: 0, // Start with 0 materials generated
       lastResetDate: new Date(now.getFullYear(), now.getMonth(), 1),
-      totalMaterials: 18
+      totalMaterials: 0 // Start with 0 total materials
     };
     
     this.saveUsage(usage);
@@ -179,6 +180,17 @@ class PlanPermissionsService {
     const now = new Date();
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 15); // 15th of next month
     return nextMonth;
+  }
+
+  // Method to check if user has active subscription (for payment status)
+  hasActiveSubscription(): boolean {
+    const currentPlan = this.getCurrentPlan();
+    return currentPlan.id !== 'gratuito';
+  }
+
+  // Method to get subscription status
+  getSubscriptionStatus(): 'active' | 'inactive' {
+    return this.hasActiveSubscription() ? 'active' : 'inactive';
   }
 
   private addToSubscriptionHistory(action: string, details?: string): void {
