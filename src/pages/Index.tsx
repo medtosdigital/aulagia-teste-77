@@ -13,19 +13,25 @@ import SubscriptionPage from '@/components/SubscriptionPage';
 import PageBlockedOverlay from '@/components/PageBlockedOverlay';
 import UpgradeModal from '@/components/UpgradeModal';
 import SupportModal from '@/components/SupportModal';
+import AdminLoginModal from '@/components/AdminLoginModal';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  
   const { 
     canAccessSchool, 
     canAccessSettings, 
+    canAccessCreateMaterial,
+    canAccessMaterials,
     hasCalendar,
     shouldShowSupportModal,
     dismissSupportModal,
     currentPlan,
-    getNextResetDate
+    getNextResetDate,
+    isAdminAuthenticated
   } = usePlanPermissions();
   
   const { 
@@ -60,6 +66,12 @@ const Index = () => {
   };
 
   const handleNavigate = (page: string) => {
+    // Verificar se precisa de login de admin para páginas administrativas
+    if ((page === 'settings' || page === 'api-keys' || page === 'templates') && !isAdminAuthenticated()) {
+      setShowAdminLogin(true);
+      return;
+    }
+    
     setActiveItem(page);
   };
 
@@ -75,16 +87,54 @@ const Index = () => {
     switch (activeItem) {
       case 'dashboard':
         return <Dashboard onNavigate={handleNavigate} />;
+        
       case 'create':
-        return <CreateLesson />;
-      case 'lessons':
-        return <MaterialsList />;
-      case 'calendar':
-        if (!hasCalendar()) {
+        if (!canAccessCreateMaterial()) {
           return (
             <PageBlockedOverlay
-              title="Calendário Premium"
-              description="O calendário está disponível apenas para planos Professor e Grupo Escolar. Faça upgrade para organizar suas aulas e atividades."
+              title="Recurso Restrito"
+              description="Para acessar a criação de materiais com o plano Grupo Escolar, você precisa ser adicionado como usuário da escola e ter acesso ao plano Professor."
+              icon="plus"
+              onUpgrade={openUpgradeModal}
+            >
+              <div className="p-8 text-center">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Criar Material</h2>
+                <p className="text-gray-600">Crie planos de aula, slides e atividades</p>
+              </div>
+            </PageBlockedOverlay>
+          );
+        }
+        return <CreateLesson />;
+        
+      case 'lessons':
+        if (!canAccessMaterials()) {
+          return (
+            <PageBlockedOverlay
+              title="Recurso Restrito"
+              description="Para acessar seus materiais com o plano Grupo Escolar, você precisa ser adicionado como usuário da escola e ter acesso ao plano Professor."
+              icon="book"
+              onUpgrade={openUpgradeModal}
+            >
+              <div className="p-8 text-center">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Meus Materiais</h2>
+                <p className="text-gray-600">Visualize e gerencie seus conteúdos</p>
+              </div>
+            </PageBlockedOverlay>
+          );
+        }
+        return <MaterialsList />;
+        
+      case 'calendar':
+        if (!hasCalendar()) {
+          const isSchoolPlan = currentPlan.id === 'grupo-escolar';
+          return (
+            <PageBlockedOverlay
+              title={isSchoolPlan ? "Recurso Restrito" : "Calendário Premium"}
+              description={
+                isSchoolPlan 
+                  ? "Para acessar o calendário com o plano Grupo Escolar, você precisa ser adicionado como usuário da escola e ter acesso ao plano Professor."
+                  : "O calendário está disponível apenas para planos Professor e Grupo Escolar. Faça upgrade para organizar suas aulas e atividades."
+              }
               icon="calendar"
               onUpgrade={openUpgradeModal}
             >
@@ -96,6 +146,7 @@ const Index = () => {
           );
         }
         return <CalendarPage />;
+        
       case 'school':
         if (!canAccessSchool()) {
           return (
@@ -113,33 +164,36 @@ const Index = () => {
           );
         }
         return <SchoolPage />;
+        
       case 'subscription':
         return <SubscriptionPage />;
+        
       case 'settings':
         if (!canAccessSettings()) {
           return (
             <PageBlockedOverlay
-              title="Configurações Avançadas"
-              description="As configurações avançadas estão disponíveis apenas para o plano Grupo Escolar. Faça upgrade para acessar recursos administrativos."
+              title="Acesso Restrito"
+              description="As configurações estão disponíveis apenas para administradores. Faça login com suas credenciais de administrador."
               icon="settings"
-              onUpgrade={openUpgradeModal}
+              onUpgrade={() => setShowAdminLogin(true)}
             >
               <div className="p-8 text-center">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Configurações</h2>
-                <p className="text-gray-600">Personalize sua experiência</p>
+                <p className="text-gray-600">Configurações administrativas do sistema</p>
               </div>
             </PageBlockedOverlay>
           );
         }
         return <div className="p-4"><h2>Configurações - Em desenvolvimento</h2></div>;
+        
       case 'api-keys':
         if (!canAccessSettings()) {
           return (
             <PageBlockedOverlay
-              title="Chaves de API Premium"
-              description="O gerenciamento de chaves de API está disponível apenas para o plano Grupo Escolar. Faça upgrade para integrar APIs externas."
+              title="Acesso Restrito"
+              description="O gerenciamento de chaves de API está disponível apenas para administradores. Faça login com suas credenciais de administrador."
               icon="settings"
-              onUpgrade={openUpgradeModal}
+              onUpgrade={() => setShowAdminLogin(true)}
             >
               <div className="p-8 text-center">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Chaves de API</h2>
@@ -149,6 +203,7 @@ const Index = () => {
           );
         }
         return <div className="p-4"><h2>Chaves de API - Em desenvolvimento</h2></div>;
+        
       default:
         return <Dashboard onNavigate={handleNavigate} />;
     }
@@ -163,7 +218,7 @@ const Index = () => {
         {/* Rota principal com sidebar */}
         <Route path="*" element={
           <div className="min-h-screen bg-gray-50 w-full">
-            <Sidebar activeItem={activeItem} onItemClick={setActiveItem} />
+            <Sidebar activeItem={activeItem} onItemClick={handleNavigate} />
             
             <div className="md:ml-64 min-h-screen pb-20 md:pb-0">
               <Header title={getPageTitle()} />
@@ -188,6 +243,16 @@ const Index = () => {
         onClose={dismissSupportModal}
         currentPlanName={currentPlan.name}
         remainingDays={calculateRemainingDays()}
+      />
+
+      {/* Modal de login do administrador */}
+      <AdminLoginModal
+        isOpen={showAdminLogin}
+        onClose={() => setShowAdminLogin(false)}
+        onSuccess={() => {
+          setShowAdminLogin(false);
+          // Redirecionar para a página solicitada após login bem-sucedido
+        }}
       />
     </>
   );

@@ -87,7 +87,19 @@ export const usePlanPermissions = () => {
   };
 
   const hasCalendar = (): boolean => {
-    return canPerformAction('hasCalendar');
+    const plan = currentPlan;
+    
+    // Para plano Professor, acesso normal
+    if (plan.id === 'professor') {
+      return canPerformAction('hasCalendar');
+    }
+    
+    // Para plano Grupo Escolar, precisa ter acesso Professor
+    if (plan.id === 'grupo-escolar') {
+      return planPermissionsService.canAccessProfessorFeaturesWithSchoolPlan();
+    }
+    
+    return false;
   };
 
   // Permissões específicas para páginas administrativas
@@ -96,7 +108,53 @@ export const usePlanPermissions = () => {
   };
 
   const canAccessSettings = (): boolean => {
-    return currentPlan.id === 'grupo-escolar';
+    return planPermissionsService.isAdminAuthenticated();
+  };
+
+  // Novas permissões para plano Grupo Escolar
+  const canAccessCreateMaterial = (): boolean => {
+    const plan = currentPlan;
+    
+    // Plano gratuito e professor tem acesso normal
+    if (plan.id === 'gratuito' || plan.id === 'professor') {
+      return true;
+    }
+    
+    // Plano grupo escolar precisa ter acesso professor
+    if (plan.id === 'grupo-escolar') {
+      return planPermissionsService.canAccessProfessorFeaturesWithSchoolPlan();
+    }
+    
+    return false;
+  };
+
+  const canAccessMaterials = (): boolean => {
+    const plan = currentPlan;
+    
+    // Plano gratuito e professor tem acesso normal
+    if (plan.id === 'gratuito' || plan.id === 'professor') {
+      return true;
+    }
+    
+    // Plano grupo escolar precisa ter acesso professor
+    if (plan.id === 'grupo-escolar') {
+      return planPermissionsService.canAccessProfessorFeaturesWithSchoolPlan();
+    }
+    
+    return false;
+  };
+
+  // Funções de administrador
+  const isAdminAuthenticated = (): boolean => {
+    return planPermissionsService.isAdminAuthenticated();
+  };
+
+  const authenticateAdmin = (email: string, password: string): boolean => {
+    return planPermissionsService.authenticateAdmin(email, password);
+  };
+
+  const logoutAdmin = (): void => {
+    planPermissionsService.logoutAdmin();
   };
 
   useEffect(() => {
@@ -134,6 +192,13 @@ export const usePlanPermissions = () => {
     canCreateAssessments,
     hasCalendar,
     canAccessSchool,
-    canAccessSettings
+    canAccessSettings,
+    // Novas permissões para Grupo Escolar
+    canAccessCreateMaterial,
+    canAccessMaterials,
+    // Funções de administrador
+    isAdminAuthenticated,
+    authenticateAdmin,
+    logoutAdmin
   };
 };

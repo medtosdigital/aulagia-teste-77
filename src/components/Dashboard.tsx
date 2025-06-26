@@ -3,6 +3,7 @@ import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, 
 import { statsService, MaterialStats } from '@/services/statsService';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { useActivityTracker } from '@/hooks/useActivityTracker';
+import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { Activity } from '@/services/activityService';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -18,8 +19,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [materialStats, setMaterialStats] = useState<MaterialStats | null>(null);
   const [upcomingClasses, setUpcomingClasses] = useState<ScheduleEvent[]>([]);
   
-  // Usar o hook de rastreamento de atividades
+  // Usar o hook de rastreamento de atividades e permissões
   const { activities: recentActivities, refreshActivities } = useActivityTracker();
+  const { canAccessCreateMaterial, canAccessMaterials, hasCalendar } = usePlanPermissions();
 
   useEffect(() => {
     console.log('🏠 Dashboard mounted, recent activities:', recentActivities);
@@ -122,35 +124,41 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('create')}>
-          <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center text-primary-600">
-            <Plus size={24} />
+        {canAccessCreateMaterial() && (
+          <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('create')}>
+            <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center text-primary-600">
+              <Plus size={24} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-800">Preparar Material</h3>
+              <p className="text-sm text-gray-500">Comece a planejar</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-800">Preparar Material</h3>
-            <p className="text-sm text-gray-500">Comece a planejar</p>
-          </div>
-        </div>
+        )}
         
-        <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('lessons')}>
-          <div className="w-12 h-12 rounded-lg bg-secondary-100 flex items-center justify-center text-secondary-600">
-            <BookOpen size={24} />
+        {canAccessMaterials() && (
+          <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('lessons')}>
+            <div className="w-12 h-12 rounded-lg bg-secondary-100 flex items-center justify-center text-secondary-600">
+              <BookOpen size={24} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-800">Meus Materiais</h3>
+              <p className="text-sm text-gray-500">Veja seus conteúdos</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-800">Meus Materiais</h3>
-            <p className="text-sm text-gray-500">Veja seus conteúdos</p>
-          </div>
-        </div>
+        )}
         
-        <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('calendar')}>
-          <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
-            <Calendar size={24} />
+        {hasCalendar() && (
+          <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('calendar')}>
+            <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+              <Calendar size={24} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-800">Calendário</h3>
+              <p className="text-sm text-gray-500">Veja sua agenda</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-800">Calendário</h3>
-            <p className="text-sm text-gray-500">Veja sua agenda</p>
-          </div>
-        </div>
+        )}
         
         <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('subscription')}>
           <div className="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600">
@@ -347,51 +355,53 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Create New Section */}
-      <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6">
-        <div className="flex flex-col md:flex-row items-center md:items-start md:justify-between mb-4 text-center md:text-left">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2 md:mb-0">Criar novo conteúdo</h3>
-          <div className="mt-2 md:mt-0">
-            <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors">
-              Ver todos os modelos
+      {/* Create New Section - só aparece se tiver permissão */}
+      {canAccessCreateMaterial() && (
+        <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6">
+          <div className="flex flex-col md:flex-row items-center md:items-start md:justify-between mb-4 text-center md:text-left">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2 md:mb-0">Criar novo conteúdo</h3>
+            <div className="mt-2 md:mt-0">
+              <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors">
+                Ver todos os modelos
+              </button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <ClipboardList size={24} />
+              </div>
+              <h4 className="font-semibold">Plano de Aula</h4>
+              <p className="text-xs opacity-80 mt-1">Alinhado à BNCC</p>
+            </button>
+            
+            <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Users size={24} />
+              </div>
+              <h4 className="font-semibold">Slides de Aula</h4>
+              <p className="text-xs opacity-80 mt-1">Com imagens e design</p>
+            </button>
+            
+            <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <FileText size={24} />
+              </div>
+              <h4 className="font-semibold">Atividade</h4>
+              <p className="text-xs opacity-80 mt-1">Questões variadas</p>
+            </button>
+            
+            <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <FileText size={24} />
+              </div>
+              <h4 className="font-semibold">Avaliação</h4>
+              <p className="text-xs opacity-80 mt-1">Testes e provas</p>
             </button>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-              <ClipboardList size={24} />
-            </div>
-            <h4 className="font-semibold">Plano de Aula</h4>
-            <p className="text-xs opacity-80 mt-1">Alinhado à BNCC</p>
-          </button>
-          
-          <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-              <Users size={24} />
-            </div>
-            <h4 className="font-semibold">Slides de Aula</h4>
-            <p className="text-xs opacity-80 mt-1">Com imagens e design</p>
-          </button>
-          
-          <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-              <FileText size={24} />
-            </div>
-            <h4 className="font-semibold">Atividade</h4>
-            <p className="text-xs opacity-80 mt-1">Questões variadas</p>
-          </button>
-          
-          <button className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group" onClick={() => handleNavigate('create')}>
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-              <FileText size={24} />
-            </div>
-            <h4 className="font-semibold">Avaliação</h4>
-            <p className="text-xs opacity-80 mt-1">Testes e provas</p>
-          </button>
-        </div>
-      </div>
+      )}
     </main>;
 };
 

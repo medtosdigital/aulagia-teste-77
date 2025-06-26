@@ -1,4 +1,3 @@
-
 export interface PlanLimits {
   materialsPerMonth: number;
   canDownloadWord: boolean;
@@ -30,11 +29,27 @@ export interface UserUsage {
   totalMaterials: number;
 }
 
+export interface SchoolUser {
+  id: string;
+  email: string;
+  name: string;
+  hasProfessorAccess: boolean;
+  addedToSchool: boolean;
+}
+
 class PlanPermissionsService {
   private readonly STORAGE_KEYS = {
     CURRENT_PLAN: 'user_current_plan',
     USAGE: 'user_usage',
-    SUBSCRIPTION_HISTORY: 'subscription_history'
+    SUBSCRIPTION_HISTORY: 'subscription_history',
+    ADMIN_SESSION: 'admin_session',
+    SCHOOL_USERS: 'school_users',
+    CURRENT_USER: 'current_user'
+  };
+
+  private readonly ADMIN_CREDENTIALS = {
+    email: 'medtosdigital@gmail.com',
+    password: '344192So!'
   };
 
   private readonly plans: Record<string, UserPlan> = {
@@ -80,7 +95,7 @@ class PlanPermissionsService {
       id: 'grupo-escolar',
       name: 'Grupo Escolar',
       limits: {
-        materialsPerMonth: 300, // 60 per user * 5 users
+        materialsPerMonth: 300,
         canDownloadWord: true,
         canDownloadPPT: true,
         canEditMaterials: true,
@@ -96,6 +111,90 @@ class PlanPermissionsService {
       price: { monthly: 89.90, yearly: 849 }
     }
   };
+
+  isAdminAuthenticated(): boolean {
+    const adminSession = localStorage.getItem(this.STORAGE_KEYS.ADMIN_SESSION);
+    if (!adminSession) return false;
+    
+    try {
+      const session = JSON.parse(adminSession);
+      const now = new Date().getTime();
+      return session.authenticated && session.expiresAt > now;
+    } catch {
+      return false;
+    }
+  }
+
+  authenticateAdmin(email: string, password: string): boolean {
+    if (email === this.ADMIN_CREDENTIALS.email && password === this.ADMIN_CREDENTIALS.password) {
+      const session = {
+        authenticated: true,
+        expiresAt: new Date().getTime() + (24 * 60 * 60 * 1000) // 24 horas
+      };
+      localStorage.setItem(this.STORAGE_KEYS.ADMIN_SESSION, JSON.stringify(session));
+      return true;
+    }
+    return false;
+  }
+
+  logoutAdmin(): void {
+    localStorage.removeItem(this.STORAGE_KEYS.ADMIN_SESSION);
+  }
+
+  getCurrentUser(): SchoolUser | null {
+    const stored = localStorage.getItem(this.STORAGE_KEYS.CURRENT_USER);
+    if (!stored) return null;
+    
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
+  }
+
+  setCurrentUser(user: SchoolUser): void {
+    localStorage.setItem(this.STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+  }
+
+  getSchoolUsers(): SchoolUser[] {
+    const stored = localStorage.getItem(this.STORAGE_KEYS.SCHOOL_USERS);
+    if (!stored) return [];
+    
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return [];
+    }
+  }
+
+  addUserToSchool(user: Omit<SchoolUser, 'id'>): SchoolUser {
+    const users = this.getSchoolUsers();
+    const newUser: SchoolUser = {
+      ...user,
+      id: Date.now().toString()
+    };
+    
+    users.push(newUser);
+    localStorage.setItem(this.STORAGE_KEYS.SCHOOL_USERS, JSON.stringify(users));
+    return newUser;
+  }
+
+  isUserAddedToSchool(): boolean {
+    const currentUser = this.getCurrentUser();
+    return currentUser ? currentUser.addedToSchool : false;
+  }
+
+  hasUserProfessorAccess(): boolean {
+    const currentUser = this.getCurrentUser();
+    return currentUser ? currentUser.hasProfessorAccess : false;
+  }
+
+  canAccessProfessorFeaturesWithSchoolPlan(): boolean {
+    const currentPlan = this.getCurrentPlan();
+    if (currentPlan.id !== 'grupo-escolar') return false;
+    
+    return this.isUserAddedToSchool() && this.hasUserProfessorAccess();
+  }
 
   getCurrentPlan(): UserPlan {
     const stored = localStorage.getItem(this.STORAGE_KEYS.CURRENT_PLAN);

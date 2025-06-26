@@ -13,7 +13,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeItem = 'dashboard',
   onItemClick
 }) => {
-  const { hasCalendar, canAccessSchool, canAccessSettings, currentPlan } = usePlanPermissions();
+  const { 
+    hasCalendar, 
+    canAccessSchool, 
+    canAccessSettings, 
+    canAccessCreateMaterial,
+    canAccessMaterials,
+    currentPlan 
+  } = usePlanPermissions();
 
   const mobileMenuItems = [
     {
@@ -21,18 +28,20 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Início',
       icon: LayoutDashboard
     },
-    {
+    // Materiais só aparece se tiver permissão
+    ...(canAccessMaterials() ? [{
       id: 'lessons',
       label: 'Materiais',
       icon: BookOpen
-    },
-    {
+    }] : []),
+    // Criar só aparece se tiver permissão
+    ...(canAccessCreateMaterial() ? [{
       id: 'create',
       label: 'Criar',
       icon: Plus,
       isCenter: true
-    },
-    // Calendário aparece para planos Professor e Grupo Escolar
+    }] : []),
+    // Calendário só aparece se tiver permissão
     ...(hasCalendar() ? [{
       id: 'calendar',
       label: 'Agenda',
@@ -51,17 +60,19 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Dashboard',
       icon: LayoutDashboard
     },
-    {
+    // Criar só aparece se tiver permissão
+    ...(canAccessCreateMaterial() ? [{
       id: 'create',
       label: 'Criar Material',
       icon: Plus
-    },
-    {
+    }] : []),
+    // Materiais só aparece se tiver permissão
+    ...(canAccessMaterials() ? [{
       id: 'lessons',
       label: 'Meus Materiais',
       icon: BookOpen
-    },
-    // Calendário aparece para planos Professor e Grupo Escolar
+    }] : []),
+    // Calendário só aparece se tiver permissão
     ...(hasCalendar() ? [{
       id: 'calendar',
       label: 'Calendário',
@@ -80,7 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   ];
 
-  // Itens administrativos só aparecem para plano grupo-escolar
+  // Itens administrativos só aparecem para administrador autenticado
   const adminMenuItems = [
     ...(canAccessSettings() ? [{
       id: 'settings',
