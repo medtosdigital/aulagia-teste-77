@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -27,6 +26,7 @@ const Index = () => {
     canAccessCreateMaterial,
     canAccessMaterials,
     hasCalendar,
+    canAccessCalendarPage,
     shouldShowSupportModal,
     dismissSupportModal,
     currentPlan,
@@ -125,26 +125,8 @@ const Index = () => {
         return <MaterialsList />;
         
       case 'calendar':
-        if (!hasCalendar()) {
-          const isSchoolPlan = currentPlan.id === 'grupo-escolar';
-          return (
-            <PageBlockedOverlay
-              title={isSchoolPlan ? "Recurso Restrito" : "Calendário Premium"}
-              description={
-                isSchoolPlan 
-                  ? "Para acessar o calendário com o plano Grupo Escolar, você precisa ser adicionado como usuário da escola e ter acesso ao plano Professor."
-                  : "O calendário está disponível apenas para planos Professor e Grupo Escolar. Faça upgrade para organizar suas aulas e atividades."
-              }
-              icon="calendar"
-              onUpgrade={openUpgradeModal}
-            >
-              <div className="p-8 text-center">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Calendário</h2>
-                <p className="text-gray-600">Organize suas aulas e atividades</p>
-              </div>
-            </PageBlockedOverlay>
-          );
-        }
+        // Agora todos os planos podem acessar a página do calendário
+        // O bloqueio visual é feito dentro da própria CalendarPage
         return <CalendarPage />;
         
       case 'school':

@@ -15,6 +15,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { 
     hasCalendar, 
+    canAccessCalendarPage, // Nova função importada
     canAccessSchool, 
     canAccessSettings, 
     canAccessCreateMaterial,
@@ -41,8 +42,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: Plus,
       isCenter: true
     }] : []),
-    // Calendário só aparece se tiver permissão
-    ...(hasCalendar() ? [{
+    // Calendário aparece para todos os planos (bloqueio visual é interno)
+    ...(canAccessCalendarPage() ? [{
       id: 'calendar',
       label: 'Agenda',
       icon: Calendar
@@ -72,8 +73,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Meus Materiais',
       icon: BookOpen
     }] : []),
-    // Calendário só aparece se tiver permissão
-    ...(hasCalendar() ? [{
+    // Calendário aparece para todos os planos (bloqueio visual é interno)
+    ...(canAccessCalendarPage() ? [{
       id: 'calendar',
       label: 'Calendário',
       icon: Calendar

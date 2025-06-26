@@ -102,6 +102,13 @@ export const usePlanPermissions = () => {
     return false;
   };
 
+  // Nova função para verificar se pode acessar a página do calendário (diferente de usar as funcionalidades)
+  const canAccessCalendarPage = (): boolean => {
+    // Todos os planos podem acessar a página do calendário
+    // O bloqueio visual é feito dentro da própria página
+    return true;
+  };
+
   // Permissões específicas para páginas administrativas
   const canAccessSchool = (): boolean => {
     return currentPlan.id === 'grupo-escolar';
@@ -191,6 +198,7 @@ export const usePlanPermissions = () => {
     canCreateSlides,
     canCreateAssessments,
     hasCalendar,
+    canAccessCalendarPage, // Nova função para acesso à página
     canAccessSchool,
     canAccessSettings,
     // Novas permissões para Grupo Escolar
