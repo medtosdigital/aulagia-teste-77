@@ -79,7 +79,9 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
             <span className="text-blue-700 font-medium">AulagIA</span>
             <span className="text-gray-500 ml-2 text-sm">Sua aula com toque mágico</span>
           </div>
-          <p className="text-gray-600 mb-6 text-lg leading-relaxed">Prepare-se para revolucionar suas aulas com a ajuda da inteligência artificial!  
+          <p className="text-gray-600 mb-6 text-lg leading-relaxed">Prepare-se para revolucionar suas aulas com a ajuda da inteligência artificial! 
+
+
 Vamos configurar tudo rapidamente para você.</p>
           <div className="flex justify-center space-x-2">
             <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
