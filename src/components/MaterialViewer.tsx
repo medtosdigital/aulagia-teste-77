@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Edit, Trash2, FileText, Presentation, ClipboardList, GraduationCap, Monitor } from 'lucide-react';
+import { ArrowLeft, Download, Edit, Trash2, FileText, Presentation, ClipboardList, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,8 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { materialService, type GeneratedMaterial, type LessonPlan, type Activity, type Slide, type Assessment } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
-import MaterialEditModal from './MaterialEditModal';
-import SlideEditModal from './SlideEditModal';
+import MaterialInlineEditModal from './MaterialInlineEditModal';
 
 const MaterialViewer = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,7 +17,6 @@ const MaterialViewer = () => {
   const [material, setMaterial] = React.useState<GeneratedMaterial | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
-  const [slideEditModalOpen, setSlideEditModalOpen] = React.useState(false);
 
   const loadMaterial = React.useCallback(() => {
     if (id) {
@@ -78,18 +76,6 @@ const MaterialViewer = () => {
     loadMaterial();
     setEditModalOpen(false);
     toast.success('Material atualizado com sucesso!');
-  };
-
-  const handleSlideEditSave = (updatedMaterial: GeneratedMaterial) => {
-    console.log('Slide edit saved, updating material...');
-    const success = materialService.updateMaterial(updatedMaterial.id, updatedMaterial);
-    if (success) {
-      setMaterial(updatedMaterial);
-      setSlideEditModalOpen(false);
-      toast.success('Slides atualizados com sucesso!');
-    } else {
-      toast.error('Erro ao atualizar slides');
-    }
   };
 
   const getTypeIcon = (type: string) => {
@@ -427,25 +413,14 @@ const MaterialViewer = () => {
           </Button>
           
           <div className="flex items-center space-x-2">
-            {material.type === 'slides' ? (
-              <Button
-                onClick={() => setSlideEditModalOpen(true)}
-                variant="outline"
-                size="sm"
-              >
-                <Monitor className="h-4 w-4 mr-2" />
-                Editar Slides
-              </Button>
-            ) : (
-              <Button
-                onClick={() => setEditModalOpen(true)}
-                variant="outline"
-                size="sm"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
-            )}
+            <Button
+              onClick={() => setEditModalOpen(true)}
+              variant="outline"
+              size="sm"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
             <Button
               onClick={() => handleExport('pdf')}
               variant="outline"
@@ -522,19 +497,12 @@ const MaterialViewer = () => {
         </Card>
       </div>
 
-      {/* Edit Modals */}
-      <MaterialEditModal
+      {/* Edit Modal - Using MaterialInlineEditModal for all material types */}
+      <MaterialInlineEditModal
         material={material}
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         onSave={handleEditSave}
-      />
-
-      <SlideEditModal
-        material={material}
-        open={slideEditModalOpen}
-        onClose={() => setSlideEditModalOpen(false)}
-        onSave={handleSlideEditSave}
       />
     </div>
   );
