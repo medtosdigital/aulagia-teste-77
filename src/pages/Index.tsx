@@ -15,10 +15,12 @@ import UpgradeModal from '@/components/UpgradeModal';
 import SupportModal from '@/components/SupportModal';
 import AdminLoginModal from '@/components/AdminLoginModal';
 import FirstAccessModal from '@/components/FirstAccessModal';
+import FeedbackModal from '@/components/FeedbackModal';
 import Footer from '@/components/Footer';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { useFirstAccess } from '@/hooks/useFirstAccess';
+import { useFeedback } from '@/hooks/useFeedback';
 
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
@@ -51,6 +53,13 @@ const Index = () => {
     completeFirstAccess,
     closeModal: closeFirstAccessModal
   } = useFirstAccess();
+
+  // Integrar sistema de feedback
+  const {
+    showFeedbackModal,
+    closeFeedbackModal,
+    dontShowAgain
+  } = useFeedback();
 
   useEffect(() => {
     const handleNavigateToProfile = () => {
@@ -278,6 +287,14 @@ const Index = () => {
           setShowAdminLogin(false);
           // Redirecionar para a página solicitada após login bem-sucedido
         }}
+      />
+
+      {/* Modal de Feedback automático */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={closeFeedbackModal}
+        onDontShowAgain={dontShowAgain}
+        showDontShowOption={true}
       />
     </>
   );

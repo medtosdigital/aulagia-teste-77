@@ -1,12 +1,15 @@
-
 import { useState, useEffect } from 'react';
 import { planPermissionsService, UserPlan, UserUsage } from '@/services/planPermissionsService';
+import { useFeedback } from './useFeedback';
 
 export const usePlanPermissions = () => {
   const [currentPlan, setCurrentPlan] = useState<UserPlan>(planPermissionsService.getCurrentPlan());
   const [usage, setUsage] = useState<UserUsage>(planPermissionsService.getUserUsage());
   const [shouldShowUpgrade, setShouldShowUpgrade] = useState(false);
   const [shouldShowSupportModal, setShouldShowSupportModal] = useState(false);
+  
+  // Integrar com sistema de feedback
+  const { incrementMaterialsCreated } = useFeedback();
 
   const refreshData = () => {
     setCurrentPlan(planPermissionsService.getCurrentPlan());
@@ -24,6 +27,12 @@ export const usePlanPermissions = () => {
         setShouldShowUpgrade(true);
       }
       return false;
+    }
+    
+    // Incrementar contador de materiais para o sistema de feedback
+    // Apenas para plano gratuito
+    if (currentPlan.id === 'gratuito') {
+      incrementMaterialsCreated();
     }
     
     refreshData();
