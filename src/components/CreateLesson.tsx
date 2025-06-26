@@ -12,7 +12,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import MaterialModal from './MaterialModal';
 import BNCCValidationModal from './BNCCValidationModal';
+import UpgradeModal from './UpgradeModal';
+import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { toast } from 'sonner';
+
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
 interface MaterialTypeOption {
   id: MaterialType;
@@ -34,7 +38,6 @@ const CreateLesson: React.FC = () => {
     grade: '',
     questionType: 'mistas',
     questionCount: [5],
-    // Campo para múltiplos assuntos/conteúdos (usado para avaliações)
     subjects: [''] as string[]
   });
   const [isGenerating, setIsGenerating] = useState(false);
@@ -42,6 +45,17 @@ const CreateLesson: React.FC = () => {
   const [generatedMaterial, setGeneratedMaterial] = useState<GeneratedMaterial | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showBNCCValidation, setShowBNCCValidation] = useState(false);
+
+  // Hooks para gerenciamento de planos e limites
+  const { createMaterial, isLimitReached, getRemainingMaterials } = usePlanPermissions();
+  const { 
+    isOpen: isUpgradeModalOpen, 
+    closeModal: closeUpgradeModal, 
+    handlePlanSelection,
+    currentPlan,
+    availablePlans 
+  } = useUpgradeModal();
+
   const materialTypes: MaterialTypeOption[] = [{
     id: 'plano-de-aula',
     title: 'Plano de Aula',
@@ -163,6 +177,15 @@ const CreateLesson: React.FC = () => {
     handleGenerate();
   };
   const handleGenerate = async () => {
+    // Verificar limite antes de gerar o material
+    const canCreate = createMaterial();
+    
+    if (!canCreate) {
+      // O modal de upgrade será mostrado automaticamente pelo hook
+      toast.error('Limite de materiais atingido! Faça upgrade para continuar.');
+      return;
+    }
+
     setStep('generating');
     setIsGenerating(true);
     setGenerationProgress(0);
@@ -264,6 +287,13 @@ const CreateLesson: React.FC = () => {
                 Crie conteúdos pedagógicos incríveis com inteligência artificial. 
                 Escolha o tipo de material e deixe a magia acontecer! ✨
               </p>
+              
+              {/* Indicador de materiais restantes */}
+              <div className="mt-4 inline-flex items-center space-x-2 bg-white px-4 py-2 rounded-full shadow-md border">
+                <span className="text-sm text-gray-600">
+                  Materiais restantes: <span className="font-bold text-blue-600">{getRemainingMaterials()}</span>
+                </span>
+              </div>
             </div>
 
             <div className="mb-3 sm:mb-4">
@@ -308,6 +338,15 @@ const CreateLesson: React.FC = () => {
         </main>
         
         <MaterialModal material={generatedMaterial} open={showModal} onClose={handleCloseModal} />
+        
+        {/* Modal de upgrade que aparece quando o limite é atingido */}
+        <UpgradeModal
+          isOpen={isUpgradeModalOpen}
+          onClose={closeUpgradeModal}
+          onSelectPlan={handlePlanSelection}
+          availablePlans={availablePlans}
+          currentPlanName={currentPlan.name}
+        />
       </>;
   }
   if (step === 'form') {
@@ -525,6 +564,15 @@ As questões serão baseadas nesses temas.</p>
         <BNCCValidationModal open={showBNCCValidation} onClose={() => setShowBNCCValidation(false)} tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} disciplina={formData.subject} serie={formData.grade} onAccept={handleBNCCValidationAccept} />
 
         <MaterialModal material={generatedMaterial} open={showModal} onClose={handleCloseModal} />
+        
+        {/* Modal de upgrade que aparece quando o limite é atingido */}
+        <UpgradeModal
+          isOpen={isUpgradeModalOpen}
+          onClose={closeUpgradeModal}
+          onSelectPlan={handlePlanSelection}
+          availablePlans={availablePlans}
+          currentPlanName={currentPlan.name}
+        />
       </>;
   }
   if (step === 'generating') {
@@ -571,4 +619,5 @@ As questões serão baseadas nesses temas.</p>
   }
   return null;
 };
+
 export default CreateLesson;
