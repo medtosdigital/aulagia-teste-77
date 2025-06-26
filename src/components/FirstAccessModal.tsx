@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -6,37 +5,23 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  User, 
-  GraduationCap, 
-  BookOpen, 
-  School, 
-  FileText, 
-  ArrowLeft, 
-  ArrowRight,
-  CheckCircle,
-  Plus,
-  Calendar,
-  Presentation,
-  ClipboardList,
-  Crown,
-  Eye
-} from 'lucide-react';
-
+import { User, GraduationCap, BookOpen, School, FileText, ArrowLeft, ArrowRight, CheckCircle, Plus, Calendar, Presentation, ClipboardList, Crown, Eye } from 'lucide-react';
 interface UserInfo {
   grade: string;
   subject: string;
   school: string;
   materialTypes: string[];
 }
-
 interface FirstAccessModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (userInfo: UserInfo) => void;
 }
-
-const FirstAccessModal: React.FC<FirstAccessModalProps> = ({ isOpen, onClose, onComplete }) => {
+const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
+  isOpen,
+  onClose,
+  onComplete
+}) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [userInfo, setUserInfo] = useState<UserInfo>({
     grade: '',
@@ -44,63 +29,62 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({ isOpen, onClose, on
     school: '',
     materialTypes: []
   });
-
-  const materialOptions = [
-    { id: 'plano-aula', label: 'Planos de Aula', icon: ClipboardList },
-    { id: 'slides', label: 'Slides', icon: Presentation },
-    { id: 'atividades', label: 'Atividades', icon: FileText },
-    { id: 'avaliacoes', label: 'Avaliações', icon: GraduationCap }
-  ];
-
-  const tourSteps = [
-    {
-      title: '🎉 Bem-vindo ao AulagIA!',
-      subtitle: 'Vamos conhecer sua plataforma de ensino com IA',
-      content: (
-        <div className="text-center py-8">
+  const materialOptions = [{
+    id: 'plano-aula',
+    label: 'Planos de Aula',
+    icon: ClipboardList
+  }, {
+    id: 'slides',
+    label: 'Slides',
+    icon: Presentation
+  }, {
+    id: 'atividades',
+    label: 'Atividades',
+    icon: FileText
+  }, {
+    id: 'avaliacoes',
+    label: 'Avaliações',
+    icon: GraduationCap
+  }];
+  const tourSteps = [{
+    title: '🎉 Bem-vindo ao AulagIA!',
+    subtitle: 'Vamos conhecer sua plataforma de ensino com IA',
+    content: <div className="text-center py-8">
           <div className="w-20 h-20 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full mx-auto mb-6 flex items-center justify-center">
             <BookOpen className="w-10 h-10 text-white" />
           </div>
-          <p className="text-gray-600 mb-4">
-            Sua jornada educacional está prestes a começar! Vamos configurar tudo rapidamente.
-          </p>
+          <p className="text-gray-600 mb-4">Sua jornada educacional está prestes a começar! 
+Vamos configurar tudo rapidamente.</p>
           <div className="flex justify-center space-x-2">
             <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
             <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
             <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
           </div>
         </div>
-      )
-    },
-    {
-      title: '👨‍🏫 Conte-nos sobre você',
-      subtitle: 'Essas informações nos ajudam a personalizar sua experiência',
-      content: (
-        <div className="space-y-6 py-4">
+  }, {
+    title: '👨‍🏫 Conte-nos sobre você',
+    subtitle: 'Essas informações nos ajudam a personalizar sua experiência',
+    content: <div className="space-y-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="grade" className="flex items-center mb-2">
                 <GraduationCap className="w-4 h-4 mr-2 text-purple-500" />
                 Etapa de Ensino
               </Label>
-              <Input
-                id="grade"
-                placeholder="Ex: 3º Ano do Ensino Fundamental"
-                value={userInfo.grade}
-                onChange={(e) => setUserInfo(prev => ({ ...prev, grade: e.target.value }))}
-              />
+              <Input id="grade" placeholder="Ex: 3º Ano do Ensino Fundamental" value={userInfo.grade} onChange={e => setUserInfo(prev => ({
+            ...prev,
+            grade: e.target.value
+          }))} />
             </div>
             <div>
               <Label htmlFor="subject" className="flex items-center mb-2">
                 <BookOpen className="w-4 h-4 mr-2 text-blue-500" />
                 Disciplina Principal
               </Label>
-              <Input
-                id="subject"
-                placeholder="Ex: Matemática"
-                value={userInfo.subject}
-                onChange={(e) => setUserInfo(prev => ({ ...prev, subject: e.target.value }))}
-              />
+              <Input id="subject" placeholder="Ex: Matemática" value={userInfo.subject} onChange={e => setUserInfo(prev => ({
+            ...prev,
+            subject: e.target.value
+          }))} />
             </div>
           </div>
           <div>
@@ -108,12 +92,10 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({ isOpen, onClose, on
               <School className="w-4 h-4 mr-2 text-green-500" />
               Escola (opcional)
             </Label>
-            <Input
-              id="school"
-              placeholder="Nome da sua instituição"
-              value={userInfo.school}
-              onChange={(e) => setUserInfo(prev => ({ ...prev, school: e.target.value }))}
-            />
+            <Input id="school" placeholder="Nome da sua instituição" value={userInfo.school} onChange={e => setUserInfo(prev => ({
+          ...prev,
+          school: e.target.value
+        }))} />
           </div>
           <div>
             <Label className="flex items-center mb-3">
@@ -121,48 +103,31 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({ isOpen, onClose, on
               Que tipos de materiais você pretende criar?
             </Label>
             <div className="grid grid-cols-2 gap-3">
-              {materialOptions.map((option) => {
-                const Icon = option.icon;
-                const isSelected = userInfo.materialTypes.includes(option.id);
-                return (
-                  <Card
-                    key={option.id}
-                    className={`cursor-pointer border-2 transition-all ${
-                      isSelected 
-                        ? 'border-primary-500 bg-primary-50' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => {
-                      setUserInfo(prev => ({
-                        ...prev,
-                        materialTypes: isSelected 
-                          ? prev.materialTypes.filter(type => type !== option.id)
-                          : [...prev.materialTypes, option.id]
-                      }));
-                    }}
-                  >
+              {materialOptions.map(option => {
+            const Icon = option.icon;
+            const isSelected = userInfo.materialTypes.includes(option.id);
+            return <Card key={option.id} className={`cursor-pointer border-2 transition-all ${isSelected ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'}`} onClick={() => {
+              setUserInfo(prev => ({
+                ...prev,
+                materialTypes: isSelected ? prev.materialTypes.filter(type => type !== option.id) : [...prev.materialTypes, option.id]
+              }));
+            }}>
                     <CardContent className="p-4 text-center">
                       <Icon className={`w-6 h-6 mx-auto mb-2 ${isSelected ? 'text-primary-600' : 'text-gray-500'}`} />
                       <p className={`text-sm font-medium ${isSelected ? 'text-primary-700' : 'text-gray-700'}`}>
                         {option.label}
                       </p>
-                      {isSelected && (
-                        <CheckCircle className="w-4 h-4 text-primary-600 mx-auto mt-1" />
-                      )}
+                      {isSelected && <CheckCircle className="w-4 h-4 text-primary-600 mx-auto mt-1" />}
                     </CardContent>
-                  </Card>
-                );
-              })}
+                  </Card>;
+          })}
             </div>
           </div>
         </div>
-      )
-    },
-    {
-      title: '🏠 Dashboard - Seu centro de controle',
-      subtitle: 'Aqui você acompanha suas atividades e acessa rapidamente suas ferramentas',
-      content: (
-        <div className="space-y-4">
+  }, {
+    title: '🏠 Dashboard - Seu centro de controle',
+    subtitle: 'Aqui você acompanha suas atividades e acessa rapidamente suas ferramentas',
+    content: <div className="space-y-4">
           <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg p-4 text-white text-center">
             <BookOpen className="w-8 h-8 mx-auto mb-2" />
             <p className="font-medium">Painel Principal</p>
@@ -189,13 +154,10 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({ isOpen, onClose, on
             ✨ Visualize suas atividades recentes, próximas aulas e estatísticas
           </p>
         </div>
-      )
-    },
-    {
-      title: '✨ Criar Material - Sua varinha mágica',
-      subtitle: 'Crie conteúdos pedagógicos incríveis com inteligência artificial',
-      content: (
-        <div className="space-y-4">
+  }, {
+    title: '✨ Criar Material - Sua varinha mágica',
+    subtitle: 'Crie conteúdos pedagógicos incríveis com inteligência artificial',
+    content: <div className="space-y-4">
           <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg p-4 text-white text-center">
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full mx-auto mb-2 flex items-center justify-center">
               <Plus className="w-6 h-6" />
@@ -235,13 +197,10 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({ isOpen, onClose, on
             🎯 Preencha o tema, selecione a disciplina e deixe a IA trabalhar!
           </p>
         </div>
-      )
-    },
-    {
-      title: '📚 Meus Materiais - Sua biblioteca',
-      subtitle: 'Gerencie, visualize e exporte todos os seus conteúdos criados',
-      content: (
-        <div className="space-y-4">
+  }, {
+    title: '📚 Meus Materiais - Sua biblioteca',
+    subtitle: 'Gerencie, visualize e exporte todos os seus conteúdos criados',
+    content: <div className="space-y-4">
           <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg p-4 text-white text-center">
             <BookOpen className="w-8 h-8 mx-auto mb-2" />
             <p className="font-medium">Biblioteca de Materiais</p>
@@ -285,13 +244,10 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({ isOpen, onClose, on
             🔍 Pesquise, filtre e organize seus materiais facilmente
           </p>
         </div>
-      )
-    },
-    {
-      title: '📅 Calendário - Organize seu tempo',
-      subtitle: 'Agende e acompanhe suas aulas com materiais organizados',
-      content: (
-        <div className="space-y-4">
+  }, {
+    title: '📅 Calendário - Organize seu tempo',
+    subtitle: 'Agende e acompanhe suas aulas com materiais organizados',
+    content: <div className="space-y-4">
           <div className="bg-gradient-to-r from-red-500 to-pink-500 rounded-lg p-4 text-white text-center">
             <Calendar className="w-8 h-8 mx-auto mb-2" />
             <p className="font-medium">Calendário de Materiais</p>
@@ -315,13 +271,10 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({ isOpen, onClose, on
             ⏰ Vincule seus materiais às aulas e nunca mais esqueça nada!
           </p>
         </div>
-      )
-    },
-    {
-      title: '🎉 Tudo pronto!',
-      subtitle: 'Você está preparado para revolucionar suas aulas',
-      content: (
-        <div className="text-center py-8">
+  }, {
+    title: '🎉 Tudo pronto!',
+    subtitle: 'Você está preparado para revolucionar suas aulas',
+    content: <div className="text-center py-8">
           <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full mx-auto mb-6 flex items-center justify-center">
             <CheckCircle className="w-10 h-10 text-white" />
           </div>
@@ -336,10 +289,7 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({ isOpen, onClose, on
             </p>
           </div>
         </div>
-      )
-    }
-  ];
-
+  }];
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -347,24 +297,20 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({ isOpen, onClose, on
       onComplete(userInfo);
     }
   };
-
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
-
   const currentTourStep = tourSteps[currentStep];
-
-  return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+  return <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
         <div className="p-6">
           <DialogHeader className="text-center mb-6">
-            <DialogTitle className="text-2xl font-bold text-gray-800">
+            <DialogTitle className="text-2xl font-bold text-gray-800 text-center">
               {currentTourStep.title}
             </DialogTitle>
-            <p className="text-gray-600 mt-2">{currentTourStep.subtitle}</p>
+            
           </DialogHeader>
 
           <div className="mb-6">
@@ -373,50 +319,28 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({ isOpen, onClose, on
 
           <div className="flex items-center justify-between">
             <div className="flex space-x-1">
-              {tourSteps.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentStep ? 'bg-primary-500' : 'bg-gray-300'
-                  }`}
-                />
-              ))}
+              {tourSteps.map((_, index) => <div key={index} className={`w-2 h-2 rounded-full transition-colors ${index === currentStep ? 'bg-primary-500' : 'bg-gray-300'}`} />)}
             </div>
 
             <div className="flex space-x-3">
-              {currentStep > 0 && (
-                <Button
-                  variant="outline"
-                  onClick={handlePrevious}
-                  className="flex items-center"
-                >
+              {currentStep > 0 && <Button variant="outline" onClick={handlePrevious} className="flex items-center">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Anterior
-                </Button>
-              )}
+                </Button>}
               
-              <Button
-                onClick={handleNext}
-                className="flex items-center"
-              >
-                {currentStep === tourSteps.length - 1 ? (
-                  <>
+              <Button onClick={handleNext} className="flex items-center">
+                {currentStep === tourSteps.length - 1 ? <>
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Começar a usar
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     Próximo
                     <ArrowRight className="w-4 h-4 ml-2" />
-                  </>
-                )}
+                  </>}
               </Button>
             </div>
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default FirstAccessModal;
