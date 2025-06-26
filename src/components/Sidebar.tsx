@@ -181,7 +181,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
         {/* Botão Escola suspenso - apenas para plano grupo-escolar */}
         {canAccessSchool() && <div className="absolute -top-10 right-4">
-            <button onClick={() => handleItemClick('school')} className="flex items-center justify-center bg-green-500 text-white rounded-lg shadow-lg hover:bg-green-600 transition-colors px-2 py-1">
+            <button onClick={() => handleItemClick('school')} className="flex items-center justify-center bg-green-500 text-white rounded-lg shadow-lg hover:bg-green-600 transition-colors px-[11px] py-[6px]">
               <School size={14} />
               <span className="text-xs font-medium ml-1">Escola</span>
             </button>
@@ -207,5 +207,4 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
     </>;
 };
-
 export default Sidebar;
