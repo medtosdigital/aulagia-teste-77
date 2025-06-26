@@ -180,11 +180,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
         {/* Botão Escola suspenso - apenas para plano grupo-escolar */}
-        {canAccessSchool() && <div className="absolute -top-16 left-1/2 transform -translate-x-1/2">
-            <button onClick={() => handleItemClick('school')} style={{
-          minWidth: '120px'
-        }} className="flex items-center justify-center space-x-2 bg-green-500 text-white rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl animate-bounce px-[10px] py-[5px]">
-              <School size={20} />
+        {canAccessSchool() && <div className="absolute -top-12 left-4">
+            <button onClick={() => handleItemClick('school')} className="flex items-center justify-center space-x-1 bg-green-500 text-white rounded-lg shadow-lg hover:bg-green-600 transition-colors px-3 py-2">
+              <School size={16} />
               <span className="text-sm font-medium">Escola</span>
             </button>
           </div>}
@@ -209,4 +207,5 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
     </>;
 };
+
 export default Sidebar;
