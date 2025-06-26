@@ -161,6 +161,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {desktopMenuItems.map(item => {
             const Icon = item.icon;
             const isActive = activeItem === item.id;
+            const isSchool = item.id === 'school';
             
             return (
               <button 
@@ -168,9 +169,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => handleItemClick(item.id)} 
                 className={cn(
                   "sidebar-item flex items-center space-x-3 p-3 rounded-lg w-full text-left transition-colors",
-                  isActive 
-                    ? "bg-primary-50 text-primary-600 font-medium" 
-                    : "text-gray-700 hover:bg-gray-100"
+                  isSchool 
+                    ? "bg-green-500 text-white font-medium hover:bg-green-600" 
+                    : isActive 
+                      ? "bg-primary-50 text-primary-600 font-medium" 
+                      : "text-gray-700 hover:bg-gray-100"
                 )}
               >
                 <div className="sidebar-icon w-6 h-6 flex items-center justify-center">
@@ -223,6 +226,19 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+        {/* Botão Escola suspenso - apenas para plano grupo-escolar */}
+        {canAccessSchool() && (
+          <div className="absolute -top-12 left-1/2 transform -translate-x-1/2">
+            <button 
+              onClick={() => handleItemClick('school')} 
+              className="flex flex-col items-center justify-center w-16 h-16 bg-green-500 text-white rounded-2xl shadow-lg transform transition-transform hover:scale-105"
+            >
+              <School size={20} />
+              <span className="text-xs font-medium mt-1">Escola</span>
+            </button>
+          </div>
+        )}
+        
         <div className="flex items-center justify-around px-2 py-2">
           {mobileMenuItems.map(item => {
             const Icon = item.icon;
