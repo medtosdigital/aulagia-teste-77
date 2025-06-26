@@ -14,9 +14,11 @@ import PageBlockedOverlay from '@/components/PageBlockedOverlay';
 import UpgradeModal from '@/components/UpgradeModal';
 import SupportModal from '@/components/SupportModal';
 import AdminLoginModal from '@/components/AdminLoginModal';
+import FirstAccessModal from '@/components/FirstAccessModal';
 import Footer from '@/components/Footer';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
+import { useFirstAccess } from '@/hooks/useFirstAccess';
 
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
@@ -43,6 +45,12 @@ const Index = () => {
     handlePlanSelection,
     availablePlans 
   } = useUpgradeModal();
+
+  const {
+    showModal: showFirstAccessModal,
+    completeFirstAccess,
+    closeModal: closeFirstAccessModal
+  } = useFirstAccess();
 
   useEffect(() => {
     const handleNavigateToProfile = () => {
@@ -237,6 +245,13 @@ const Index = () => {
           </div>
         } />
       </Routes>
+
+      {/* Modal de primeiro acesso */}
+      <FirstAccessModal
+        isOpen={showFirstAccessModal}
+        onClose={closeFirstAccessModal}
+        onComplete={completeFirstAccess}
+      />
 
       {/* Modal de upgrade global */}
       <UpgradeModal
