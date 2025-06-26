@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation } from 'lucide-react';
 import { activityService, Activity } from '@/services/activityService';
@@ -249,13 +248,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <p className="text-sm text-gray-500">Planos de aula</p>
                       <p className="text-2xl font-bold text-gray-800">{materialStats?.planoAula || 0}</p>
                     </div>
-                    <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
+                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                       <ClipboardList size={24} />
                     </div>
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-primary-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.planoAula || 0) * 10, 100)}%`}}></div>
+                      <div className="bg-blue-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.planoAula || 0) * 10, 100)}%`}}></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.planoAula || 0} na última semana</p>
                   </div>
@@ -267,13 +266,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <p className="text-sm text-gray-500">Slides</p>
                       <p className="text-2xl font-bold text-gray-800">{materialStats?.slides || 0}</p>
                     </div>
-                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
                       <Presentation size={24} />
                     </div>
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.slides || 0) * 15, 100)}%`}}></div>
+                      <div className="bg-gray-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.slides || 0) * 15, 100)}%`}}></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.slides || 0} na última semana</p>
                   </div>
@@ -285,13 +284,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <p className="text-sm text-gray-500">Atividades criadas</p>
                       <p className="text-2xl font-bold text-gray-800">{materialStats?.atividades || 0}</p>
                     </div>
-                    <div className="w-12 h-12 rounded-full bg-secondary-100 flex items-center justify-center text-secondary-600">
+                    <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
                       <FileText size={24} />
                     </div>
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-secondary-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.atividades || 0) * 8, 100)}%`}}></div>
+                      <div className="bg-green-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.atividades || 0) * 8, 100)}%`}}></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.atividades || 0} na última semana</p>
                   </div>
@@ -303,13 +302,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <p className="text-sm text-gray-500">Avaliações</p>
                       <p className="text-2xl font-bold text-gray-800">{materialStats?.avaliacoes || 0}</p>
                     </div>
-                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                    <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
                       <FileText size={24} />
                     </div>
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-red-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.avaliacoes || 0) * 20, 100)}%`}}></div>
+                      <div className="bg-purple-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.avaliacoes || 0) * 20, 100)}%`}}></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.avaliacoes || 0} na última semana</p>
                   </div>
