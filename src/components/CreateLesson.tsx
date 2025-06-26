@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X, Lock } from 'lucide-react';
+import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -136,18 +136,6 @@ const CreateLesson: React.FC = () => {
     });
   };
   const handleTypeSelection = (type: MaterialType) => {
-    // Verificar se o usuário tem permissão para este tipo de material
-    if (currentPlan.id === 'gratuito') {
-      if (type === 'slides' && !currentPlan.limits.canCreateSlides) {
-        toast.error('Slides disponível apenas nos planos pagos');
-        return;
-      }
-      if (type === 'avaliacao' && !currentPlan.limits.canCreateAssessments) {
-        toast.error('Avaliação disponível apenas nos planos pagos');
-        return;
-      }
-    }
-
     setSelectedType(type);
     setStep('form');
     // Reset subjects para avaliações
@@ -281,16 +269,8 @@ const CreateLesson: React.FC = () => {
     }
     return value;
   };
-  const isTypeBlocked = (type: MaterialType): boolean => {
-    if (currentPlan.id === 'gratuito') {
-      if (type === 'slides' && !currentPlan.limits.canCreateSlides) return true;
-      if (type === 'avaliacao' && !currentPlan.limits.canCreateAssessments) return true;
-    }
-    return false;
-  };
   if (step === 'selection') {
-    return (
-      <>
+    return <>
         <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-4 sm:mb-6">
@@ -324,63 +304,28 @@ const CreateLesson: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 px-2">
               {materialTypes.map(type => {
-                const Icon = type.icon;
-                const isBlocked = isTypeBlocked(type.id);
-                
-                return (
-                  <Card 
-                    key={type.id} 
-                    className={`cursor-pointer border-2 border-transparent transition-all duration-300 shadow-lg hover:shadow-xl h-24 sm:h-28 ${
-                      isBlocked 
-                        ? 'bg-gray-100 border-gray-300 cursor-not-allowed opacity-75' 
-                        : `${type.bgGradient} ${type.hoverEffect}`
-                    }`} 
-                    onClick={() => isBlocked ? undefined : handleTypeSelection(type.id)}
-                  >
+              const Icon = type.icon;
+              return <Card key={type.id} className={`cursor-pointer border-2 border-transparent transition-all duration-300 ${type.bgGradient} ${type.hoverEffect} shadow-lg hover:shadow-xl h-24 sm:h-28`} onClick={() => handleTypeSelection(type.id)}>
                     <CardContent className="p-3 sm:p-4 relative h-full">
                       <div className="flex items-center justify-between h-full">
                         <div className="flex items-center space-x-3 sm:space-x-4 flex-1">
-                          <div className={`w-10 h-10 sm:w-12 sm:h-12 ${isBlocked ? 'bg-gray-400' : type.iconBg} rounded-xl flex items-center justify-center shadow-md transform transition-transform ${!isBlocked && 'hover:scale-110'} relative`}>
-                            <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${isBlocked ? 'text-gray-300' : 'text-white'}`} />
-                            {isBlocked && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-xl">
-                                <Lock className="w-3 h-3 text-white" />
-                              </div>
-                            )}
+                          <div className={`w-10 h-10 sm:w-12 sm:h-12 ${type.iconBg} rounded-xl flex items-center justify-center shadow-md transform transition-transform hover:scale-110`}>
+                            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className={`text-base sm:text-lg font-bold mb-1 ${isBlocked ? 'text-gray-500' : type.color}`}>
-                              {type.title}
-                            </h3>
-                            <p className={`text-xs sm:text-sm leading-relaxed ${isBlocked ? 'text-gray-400' : 'text-gray-600'}`}>
-                              {isBlocked ? 'Disponível apenas nos planos pagos' : type.description}
-                            </p>
+                            <h3 className={`text-base sm:text-lg font-bold ${type.color} mb-1`}>{type.title}</h3>
+                            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{type.description}</p>
                           </div>
                         </div>
                         <div className="flex items-center ml-3">
-                          {isBlocked ? (
-                            <Button
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 h-8"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Abrir modal de upgrade
-                                toast.info('Faça upgrade para acessar esta funcionalidade');
-                              }}
-                            >
-                              Upgrade
-                            </Button>
-                          ) : (
-                            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm">
-                              <ArrowLeft className="w-3 h-3 text-gray-400 rotate-180" />
-                            </div>
-                          )}
+                          <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm">
+                            <ArrowLeft className="w-3 h-3 text-gray-400 rotate-180" />
+                          </div>
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                );
-              })}
+                  </Card>;
+            })}
             </div>
 
             <div className="mt-4 sm:mt-6 text-center">
@@ -402,8 +347,7 @@ const CreateLesson: React.FC = () => {
           availablePlans={availablePlans}
           currentPlanName={currentPlan.name}
         />
-      </>
-    );
+      </>;
   }
   if (step === 'form') {
     const typeInfo = getCurrentTypeInfo();
