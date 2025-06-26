@@ -203,8 +203,26 @@ class PlanPermissionsService {
   }
 
   setCurrentPlan(planId: string): void {
+    const currentPlan = this.getCurrentPlan();
+    
+    // Se está mudando de plano, resetar o contador de materiais
+    if (currentPlan.id !== planId) {
+      this.resetMaterialUsage();
+    }
+    
     localStorage.setItem(this.STORAGE_KEYS.CURRENT_PLAN, planId);
     this.addToSubscriptionHistory('plan_changed', planId);
+  }
+
+  private resetMaterialUsage(): void {
+    const now = new Date();
+    const usage: UserUsage = {
+      materialsThisMonth: 0,
+      lastResetDate: new Date(now.getFullYear(), now.getMonth(), 1),
+      totalMaterials: this.getUserUsage().totalMaterials // Manter o total histórico
+    };
+    
+    this.saveUsage(usage);
   }
 
   getUserUsage(): UserUsage {
