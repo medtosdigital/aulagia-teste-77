@@ -114,9 +114,9 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
   const getPlanBorderColor = (planId: string) => {
     switch (planId) {
       case 'gratuito':
-        return 'border-gray-300';
+        return 'border-gray-400';
       case 'professor':
-        return 'border-green-400';
+        return 'border-green-500';
       case 'grupo-escolar':
         return 'border-purple-400';
       default:
