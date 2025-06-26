@@ -2,10 +2,19 @@
 import { useState, useEffect } from 'react';
 
 interface UserInfo {
-  grade: string;
-  subject: string;
+  teachingLevel: string;
+  grades: string[];
+  subjects: string[];
   school: string;
   materialTypes: string[];
+  name: string;
+  educationalInfo?: {
+    teachingLevel: string;
+    grades: string[];
+    subjects: string[];
+    school: string;
+    materialTypes: string[];
+  };
 }
 
 interface FirstAccessState {
@@ -46,17 +55,19 @@ export const useFirstAccess = () => {
     localStorage.setItem('firstAccessCompleted', 'true');
     localStorage.setItem('userFirstAccessInfo', JSON.stringify(userInfo));
 
-    // Atualizar também as informações do perfil
+    // Integrar as informações com o perfil do usuário
     const profileInfo = {
-      educationalInfo: {
-        grade: userInfo.grade,
-        subject: userInfo.subject,
-        school: userInfo.school,
-        preferredMaterials: userInfo.materialTypes
-      },
+      name: userInfo.name || 'Professor(a)',
+      teachingLevel: userInfo.teachingLevel,
+      grades: userInfo.grades || [],
+      subjects: userInfo.subjects || [],
+      school: userInfo.school,
+      materialTypes: userInfo.materialTypes || [],
+      photo: '',
       completedAt: new Date().toISOString()
     };
 
+    // Salvar perfil integrado
     localStorage.setItem('userProfile', JSON.stringify(profileInfo));
 
     // Atualizar estado
@@ -66,7 +77,10 @@ export const useFirstAccess = () => {
       userInfo
     });
 
-    console.log('✅ First access completed with user info:', userInfo);
+    console.log('✅ First access completed with integrated user info:', profileInfo);
+
+    // Disparar evento para atualizar outras partes da aplicação
+    window.dispatchEvent(new CustomEvent('profileUpdated'));
   };
 
   const resetFirstAccess = () => {
@@ -81,12 +95,17 @@ export const useFirstAccess = () => {
     });
   };
 
+  const openModal = () => {
+    setState(prev => ({ ...prev, showModal: true }));
+  };
+
   return {
     isFirstAccess: state.isFirstAccess,
     showModal: state.showModal,
     userInfo: state.userInfo,
     completeFirstAccess,
     resetFirstAccess,
+    openModal,
     closeModal: () => setState(prev => ({ ...prev, showModal: false }))
   };
 };
