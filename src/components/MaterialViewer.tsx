@@ -83,7 +83,7 @@ const MaterialViewer = () => {
   const handleSlideEditSave = (updatedMaterial: GeneratedMaterial) => {
     console.log('Slide edit saved, updating material...');
     materialService.updateMaterial(updatedMaterial);
-    loadMaterial();
+    setMaterial(updatedMaterial);
     setSlideEditModalOpen(false);
     toast.success('Slides atualizados com sucesso!');
   };
