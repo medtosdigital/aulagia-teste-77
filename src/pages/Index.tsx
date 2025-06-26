@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -8,11 +7,14 @@ import CreateLesson from '@/components/CreateLesson';
 import MaterialsList from '@/components/MaterialsList';
 import MaterialViewer from '@/components/MaterialViewer';
 import CalendarPage from '@/components/CalendarPage';
+import CalendarBlockedPage from '@/components/CalendarBlockedPage';
 import SchoolPage from '@/components/SchoolPage';
 import SubscriptionPage from '@/components/SubscriptionPage';
+import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
+  const { currentPlan } = usePlanPermissions();
 
   const getPageTitle = () => {
     switch (activeItem) {
@@ -50,6 +52,10 @@ const Index = () => {
       case 'lessons':
         return <MaterialsList />;
       case 'calendar':
+        // Verificar se o usuário tem acesso ao calendário
+        if (currentPlan.id === 'gratuito' && !currentPlan.limits.hasCalendar) {
+          return <CalendarBlockedPage />;
+        }
         return <CalendarPage />;
       case 'school':
         return <SchoolPage />;
