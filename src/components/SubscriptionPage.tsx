@@ -3,6 +3,7 @@ import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCar
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { 
   DropdownMenu,
@@ -63,10 +64,17 @@ const SubscriptionPage = () => {
     refreshData
   } = usePlanPermissions();
 
-  // Refresh data when component mounts to ensure accuracy
+  // Refresh data when component mounts and at intervals to ensure real-time updates
   useEffect(() => {
     refreshData();
-  }, []);
+    
+    // Set up interval to refresh data every 30 seconds for real-time updates
+    const interval = setInterval(() => {
+      refreshData();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [refreshData]);
 
   const plans: Plan[] = [
     {
@@ -172,18 +180,18 @@ const SubscriptionPage = () => {
     // Add actual cancellation logic here
   };
 
-  // Calculate usage percentage with real-time data
+  // Calculate usage percentage with real-time data from the hook
   const usagePercentage = currentPlan.limits.materialsPerMonth > 0 
-    ? (usage.materialsThisMonth / currentPlan.limits.materialsPerMonth) * 100 
+    ? Math.min((usage.materialsThisMonth / currentPlan.limits.materialsPerMonth) * 100, 100)
     : 0;
 
-  // Format next reset date
+  // Format next reset date using real data
   const nextResetDate = getNextResetDate();
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  // Get remaining materials
+  // Get remaining materials using real data
   const remainingMaterials = getRemainingMaterials();
 
   return (
@@ -207,7 +215,7 @@ const SubscriptionPage = () => {
 
           <CardContent className="p-4 sm:p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
-              {/* Usage Card - Updated with real-time data */}
+              {/* Usage Card - Updated with real-time data using Progress component */}
               <div className="bg-gray-50 rounded-lg p-4 sm:p-5 border border-gray-200">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-gray-800 flex items-center text-sm sm:text-base">
@@ -218,16 +226,18 @@ const SubscriptionPage = () => {
                     {usage.materialsThisMonth}/{currentPlan.limits.materialsPerMonth}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div 
-                    className="bg-gradient-to-r from-blue-400 to-blue-600 h-2.5 rounded-full transition-all duration-300" 
-                    style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-                  ></div>
-                </div>
+                
+                {/* Progress Bar using shadcn/ui Progress component */}
+                <Progress 
+                  value={usagePercentage} 
+                  className="w-full h-2.5 mb-2" 
+                />
+                
                 <div className="flex justify-between mt-2 text-xs sm:text-sm text-gray-500">
                   <span>0</span>
                   <span>{currentPlan.limits.materialsPerMonth}</span>
                 </div>
+                
                 <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <p className="text-xs text-gray-500 flex items-center">
                     <Calendar className="w-3 h-3 mr-1" />
@@ -237,7 +247,9 @@ const SubscriptionPage = () => {
                     {remainingMaterials} restantes
                   </p>
                 </div>
-                {usagePercentage >= 80 && (
+                
+                {/* Warning messages based on real usage */}
+                {usagePercentage >= 80 && remainingMaterials > 0 && (
                   <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700">
                     <span className="font-medium">Atenção:</span> Você já usou {Math.round(usagePercentage)}% dos seus materiais este mês
                   </div>
@@ -249,7 +261,7 @@ const SubscriptionPage = () => {
                 )}
               </div>
 
-              {/* Payment Card */}
+              {/* Payment Card - keep existing code */}
               <div className="bg-gray-50 rounded-lg p-4 sm:p-5 border border-gray-200">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-gray-800 flex items-center text-sm sm:text-base">
@@ -271,7 +283,7 @@ const SubscriptionPage = () => {
               </div>
             </div>
 
-            {/* Features */}
+            {/* Features - keep existing code */}
             <div className="border-t border-gray-200 pt-5">
               <h3 className="font-semibold text-gray-800 mb-3 text-sm sm:text-base">Recursos incluídos:</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -300,7 +312,7 @@ const SubscriptionPage = () => {
               </div>
             </div>
 
-            {/* Actions */}
+            {/* Actions - keep existing code */}
             <div className="border-t border-gray-200 mt-6 pt-6">
               <div className="flex flex-col gap-4">
                 <div>
@@ -379,7 +391,7 @@ const SubscriptionPage = () => {
         </Card>
       </div>
 
-      {/* Plans Section */}
+      {/* Plans Section - keep existing code */}
       <div className="max-w-6xl mx-auto mb-6 sm:mb-8">
         <Card className="p-4 sm:p-6">
           <div className="flex flex-col gap-4 mb-6">
@@ -424,7 +436,7 @@ const SubscriptionPage = () => {
             </div>
           </div>
 
-          {/* Plans Grid */}
+          {/* Plans Grid - keep existing code */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {plans.map((plan) => {
               const Icon = plan.icon;
@@ -553,7 +565,7 @@ const SubscriptionPage = () => {
         </Card>
       </div>
 
-      {/* FAQ Section */}
+      {/* FAQ Section - keep existing code */}
       <div className="max-w-6xl mx-auto">
         <Card>
           <CardHeader className="p-4 sm:p-6">
@@ -610,7 +622,7 @@ const SubscriptionPage = () => {
         </Card>
       </div>
 
-      {/* Modals */}
+      {/* Modals - keep existing code */}
       <ChangeCardModal 
         isOpen={isChangeCardModalOpen} 
         onClose={() => setIsChangeCardModalOpen(false)} 
