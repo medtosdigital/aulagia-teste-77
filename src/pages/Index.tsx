@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -43,6 +43,18 @@ const Index = () => {
     handlePlanSelection,
     availablePlans 
   } = useUpgradeModal();
+
+  useEffect(() => {
+    const handleNavigateToProfile = () => {
+      setActiveItem('profile');
+    };
+
+    window.addEventListener('navigateToProfile', handleNavigateToProfile);
+
+    return () => {
+      window.removeEventListener('navigateToProfile', handleNavigateToProfile);
+    };
+  }, []);
 
   const getPageTitle = () => {
     switch (activeItem) {
