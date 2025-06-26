@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation } from 'lucide-react';
 import { statsService, MaterialStats } from '@/services/statsService';
@@ -20,9 +19,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [upcomingClasses, setUpcomingClasses] = useState<ScheduleEvent[]>([]);
   
   // Usar o hook de rastreamento de atividades
-  const { activities: recentActivities } = useActivityTracker();
+  const { activities: recentActivities, refreshActivities } = useActivityTracker();
 
   useEffect(() => {
+    console.log('🏠 Dashboard mounted, recent activities:', recentActivities);
+    
     // Carregar dados quando o componente montar
     setMaterialStats(statsService.getMaterialStats());
     
@@ -34,7 +35,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
       .slice(0, 5);
     setUpcomingClasses(upcoming);
-  }, []);
+  }, [recentActivities]);
 
   const tabs = [{
     id: 'recent-activities',
@@ -179,6 +180,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   <span className="text-xs text-gray-500">Ao vivo</span>
+                  <button 
+                    onClick={refreshActivities}
+                    className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                  >
+                    Atualizar
+                  </button>
                 </div>
               </div>
               
@@ -211,8 +218,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 )) : (
                   <div className="text-center py-8">
                     <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Nenhuma atividade recente</p>
-                    <p className="text-sm text-gray-400">Comece criando um material para ver suas atividades aqui</p>
+                    <p className="text-gray-500">Nenhuma atividade recente encontrada</p>
+                    <p className="text-sm text-gray-400 mb-4">Comece criando um material para ver suas atividades aqui</p>
+                    <p className="text-xs text-gray-400">Debug: {recentActivities.length} atividades carregadas</p>
                   </div>
                 )}
               </div>
