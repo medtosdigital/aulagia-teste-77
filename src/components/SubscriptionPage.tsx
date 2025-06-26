@@ -198,6 +198,85 @@ const SubscriptionPage = () => {
   // Get remaining materials using real data
   const remainingMaterials = getRemainingMaterials();
 
+  // Function to get all resources for current plan
+  const getAllResourcesForCurrentPlan = () => {
+    const resources = [];
+    
+    // Basic resources
+    resources.push({
+      name: `${currentPlan.limits.materialsPerMonth} materiais por mês`,
+      icon: FileText,
+      available: true
+    });
+
+    // Material types based on plan
+    if (currentPlan.id === 'gratuito') {
+      resources.push(
+        { name: 'Planos de Aula básicos', icon: GraduationCap, available: true },
+        { name: 'Atividades simples', icon: ClipboardList, available: true }
+      );
+    } else if (currentPlan.id === 'professor' || currentPlan.id === 'grupo-escolar') {
+      resources.push(
+        { name: 'Planos de Aula completos', icon: GraduationCap, available: true },
+        { name: 'Slides interativos', icon: Presentation, available: true },
+        { name: 'Atividades diversificadas', icon: ClipboardList, available: true },
+        { name: 'Avaliações personalizadas', icon: FileText, available: true }
+      );
+    }
+
+    // Download capabilities
+    resources.push({ name: 'Download em PDF', icon: Download, available: true });
+    
+    if (currentPlan.limits.canDownloadWord) {
+      resources.push({ name: 'Download em Word', icon: Download, available: true });
+    } else {
+      resources.push({ name: 'Download em Word', icon: Download, available: false });
+    }
+
+    if (currentPlan.limits.canDownloadPPT) {
+      resources.push({ name: 'Download em PowerPoint', icon: Download, available: true });
+    } else {
+      resources.push({ name: 'Download em PowerPoint', icon: Download, available: false });
+    }
+
+    // Editing capabilities
+    if (currentPlan.limits.canEditMaterials) {
+      resources.push({ name: 'Edição completa de materiais', icon: Brain, available: true });
+    } else {
+      resources.push({ name: 'Edição completa de materiais', icon: Brain, available: false });
+    }
+
+    // Calendar
+    if (currentPlan.limits.hasCalendar) {
+      resources.push({ name: 'Calendário de aulas', icon: Calendar, available: true });
+    } else {
+      resources.push({ name: 'Calendário de aulas', icon: Calendar, available: false });
+    }
+
+    // History
+    if (currentPlan.limits.hasHistory) {
+      resources.push({ name: 'Histórico completo', icon: FileText, available: true });
+    } else {
+      resources.push({ name: 'Histórico limitado', icon: FileText, available: false });
+    }
+
+    // Collaboration (only for school plan)
+    if (currentPlan.id === 'grupo-escolar') {
+      resources.push(
+        { name: 'Dashboard colaborativo', icon: Users, available: true },
+        { name: 'Compartilhamento entre professores', icon: Users, available: true },
+        { name: 'Gestão de usuários', icon: Users, available: true }
+      );
+    } else {
+      resources.push(
+        { name: 'Dashboard colaborativo', icon: Users, available: false },
+        { name: 'Compartilhamento entre professores', icon: Users, available: false }
+      );
+    }
+
+    return resources;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
       {/* Current Plan Section */}
@@ -306,38 +385,26 @@ const SubscriptionPage = () => {
               </div>
             </div>
 
-            {/* Features - Updated with real plan features */}
+            {/* Features - Updated with comprehensive resource list */}
             <div className="border-t border-gray-200 pt-5">
-              <h3 className="font-semibold text-gray-800 mb-3 text-sm sm:text-base">Recursos incluídos:</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex items-center">
-                  <Check className="w-4 sm:w-5 h-4 sm:h-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className="text-gray-700 text-sm">{currentPlan.limits.materialsPerMonth} materiais/mês</span>
-                </div>
-                {currentPlan.limits.canDownloadWord && (
-                  <div className="flex items-center">
-                    <Check className="w-4 sm:w-5 h-4 sm:h-5 text-green-500 mr-2 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">Downloads ilimitados</span>
-                  </div>
-                )}
-                {currentPlan.limits.canDownloadPPT && (
-                  <div className="flex items-center">
-                    <Check className="w-4 sm:w-5 h-4 sm:h-5 text-green-500 mr-2 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">Word, PPT e PDF</span>
-                  </div>
-                )}
-                {currentPlan.limits.canEditMaterials && (
-                  <div className="flex items-center">
-                    <Check className="w-4 sm:w-5 h-4 sm:h-5 text-green-500 mr-2 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">Edição completa</span>
-                  </div>
-                )}
-                {!currentPlan.limits.canDownloadWord && (
-                  <div className="flex items-center">
-                    <span className="w-4 sm:w-5 h-4 sm:h-5 text-red-400 mr-2 flex-shrink-0">×</span>
-                    <span className="text-gray-400 text-sm">Sem download em Word/PPT</span>
-                  </div>
-                )}
+              <h3 className="font-semibold text-gray-800 mb-4 text-sm sm:text-base">Recursos incluídos no seu plano:</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {getAllResourcesForCurrentPlan().map((resource, index) => {
+                  const IconComponent = resource.icon;
+                  return (
+                    <div key={index} className="flex items-center">
+                      {resource.available ? (
+                        <Check className="w-4 sm:w-5 h-4 sm:h-5 text-green-500 mr-2 flex-shrink-0" />
+                      ) : (
+                        <X className="w-4 sm:w-5 h-4 sm:h-5 text-red-400 mr-2 flex-shrink-0" />
+                      )}
+                      <IconComponent className="w-3 sm:w-4 h-3 sm:h-4 text-blue-500 mr-2 flex-shrink-0" />
+                      <span className={`text-sm ${resource.available ? 'text-gray-700' : 'text-gray-400'}`}>
+                        {resource.name}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
