@@ -1,45 +1,42 @@
+
 import React from 'react';
 import { BookOpen, Heart } from 'lucide-react';
+
 const Footer = () => {
-  return <footer className="bg-white border-t border-gray-200 mt-auto">
+  return (
+    <footer className="bg-white border-t border-gray-200 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="py-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Logo e descrição */}
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="bg-primary-500 text-white p-2 rounded-lg">
-                  <BookOpen className="w-5 h-5" />
+            <div>
+              <div className="flex items-center space-x-2 mb-3">
+                <div className="bg-primary-500 text-white p-1.5 rounded-lg">
+                  <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="logo-text text-xl text-primary-600">AulagIA</h3>
-                  <p className="text-gray-500 text-xs font-normal -mt-1">Sua aula com toque mágico</p>
+                  <h3 className="logo-text text-lg text-primary-600">AulagIA</h3>
+                  <p className="text-gray-500 text-xs -mt-1">Sua aula com toque mágico</p>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm max-w-md">Prepare suas Aulas em Minutos com um Toque Mágico. </p>
             </div>
             
             {/* Links legais */}
             <div>
-              <h4 className="font-semibold text-gray-800 mb-4">Legal</h4>
-              <ul className="space-y-2">
+              <h4 className="font-semibold text-gray-800 mb-3 text-sm">Legal</h4>
+              <ul className="space-y-1">
                 <li>
-                  <a href="/termos-de-servico" className="text-gray-600 hover:text-primary-600 text-sm transition-colors">
+                  <a href="/termos-de-servico" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
                     Termos de Serviço
                   </a>
                 </li>
                 <li>
-                  <a href="/politica-de-privacidade" className="text-gray-600 hover:text-primary-600 text-sm transition-colors">
+                  <a href="/politica-de-privacidade" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
                     Política de Privacidade
                   </a>
                 </li>
                 <li>
-                  <a href="/termos-de-uso" className="text-gray-600 hover:text-primary-600 text-sm transition-colors">
-                    Termos de Uso
-                  </a>
-                </li>
-                <li>
-                  <a href="/aviso-ia" className="text-gray-600 hover:text-primary-600 text-sm transition-colors">
+                  <a href="/aviso-ia" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
                     Aviso sobre IA
                   </a>
                 </li>
@@ -48,41 +45,35 @@ const Footer = () => {
             
             {/* Suporte */}
             <div>
-              <h4 className="font-semibold text-gray-800 mb-4">Suporte</h4>
-              <ul className="space-y-2">
+              <h4 className="font-semibold text-gray-800 mb-3 text-sm">Suporte</h4>
+              <ul className="space-y-1">
                 <li>
-                  <a href="#" className="text-gray-600 hover:text-primary-600 text-sm transition-colors">
+                  <a href="#" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
                     Central de Ajuda
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-600 hover:text-primary-600 text-sm transition-colors">
+                  <a href="#" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
                     Contato
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-primary-600 text-sm transition-colors">
-                    FAQ
                   </a>
                 </li>
               </ul>
             </div>
           </div>
           
-          {/* Aviso sobre IA */}
-          
-          
           {/* Copyright */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-gray-500 text-sm">© 2025 AulagIA. Todos os direitos reservados.</p>
-              <p className="text-gray-500 text-sm flex items-center mt-2 md:mt-0">
-                Feito com <Heart className="w-4 h-4 text-red-500 mx-1" /> para educadores
+              <p className="text-gray-500 text-xs">© 2025 AulagIA. Todos os direitos reservados.</p>
+              <p className="text-gray-500 text-xs flex items-center mt-2 md:mt-0">
+                Feito com <Heart className="w-3 h-3 text-red-500 mx-1" /> para educadores
               </p>
             </div>
           </div>
         </div>
       </div>
-    </footer>;
+    </footer>
+  );
 };
+
 export default Footer;
