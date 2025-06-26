@@ -1,12 +1,14 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 interface SidebarProps {
   activeItem?: string;
   onItemClick?: (item: string) => void;
 }
+
 const Sidebar: React.FC<SidebarProps> = ({
   activeItem = 'dashboard',
   onItemClick
@@ -20,6 +22,31 @@ const Sidebar: React.FC<SidebarProps> = ({
     canAccessMaterials,
     currentPlan
   } = usePlanPermissions();
+
+  const [userProfile, setUserProfile] = useState({
+    name: 'Professor(a)',
+    photo: ''
+  });
+
+  // Carregar dados do perfil do localStorage
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('userProfile');
+    const savedPhoto = localStorage.getItem('userPhoto');
+    
+    if (savedProfile) {
+      const profile = JSON.parse(savedProfile);
+      setUserProfile({
+        name: profile.name || 'Professor(a)',
+        photo: profile.photo || savedPhoto || ''
+      });
+    } else if (savedPhoto) {
+      setUserProfile(prev => ({
+        ...prev,
+        photo: savedPhoto
+      }));
+    }
+  }, []);
+
   const mobileMenuItems = [{
     id: 'dashboard',
     label: 'Início',
@@ -129,14 +156,17 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
         
-        {/* User Info */}
+        {/* User Info - Atualizado */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-              <User className="w-5 h-5 text-primary-600" />
-            </div>
-            <div>
-              <p className="font-semibold">Professor(a)</p>
+            <Avatar className="w-10 h-10 border-2 border-primary-200">
+              <AvatarImage src={userProfile.photo} />
+              <AvatarFallback className="bg-primary-100 text-primary-600">
+                {userProfile.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-900 truncate">{userProfile.name}</p>
               <p className="text-xs text-gray-500">{getPlanDisplayName()}</p>
             </div>
           </div>
@@ -212,4 +242,5 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
     </>;
 };
+
 export default Sidebar;
