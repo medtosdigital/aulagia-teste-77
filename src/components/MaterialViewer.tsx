@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Edit, Trash2, FileText, Presentation, ClipboardList, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Download, Edit, Trash2, FileText, Presentation, ClipboardList, GraduationCap, Slides } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { materialService, type GeneratedMaterial, type LessonPlan, type Activity, type Slide, type Assessment } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
 import MaterialEditModal from './MaterialEditModal';
+import SlideEditModal from './SlideEditModal';
 
 const MaterialViewer = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,7 @@ const MaterialViewer = () => {
   const [material, setMaterial] = React.useState<GeneratedMaterial | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [slideEditModalOpen, setSlideEditModalOpen] = React.useState(false);
 
   const loadMaterial = React.useCallback(() => {
     if (id) {
@@ -73,10 +75,16 @@ const MaterialViewer = () => {
 
   const handleEditSave = () => {
     console.log('Edit saved, reloading material...');
-    // Force reload the material from storage to reflect changes
     loadMaterial();
     setEditModalOpen(false);
     toast.success('Material atualizado com sucesso!');
+  };
+
+  const handleSlideEditSave = (updatedMaterial: GeneratedMaterial) => {
+    console.log('Slide edit saved, updating material...');
+    materialService.updateMaterial(updatedMaterial);
+    loadMaterial();
+    setSlideEditModalOpen(false);
   };
 
   const getTypeIcon = (type: string) => {
@@ -203,7 +211,6 @@ const MaterialViewer = () => {
   );
 
   const renderSlides = (slidesContent: any) => {
-    // Extract the slides array from the content structure
     const slides = slidesContent.slides || [];
     
     if (!Array.isArray(slides)) {
@@ -286,7 +293,6 @@ const MaterialViewer = () => {
   );
 
   const renderAssessment = (assessment: Assessment) => {
-    // Se a avaliação tem HTML content, renderizar o HTML completo
     if (assessment.htmlContent) {
       return (
         <div className="w-full">
@@ -309,7 +315,6 @@ const MaterialViewer = () => {
       );
     }
 
-    // Fallback para o formato antigo
     return (
       <div className="space-y-6">
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
@@ -417,14 +422,25 @@ const MaterialViewer = () => {
           </Button>
           
           <div className="flex items-center space-x-2">
-            <Button
-              onClick={() => setEditModalOpen(true)}
-              variant="outline"
-              size="sm"
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Editar
-            </Button>
+            {material.type === 'slides' ? (
+              <Button
+                onClick={() => setSlideEditModalOpen(true)}
+                variant="outline"
+                size="sm"
+              >
+                <Slides className="h-4 w-4 mr-2" />
+                Editar Slides
+              </Button>
+            ) : (
+              <Button
+                onClick={() => setEditModalOpen(true)}
+                variant="outline"
+                size="sm"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Editar
+              </Button>
+            )}
             <Button
               onClick={() => handleExport('pdf')}
               variant="outline"
@@ -501,12 +517,19 @@ const MaterialViewer = () => {
         </Card>
       </div>
 
-      {/* Edit Modal */}
+      {/* Edit Modals */}
       <MaterialEditModal
         material={material}
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         onSave={handleEditSave}
+      />
+
+      <SlideEditModal
+        material={material}
+        open={slideEditModalOpen}
+        onClose={() => setSlideEditModalOpen(false)}
+        onSave={handleSlideEditSave}
       />
     </div>
   );
