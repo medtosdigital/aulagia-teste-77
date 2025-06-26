@@ -23,21 +23,30 @@ const BlockedFeature: React.FC<BlockedFeatureProps> = ({
     <Card className={`cursor-not-allowed border-2 border-gray-300 bg-gradient-to-br from-gray-100 to-gray-200 ${className}`}>
       <CardContent className="p-4 relative h-full">
         {/* Overlay de bloqueio */}
-        <div className="absolute inset-0 bg-black/5 rounded-lg flex items-center justify-center z-10">
-          <div className="text-center bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-md border border-gray-200 max-w-[200px]">
-            <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Lock className="w-4 h-4 text-white" />
+        <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center z-10 p-4">
+          <div className="flex items-center justify-between w-full max-w-sm">
+            {/* Coluna de texto */}
+            <div className="flex items-center space-x-2 flex-1">
+              <div className="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center">
+                <Lock className="w-3 h-3 text-gray-600" />
+              </div>
+              <div className="text-left">
+                <h4 className="text-xs font-semibold text-white mb-0.5">{title}</h4>
+                <p className="text-[10px] text-white/90 leading-tight">{description}</p>
+              </div>
             </div>
-            <h4 className="text-xs font-semibold text-gray-800 mb-1">{title}</h4>
-            <p className="text-[10px] text-gray-600 mb-2 leading-tight">{description}</p>
-            <Button 
-              onClick={onUpgrade}
-              size="sm"
-              className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white px-3 py-1 rounded-md font-medium shadow-sm hover:shadow-md transition-all text-xs h-7"
-            >
-              <Crown className="w-3 h-3 mr-1" />
-              Upgrade
-            </Button>
+            
+            {/* Coluna do botão */}
+            <div className="ml-3">
+              <Button 
+                onClick={onUpgrade}
+                size="sm"
+                className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white px-2 py-1 rounded-md font-medium shadow-sm hover:shadow-md transition-all text-xs h-6"
+              >
+                <Crown className="w-3 h-3 mr-1" />
+                Upgrade
+              </Button>
+            </div>
           </div>
         </div>
         
