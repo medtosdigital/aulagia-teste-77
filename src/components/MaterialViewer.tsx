@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Edit, Trash2, FileText, Presentation, ClipboardList, GraduationCap, Slides } from 'lucide-react';
+import { ArrowLeft, Download, Edit, Trash2, FileText, Presentation, ClipboardList, GraduationCap, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -428,7 +428,7 @@ const MaterialViewer = () => {
                 variant="outline"
                 size="sm"
               >
-                <Slides className="h-4 w-4 mr-2" />
+                <Monitor className="h-4 w-4 mr-2" />
                 Editar Slides
               </Button>
             ) : (
