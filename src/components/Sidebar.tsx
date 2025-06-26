@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -76,6 +77,10 @@ const Sidebar: React.FC<SidebarProps> = ({
     label: 'Escola',
     icon: School
   }] : []), {
+    id: 'profile',
+    label: 'Perfil',
+    icon: User
+  }, {
     id: 'subscription',
     label: 'Assinatura',
     icon: Crown

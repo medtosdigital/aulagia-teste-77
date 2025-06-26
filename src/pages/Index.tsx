@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -9,6 +10,7 @@ import MaterialViewer from '@/components/MaterialViewer';
 import CalendarPage from '@/components/CalendarPage';
 import SchoolPage from '@/components/SchoolPage';
 import SubscriptionPage from '@/components/SubscriptionPage';
+import ProfilePage from '@/components/ProfilePage';
 import PageBlockedOverlay from '@/components/PageBlockedOverlay';
 import UpgradeModal from '@/components/UpgradeModal';
 import SupportModal from '@/components/SupportModal';
@@ -55,6 +57,8 @@ const Index = () => {
         return 'Calendário';
       case 'school':
         return 'Escola';
+      case 'profile':
+        return 'Perfil';
       case 'subscription':
         return 'Assinatura';
       case 'settings':
@@ -147,6 +151,9 @@ const Index = () => {
           );
         }
         return <SchoolPage />;
+
+      case 'profile':
+        return <ProfilePage />;
         
       case 'subscription':
         return <SubscriptionPage />;
