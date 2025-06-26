@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation } from 'lucide-react';
+import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation, School } from 'lucide-react';
 import { statsService, MaterialStats } from '@/services/statsService';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { useActivityTracker } from '@/hooks/useActivityTracker';
@@ -22,7 +21,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Usar o hook de rastreamento de atividades e permissões
   const { activities: recentActivities, refreshActivities } = useActivityTracker();
-  const { canAccessCreateMaterial, canAccessMaterials, hasCalendar, canAccessCalendarPage } = usePlanPermissions();
+  const { canAccessCreateMaterial, canAccessMaterials, hasCalendar, canAccessCalendarPage, canAccessSchool } = usePlanPermissions();
 
   useEffect(() => {
     console.log('🏠 Dashboard mounted, recent activities:', recentActivities);
@@ -157,6 +156,18 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div>
               <h3 className="font-semibold text-gray-800">Calendário</h3>
               <p className="text-sm text-gray-500">Veja sua agenda</p>
+            </div>
+          </div>
+        )}
+
+        {canAccessSchool() && (
+          <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('school')}>
+            <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
+              <School size={24} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-800">Escola</h3>
+              <p className="text-sm text-gray-500">Adicionar professores</p>
             </div>
           </div>
         )}
