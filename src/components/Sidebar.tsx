@@ -45,6 +45,35 @@ const Sidebar: React.FC<SidebarProps> = ({
         photo: savedPhoto
       }));
     }
+
+    // Adicionar listener para mudanças no localStorage
+    const handleStorageChange = () => {
+      const updatedProfile = localStorage.getItem('userProfile');
+      const updatedPhoto = localStorage.getItem('userPhoto');
+      
+      if (updatedProfile) {
+        const profile = JSON.parse(updatedProfile);
+        setUserProfile({
+          name: profile.name || 'Professor(a)',
+          photo: profile.photo || updatedPhoto || ''
+        });
+      } else if (updatedPhoto) {
+        setUserProfile(prev => ({
+          ...prev,
+          photo: updatedPhoto
+        }));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Listener personalizado para mudanças no perfil
+    window.addEventListener('profileUpdated', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('profileUpdated', handleStorageChange);
+    };
   }, []);
 
   const mobileMenuItems = [{
@@ -160,8 +189,14 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <Avatar className="w-10 h-10 border-2 border-primary-200">
-              <AvatarImage src={userProfile.photo} />
-              <AvatarFallback className="bg-primary-100 text-primary-600">
+              {userProfile.photo && (
+                <AvatarImage 
+                  src={userProfile.photo} 
+                  alt={userProfile.name}
+                  className="object-cover"
+                />
+              )}
+              <AvatarFallback className="bg-primary-100 text-primary-600 font-semibold">
                 {userProfile.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
