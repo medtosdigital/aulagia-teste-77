@@ -82,10 +82,14 @@ const MaterialViewer = () => {
 
   const handleSlideEditSave = (updatedMaterial: GeneratedMaterial) => {
     console.log('Slide edit saved, updating material...');
-    materialService.updateMaterial(updatedMaterial);
-    setMaterial(updatedMaterial);
-    setSlideEditModalOpen(false);
-    toast.success('Slides atualizados com sucesso!');
+    const success = materialService.updateMaterial(updatedMaterial.id, updatedMaterial);
+    if (success) {
+      setMaterial(updatedMaterial);
+      setSlideEditModalOpen(false);
+      toast.success('Slides atualizados com sucesso!');
+    } else {
+      toast.error('Erro ao atualizar slides');
+    }
   };
 
   const getTypeIcon = (type: string) => {
