@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown, Brain, Presentation, ClipboardList, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,8 +28,14 @@ const SubscriptionPage = () => {
     usage, 
     getRemainingMaterials, 
     getNextResetDate,
-    changePlan 
+    changePlan,
+    refreshData
   } = usePlanPermissions();
+
+  // Refresh data when component mounts to ensure accuracy
+  useEffect(() => {
+    refreshData();
+  }, []);
 
   const plans: Plan[] = [
     {
@@ -129,7 +134,7 @@ const SubscriptionPage = () => {
     changePlan(planId);
   };
 
-  // Calculate usage percentage
+  // Calculate usage percentage with real-time data
   const usagePercentage = currentPlan.limits.materialsPerMonth > 0 
     ? (usage.materialsThisMonth / currentPlan.limits.materialsPerMonth) * 100 
     : 0;
@@ -139,6 +144,9 @@ const SubscriptionPage = () => {
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
+
+  // Get remaining materials
+  const remainingMaterials = getRemainingMaterials();
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -161,7 +169,7 @@ const SubscriptionPage = () => {
 
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              {/* Usage Card */}
+              {/* Usage Card - Updated with real-time data */}
               <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-gray-800 flex items-center">
@@ -174,7 +182,7 @@ const SubscriptionPage = () => {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div 
-                    className="bg-gradient-to-r from-blue-400 to-blue-600 h-2.5 rounded-full" 
+                    className="bg-gradient-to-r from-blue-400 to-blue-600 h-2.5 rounded-full transition-all duration-300" 
                     style={{ width: `${Math.min(usagePercentage, 100)}%` }}
                   ></div>
                 </div>
@@ -182,10 +190,25 @@ const SubscriptionPage = () => {
                   <span>0</span>
                   <span>{currentPlan.limits.materialsPerMonth}</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-3 flex items-center">
-                  <Calendar className="w-3 h-3 mr-1" />
-                  Renova em {formatDate(nextResetDate)}
-                </p>
+                <div className="mt-3 flex items-center justify-between">
+                  <p className="text-xs text-gray-500 flex items-center">
+                    <Calendar className="w-3 h-3 mr-1" />
+                    Renova em {formatDate(nextResetDate)}
+                  </p>
+                  <p className="text-xs text-blue-600 font-medium">
+                    {remainingMaterials} restantes
+                  </p>
+                </div>
+                {usagePercentage >= 80 && (
+                  <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700">
+                    <span className="font-medium">Atenção:</span> Você já usou {Math.round(usagePercentage)}% dos seus materiais este mês
+                  </div>
+                )}
+                {remainingMaterials === 0 && (
+                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                    <span className="font-medium">Limite atingido:</span> Faça upgrade para continuar gerando materiais
+                  </div>
+                )}
               </div>
 
               {/* Payment Card */}
