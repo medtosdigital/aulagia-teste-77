@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -14,6 +13,7 @@ import PageBlockedOverlay from '@/components/PageBlockedOverlay';
 import UpgradeModal from '@/components/UpgradeModal';
 import SupportModal from '@/components/SupportModal';
 import AdminLoginModal from '@/components/AdminLoginModal';
+import Footer from '@/components/Footer';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 
@@ -200,12 +200,15 @@ const Index = () => {
         
         {/* Rota principal com sidebar */}
         <Route path="*" element={
-          <div className="min-h-screen bg-gray-50 w-full">
+          <div className="min-h-screen bg-gray-50 w-full flex flex-col">
             <Sidebar activeItem={activeItem} onItemClick={handleNavigate} />
             
-            <div className="md:ml-64 min-h-screen pb-20 md:pb-0">
+            <div className="md:ml-64 min-h-screen flex flex-col">
               <Header title={getPageTitle()} />
-              {renderContent()}
+              <div className="flex-1">
+                {renderContent()}
+              </div>
+              <Footer />
             </div>
           </div>
         } />
