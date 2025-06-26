@@ -1,10 +1,7 @@
-
 import React from 'react';
 import { BookOpen, Heart } from 'lucide-react';
-
 const Footer = () => {
-  return (
-    <footer className="bg-white border-t border-gray-200 mt-auto">
+  return <footer className="bg-white border-t border-gray-200 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -19,10 +16,7 @@ const Footer = () => {
                   <p className="text-gray-500 text-xs font-normal -mt-1">Sua aula com toque mágico</p>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm max-w-md">
-                Plataforma de criação de materiais educacionais powered by AI. 
-                Transforme suas ideias em conteúdos pedagógicos incríveis.
-              </p>
+              <p className="text-gray-600 text-sm max-w-md">Prepare suas Aulas em Minutos com um Toque Mágico. </p>
             </div>
             
             {/* Links legais */}
@@ -76,19 +70,12 @@ const Footer = () => {
           </div>
           
           {/* Aviso sobre IA */}
-          <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-800">
-              <strong>Aviso:</strong> Os materiais educacionais são gerados por Inteligência Artificial e podem conter erros. 
-              É responsabilidade do usuário verificar e validar todo o conteúdo antes de utilizá-lo em sala de aula.
-            </p>
-          </div>
+          
           
           {/* Copyright */}
           <div className="mt-8 pt-8 border-t border-gray-200">
             <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-gray-500 text-sm">
-                © 2024 AulagIA. Todos os direitos reservados.
-              </p>
+              <p className="text-gray-500 text-sm">© 2025 AulagIA. Todos os direitos reservados.</p>
               <p className="text-gray-500 text-sm flex items-center mt-2 md:mt-0">
                 Feito com <Heart className="w-4 h-4 text-red-500 mx-1" /> para educadores
               </p>
@@ -96,8 +83,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
