@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation } from 'lucide-react';
-import { activityService, Activity } from '@/services/activityService';
 import { statsService, MaterialStats } from '@/services/statsService';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
+import { useActivityTracker } from '@/hooks/useActivityTracker';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -14,13 +14,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   onNavigate
 }) => {
   const [activeTab, setActiveTab] = useState('recent-activities');
-  const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [materialStats, setMaterialStats] = useState<MaterialStats | null>(null);
   const [upcomingClasses, setUpcomingClasses] = useState<ScheduleEvent[]>([]);
+  
+  // Usar o hook de rastreamento de atividades
+  const { activities: recentActivities } = useActivityTracker();
 
   useEffect(() => {
     // Carregar dados quando o componente montar
-    setRecentActivities(activityService.getRecentActivities(10));
     setMaterialStats(statsService.getMaterialStats());
     
     // Carregar próximas aulas (próximos 7 dias)
@@ -171,11 +172,17 @@ const Dashboard: React.FC<DashboardProps> = ({
         
         <div className="p-4 md:p-6">
           {activeTab === 'recent-activities' && <div>
-              <h3 className="font-semibold text-lg mb-4">Suas atividades recentes</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-lg">Suas atividades recentes</h3>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-gray-500">Ao vivo</span>
+                </div>
+              </div>
               
-              <div className="space-y-4">
-                {recentActivities.length > 0 ? recentActivities.map(activity => (
-                  <div key={activity.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition">
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {recentActivities.length > 0 ? recentActivities.map((activity, index) => (
+                  <div key={activity.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
                     <div className="mt-1">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getActivityIconColor(activity.type)}`}>
                         {getActivityIcon(activity.type)}
@@ -184,7 +191,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div className="flex-1">
                       <p className="font-medium">{activity.title}</p>
                       <p className="text-sm text-gray-500">{activity.description}</p>
-                      <p className="text-xs text-gray-400 mt-1">{formatTimeAgo(activity.timestamp)}</p>
+                      <div className="flex items-center space-x-3 mt-1">
+                        <p className="text-xs text-gray-400">{formatTimeAgo(activity.timestamp)}</p>
+                        {activity.subject && (
+                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                            {activity.subject}
+                          </span>
+                        )}
+                        {activity.grade && (
+                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                            {activity.grade}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )) : (
