@@ -5,7 +5,7 @@ interface FeedbackState {
   materialsCreated: number;
   showFeedbackModal: boolean;
   dontShowAgain: boolean;
-  lastShownAt: string | null;
+  lastShownDate: string | null; // Mudança: armazenar apenas a data (YYYY-MM-DD)
 }
 
 export const useFeedback = () => {
@@ -13,7 +13,7 @@ export const useFeedback = () => {
     materialsCreated: 0,
     showFeedbackModal: false,
     dontShowAgain: false,
-    lastShownAt: null
+    lastShownDate: null
   });
 
   // Carregar estado do localStorage
@@ -36,6 +36,28 @@ export const useFeedback = () => {
     localStorage.setItem('feedbackState', JSON.stringify(updatedState));
   };
 
+  // Verificar se deve mostrar o modal baseado na data
+  const shouldShowTodayModal = (): boolean => {
+    if (feedbackState.dontShowAgain) {
+      console.log('🚫 Modal disabled by user preference');
+      return false;
+    }
+    
+    const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    
+    // Se nunca foi mostrado, mostrar
+    if (!feedbackState.lastShownDate) {
+      console.log('🔔 First time showing modal');
+      return true;
+    }
+    
+    // Se a última exibição foi em um dia diferente de hoje, mostrar
+    const canShowToday = feedbackState.lastShownDate !== today;
+    console.log('📅 Last shown:', feedbackState.lastShownDate, '| Today:', today, '| Can show:', canShowToday);
+    
+    return canShowToday;
+  };
+
   // Incrementar contador de materiais criados
   const incrementMaterialsCreated = () => {
     const newCount = feedbackState.materialsCreated + 1;
@@ -45,7 +67,7 @@ export const useFeedback = () => {
     
     // Verificar se deve mostrar o modal (a cada 3 materiais se não foi marcado para não mostrar)
     if (!feedbackState.dontShowAgain && newCount % 3 === 0) {
-      const shouldShow = checkShouldShowModal();
+      const shouldShow = shouldShowTodayModal();
       console.log('🔔 Should show feedback modal:', shouldShow);
       
       if (shouldShow) {
@@ -54,19 +76,16 @@ export const useFeedback = () => {
     }
   };
 
-  // Verificar se deve mostrar o modal baseado no tempo
-  const checkShouldShowModal = (): boolean => {
-    if (feedbackState.dontShowAgain) return false;
+  // Verificar e mostrar modal no login (uma vez por dia)
+  const checkDailyModal = () => {
+    console.log('🔍 Checking daily modal on login');
     
-    // Se nunca foi mostrado, mostrar
-    if (!feedbackState.lastShownAt) return true;
-    
-    // Mostrar novamente após 7 dias
-    const lastShown = new Date(feedbackState.lastShownAt);
-    const now = new Date();
-    const daysDiff = Math.floor((now.getTime() - lastShown.getTime()) / (1000 * 60 * 60 * 24));
-    
-    return daysDiff >= 7;
+    if (shouldShowTodayModal()) {
+      console.log('✅ Showing daily modal');
+      saveFeedbackState({ showFeedbackModal: true });
+    } else {
+      console.log('❌ Daily modal already shown or disabled');
+    }
   };
 
   // Abrir modal manualmente (botão ?)
@@ -78,19 +97,21 @@ export const useFeedback = () => {
   // Fechar modal
   const closeFeedbackModal = () => {
     console.log('❌ Closing feedback modal');
+    const today = new Date().toISOString().split('T')[0];
     saveFeedbackState({ 
       showFeedbackModal: false,
-      lastShownAt: new Date().toISOString()
+      lastShownDate: today // Marcar que foi mostrado hoje
     });
   };
 
   // Marcar para não mostrar novamente
   const dontShowAgain = () => {
     console.log('🚫 User selected dont show again');
+    const today = new Date().toISOString().split('T')[0];
     saveFeedbackState({ 
       showFeedbackModal: false,
       dontShowAgain: true,
-      lastShownAt: new Date().toISOString()
+      lastShownDate: today
     });
   };
 
@@ -101,7 +122,7 @@ export const useFeedback = () => {
       materialsCreated: 0,
       showFeedbackModal: false,
       dontShowAgain: false,
-      lastShownAt: null
+      lastShownDate: null
     };
     setFeedbackState(resetState);
     localStorage.setItem('feedbackState', JSON.stringify(resetState));
@@ -110,6 +131,7 @@ export const useFeedback = () => {
   return {
     ...feedbackState,
     incrementMaterialsCreated,
+    checkDailyModal,
     openFeedbackModal,
     closeFeedbackModal,
     dontShowAgain,
