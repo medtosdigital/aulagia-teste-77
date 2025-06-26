@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Lock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ import YearView from './calendar/YearView';
 
 const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'day' | 'week' | 'month' | 'year'>('week');
+  const [view, setView] = useState<'day' | 'week' | 'month' | 'year'>('day');
   const [events, setEvents] = useState<ScheduleEvent[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
