@@ -1,11 +1,37 @@
-
 import React, { useState, useEffect } from 'react';
-import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown, Brain, Presentation, ClipboardList, GraduationCap } from 'lucide-react';
+import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown, Brain, Presentation, ClipboardList, GraduationCap, MoreHorizontal, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { ChangeCardModal } from '@/components/ChangeCardModal';
+import { ChangePlanModal } from '@/components/ChangePlanModal';
 
 interface Plan {
   id: string;
@@ -24,6 +50,10 @@ interface Plan {
 
 const SubscriptionPage = () => {
   const [billingType, setBillingType] = useState<'monthly' | 'yearly'>('monthly');
+  const [isChangeCardModalOpen, setIsChangeCardModalOpen] = useState(false);
+  const [isChangePlanModalOpen, setIsChangePlanModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  
   const { 
     currentPlan, 
     usage, 
@@ -133,6 +163,13 @@ const SubscriptionPage = () => {
 
   const handlePlanChange = (planId: string) => {
     changePlan(planId);
+  };
+
+  const handleCancelSubscription = () => {
+    // Logic to cancel subscription
+    console.log('Cancelar assinatura');
+    setIsCancelModalOpen(false);
+    // Add actual cancellation logic here
   };
 
   // Calculate usage percentage with real-time data
@@ -271,16 +308,67 @@ const SubscriptionPage = () => {
                   <p className="text-xs sm:text-sm text-gray-500">Altere ou cancele quando quiser</p>
                 </div>
                 
-                <div className="flex flex-col gap-2 sm:gap-3">
-                  <Button variant="outline" className="flex items-center justify-center w-full sm:w-auto text-sm">
+                {/* Desktop Actions - 3 columns */}
+                <div className="hidden sm:grid sm:grid-cols-3 sm:gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center justify-center text-sm"
+                    onClick={() => setIsChangeCardModalOpen(true)}
+                  >
                     <CreditCard className="w-4 h-4 mr-2" />
                     Alterar cartão
                   </Button>
-                  <Button variant="outline" className="flex items-center justify-center w-full sm:w-auto text-sm">
+                  
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center justify-center text-sm"
+                    onClick={() => setIsChangePlanModalOpen(true)}
+                  >
                     <ArrowUpDown className="w-4 h-4 mr-2" />
                     Alterar plano
                   </Button>
-                  <Button variant="outline" className="flex items-center justify-center w-full sm:w-auto text-sm text-red-600 border-red-200 hover:bg-red-50">
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="flex items-center justify-center text-sm">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem 
+                        className="text-red-600 focus:text-red-600"
+                        onClick={() => setIsCancelModalOpen(true)}
+                      >
+                        <Ban className="w-4 h-4 mr-2" />
+                        Cancelar assinatura
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                {/* Mobile Actions - keep existing vertical layout */}
+                <div className="flex flex-col gap-2 sm:hidden">
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center justify-center w-full text-sm"
+                    onClick={() => setIsChangeCardModalOpen(true)}
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Alterar cartão
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center justify-center w-full text-sm"
+                    onClick={() => setIsChangePlanModalOpen(true)}
+                  >
+                    <ArrowUpDown className="w-4 h-4 mr-2" />
+                    Alterar plano
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center justify-center w-full text-sm text-red-600 border-red-200 hover:bg-red-50"
+                    onClick={() => setIsCancelModalOpen(true)}
+                  >
                     <Ban className="w-4 h-4 mr-2" />
                     Cancelar
                   </Button>
@@ -521,6 +609,51 @@ const SubscriptionPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modals */}
+      <ChangeCardModal 
+        isOpen={isChangeCardModalOpen} 
+        onClose={() => setIsChangeCardModalOpen(false)} 
+      />
+      
+      <ChangePlanModal 
+        isOpen={isChangePlanModalOpen} 
+        onClose={() => setIsChangePlanModalOpen(false)}
+        currentPlan={currentPlan}
+        onPlanChange={handlePlanChange}
+      />
+
+      {/* Cancel Subscription Modal */}
+      <AlertDialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+              Cancelar Assinatura
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-left">
+              Tem certeza de que deseja cancelar sua assinatura?
+              <br /><br />
+              <strong>O que acontecerá:</strong>
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Você manterá acesso aos recursos premium até o final do período atual</li>
+                <li>Não será cobrado novamente</li>
+                <li>Após o vencimento, sua conta será alterada para o plano Gratuito</li>
+                <li>Você poderá reativar sua assinatura a qualquer momento</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Manter Assinatura</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleCancelSubscription}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Confirmar Cancelamento
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
