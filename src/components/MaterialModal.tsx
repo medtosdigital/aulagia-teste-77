@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { X, Download, Printer, FileCheck } from 'lucide-react';
+import { X, Download, Printer, FileCheck, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -11,6 +12,8 @@ import { templateService } from '@/services/templateService';
 import { exportService } from '@/services/exportService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 
 interface MaterialModalProps {
   material: GeneratedMaterial | null;
@@ -28,6 +31,10 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
   const isMobile = useIsMobile();
   const [answerKeyModalOpen, setAnswerKeyModalOpen] = useState(false);
   const [nextStepsModalOpen, setNextStepsModalOpen] = useState(false);
+
+  // Hooks para gerenciamento de planos
+  const { canDownloadWord, canDownloadPPT } = usePlanPermissions();
+  const { openModal: openUpgradeModal } = useUpgradeModal();
 
   // Só mostrar o modal de próximos passos se explicitamente solicitado
   React.useEffect(() => {
@@ -85,6 +92,13 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
   const handleExportWord = async () => {
     if (!material) return;
 
+    // Verificar permissão para download em Word
+    if (!canDownloadWord()) {
+      toast.error('Download em Word disponível apenas em planos pagos');
+      openUpgradeModal();
+      return;
+    }
+
     try {
       console.log('Iniciando exportação Word para material:', material.type);
       await exportService.exportToWord(material);
@@ -97,6 +111,13 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
 
   const handleExportPPT = async () => {
     if (!material) return;
+
+    // Verificar permissão para download em PPT
+    if (!canDownloadPPT()) {
+      toast.error('Download em PowerPoint disponível apenas em planos pagos');
+      openUpgradeModal();
+      return;
+    }
 
     try {
       console.log('Iniciando exportação PPT para material:', material.type);
@@ -174,9 +195,14 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={handleExportPPT}
-                      className="text-xs rounded-xl"
+                      className={`text-xs rounded-xl ${canDownloadPPT() ? '' : 'opacity-50 cursor-not-allowed'}`}
+                      disabled={!canDownloadPPT()}
                     >
-                      <Download className="h-3 w-3 mr-1" />
+                      {canDownloadPPT() ? (
+                        <Download className="h-3 w-3 mr-1" />
+                      ) : (
+                        <Lock className="h-3 w-3 mr-1" />
+                      )}
                       PPT
                     </Button>
                   ) : (
@@ -184,9 +210,14 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={handleExportWord}
-                      className="text-xs rounded-xl"
+                      className={`text-xs rounded-xl ${canDownloadWord() ? '' : 'opacity-50 cursor-not-allowed'}`}
+                      disabled={!canDownloadWord()}
                     >
-                      <Download className="h-3 w-3 mr-1" />
+                      {canDownloadWord() ? (
+                        <Download className="h-3 w-3 mr-1" />
+                      ) : (
+                        <Lock className="h-3 w-3 mr-1" />
+                      )}
                       Word
                     </Button>
                   )}
@@ -289,10 +320,17 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                   variant="outline"
                   size="default"
                   onClick={handleExportWord}
-                  className="w-full justify-start rounded-lg"
+                  className={`w-full justify-start rounded-lg ${
+                    canDownloadWord() ? '' : 'opacity-50 cursor-not-allowed'
+                  }`}
+                  disabled={!canDownloadWord()}
                 >
-                  <Download className="h-4 w-4 mr-3" />
-                  Microsoft Word
+                  {canDownloadWord() ? (
+                    <Download className="h-4 w-4 mr-3" />
+                  ) : (
+                    <Lock className="h-4 w-4 mr-3" />
+                  )}
+                  Microsoft Word {!canDownloadWord() && '(Premium)'}
                 </Button>
               )}
               
@@ -301,10 +339,17 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                   variant="outline"
                   size="default"
                   onClick={handleExportPPT}
-                  className="w-full justify-start rounded-lg"
+                  className={`w-full justify-start rounded-lg ${
+                    canDownloadPPT() ? '' : 'opacity-50 cursor-not-allowed'
+                  }`}
+                  disabled={!canDownloadPPT()}
                 >
-                  <Download className="h-4 w-4 mr-3" />
-                  PPT
+                  {canDownloadPPT() ? (
+                    <Download className="h-4 w-4 mr-3" />
+                  ) : (
+                    <Lock className="h-4 w-4 mr-3" />
+                  )}
+                  PPT {!canDownloadPPT() && '(Premium)'}
                 </Button>
               )}
 
