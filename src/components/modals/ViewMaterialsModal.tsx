@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, FileText, Users } from 'lucide-react';
+import { userMaterialsService, UserMaterial } from '@/services/userMaterialsService';
 
 interface Teacher {
   id: string;
@@ -30,36 +31,18 @@ const ViewMaterialsModal: React.FC<ViewMaterialsModalProps> = ({
   onClose,
   teacher
 }) => {
-  // Mock materials data - in real app this would come from a service
-  const materials = [
-    {
-      id: '1',
-      title: 'Plano de Aula - Frações',
-      type: 'plano-aula',
-      subject: teacher?.subject || 'Matemática',
-      grade: teacher?.grade || '6º ano',
-      createdAt: '2023-12-10',
-      status: 'completed'
-    },
-    {
-      id: '2',
-      title: 'Atividade - Operações Básicas',
-      type: 'atividade',
-      subject: teacher?.subject || 'Matemática',
-      grade: teacher?.grade || '6º ano',
-      createdAt: '2023-12-08',
-      status: 'completed'
-    },
-    {
-      id: '3',
-      title: 'Slides - Geometria Básica',
-      type: 'slides',
-      subject: teacher?.subject || 'Matemática',
-      grade: teacher?.grade || '7º ano',
-      createdAt: '2023-12-05',
-      status: 'completed'
+  const [materials, setMaterials] = useState<UserMaterial[]>([]);
+
+  useEffect(() => {
+    if (teacher && isOpen) {
+      // Inicializar materiais de exemplo se não existirem
+      userMaterialsService.initializeSampleMaterials(teacher.id);
+      
+      // Carregar materiais reais do usuário
+      const userMaterials = userMaterialsService.getMaterialsByUser(teacher.id);
+      setMaterials(userMaterials);
     }
-  ];
+  }, [teacher, isOpen]);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -80,6 +63,8 @@ const ViewMaterialsModal: React.FC<ViewMaterialsModalProps> = ({
         return <Badge className="bg-purple-100 text-purple-800 text-xs">Slides</Badge>;
       case 'atividade':
         return <Badge className="bg-green-100 text-green-800 text-xs">Atividade</Badge>;
+      case 'avaliacao':
+        return <Badge className="bg-orange-100 text-orange-800 text-xs">Avaliação</Badge>;
       default:
         return <Badge className="text-xs">Material</Badge>;
     }
@@ -109,12 +94,12 @@ const ViewMaterialsModal: React.FC<ViewMaterialsModalProps> = ({
               </div>
             </div>
             <p className="text-sm text-gray-500">
-              Total de materiais criados: <span className="font-semibold">{teacher.materialsCount}</span>
+              Total de materiais criados: <span className="font-semibold">{materials.length}</span>
             </p>
           </div>
 
           <div className="space-y-3">
-            <h4 className="font-medium text-gray-900">Materiais Recentes</h4>
+            <h4 className="font-medium text-gray-900">Materiais Criados</h4>
             
             {materials.map((material) => (
               <div key={material.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">

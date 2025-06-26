@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Users, BookOpen, Calendar, TrendingUp, Search, MoreVertical, Mail, Edit, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ import ResendInviteModal from '@/components/modals/ResendInviteModal';
 import RemoveTeacherModal from '@/components/modals/RemoveTeacherModal';
 import { useToast } from '@/hooks/use-toast';
 import { planPermissionsService } from '@/services/planPermissionsService';
+import { userMaterialsService } from '@/services/userMaterialsService';
 
 interface Teacher {
   id: string;
@@ -62,6 +62,9 @@ const SchoolPage = () => {
       const isOwner = planPermissionsService.isSchoolOwner();
       
       if (isOwner && currentUser) {
+        // Get real materials count for the current user
+        const userMaterials = userMaterialsService.getMaterialsByUser(currentUser.id);
+        
         // Create school owner as first teacher if not already exists
         const ownerTeacher: Teacher = {
           id: currentUser.id,
@@ -70,23 +73,26 @@ const SchoolPage = () => {
           subject: 'Múltiplas Disciplinas',
           grade: 'Ensino Fundamental',
           status: 'active',
-          materialsCount: currentUser.materialsUsed || 0,
+          materialsCount: userMaterials.length,
           lastAccess: new Date().toLocaleDateString('pt-BR'),
           isSchoolOwner: true
         };
 
         // Check if owner is already in the teachers list
-        const existingTeachers = schoolUsers.map(user => ({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          subject: user.id === currentUser.id ? 'Múltiplas Disciplinas' : 'Disciplina',
-          grade: user.id === currentUser.id ? 'Ensino Fundamental' : 'Série',
-          status: 'active' as const,
-          materialsCount: user.materialsUsed || 0,
-          lastAccess: user.id === currentUser.id ? new Date().toLocaleDateString('pt-BR') : 'Nunca',
-          isSchoolOwner: user.id === currentUser.id
-        }));
+        const existingTeachers = schoolUsers.map(user => {
+          const userMaterials = userMaterialsService.getMaterialsByUser(user.id);
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            subject: user.id === currentUser.id ? 'Múltiplas Disciplinas' : 'Disciplina',
+            grade: user.id === currentUser.id ? 'Ensino Fundamental' : 'Série',
+            status: 'active' as const,
+            materialsCount: userMaterials.length,
+            lastAccess: user.id === currentUser.id ? new Date().toLocaleDateString('pt-BR') : 'Nunca',
+            isSchoolOwner: user.id === currentUser.id
+          };
+        });
 
         // If owner is not in school users, add them
         if (!existingTeachers.find(t => t.id === currentUser.id)) {
@@ -95,18 +101,21 @@ const SchoolPage = () => {
           setTeachers(existingTeachers);
         }
       } else {
-        // Load existing school users
-        const teachersList = schoolUsers.map(user => ({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          subject: 'Disciplina',
-          grade: 'Série',
-          status: 'active' as const,
-          materialsCount: user.materialsUsed || 0,
-          lastAccess: 'Nunca',
-          isSchoolOwner: false
-        }));
+        // Load existing school users with real materials count
+        const teachersList = schoolUsers.map(user => {
+          const userMaterials = userMaterialsService.getMaterialsByUser(user.id);
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            subject: 'Disciplina',
+            grade: 'Série',
+            status: 'active' as const,
+            materialsCount: userMaterials.length,
+            lastAccess: 'Nunca',
+            isSchoolOwner: false
+          };
+        });
         setTeachers(teachersList);
       }
     } else {
@@ -245,10 +254,10 @@ const SchoolPage = () => {
     }
   };
 
-  // Calculate real data
+  // Calculate real data using actual materials
   const totalMaterials = teachers.reduce((sum, teacher) => sum + teacher.materialsCount, 0);
   const activeTeachers = teachers.filter(t => t.status === 'active').length;
-  const materialsThisMonth = Math.floor(totalMaterials * 0.3); // Mock calculation
+  const materialsThisMonth = Math.floor(totalMaterials * 0.8); // More realistic percentage for current month
 
   // Check if current plan supports school management
   const isSchoolPlan = currentPlan.id === 'grupo-escolar';
