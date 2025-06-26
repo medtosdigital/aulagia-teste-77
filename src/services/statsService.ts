@@ -31,18 +31,6 @@ export interface ScheduleStats {
   thisMonth: number;
 }
 
-export interface StatsData {
-  materialsByType: {
-    'plano-de-aula': number;
-    'slides': number;
-    'atividade': number;
-    'avaliacao': number;
-  };
-  materials: MaterialStats;
-  activities: ActivityStats;
-  schedule: ScheduleStats;
-}
-
 class StatsService {
   getMaterialStats(): MaterialStats {
     const materials = materialService.getMaterials();
@@ -138,22 +126,6 @@ class StatsService {
       thisMonth: events.filter(event => 
         event.startDate >= startOfMonth && event.startDate <= endOfMonth
       ).length
-    };
-  }
-
-  getStats(): StatsData {
-    const materials = materialService.getMaterials();
-    
-    return {
-      materialsByType: {
-        'plano-de-aula': materials.filter(m => m.type === 'plano-de-aula').length,
-        'slides': materials.filter(m => m.type === 'slides').length,
-        'atividade': materials.filter(m => m.type === 'atividade').length,
-        'avaliacao': materials.filter(m => m.type === 'avaliacao').length,
-      },
-      materials: this.getMaterialStats(),
-      activities: this.getActivityStats(),
-      schedule: this.getScheduleStats()
     };
   }
 }
