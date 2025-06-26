@@ -310,12 +310,12 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
             </div>
 
             <div className="flex space-x-2 order-1 sm:order-2 w-full sm:w-auto">
-              {currentStep > 0 && <Button variant="outline" onClick={handlePrevious} className="flex items-center border-2 hover:bg-gray-50 flex-1 sm:flex-none text-sm h-8 rounded-lg">
+              {currentStep > 0 && <Button variant="outline" onClick={handlePrevious} className="flex items-center border-2 hover:bg-gray-50 flex-1 sm:flex-none text-sm h-8 rounded-lg my-[5px]">
                   <ArrowLeft className="w-3 h-3 mr-1" />
                   Anterior
                 </Button>}
               
-              <Button onClick={handleNext} size="sm" className="flex items-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg flex-1 sm:flex-none text-sm h-8 rounded-lg my-[14px]">
+              <Button onClick={handleNext} size="sm" className="flex items-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg flex-1 sm:flex-none text-sm h-8 rounded-lg my-[5px]">
                 {currentStep === tourSteps.length - 1 ? <>
                     <CheckCircle className="w-3 h-3 mr-1" />
                     Começar a usar
