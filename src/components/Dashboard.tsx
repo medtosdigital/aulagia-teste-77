@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation } from 'lucide-react';
 import { statsService, MaterialStats } from '@/services/statsService';
@@ -21,7 +22,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Usar o hook de rastreamento de atividades e permissões
   const { activities: recentActivities, refreshActivities } = useActivityTracker();
-  const { canAccessCreateMaterial, canAccessMaterials, hasCalendar } = usePlanPermissions();
+  const { canAccessCreateMaterial, canAccessMaterials, hasCalendar, canAccessCalendarPage } = usePlanPermissions();
 
   useEffect(() => {
     console.log('🏠 Dashboard mounted, recent activities:', recentActivities);
@@ -148,7 +149,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         )}
         
-        {hasCalendar() && (
+        {canAccessCalendarPage() && (
           <div className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" onClick={() => handleNavigate('calendar')}>
             <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
               <Calendar size={24} />
