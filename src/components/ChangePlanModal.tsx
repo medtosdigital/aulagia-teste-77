@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Crown, Check, Users, ArrowUpDown, Star } from 'lucide-react';
+import { Crown, Check, Users, ArrowUpDown, Star, Brain, Presentation, ClipboardList, GraduationCap, FileText } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ interface Plan {
     yearly: number;
   };
   features: string[];
+  materialTypes?: string[];
   popular?: boolean;
 }
 
@@ -60,6 +61,12 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
         'Edição completa de materiais',
         'Suporte por e-mail'
       ],
+      materialTypes: [
+        'Planos de Aula completos',
+        'Slides interativos',
+        'Atividades diversificadas',
+        'Avaliações personalizadas'
+      ],
       popular: true
     },
     {
@@ -71,6 +78,11 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
         '60 materiais por professor/mês',
         'Dashboard colaborativo',
         'Suporte prioritário'
+      ],
+      materialTypes: [
+        'Todos os tipos do plano Professor',
+        'Colaboração entre professores',
+        'Gestão centralizada de materiais'
       ]
     }
   ];
@@ -86,6 +98,30 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
     const monthlyTotal = plan.price.monthly * 12;
     if (monthlyTotal === 0) return 0;
     return Math.round(((monthlyTotal - plan.price.yearly) / monthlyTotal) * 100);
+  };
+
+  const getMaterialTypeIcon = (materialType: string) => {
+    if (materialType.includes('Planos de Aula')) return GraduationCap;
+    if (materialType.includes('Slides')) return Presentation;
+    if (materialType.includes('Atividades')) return ClipboardList;
+    if (materialType.includes('Avaliações')) return FileText;
+    if (materialType.includes('Todos os tipos')) return Crown;
+    if (materialType.includes('Colaboração')) return Users;
+    if (materialType.includes('Gestão')) return Brain;
+    return Brain;
+  };
+
+  const getPlanBorderColor = (planId: string) => {
+    switch (planId) {
+      case 'gratuito':
+        return 'border-gray-300';
+      case 'professor':
+        return 'border-green-400';
+      case 'grupo-escolar':
+        return 'border-purple-400';
+      default:
+        return 'border-gray-200';
+    }
   };
 
   const handlePlanChange = async () => {
@@ -155,12 +191,13 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
               const price = billingType === 'monthly' ? plan.price.monthly : plan.price.yearly;
               const yearlyDiscount = getYearlyDiscount(plan);
               const isSelected = selectedPlan === plan.id;
+              const borderColor = getPlanBorderColor(plan.id);
 
               return (
                 <div
                   key={plan.id}
-                  className={`relative cursor-pointer transition-all duration-300 border-2 rounded-xl p-4 sm:p-6 ${
-                    plan.popular ? 'ring-2 ring-blue-500 border-blue-200' : 'border-gray-200'
+                  className={`relative cursor-pointer transition-all duration-300 border-2 rounded-xl p-4 sm:p-6 ${borderColor} ${
+                    plan.popular ? 'ring-2 ring-blue-500' : ''
                   } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''} ${
                     isSelected ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:shadow-lg'
                   }`}
@@ -199,6 +236,27 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
                       </span>
                     )}
                   </div>
+
+                  {/* Material Types Section */}
+                  {plan.materialTypes && plan.materialTypes.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center text-sm">
+                        <Brain className="w-4 h-4 text-blue-600 mr-2" />
+                        Tipos de Materiais
+                      </h4>
+                      <div className="space-y-2">
+                        {plan.materialTypes.map((materialType, index) => {
+                          const MaterialIcon = getMaterialTypeIcon(materialType);
+                          return (
+                            <div key={index} className="flex items-start">
+                              <MaterialIcon className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
+                              <span className="text-gray-700 text-xs sm:text-sm">{materialType}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <ul className="space-y-2 mb-4">
                     {plan.features.map((feature, index) => (
