@@ -17,7 +17,7 @@ const Header: React.FC<HeaderProps> = ({
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="logo-text text-primary-600 font-bold text-2xl">AulagIA</h1>
+              <h1 className="logo-text text-primary-600 text-2xl font-medium">AulagIA</h1>
               <p className="text-gray-500 font-normal -mt-2 my-0 text-xs">Sua aula com toque mágico</p>
             </div>
           </div> :
