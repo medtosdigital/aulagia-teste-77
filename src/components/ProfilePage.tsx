@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -168,8 +167,8 @@ const ProfilePage = () => {
   };
 
   const handleManageSubscription = () => {
-    // Navegar para página de assinatura
-    window.location.hash = '#subscription';
+    // Disparar evento para navegar para página de assinatura
+    window.dispatchEvent(new CustomEvent('navigateToSubscription'));
   };
 
   // Carregar dados salvos

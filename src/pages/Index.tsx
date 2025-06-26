@@ -49,10 +49,16 @@ const Index = () => {
       setActiveItem('profile');
     };
 
+    const handleNavigateToSubscription = () => {
+      setActiveItem('subscription');
+    };
+
     window.addEventListener('navigateToProfile', handleNavigateToProfile);
+    window.addEventListener('navigateToSubscription', handleNavigateToSubscription);
 
     return () => {
       window.removeEventListener('navigateToProfile', handleNavigateToProfile);
+      window.removeEventListener('navigateToSubscription', handleNavigateToSubscription);
     };
   }, []);
 
