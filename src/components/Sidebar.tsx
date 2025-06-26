@@ -180,10 +180,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
         {/* Botão Escola suspenso - apenas para plano grupo-escolar */}
-        {canAccessSchool() && <div className="absolute -top-12 left-4">
-            <button onClick={() => handleItemClick('school')} className="flex items-center justify-center space-x-1 bg-green-500 text-white rounded-lg shadow-lg hover:bg-green-600 transition-colors px-3 py-2">
-              <School size={16} />
-              <span className="text-sm font-medium">Escola</span>
+        {canAccessSchool() && <div className="absolute -top-10 right-4">
+            <button onClick={() => handleItemClick('school')} className="flex items-center justify-center bg-green-500 text-white rounded-lg shadow-lg hover:bg-green-600 transition-colors px-2 py-1">
+              <School size={14} />
+              <span className="text-xs font-medium ml-1">Escola</span>
             </button>
           </div>}
         
