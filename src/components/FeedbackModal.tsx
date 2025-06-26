@@ -157,7 +157,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
             <RadioGroup 
               value={feedbackType} 
               onValueChange={(value) => setFeedbackType(value as typeof feedbackType)}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+              className="grid grid-cols-3 gap-2"
             >
               {feedbackTypes.map((type) => {
                 const Icon = type.icon;
