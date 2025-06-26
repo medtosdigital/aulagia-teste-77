@@ -224,11 +224,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                   </div>
                 )) : (
-                  <div className="text-center py-8">
-                    <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Nenhuma atividade recente encontrada</p>
-                    <p className="text-sm text-gray-400 mb-4">Comece criando um material para ver suas atividades aqui</p>
-                    <p className="text-xs text-gray-400">Debug: {recentActivities.length} atividades carregadas</p>
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h4 className="font-medium text-gray-800 mb-2">Ainda não há atividades</h4>
+                    <p className="text-gray-500 mb-4">Suas atividades aparecerão aqui quando você começar a criar materiais</p>
+                    {canAccessCreateMaterial() && (
+                      <button 
+                        onClick={() => handleNavigate('create')}
+                        className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Criar Primeiro Material
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

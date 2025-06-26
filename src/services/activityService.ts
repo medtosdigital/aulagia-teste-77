@@ -80,53 +80,25 @@ class ActivityService {
     console.log('🗑️ Clearing all activities');
     localStorage.removeItem(this.storageKey);
   }
-
-  // Método para teste - adicionar algumas atividades de exemplo
-  addTestActivities(): void {
-    console.log('🧪 Adding test activities...');
-    
-    const testActivities = [
-      {
-        type: 'created' as const,
-        title: 'Plano de Aula - Matemática',
-        description: 'Criado plano de aula sobre frações',
-        materialType: 'plano-de-aula' as const,
-        subject: 'Matemática',
-        grade: '5º Ano'
-      },
-      {
-        type: 'exported' as const,
-        title: 'Slides - História',
-        description: 'Exportado slides sobre Brasil Colonial',
-        materialType: 'slides' as const,
-        subject: 'História',
-        grade: '7º Ano'
-      },
-      {
-        type: 'updated' as const,
-        title: 'Atividade - Português',
-        description: 'Atualizada atividade de interpretação de texto',
-        materialType: 'atividade' as const,
-        subject: 'Português',
-        grade: '6º Ano'
-      }
-    ];
-
-    testActivities.forEach(activity => {
-      this.addActivity(activity);
-    });
-  }
 }
 
 export const activityService = new ActivityService();
 
-// Adicionar atividades de teste se não houver nenhuma atividade
+// Limpar atividades de teste existentes se elas estiverem presentes
 if (typeof window !== 'undefined') {
   setTimeout(() => {
     const existingActivities = activityService.getActivities();
-    if (existingActivities.length === 0) {
-      console.log('🧪 No existing activities found, adding test activities...');
-      activityService.addTestActivities();
+    
+    // Verificar se há atividades de teste e removê-las
+    const hasTestActivities = existingActivities.some(activity => 
+      (activity.title === 'Plano de Aula - Matemática' && activity.description === 'Criado plano de aula sobre frações') ||
+      (activity.title === 'Slides - História' && activity.description === 'Exportado slides sobre Brasil Colonial') ||
+      (activity.title === 'Atividade - Português' && activity.description === 'Atualizada atividade de interpretação de texto')
+    );
+    
+    if (hasTestActivities) {
+      console.log('🧹 Removing test activities...');
+      activityService.clearActivities();
     }
-  }, 1000);
+  }, 500);
 }
