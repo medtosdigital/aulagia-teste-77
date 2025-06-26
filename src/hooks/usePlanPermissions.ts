@@ -6,6 +6,7 @@ export const usePlanPermissions = () => {
   const [currentPlan, setCurrentPlan] = useState<UserPlan>(planPermissionsService.getCurrentPlan());
   const [usage, setUsage] = useState<UserUsage>(planPermissionsService.getUserUsage());
   const [shouldShowUpgrade, setShouldShowUpgrade] = useState(false);
+  const [shouldShowSupportModal, setShouldShowSupportModal] = useState(false);
 
   const refreshData = () => {
     setCurrentPlan(planPermissionsService.getCurrentPlan());
@@ -16,7 +17,12 @@ export const usePlanPermissions = () => {
     const canCreate = planPermissionsService.incrementMaterialUsage();
     
     if (!canCreate) {
-      setShouldShowUpgrade(true);
+      // Para o plano Professor, mostrar modal de suporte
+      if (planPermissionsService.shouldShowSupportModal()) {
+        setShouldShowSupportModal(true);
+      } else {
+        setShouldShowUpgrade(true);
+      }
       return false;
     }
     
@@ -48,10 +54,15 @@ export const usePlanPermissions = () => {
     planPermissionsService.setCurrentPlan(planId);
     refreshData();
     setShouldShowUpgrade(false);
+    setShouldShowSupportModal(false);
   };
 
   const dismissUpgradeModal = (): void => {
     setShouldShowUpgrade(false);
+  };
+
+  const dismissSupportModal = (): void => {
+    setShouldShowSupportModal(false);
   };
 
   // Funções específicas para verificar permissões
@@ -79,6 +90,7 @@ export const usePlanPermissions = () => {
     return canPerformAction('hasCalendar');
   };
 
+  // Permissões específicas para páginas administrativas
   const canAccessSchool = (): boolean => {
     return currentPlan.id === 'grupo-escolar';
   };
@@ -88,16 +100,22 @@ export const usePlanPermissions = () => {
   };
 
   useEffect(() => {
-    // Check if limit is reached on component mount
-    if (planPermissionsService.isLimitReached() && currentPlan.id === 'gratuito') {
-      setShouldShowUpgrade(true);
+    const plan = planPermissionsService.getCurrentPlan();
+    
+    if (planPermissionsService.isLimitReached()) {
+      if (plan.id === 'professor') {
+        setShouldShowSupportModal(true);
+      } else if (plan.id === 'gratuito') {
+        setShouldShowUpgrade(true);
+      }
     }
-  }, [currentPlan.id]);
+  }, []);
 
   return {
     currentPlan,
     usage,
     shouldShowUpgrade,
+    shouldShowSupportModal,
     createMaterial,
     canPerformAction,
     getRemainingMaterials,
@@ -106,6 +124,7 @@ export const usePlanPermissions = () => {
     getAvailablePlansForUpgrade,
     changePlan,
     dismissUpgradeModal,
+    dismissSupportModal,
     refreshData,
     // Permissões específicas
     canEditMaterials,

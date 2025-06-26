@@ -12,18 +12,27 @@ import SchoolPage from '@/components/SchoolPage';
 import SubscriptionPage from '@/components/SubscriptionPage';
 import PageBlockedOverlay from '@/components/PageBlockedOverlay';
 import UpgradeModal from '@/components/UpgradeModal';
+import SupportModal from '@/components/SupportModal';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
-  const { canAccessSchool, canAccessSettings } = usePlanPermissions();
+  const { 
+    canAccessSchool, 
+    canAccessSettings, 
+    hasCalendar,
+    shouldShowSupportModal,
+    dismissSupportModal,
+    currentPlan,
+    getNextResetDate
+  } = usePlanPermissions();
+  
   const { 
     isOpen: isUpgradeModalOpen, 
     closeModal: closeUpgradeModal, 
     openModal: openUpgradeModal,
     handlePlanSelection,
-    currentPlan,
     availablePlans 
   } = useUpgradeModal();
 
@@ -54,6 +63,14 @@ const Index = () => {
     setActiveItem(page);
   };
 
+  const calculateRemainingDays = (): number => {
+    const nextReset = getNextResetDate();
+    const now = new Date();
+    const diffTime = Math.abs(nextReset.getTime() - now.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   const renderContent = () => {
     switch (activeItem) {
       case 'dashboard':
@@ -63,6 +80,21 @@ const Index = () => {
       case 'lessons':
         return <MaterialsList />;
       case 'calendar':
+        if (!hasCalendar()) {
+          return (
+            <PageBlockedOverlay
+              title="Calendário Premium"
+              description="O calendário está disponível apenas para planos Professor e Grupo Escolar. Faça upgrade para organizar suas aulas e atividades."
+              icon="calendar"
+              onUpgrade={openUpgradeModal}
+            >
+              <div className="p-8 text-center">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Calendário</h2>
+                <p className="text-gray-600">Organize suas aulas e atividades</p>
+              </div>
+            </PageBlockedOverlay>
+          );
+        }
         return <CalendarPage />;
       case 'school':
         if (!canAccessSchool()) {
@@ -148,6 +180,14 @@ const Index = () => {
         onSelectPlan={handlePlanSelection}
         availablePlans={availablePlans}
         currentPlanName={currentPlan.name}
+      />
+
+      {/* Modal de suporte para plano Professor */}
+      <SupportModal
+        isOpen={shouldShowSupportModal}
+        onClose={dismissSupportModal}
+        currentPlanName={currentPlan.name}
+        remainingDays={calculateRemainingDays()}
       />
     </>
   );

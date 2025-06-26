@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -31,12 +32,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: Plus,
       isCenter: true
     },
-    // Calendário agora aparece para todos os planos
-    {
+    // Calendário aparece para planos Professor e Grupo Escolar
+    ...(hasCalendar() ? [{
       id: 'calendar',
       label: 'Agenda',
       icon: Calendar
-    },
+    }] : []),
     {
       id: 'subscription',
       label: 'Assinatura',
@@ -60,12 +61,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Meus Materiais',
       icon: BookOpen
     },
-    // Calendário agora aparece para todos os planos
-    {
+    // Calendário aparece para planos Professor e Grupo Escolar
+    ...(hasCalendar() ? [{
       id: 'calendar',
       label: 'Calendário',
       icon: Calendar
-    },
+    }] : []),
     // Escola só aparece para plano grupo-escolar
     ...(canAccessSchool() ? [{
       id: 'school',
@@ -79,8 +80,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   ];
 
+  // Itens administrativos só aparecem para plano grupo-escolar
   const adminMenuItems = [
-    // Configurações só aparece para plano grupo-escolar
     ...(canAccessSettings() ? [{
       id: 'settings',
       label: 'Configurações',

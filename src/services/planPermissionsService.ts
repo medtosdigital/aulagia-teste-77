@@ -99,7 +99,7 @@ class PlanPermissionsService {
 
   getCurrentPlan(): UserPlan {
     const stored = localStorage.getItem(this.STORAGE_KEYS.CURRENT_PLAN);
-    const planId = stored || 'gratuito'; // Default to gratuito (free plan)
+    const planId = stored || 'gratuito';
     return this.plans[planId] || this.plans.gratuito;
   }
 
@@ -118,12 +118,11 @@ class PlanPermissionsService {
       };
     }
 
-    // Initialize with real zero values for new users
     const now = new Date();
     const usage: UserUsage = {
-      materialsThisMonth: 0, // Start with 0 materials generated
+      materialsThisMonth: 0,
       lastResetDate: new Date(now.getFullYear(), now.getMonth(), 1),
-      totalMaterials: 0 // Start with 0 total materials
+      totalMaterials: 0
     };
     
     this.saveUsage(usage);
@@ -178,17 +177,15 @@ class PlanPermissionsService {
 
   getNextResetDate(): Date {
     const now = new Date();
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 15); // 15th of next month
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 15);
     return nextMonth;
   }
 
-  // Method to check if user has active subscription (for payment status)
   hasActiveSubscription(): boolean {
     const currentPlan = this.getCurrentPlan();
     return currentPlan.id !== 'gratuito';
   }
 
-  // Method to get subscription status
   getSubscriptionStatus(): 'active' | 'inactive' {
     return this.hasActiveSubscription() ? 'active' : 'inactive';
   }
@@ -203,7 +200,6 @@ class PlanPermissionsService {
       planId: this.getCurrentPlan().id
     });
     
-    // Keep only last 100 entries
     if (history.length > 100) {
       history.splice(0, history.length - 100);
     }
@@ -241,6 +237,12 @@ class PlanPermissionsService {
     }
     
     return [];
+  }
+
+  // Método específico para verificar se deve mostrar modal de suporte para plano Professor
+  shouldShowSupportModal(): boolean {
+    const currentPlan = this.getCurrentPlan();
+    return currentPlan.id === 'professor' && this.isLimitReached();
   }
 }
 
