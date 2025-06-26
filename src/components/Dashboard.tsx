@@ -1,12 +1,39 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation } from 'lucide-react';
+import { activityService, Activity } from '@/services/activityService';
+import { statsService, MaterialStats } from '@/services/statsService';
+import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
 interface DashboardProps {
   onNavigate?: (page: string) => void;
 }
+
 const Dashboard: React.FC<DashboardProps> = ({
   onNavigate
 }) => {
   const [activeTab, setActiveTab] = useState('recent-activities');
+  const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
+  const [materialStats, setMaterialStats] = useState<MaterialStats | null>(null);
+  const [upcomingClasses, setUpcomingClasses] = useState<ScheduleEvent[]>([]);
+
+  useEffect(() => {
+    // Carregar dados quando o componente montar
+    setRecentActivities(activityService.getRecentActivities(10));
+    setMaterialStats(statsService.getMaterialStats());
+    
+    // Carregar próximas aulas (próximos 7 dias)
+    const now = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(now.getDate() + 7);
+    const upcoming = scheduleService.getEventsByDateRange(now, nextWeek)
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+      .slice(0, 5);
+    setUpcomingClasses(upcoming);
+  }, []);
+
   const tabs = [{
     id: 'recent-activities',
     label: 'Atividades Recentes',
@@ -20,11 +47,58 @@ const Dashboard: React.FC<DashboardProps> = ({
     label: 'Estatísticas',
     shortLabel: 'Stats'
   }];
+
   const handleNavigate = (page: string) => {
     if (onNavigate) {
       onNavigate(page);
     }
   };
+
+  const getActivityIcon = (type: Activity['type']) => {
+    switch (type) {
+      case 'created':
+        return <Plus size={16} />;
+      case 'exported':
+        return <Download size={16} />;
+      case 'updated':
+        return <CheckCircle size={16} />;
+      case 'scheduled':
+        return <Calendar size={16} />;
+      default:
+        return <FileText size={16} />;
+    }
+  };
+
+  const getActivityIconColor = (type: Activity['type']) => {
+    switch (type) {
+      case 'created':
+        return 'bg-green-100 text-green-600';
+      case 'exported':
+        return 'bg-blue-100 text-blue-600';
+      case 'updated':
+        return 'bg-purple-100 text-purple-600';
+      case 'scheduled':
+        return 'bg-orange-100 text-orange-600';
+      default:
+        return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+      return `${diffInMinutes} min atrás`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h atrás`;
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays} dia${diffInDays > 1 ? 's' : ''} atrás`;
+    }
+  };
+
   return <main className="p-4">
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl p-6 text-white mb-6">
@@ -101,44 +175,26 @@ const Dashboard: React.FC<DashboardProps> = ({
               <h3 className="font-semibold text-lg mb-4">Suas atividades recentes</h3>
               
               <div className="space-y-4">
-                <div className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition">
-                  <div className="mt-1">
-                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                      <CheckCircle size={16} />
+                {recentActivities.length > 0 ? recentActivities.map(activity => (
+                  <div key={activity.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition">
+                    <div className="mt-1">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getActivityIconColor(activity.type)}`}>
+                        {getActivityIcon(activity.type)}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{activity.title}</p>
+                      <p className="text-sm text-gray-500">{activity.description}</p>
+                      <p className="text-xs text-gray-400 mt-1">{formatTimeAgo(activity.timestamp)}</p>
                     </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Você criou um novo plano de aula</p>
-                    <p className="text-sm text-gray-500">Matemática - Álgebra Linear para o 3º ano</p>
-                    <p className="text-xs text-gray-400 mt-1">Hoje, 10:45 AM</p>
+                )) : (
+                  <div className="text-center py-8">
+                    <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">Nenhuma atividade recente</p>
+                    <p className="text-sm text-gray-400">Comece criando um material para ver suas atividades aqui</p>
                   </div>
-                </div>
-                
-                <div className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition">
-                  <div className="mt-1">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                      <Download size={16} />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Exportou uma avaliação</p>
-                    <p className="text-sm text-gray-500">História - Revolução Industrial em PDF</p>
-                    <p className="text-xs text-gray-400 mt-1">Ontem, 3:20 PM</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition">
-                  <div className="mt-1">
-                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                      <Plus size={16} />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Atualizou o template de slides</p>
-                    <p className="text-sm text-gray-500">Novo cabeçalho e rodapé adicionados</p>
-                    <p className="text-xs text-gray-400 mt-1">Quarta-feira, 9:15 AM</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>}
 
@@ -146,31 +202,40 @@ const Dashboard: React.FC<DashboardProps> = ({
               <h3 className="font-semibold text-lg mb-4">Suas próximas aulas</h3>
               
               <div className="space-y-4">
-                <div className="flex items-start space-x-4 p-3 bg-blue-50 rounded-lg">
-                  <div className="mt-1">
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white">
-                      <Users size={16} />
+                {upcomingClasses.length > 0 ? upcomingClasses.map(event => (
+                  <div key={event.id} className={`flex items-start space-x-4 p-3 rounded-lg ${
+                    new Date(event.startDate).toDateString() === new Date().toDateString() 
+                      ? 'bg-blue-50 border border-blue-200' 
+                      : 'hover:bg-gray-50'
+                  } transition`}>
+                    <div className="mt-1">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        new Date(event.startDate).toDateString() === new Date().toDateString()
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-green-100 text-green-600'
+                      }`}>
+                        <Users size={16} />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{event.title}</p>
+                      <p className="text-sm text-gray-700">{event.grade} - {event.subject}</p>
+                      <p className={`text-xs mt-1 font-medium ${
+                        new Date(event.startDate).toDateString() === new Date().toDateString()
+                          ? 'text-blue-600'
+                          : 'text-gray-400'
+                      }`}>
+                        {format(event.startDate, "dd/MM/yyyy", { locale: ptBR })} - {event.startTime} às {event.endTime}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Matemática - 3º Ano A</p>
-                    <p className="text-sm text-gray-700">Álgebra Linear: Introdução a Matrizes</p>
-                    <p className="text-xs text-blue-600 font-medium mt-1">Amanhã, 8:00 AM - 9:30 AM</p>
+                )) : (
+                  <div className="text-center py-8">
+                    <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">Nenhuma aula agendada para os próximos dias</p>
+                    <p className="text-sm text-gray-400">Vá ao calendário para agendar suas aulas</p>
                   </div>
-                </div>
-                
-                <div className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition">
-                  <div className="mt-1">
-                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                      <BookOpen size={16} />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Português - 2º Ano B</p>
-                    <p className="text-sm text-gray-500">Análise de Texto: Machado de Assis</p>
-                    <p className="text-xs text-gray-400 mt-1">Sexta-feira, 10:00 AM - 11:30 AM</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>}
 
@@ -182,7 +247,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500">Planos de aula</p>
-                      <p className="text-2xl font-bold text-gray-800">24</p>
+                      <p className="text-2xl font-bold text-gray-800">{materialStats?.planoAula || 0}</p>
                     </div>
                     <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
                       <ClipboardList size={24} />
@@ -190,9 +255,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-primary-500 h-2 rounded-full w-3/4"></div>
+                      <div className="bg-primary-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.planoAula || 0) * 10, 100)}%`}}></div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">+5 na última semana</p>
+                    <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.planoAula || 0} na última semana</p>
                   </div>
                 </div>
                 
@@ -200,7 +265,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500">Slides</p>
-                      <p className="text-2xl font-bold text-gray-800">18</p>
+                      <p className="text-2xl font-bold text-gray-800">{materialStats?.slides || 0}</p>
                     </div>
                     <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                       <Presentation size={24} />
@@ -208,9 +273,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full w-4/5"></div>
+                      <div className="bg-blue-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.slides || 0) * 15, 100)}%`}}></div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">+3 na última semana</p>
+                    <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.slides || 0} na última semana</p>
                   </div>
                 </div>
                 
@@ -218,7 +283,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500">Atividades criadas</p>
-                      <p className="text-2xl font-bold text-gray-800">42</p>
+                      <p className="text-2xl font-bold text-gray-800">{materialStats?.atividades || 0}</p>
                     </div>
                     <div className="w-12 h-12 rounded-full bg-secondary-100 flex items-center justify-center text-secondary-600">
                       <FileText size={24} />
@@ -226,9 +291,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-secondary-500 h-2 rounded-full w-3/5"></div>
+                      <div className="bg-secondary-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.atividades || 0) * 8, 100)}%`}}></div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">+8 na última semana</p>
+                    <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.atividades || 0} na última semana</p>
                   </div>
                 </div>
                 
@@ -236,7 +301,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500">Avaliações</p>
-                      <p className="text-2xl font-bold text-gray-800">15</p>
+                      <p className="text-2xl font-bold text-gray-800">{materialStats?.avaliacoes || 0}</p>
                     </div>
                     <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
                       <FileText size={24} />
@@ -244,9 +309,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-red-500 h-2 rounded-full w-2/5"></div>
+                      <div className="bg-red-500 h-2 rounded-full" style={{width: `${Math.min((materialStats?.avaliacoes || 0) * 20, 100)}%`}}></div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">+3 na última semana</p>
+                    <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.avaliacoes || 0} na última semana</p>
                   </div>
                 </div>
               </div>
@@ -301,4 +366,5 @@ const Dashboard: React.FC<DashboardProps> = ({
       </div>
     </main>;
 };
+
 export default Dashboard;
