@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Crown, Check, Users, ArrowUpDown, Star, Brain, Presentation, ClipboardList, GraduationCap, FileText } from 'lucide-react';
 import {
@@ -75,9 +74,11 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
       price: { monthly: 89.90, yearly: 849 },
       features: [
         'Até 5 professores',
-        '60 materiais por professor/mês',
+        '300 materiais por mês (total)',
         'Dashboard colaborativo',
-        'Suporte prioritário'
+        'Suporte prioritário',
+        'Distribuição flexível de materiais',
+        'Gestão centralizada de usuários'
       ],
       materialTypes: [
         'Todos os tipos do plano Professor',
@@ -237,6 +238,21 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
                     )}
                   </div>
 
+                  {/* Special highlight for Grupo Escolar plan */}
+                  {plan.id === 'grupo-escolar' && (
+                    <div className="mb-4">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <h4 className="font-semibold text-blue-800 mb-2 flex items-center text-sm">
+                          <Crown className="w-4 h-4 text-blue-600 mr-2" />
+                          300 materiais por mês
+                        </h4>
+                        <p className="text-blue-700 text-xs">
+                          Total de materiais que podem ser distribuídos flexivelmente entre até 5 professores.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Material Types Section */}
                   {plan.materialTypes && plan.materialTypes.length > 0 && (
                     <div className="mb-4">
@@ -290,6 +306,11 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({
                 <strong>{plans.find(p => p.id === selectedPlan)?.name}</strong>.
                 A diferença de valor será ajustada na próxima fatura.
               </p>
+              {selectedPlan === 'grupo-escolar' && (
+                <p className="text-blue-700 text-xs mt-2">
+                  <strong>Plano Grupo Escolar:</strong> Você terá acesso a 300 materiais por mês que podem ser distribuídos entre até 5 professores.
+                </p>
+              )}
             </div>
           )}
 

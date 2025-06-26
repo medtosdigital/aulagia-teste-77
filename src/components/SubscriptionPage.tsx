@@ -133,7 +133,7 @@ const SubscriptionPage = () => {
       price: { monthly: 89.90, yearly: 849 },
       features: [
         'Até 5 professores',
-        '60 materiais por professor/mês',
+        '300 materiais por mês (total)',
         'Todos os recursos do plano Professor',
         'Dashboard de gestão colaborativa',
         'Compartilhamento de materiais entre professores',
@@ -141,7 +141,7 @@ const SubscriptionPage = () => {
         'Suporte prioritário',
         'Gestão centralizada de usuários',
         'Controle de permissões',
-        'Ideal para grupos de professores ou instituições'
+        'Distribuição flexível de materiais entre professores'
       ],
       materialTypes: [],
       limitations: [],
@@ -201,11 +201,19 @@ const SubscriptionPage = () => {
     const resources = [];
     
     // Basic resources
-    resources.push({
-      name: `${currentPlan.limits.materialsPerMonth} materiais por mês`,
-      icon: FileText,
-      available: true
-    });
+    if (currentPlan.id === 'grupo-escolar') {
+      resources.push({
+        name: `${currentPlan.limits.materialsPerMonth} materiais por mês (total)`,
+        icon: FileText,
+        available: true
+      });
+    } else {
+      resources.push({
+        name: `${currentPlan.limits.materialsPerMonth} materiais por mês`,
+        icon: FileText,
+        available: true
+      });
+    }
 
     // Material types based on plan
     if (currentPlan.id === 'gratuito') {
@@ -263,7 +271,8 @@ const SubscriptionPage = () => {
       resources.push(
         { name: 'Dashboard colaborativo', icon: Users, available: true },
         { name: 'Compartilhamento entre professores', icon: Users, available: true },
-        { name: 'Gestão de usuários', icon: Users, available: true }
+        { name: 'Gestão de usuários', icon: Users, available: true },
+        { name: 'Distribuição de materiais entre professores', icon: Users, available: true }
       );
     } else {
       resources.push(
@@ -338,6 +347,13 @@ const SubscriptionPage = () => {
                     {remainingMaterials} restantes
                   </p>
                 </div>
+                
+                {/* Special note for Grupo Escolar plan */}
+                {currentPlan.id === 'grupo-escolar' && (
+                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                    <span className="font-medium">Plano Grupo Escolar:</span> Os materiais podem ser distribuídos entre até 5 professores
+                  </div>
+                )}
                 
                 {/* Warning messages based on real usage */}
                 {usagePercentage >= 80 && remainingMaterials > 0 && (
@@ -619,6 +635,9 @@ const SubscriptionPage = () => {
                           Inclui todos os tipos de materiais e funcionalidades do plano Professor, 
                           além dos recursos colaborativos exclusivos para grupos.
                         </p>
+                        <p className="text-blue-700 text-xs mt-2">
+                          <strong>300 materiais por mês</strong> que podem ser distribuídos flexivelmente entre até 5 professores.
+                        </p>
                       </div>
                     </div>
                   )}
@@ -683,7 +702,7 @@ const SubscriptionPage = () => {
                   Como funciona o plano Grupo Escolar?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600 text-xs sm:text-sm">
-                  O plano Grupo Escolar é ideal tanto para grupos independentes de professores quanto para instituições de ensino. Permite adicionar até 5 professores, cada um com acesso individual à plataforma com todos os benefícios do plano Professor, além de recursos colaborativos como compartilhamento de materiais e dashboard de gestão centralizada.
+                  O plano Grupo Escolar oferece 300 materiais por mês que podem ser distribuídos flexivelmente entre até 5 professores. O administrador do plano pode ajustar quantos materiais cada professor pode usar por mês, permitindo maior ou menor uso conforme a necessidade de cada um. Ideal tanto para grupos independentes de professores quanto para instituições de ensino.
                 </AccordionContent>
               </AccordionItem>
               
