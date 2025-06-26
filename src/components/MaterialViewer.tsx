@@ -75,7 +75,7 @@ const MaterialViewer = () => {
     console.log('Edit saved, reloading material...');
     loadMaterial();
     setEditModalOpen(false);
-    toast.success('Material atualizado com sucesso!');
+    // Toast será mostrado pelo modal
   };
 
   const getTypeIcon = (type: string) => {
