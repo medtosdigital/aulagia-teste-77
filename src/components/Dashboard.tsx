@@ -281,7 +281,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-500">Atividades criadas</p>
+                      <p className="text-sm text-gray-500">Atividades</p>
                       <p className="text-2xl font-bold text-gray-800">{materialStats?.atividades || 0}</p>
                     </div>
                     <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
