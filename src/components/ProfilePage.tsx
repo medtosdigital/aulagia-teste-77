@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,10 +26,10 @@ const ProfilePage = () => {
     name: 'Professor(a)',
     photo: '',
     teachingLevel: '',
-    grades: [],
-    subjects: [],
+    grades: [] as string[],
+    subjects: [] as string[],
     school: '',
-    materialTypes: []
+    materialTypes: [] as string[]
   });
 
   const [materialStats, setMaterialStats] = useState({
@@ -47,7 +48,7 @@ const ProfilePage = () => {
     'Ensino Superior'
   ];
 
-  const gradesByLevel = {
+  const gradesByLevel: { [key: string]: string[] } = {
     'Educação Infantil': ['Maternal', 'Jardim I', 'Jardim II', 'Pré-Escola'],
     'Ensino Fundamental I': ['1º Ano', '2º Ano', '3º Ano', '4º Ano', '5º Ano'],
     'Ensino Fundamental II': ['6º Ano', '7º Ano', '8º Ano', '9º Ano'],
@@ -72,12 +73,52 @@ const ProfilePage = () => {
   ];
 
   useEffect(() => {
-    // Carregar estatísticas dos materiais
-    const stats = statsService.getMaterialStats();
-    setMaterialStats(stats);
+    try {
+      // Carregar estatísticas dos materiais
+      const stats = statsService.getMaterialStats();
+      setMaterialStats(stats);
 
-    // Inicializar materiais de exemplo se necessário
-    userMaterialsService.initializeSampleMaterials('user1');
+      // Inicializar materiais de exemplo se necessário
+      userMaterialsService.initializeSampleMaterials('user1');
+    } catch (error) {
+      console.error('Error loading material stats:', error);
+      // Fallback para estatísticas vazias
+      setMaterialStats({
+        totalMaterials: 0,
+        planoAula: 0,
+        slides: 0,
+        atividades: 0,
+        avaliacoes: 0
+      });
+    }
+  }, []);
+
+  // Carregar dados salvos
+  useEffect(() => {
+    try {
+      const savedProfile = localStorage.getItem('userProfile');
+      const savedPhoto = localStorage.getItem('userPhoto');
+      
+      if (savedProfile) {
+        const profile = JSON.parse(savedProfile);
+        setFormData(prev => ({
+          ...prev,
+          ...profile,
+          grades: profile.grades || [],
+          subjects: profile.subjects || [],
+          materialTypes: profile.materialTypes || []
+        }));
+      }
+      
+      if (savedPhoto) {
+        setFormData(prev => ({
+          ...prev,
+          photo: savedPhoto
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading profile data:', error);
+    }
   }, []);
 
   const getPlanDisplayName = () => {
@@ -114,9 +155,9 @@ const ProfilePage = () => {
   const toggleArrayItem = (field: string, item: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: prev[field].includes(item) 
-        ? prev[field].filter(i => i !== item)
-        : [...prev[field], item]
+      [field]: (prev[field as keyof typeof prev] as string[]).includes(item) 
+        ? (prev[field as keyof typeof prev] as string[]).filter(i => i !== item)
+        : [...(prev[field as keyof typeof prev] as string[]), item]
     }));
   };
 
@@ -139,9 +180,17 @@ const ProfilePage = () => {
   };
 
   const handleSave = () => {
-    // Salvar dados do perfil
-    localStorage.setItem('userProfile', JSON.stringify(formData));
-    setIsEditing(false);
+    try {
+      // Salvar dados do perfil
+      localStorage.setItem('userProfile', JSON.stringify(formData));
+      
+      // Disparar evento para atualizar header
+      window.dispatchEvent(new CustomEvent('profileUpdated'));
+      
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    }
   };
 
   const handlePasswordChange = () => {
@@ -170,23 +219,6 @@ const ProfilePage = () => {
     // Disparar evento para navegar para página de assinatura
     window.dispatchEvent(new CustomEvent('navigateToSubscription'));
   };
-
-  // Carregar dados salvos
-  useEffect(() => {
-    const savedProfile = localStorage.getItem('userProfile');
-    const savedPhoto = localStorage.getItem('userPhoto');
-    
-    if (savedProfile) {
-      setFormData(JSON.parse(savedProfile));
-    }
-    
-    if (savedPhoto) {
-      setFormData(prev => ({
-        ...prev,
-        photo: savedPhoto
-      }));
-    }
-  }, []);
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
@@ -307,11 +339,11 @@ const ProfilePage = () => {
               </div>
 
               {/* Anos/Séries */}
-              {formData.teachingLevel && (
+              {formData.teachingLevel && gradesByLevel[formData.teachingLevel] && (
                 <div>
                   <Label className="text-sm font-medium text-gray-700 mb-3 block">Anos/Séries que atende</Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {gradesByLevel[formData.teachingLevel]?.map((grade) => (
+                    {gradesByLevel[formData.teachingLevel].map((grade) => (
                       <Button
                         key={grade}
                         variant={formData.grades.includes(grade) ? "default" : "outline"}
