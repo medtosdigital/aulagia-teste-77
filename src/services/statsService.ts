@@ -1,5 +1,5 @@
 
-import { materialService, Material } from './materialService';
+import { materialService, GeneratedMaterial } from './materialService';
 import { activityService } from './activityService';
 import { scheduleService } from './scheduleService';
 
