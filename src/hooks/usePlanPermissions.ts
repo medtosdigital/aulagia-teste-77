@@ -54,6 +54,39 @@ export const usePlanPermissions = () => {
     setShouldShowUpgrade(false);
   };
 
+  // Funções específicas para verificar permissões
+  const canEditMaterials = (): boolean => {
+    return canPerformAction('canEditMaterials');
+  };
+
+  const canDownloadWord = (): boolean => {
+    return canPerformAction('canDownloadWord');
+  };
+
+  const canDownloadPPT = (): boolean => {
+    return canPerformAction('canDownloadPPT');
+  };
+
+  const canCreateSlides = (): boolean => {
+    return canPerformAction('canCreateSlides');
+  };
+
+  const canCreateAssessments = (): boolean => {
+    return canPerformAction('canCreateAssessments');
+  };
+
+  const hasCalendar = (): boolean => {
+    return canPerformAction('hasCalendar');
+  };
+
+  const canAccessSchool = (): boolean => {
+    return currentPlan.id === 'grupo-escolar';
+  };
+
+  const canAccessSettings = (): boolean => {
+    return currentPlan.id === 'grupo-escolar';
+  };
+
   useEffect(() => {
     // Check if limit is reached on component mount
     if (planPermissionsService.isLimitReached() && currentPlan.id === 'gratuito') {
@@ -73,6 +106,15 @@ export const usePlanPermissions = () => {
     getAvailablePlansForUpgrade,
     changePlan,
     dismissUpgradeModal,
-    refreshData
+    refreshData,
+    // Permissões específicas
+    canEditMaterials,
+    canDownloadWord,
+    canDownloadPPT,
+    canCreateSlides,
+    canCreateAssessments,
+    hasCalendar,
+    canAccessSchool,
+    canAccessSettings
   };
 };

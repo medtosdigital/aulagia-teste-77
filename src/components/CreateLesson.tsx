@@ -13,11 +13,13 @@ import { materialService, GeneratedMaterial } from '@/services/materialService';
 import MaterialModal from './MaterialModal';
 import BNCCValidationModal from './BNCCValidationModal';
 import UpgradeModal from './UpgradeModal';
+import BlockedFeature from './BlockedFeature';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { toast } from 'sonner';
 
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
+
 interface MaterialTypeOption {
   id: MaterialType;
   title: string;
@@ -27,7 +29,9 @@ interface MaterialTypeOption {
   bgGradient: string;
   iconBg: string;
   hoverEffect: string;
+  blocked?: boolean;
 }
+
 const CreateLesson: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<'selection' | 'form' | 'generating'>('selection');
@@ -47,53 +51,62 @@ const CreateLesson: React.FC = () => {
   const [showBNCCValidation, setShowBNCCValidation] = useState(false);
 
   // Hooks para gerenciamento de planos e limites
-  const { createMaterial, isLimitReached, getRemainingMaterials } = usePlanPermissions();
+  const { createMaterial, isLimitReached, getRemainingMaterials, currentPlan, canPerformAction } = usePlanPermissions();
   const { 
     isOpen: isUpgradeModalOpen, 
     closeModal: closeUpgradeModal, 
+    openModal: openUpgradeModal,
     handlePlanSelection,
-    currentPlan,
     availablePlans 
   } = useUpgradeModal();
 
-  const materialTypes: MaterialTypeOption[] = [{
-    id: 'plano-de-aula',
-    title: 'Plano de Aula',
-    description: 'Documento completo alinhado à BNCC com objetivos, conteúdos e estratégias.',
-    icon: BookOpen,
-    color: 'text-blue-700',
-    bgGradient: 'bg-gradient-to-br from-blue-50 to-blue-100',
-    iconBg: 'bg-blue-500',
-    hoverEffect: 'hover:shadow-blue-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-blue-100 hover:to-blue-150'
-  }, {
-    id: 'slides',
-    title: 'Slides',
-    description: 'Apresentação visual com os principais pontos da aula.',
-    icon: Monitor,
-    color: 'text-slate-700',
-    bgGradient: 'bg-gradient-to-br from-slate-50 to-slate-100',
-    iconBg: 'bg-slate-500',
-    hoverEffect: 'hover:shadow-slate-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-150'
-  }, {
-    id: 'atividade',
-    title: 'Atividade',
-    description: 'Exercícios e tarefas para fixação do conteúdo.',
-    icon: FileText,
-    color: 'text-emerald-700',
-    bgGradient: 'bg-gradient-to-br from-emerald-50 to-emerald-100',
-    iconBg: 'bg-emerald-500',
-    hoverEffect: 'hover:shadow-emerald-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-emerald-100 hover:to-emerald-150'
-  }, {
-    id: 'avaliacao',
-    title: 'Avaliação',
-    description: 'Teste formal para verificar o aprendizado dos alunos.',
-    icon: ClipboardCheck,
-    color: 'text-purple-700',
-    bgGradient: 'bg-gradient-to-br from-purple-50 to-purple-100',
-    iconBg: 'bg-purple-500',
-    hoverEffect: 'hover:shadow-purple-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-purple-100 hover:to-purple-150'
-  }];
+  const materialTypes: MaterialTypeOption[] = [
+    {
+      id: 'plano-de-aula',
+      title: 'Plano de Aula',
+      description: 'Documento completo alinhado à BNCC com objetivos, conteúdos e estratégias.',
+      icon: BookOpen,
+      color: 'text-blue-700',
+      bgGradient: 'bg-gradient-to-br from-blue-50 to-blue-100',
+      iconBg: 'bg-blue-500',
+      hoverEffect: 'hover:shadow-blue-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-blue-100 hover:to-blue-150'
+    },
+    {
+      id: 'slides',
+      title: 'Slides',
+      description: 'Apresentação visual com os principais pontos da aula.',
+      icon: Monitor,
+      color: 'text-slate-700',
+      bgGradient: 'bg-gradient-to-br from-slate-50 to-slate-100',
+      iconBg: 'bg-slate-500',
+      hoverEffect: 'hover:shadow-slate-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-150',
+      blocked: currentPlan.id === 'gratuito' && !canPerformAction('canCreateSlides')
+    },
+    {
+      id: 'atividade',
+      title: 'Atividade',
+      description: 'Exercícios e tarefas para fixação do conteúdo.',
+      icon: FileText,
+      color: 'text-emerald-700',
+      bgGradient: 'bg-gradient-to-br from-emerald-50 to-emerald-100',
+      iconBg: 'bg-emerald-500',
+      hoverEffect: 'hover:shadow-emerald-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-emerald-100 hover:to-emerald-150'
+    },
+    {
+      id: 'avaliacao',
+      title: 'Avaliação',
+      description: 'Teste formal para verificar o aprendizado dos alunos.',
+      icon: ClipboardCheck,
+      color: 'text-purple-700',
+      bgGradient: 'bg-gradient-to-br from-purple-50 to-purple-100',
+      iconBg: 'bg-purple-500',
+      hoverEffect: 'hover:shadow-purple-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-purple-100 hover:to-purple-150',
+      blocked: currentPlan.id === 'gratuito' && !canPerformAction('canCreateAssessments')
+    }
+  ];
+
   const subjects = ['Matemática', 'Português', 'Ciências', 'História', 'Geografia', 'Física', 'Química', 'Biologia', 'Educação Física', 'Espanhol', 'Inglês', 'Filosofia', 'Sociologia', 'Informática', 'Física Quântica', 'Teatro', 'Literatura', 'Música', 'Dança', 'Artes'];
+  
   const grades = [{
     category: 'Educação Infantil',
     options: ['Maternal', 'Jardim I', 'Jardim II', 'Pré-Escola']
@@ -111,13 +124,13 @@ const CreateLesson: React.FC = () => {
     options: ['Graduação']
   }];
 
-  // Funções para gerenciar múltiplos assuntos/conteúdos
   const addSubject = () => {
     setFormData({
       ...formData,
       subjects: [...formData.subjects, '']
     });
   };
+
   const removeSubject = (index: number) => {
     if (formData.subjects.length > 1) {
       const newSubjects = formData.subjects.filter((_, i) => i !== index);
@@ -127,6 +140,7 @@ const CreateLesson: React.FC = () => {
       });
     }
   };
+
   const updateSubject = (index: number, value: string) => {
     const newSubjects = [...formData.subjects];
     newSubjects[index] = value;
@@ -135,7 +149,15 @@ const CreateLesson: React.FC = () => {
       subjects: newSubjects
     });
   };
+
   const handleTypeSelection = (type: MaterialType) => {
+    // Verificar se o tipo está bloqueado
+    const typeConfig = materialTypes.find(t => t.id === type);
+    if (typeConfig?.blocked) {
+      openUpgradeModal();
+      return;
+    }
+
     setSelectedType(type);
     setStep('form');
     // Reset subjects para avaliações
@@ -146,11 +168,20 @@ const CreateLesson: React.FC = () => {
       }));
     }
   };
+
   const handleBackToSelection = () => {
     setStep('selection');
     setSelectedType(null);
   };
+
   const handleFormSubmit = () => {
+    // Verificar se atingiu limite antes de validar
+    if (isLimitReached()) {
+      toast.error('Limite de materiais atingido! Faça upgrade para continuar.');
+      openUpgradeModal();
+      return;
+    }
+
     // Verificar campos básicos
     if (!formData.subject || !formData.grade) {
       toast.error('Preencha todos os campos obrigatórios');
@@ -173,9 +204,11 @@ const CreateLesson: React.FC = () => {
     }
     setShowBNCCValidation(true);
   };
+
   const handleBNCCValidationAccept = () => {
     handleGenerate();
   };
+
   const handleGenerate = async () => {
     // Verificar limite antes de gerar o material
     const canCreate = createMaterial();
@@ -199,6 +232,7 @@ const CreateLesson: React.FC = () => {
         return prev + Math.random() * 15;
       });
     }, 300);
+
     try {
       // Para avaliações, usar os múltiplos assuntos como tema
       const materialFormData = {
@@ -221,10 +255,13 @@ const CreateLesson: React.FC = () => {
           quantidadeQuestoes: formData.questionCount[0]
         } : {})
       };
+
       console.log('Material form data being sent:', materialFormData);
       const material = await materialService.generateMaterial(selectedType!, materialFormData);
+      
       clearInterval(progressInterval);
       setGenerationProgress(100);
+      
       setTimeout(() => {
         setIsGenerating(false);
         setGeneratedMaterial(material);
@@ -240,9 +277,11 @@ const CreateLesson: React.FC = () => {
       console.error('Generation error:', error);
     }
   };
+
   const getCurrentTypeInfo = () => {
     return materialTypes.find(type => type.id === selectedType);
   };
+
   const handleCloseModal = () => {
     setShowModal(false);
     setGeneratedMaterial(null);
@@ -269,8 +308,10 @@ const CreateLesson: React.FC = () => {
     }
     return value;
   };
+
   if (step === 'selection') {
-    return <>
+    return (
+      <>
         <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-4 sm:mb-6">
@@ -304,8 +345,34 @@ const CreateLesson: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 px-2">
               {materialTypes.map(type => {
-              const Icon = type.icon;
-              return <Card key={type.id} className={`cursor-pointer border-2 border-transparent transition-all duration-300 ${type.bgGradient} ${type.hoverEffect} shadow-lg hover:shadow-xl h-24 sm:h-28`} onClick={() => handleTypeSelection(type.id)}>
+                const Icon = type.icon;
+                
+                if (type.blocked) {
+                  return (
+                    <BlockedFeature
+                      key={type.id}
+                      title="Recurso Premium"
+                      description={`${type.title} está disponível apenas em planos pagos`}
+                      onUpgrade={openUpgradeModal}
+                      className="h-24 sm:h-28"
+                    >
+                      <div className="flex items-center justify-between h-full">
+                        <div className="flex items-center space-x-3 sm:space-x-4 flex-1">
+                          <div className={`w-10 h-10 sm:w-12 sm:h-12 ${type.iconBg} rounded-xl flex items-center justify-center shadow-md`}>
+                            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className={`text-base sm:text-lg font-bold ${type.color} mb-1`}>{type.title}</h3>
+                            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{type.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </BlockedFeature>
+                  );
+                }
+
+                return (
+                  <Card key={type.id} className={`cursor-pointer border-2 border-transparent transition-all duration-300 ${type.bgGradient} ${type.hoverEffect} shadow-lg hover:shadow-xl h-24 sm:h-28`} onClick={() => handleTypeSelection(type.id)}>
                     <CardContent className="p-3 sm:p-4 relative h-full">
                       <div className="flex items-center justify-between h-full">
                         <div className="flex items-center space-x-3 sm:space-x-4 flex-1">
@@ -324,8 +391,9 @@ const CreateLesson: React.FC = () => {
                         </div>
                       </div>
                     </CardContent>
-                  </Card>;
-            })}
+                  </Card>
+                );
+              })}
             </div>
 
             <div className="mt-4 sm:mt-6 text-center">
@@ -347,12 +415,16 @@ const CreateLesson: React.FC = () => {
           availablePlans={availablePlans}
           currentPlanName={currentPlan.name}
         />
-      </>;
+      </>
+    );
   }
+
   if (step === 'form') {
     const typeInfo = getCurrentTypeInfo();
     const Icon = typeInfo?.icon || BookOpen;
-    return <>
+    
+    return (
+      <>
         <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
           <div className="max-w-3xl mx-auto">
             <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 lg:p-8 mb-4">
@@ -372,7 +444,8 @@ const CreateLesson: React.FC = () => {
 
               <div className="space-y-6">
                 {/* Campo de Tema da Aula (apenas para tipos que não são avaliação) */}
-                {selectedType !== 'avaliacao' && <div>
+                {selectedType !== 'avaliacao' && (
+                  <div>
                     <div className="flex items-center space-x-3 mb-4">
                       <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
                         T
@@ -380,46 +453,77 @@ const CreateLesson: React.FC = () => {
                       <Label className="text-base sm:text-lg font-semibold text-gray-800">Tema da Aula</Label>
                     </div>
                     <div className="relative">
-                      <Input placeholder="Ex: Introdução à Álgebra Linear" value={formData.topic} onChange={e => setFormData({
-                    ...formData,
-                    topic: e.target.value
-                  })} className="pr-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" />
+                      <Input 
+                        placeholder="Ex: Introdução à Álgebra Linear" 
+                        value={formData.topic} 
+                        onChange={e => setFormData({
+                          ...formData,
+                          topic: e.target.value
+                        })} 
+                        className="pr-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
+                      />
                       <button className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-2 hover:bg-blue-50 rounded-lg transition-colors">
                         <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                       </button>
                     </div>
-                  </div>}
+                  </div>
+                )}
 
                 {/* Campo para múltiplos assuntos/conteúdos (apenas para avaliações) */}
-                {selectedType === 'avaliacao' && <div className="space-y-4">
+                {selectedType === 'avaliacao' && (
+                  <div className="space-y-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
                         C
                       </div>
                       <Label className="text-base sm:text-lg font-semibold text-gray-800">Conteúdos da Avaliação</Label>
                     </div>
-                    <p className="text-sm text-gray-600 mb-4">Adicione os assuntos ou conteúdos específicos que serão abordados na avaliação.
-As questões serão baseadas nesses temas.</p>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Adicione os assuntos ou conteúdos específicos que serão abordados na avaliação.
+                      As questões serão baseadas nesses temas.
+                    </p>
                     
                     <div className="space-y-3">
-                      {formData.subjects.map((subject, index) => <div key={index} className="flex items-center space-x-3">
+                      {formData.subjects.map((subject, index) => (
+                        <div key={index} className="flex items-center space-x-3">
                           <div className="flex-1">
-                            <Input placeholder={`Ex: ${index === 0 ? 'Equações do 1º grau' : index === 1 ? 'Sistemas lineares' : 'Funções quadráticas'}`} value={subject} onChange={e => updateSubject(index, e.target.value)} className="h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" />
+                            <Input 
+                              placeholder={`Ex: ${index === 0 ? 'Equações do 1º grau' : index === 1 ? 'Sistemas lineares' : 'Funções quadráticas'}`}
+                              value={subject} 
+                              onChange={e => updateSubject(index, e.target.value)} 
+                              className="h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
+                            />
                           </div>
-                          {formData.subjects.length > 1 && <Button type="button" onClick={() => removeSubject(index)} variant="outline" size="sm" className="flex items-center justify-center w-12 h-12 hover:bg-red-50 border-red-200 text-red-500">
+                          {formData.subjects.length > 1 && (
+                            <Button 
+                              type="button" 
+                              onClick={() => removeSubject(index)} 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex items-center justify-center w-12 h-12 hover:bg-red-50 border-red-200 text-red-500"
+                            >
                               <X className="w-4 h-4" />
-                            </Button>}
-                        </div>)}
+                            </Button>
+                          )}
+                        </div>
+                      ))}
                     </div>
                     
                     {/* Botão Adicionar movido para baixo dos campos */}
                     <div className="flex justify-center pt-2">
-                      <Button type="button" onClick={addSubject} variant="outline" size="sm" className="flex items-center space-x-2 hover:bg-blue-50 border-blue-200">
+                      <Button 
+                        type="button" 
+                        onClick={addSubject} 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center space-x-2 hover:bg-blue-50 border-blue-200"
+                      >
                         <Plus className="w-4 h-4" />
                         <span>Adicionar Conteúdo</span>
                       </Button>
                     </div>
-                  </div>}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
@@ -430,17 +534,19 @@ As questões serão baseadas nesses temas.</p>
                       <Label className="text-base sm:text-lg font-semibold text-gray-800">Disciplina</Label>
                     </div>
                     <Select value={formData.subject} onValueChange={value => setFormData({
-                    ...formData,
-                    subject: value
-                  })}>
+                      ...formData,
+                      subject: value
+                    })}>
                       <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white">
                         <SelectValue placeholder="Selecione uma disciplina" />
                       </SelectTrigger>
                       <SelectContent>
                         <div className="grid grid-cols-2 gap-1 p-2">
-                          {subjects.map(subject => <SelectItem key={subject} value={subject.toLowerCase()}>
+                          {subjects.map(subject => (
+                            <SelectItem key={subject} value={subject.toLowerCase()}>
                               {subject}
-                            </SelectItem>)}
+                            </SelectItem>
+                          ))}
                         </div>
                       </SelectContent>
                     </Select>
@@ -454,28 +560,33 @@ As questões serão baseadas nesses temas.</p>
                       <Label className="text-base sm:text-lg font-semibold text-gray-800">Turma (Série/Ano)</Label>
                     </div>
                     <Select value={formData.grade} onValueChange={value => setFormData({
-                    ...formData,
-                    grade: value
-                  })}>
+                      ...formData,
+                      grade: value
+                    })}>
                       <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white">
                         <SelectValue placeholder="Selecione a turma" />
                       </SelectTrigger>
                       <SelectContent>
-                        {grades.map(category => <div key={category.category}>
+                        {grades.map(category => (
+                          <div key={category.category}>
                             <div className="px-3 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg mx-2 mt-2">
                               {category.category}
                             </div>
-                            {category.options.map(option => <SelectItem key={`${category.category}-${option}`} value={`${category.category}-${option}`}>
+                            {category.options.map(option => (
+                              <SelectItem key={`${category.category}-${option}`} value={`${category.category}-${option}`}>
                                 {option}
-                              </SelectItem>)}
-                          </div>)}
+                              </SelectItem>
+                            ))}
+                          </div>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
                 {/* Campos específicos para atividades e avaliações */}
-                {(selectedType === 'atividade' || selectedType === 'avaliacao') && <div className="space-y-6 border-t border-gray-200 pt-6">
+                {(selectedType === 'atividade' || selectedType === 'avaliacao') && (
+                  <div className="space-y-6 border-t border-gray-200 pt-6">
                     <div className="text-center mb-4">
                       <h3 className="text-lg font-semibold text-gray-800 mb-2">Configurações de Questões</h3>
                       <p className="text-sm text-gray-600">Personalize o tipo e quantidade de questões</p>
@@ -489,9 +600,9 @@ As questões serão baseadas nesses temas.</p>
                         <Label className="text-base sm:text-lg font-semibold text-gray-800">Tipo de Questões</Label>
                       </div>
                       <RadioGroup value={formData.questionType} onValueChange={value => setFormData({
-                    ...formData,
-                    questionType: value
-                  })} className="grid grid-cols-3 gap-2 sm:gap-4">
+                        ...formData,
+                        questionType: value
+                      })} className="grid grid-cols-3 gap-2 sm:gap-4">
                         <div className="flex items-center space-x-1 sm:space-x-2 p-2 sm:p-3 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-300 transition-colors">
                           <RadioGroupItem value="abertas" id="abertas" />
                           <Label htmlFor="abertas" className="cursor-pointer font-medium text-xs sm:text-base">Abertas</Label>
@@ -523,10 +634,17 @@ As questões serão baseadas nesses temas.</p>
                               <span>Deslize para ajustar</span>
                             </div>
                           </div>
-                          <Slider value={formData.questionCount} onValueChange={value => setFormData({
-                        ...formData,
-                        questionCount: value
-                      })} max={20} min={1} step={1} className="w-full" />
+                          <Slider 
+                            value={formData.questionCount} 
+                            onValueChange={value => setFormData({
+                              ...formData,
+                              questionCount: value
+                            })} 
+                            max={20} 
+                            min={1} 
+                            step={1} 
+                            className="w-full" 
+                          />
                           <div className="flex justify-between text-xs text-gray-500 mt-1">
                             <span>1</span>
                             <span>10</span>
@@ -535,15 +653,24 @@ As questões serão baseadas nesses temas.</p>
                         </div>
                       </div>
                     </div>
-                  </div>}
+                  </div>
+                )}
 
                 <div className="flex flex-col sm:flex-row justify-between items-center pt-6 gap-4">
-                  <Button variant="outline" onClick={handleBackToSelection} className="w-full sm:w-auto flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-6 border-2 hover:bg-gray-50 rounded-xl">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleBackToSelection} 
+                    className="w-full sm:w-auto flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-6 border-2 hover:bg-gray-50 rounded-xl"
+                  >
                     <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="font-semibold">Voltar</span>
                   </Button>
 
-                  <Button onClick={handleFormSubmit} disabled={!formData.subject || !formData.grade || selectedType !== 'avaliacao' && !formData.topic || selectedType === 'avaliacao' && formData.subjects.filter(s => s.trim() !== '').length === 0} className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                  <Button 
+                    onClick={handleFormSubmit} 
+                    disabled={!formData.subject || !formData.grade || (selectedType !== 'avaliacao' && !formData.topic) || (selectedType === 'avaliacao' && formData.subjects.filter(s => s.trim() !== '').length === 0)} 
+                    className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="font-semibold">Criar {typeInfo?.title}</span>
                   </Button>
@@ -561,7 +688,14 @@ As questões serão baseadas nesses temas.</p>
         </main>
 
         {/* Modal de validação BNCC */}
-        <BNCCValidationModal open={showBNCCValidation} onClose={() => setShowBNCCValidation(false)} tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} disciplina={formData.subject} serie={formData.grade} onAccept={handleBNCCValidationAccept} />
+        <BNCCValidationModal 
+          open={showBNCCValidation} 
+          onClose={() => setShowBNCCValidation(false)} 
+          tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
+          disciplina={formData.subject} 
+          serie={formData.grade} 
+          onAccept={handleBNCCValidationAccept} 
+        />
 
         <MaterialModal material={generatedMaterial} open={showModal} onClose={handleCloseModal} />
         
@@ -573,10 +707,13 @@ As questões serão baseadas nesses temas.</p>
           availablePlans={availablePlans}
           currentPlanName={currentPlan.name}
         />
-      </>;
+      </>
+    );
   }
+
   if (step === 'generating') {
-    return <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm sm:max-w-lg w-full shadow-xl">
             <div className="text-center">
@@ -615,8 +752,10 @@ As questões serão baseadas nesses temas.</p>
             </div>
           </div>
         </div>
-      </main>;
+      </main>
+    );
   }
+
   return null;
 };
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,8 +7,12 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addW
 import { ptBR } from 'date-fns/locale';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { materialService } from '@/services/materialService';
+import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import ScheduleModal from './ScheduleModal';
 import MaterialModal from './MaterialModal';
+import PageBlockedOverlay from './PageBlockedOverlay';
+import UpgradeModal from './UpgradeModal';
 import { toast } from 'sonner';
 import DayView from './calendar/DayView';
 import WeekView from './calendar/WeekView';
@@ -27,6 +30,107 @@ const CalendarPage: React.FC = () => {
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
   const [showFullWeek, setShowFullWeek] = useState(false);
   const [showWeekends, setShowWeekends] = useState(false);
+
+  // Hooks para verificar permissões
+  const { hasCalendar } = usePlanPermissions();
+  const { 
+    isOpen: isUpgradeModalOpen, 
+    closeModal: closeUpgradeModal, 
+    openModal: openUpgradeModal,
+    handlePlanSelection,
+    currentPlan,
+    availablePlans 
+  } = useUpgradeModal();
+
+  // Se não tem permissão para calendário, mostrar overlay de bloqueio
+  if (!hasCalendar()) {
+    const calendarContent = (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="max-w-7xl mx-auto p-4 md:p-6">
+          {/* Header */}
+          <div className="flex flex-col space-y-6 mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3">
+                  Calendário de Materiais
+                </h1>
+                <p className="text-gray-600 text-lg">Organize e acompanhe seus agendamentos pedagógicos com elegância</p>
+              </div>
+              <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all w-full md:w-auto">
+                <Plus className="w-5 h-5 mr-2" />
+                Novo Agendamento
+              </Button>
+            </div>
+
+            {/* Navigation Controls */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                  <div className="flex items-center justify-center md:justify-start space-x-4">
+                    <Button variant="outline" size="sm" className="hover:bg-blue-50 hover:border-blue-300 transition-colors">
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <h2 className="text-xl font-bold min-w-[250px] text-center text-gray-900">
+                      {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
+                    </h2>
+                    <Button variant="outline" size="sm" className="hover:bg-blue-50 hover:border-blue-300 transition-colors">
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  <Tabs value="month" className="w-full md:w-auto">
+                    <TabsList className="grid w-full grid-cols-4 md:w-auto bg-gray-100 p-1 rounded-xl">
+                      <TabsTrigger value="day" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                        Dia
+                      </TabsTrigger>
+                      <TabsTrigger value="week" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                        Semana
+                      </TabsTrigger>
+                      <TabsTrigger value="month" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                        Mês
+                      </TabsTrigger>
+                      <TabsTrigger value="year" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                        Ano
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Placeholder Calendar Content */}
+          <Card className="shadow-lg bg-white/90 backdrop-blur-sm">
+            <CardContent className="p-8 text-center">
+              <CalendarIcon className="w-24 h-24 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">Calendário em breve...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+
+    return (
+      <>
+        <PageBlockedOverlay
+          title="Calendário Premium"
+          description="O calendário de materiais está disponível apenas em planos pagos. Faça upgrade para organizar e agendar seus materiais pedagógicos com eficiência."
+          icon="calendar"
+          onUpgrade={openUpgradeModal}
+        >
+          {calendarContent}
+        </PageBlockedOverlay>
+        
+        <UpgradeModal
+          isOpen={isUpgradeModalOpen}
+          onClose={closeUpgradeModal}
+          onSelectPlan={handlePlanSelection}
+          availablePlans={availablePlans}
+          currentPlanName={currentPlan.name}
+        />
+      </>
+    );
+  }
 
   useEffect(() => {
     loadEvents();
