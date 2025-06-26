@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation } from 'lucide-react';
 import { statsService, MaterialStats } from '@/services/statsService';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { useActivityTracker } from '@/hooks/useActivityTracker';
+import { Activity } from '@/services/activityService';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
