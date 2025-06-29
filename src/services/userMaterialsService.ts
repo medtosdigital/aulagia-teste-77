@@ -14,23 +14,11 @@ export interface UserMaterial {
 }
 
 class UserMaterialsService {
-  private getTableName(type: string): string {
-    const tableMap = {
-      'plano-aula': 'planos_de_aula',
-      'atividade': 'atividades',
-      'slides': 'slides',
-      'avaliacao': 'avaliacoes'
-    };
-    return tableMap[type as keyof typeof tableMap] || 'atividades';
-  }
-
-  private mapFromSupabase(item: any, tableName: string): UserMaterial {
+  private mapFromSupabase(item: any, type: string): UserMaterial {
     return {
       id: item.id,
       title: item.titulo,
-      type: tableName === 'planos_de_aula' ? 'plano-aula' : 
-            tableName === 'atividades' ? 'atividade' :
-            tableName === 'slides' ? 'slides' : 'avaliacao',
+      type: type as 'plano-aula' | 'atividade' | 'slides' | 'avaliacao',
       subject: item.disciplina || 'Não informado',
       grade: item.serie || 'Não informado',
       createdAt: item.data_criacao?.split('T')[0] || new Date().toISOString().split('T')[0],
@@ -54,24 +42,53 @@ class UserMaterialsService {
   async getMaterialsByUser(userId: string): Promise<UserMaterial[]> {
     try {
       const allMaterials: UserMaterial[] = [];
-      const tables = ['planos_de_aula', 'atividades', 'slides', 'avaliacoes'];
 
-      for (const table of tables) {
-        const { data, error } = await supabase
-          .from(table)
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
+      // Buscar planos de aula
+      const { data: planosData, error: planosError } = await supabase
+        .from('planos_de_aula')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error(`Error fetching from ${table}:`, error);
-          continue;
-        }
+      if (!planosError && planosData) {
+        const mappedPlanos = planosData.map(item => this.mapFromSupabase(item, 'plano-aula'));
+        allMaterials.push(...mappedPlanos);
+      }
 
-        if (data) {
-          const mappedData = data.map(item => this.mapFromSupabase(item, table));
-          allMaterials.push(...mappedData);
-        }
+      // Buscar atividades
+      const { data: atividadesData, error: atividadesError } = await supabase
+        .from('atividades')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (!atividadesError && atividadesData) {
+        const mappedAtividades = atividadesData.map(item => this.mapFromSupabase(item, 'atividade'));
+        allMaterials.push(...mappedAtividades);
+      }
+
+      // Buscar slides
+      const { data: slidesData, error: slidesError } = await supabase
+        .from('slides')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (!slidesError && slidesData) {
+        const mappedSlides = slidesData.map(item => this.mapFromSupabase(item, 'slides'));
+        allMaterials.push(...mappedSlides);
+      }
+
+      // Buscar avaliações
+      const { data: avaliacoesData, error: avaliacoesError } = await supabase
+        .from('avaliacoes')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (!avaliacoesError && avaliacoesData) {
+        const mappedAvaliacoes = avaliacoesData.map(item => this.mapFromSupabase(item, 'avaliacao'));
+        allMaterials.push(...mappedAvaliacoes);
       }
 
       // Sort by creation date
@@ -86,21 +103,63 @@ class UserMaterialsService {
 
   async addMaterial(material: Omit<UserMaterial, 'id' | 'createdAt' | 'status'>): Promise<UserMaterial | null> {
     try {
-      const tableName = this.getTableName(material.type);
       const supabaseData = this.mapToSupabase(material);
 
-      const { data, error } = await supabase
-        .from(tableName)
-        .insert([supabaseData])
-        .select()
-        .single();
+      if (material.type === 'plano-aula') {
+        const { data, error } = await supabase
+          .from('planos_de_aula')
+          .insert([supabaseData])
+          .select()
+          .single();
 
-      if (error) {
-        console.error('Error adding material:', error);
-        return null;
+        if (error) {
+          console.error('Error adding plano de aula:', error);
+          return null;
+        }
+
+        return this.mapFromSupabase(data, 'plano-aula');
+      } else if (material.type === 'atividade') {
+        const { data, error } = await supabase
+          .from('atividades')
+          .insert([supabaseData])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error adding atividade:', error);
+          return null;
+        }
+
+        return this.mapFromSupabase(data, 'atividade');
+      } else if (material.type === 'slides') {
+        const { data, error } = await supabase
+          .from('slides')
+          .insert([supabaseData])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error adding slides:', error);
+          return null;
+        }
+
+        return this.mapFromSupabase(data, 'slides');
+      } else if (material.type === 'avaliacao') {
+        const { data, error } = await supabase
+          .from('avaliacoes')
+          .insert([supabaseData])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error adding avaliacao:', error);
+          return null;
+        }
+
+        return this.mapFromSupabase(data, 'avaliacao');
       }
 
-      return this.mapFromSupabase(data, tableName);
+      return null;
     } catch (error) {
       console.error('Error adding material:', error);
       return null;
@@ -121,18 +180,44 @@ class UserMaterialsService {
 
   async deleteMaterial(id: string): Promise<boolean> {
     try {
-      // Try to delete from all tables since we don't know which table the material is in
-      const tables = ['planos_de_aula', 'atividades', 'slides', 'avaliacoes'];
-      
-      for (const table of tables) {
-        const { error } = await supabase
-          .from(table)
-          .delete()
-          .eq('id', id);
+      // Try to delete from planos_de_aula
+      const { error: planosError } = await supabase
+        .from('planos_de_aula')
+        .delete()
+        .eq('id', id);
 
-        if (!error) {
-          return true; // Successfully deleted
-        }
+      if (!planosError) {
+        return true;
+      }
+
+      // Try to delete from atividades
+      const { error: atividadesError } = await supabase
+        .from('atividades')
+        .delete()
+        .eq('id', id);
+
+      if (!atividadesError) {
+        return true;
+      }
+
+      // Try to delete from slides
+      const { error: slidesError } = await supabase
+        .from('slides')
+        .delete()
+        .eq('id', id);
+
+      if (!slidesError) {
+        return true;
+      }
+
+      // Try to delete from avaliacoes
+      const { error: avaliacoesError } = await supabase
+        .from('avaliacoes')
+        .delete()
+        .eq('id', id);
+
+      if (!avaliacoesError) {
+        return true;
       }
       
       return false;
@@ -144,32 +229,75 @@ class UserMaterialsService {
 
   async updateMaterial(id: string, updates: Partial<UserMaterial>): Promise<boolean> {
     try {
-      const tables = ['planos_de_aula', 'atividades', 'slides', 'avaliacoes'];
+      const updateData: any = {};
       
-      for (const table of tables) {
-        // First check if the material exists in this table
-        const { data: existing } = await supabase
-          .from(table)
-          .select('id')
-          .eq('id', id)
-          .single();
+      if (updates.title) updateData.titulo = updates.title;
+      if (updates.content) updateData.conteudo = updates.content;
+      if (updates.subject) updateData.disciplina = updates.subject;
+      if (updates.grade) updateData.serie = updates.grade;
 
-        if (existing) {
-          // Update the material in this table
-          const updateData: any = {};
-          
-          if (updates.title) updateData.titulo = updates.title;
-          if (updates.content) updateData.conteudo = updates.content;
-          if (updates.subject) updateData.disciplina = updates.subject;
-          if (updates.grade) updateData.serie = updates.grade;
+      // Try to update in planos_de_aula
+      const { data: planosData } = await supabase
+        .from('planos_de_aula')
+        .select('id')
+        .eq('id', id)
+        .single();
 
-          const { error } = await supabase
-            .from(table)
-            .update(updateData)
-            .eq('id', id);
+      if (planosData) {
+        const { error } = await supabase
+          .from('planos_de_aula')
+          .update(updateData)
+          .eq('id', id);
 
-          return !error;
-        }
+        return !error;
+      }
+
+      // Try to update in atividades
+      const { data: atividadesData } = await supabase
+        .from('atividades')
+        .select('id')
+        .eq('id', id)
+        .single();
+
+      if (atividadesData) {
+        const { error } = await supabase
+          .from('atividades')
+          .update(updateData)
+          .eq('id', id);
+
+        return !error;
+      }
+
+      // Try to update in slides
+      const { data: slidesData } = await supabase
+        .from('slides')
+        .select('id')
+        .eq('id', id)
+        .single();
+
+      if (slidesData) {
+        const { error } = await supabase
+          .from('slides')
+          .update(updateData)
+          .eq('id', id);
+
+        return !error;
+      }
+
+      // Try to update in avaliacoes
+      const { data: avaliacoesData } = await supabase
+        .from('avaliacoes')
+        .select('id')
+        .eq('id', id)
+        .single();
+
+      if (avaliacoesData) {
+        const { error } = await supabase
+          .from('avaliacoes')
+          .update(updateData)
+          .eq('id', id);
+
+        return !error;
       }
       
       return false;
@@ -179,7 +307,6 @@ class UserMaterialsService {
     }
   }
 
-  // Função para inicializar alguns materiais de exemplo se não existirem
   async initializeSampleMaterials(userId: string): Promise<void> {
     try {
       const existingMaterials = await this.getMaterialsByUser(userId);

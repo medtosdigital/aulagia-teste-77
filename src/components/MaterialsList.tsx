@@ -93,7 +93,8 @@ const MaterialsList: React.FC = () => {
       subject: userMaterial.subject,
       grade: userMaterial.grade,
       createdAt: userMaterial.createdAt,
-      content: parsedContent
+      content: parsedContent,
+      formData: undefined // Campo opcional para compatibilidade
     };
   };
 

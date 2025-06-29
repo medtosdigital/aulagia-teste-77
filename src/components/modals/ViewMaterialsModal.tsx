@@ -32,17 +32,32 @@ const ViewMaterialsModal: React.FC<ViewMaterialsModalProps> = ({
   teacher
 }) => {
   const [materials, setMaterials] = useState<UserMaterial[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (teacher && isOpen) {
-      // Inicializar materiais de exemplo se não existirem
-      userMaterialsService.initializeSampleMaterials(teacher.id);
-      
-      // Carregar materiais reais do usuário
-      const userMaterials = userMaterialsService.getMaterialsByUser(teacher.id);
-      setMaterials(userMaterials);
+      loadMaterials();
     }
   }, [teacher, isOpen]);
+
+  const loadMaterials = async () => {
+    if (!teacher) return;
+    
+    try {
+      setLoading(true);
+      // Inicializar materiais de exemplo se não existirem
+      await userMaterialsService.initializeSampleMaterials(teacher.id);
+      
+      // Carregar materiais reais do usuário com await
+      const userMaterials = await userMaterialsService.getMaterialsByUser(teacher.id);
+      setMaterials(userMaterials);
+    } catch (error) {
+      console.error('Error loading materials:', error);
+      setMaterials([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -101,25 +116,30 @@ const ViewMaterialsModal: React.FC<ViewMaterialsModalProps> = ({
           <div className="space-y-3">
             <h4 className="font-medium text-gray-900">Materiais Criados</h4>
             
-            {materials.map((material) => (
-              <div key={material.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="mt-1">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                    {getTypeIcon(material.type)}
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h5 className="font-medium text-gray-900 truncate">{material.title}</h5>
-                  <p className="text-sm text-gray-600">{material.subject} • {material.grade}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    {getTypeBadge(material.type)}
-                    <span className="text-xs text-gray-400">Criado em {material.createdAt}</span>
-                  </div>
-                </div>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-500">Carregando materiais...</p>
               </div>
-            ))}
-
-            {materials.length === 0 && (
+            ) : materials.length > 0 ? (
+              materials.map((material) => (
+                <div key={material.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="mt-1">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                      {getTypeIcon(material.type)}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-medium text-gray-900 truncate">{material.title}</h5>
+                    <p className="text-sm text-gray-600">{material.subject} • {material.grade}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      {getTypeBadge(material.type)}
+                      <span className="text-xs text-gray-400">Criado em {material.createdAt}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
               <div className="text-center py-8">
                 <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">Nenhum material encontrado</p>
