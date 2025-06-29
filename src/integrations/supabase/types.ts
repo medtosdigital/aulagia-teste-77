@@ -12,6 +12,7 @@ export type Database = {
       perfis: {
         Row: {
           anos_serie: string[] | null
+          celular: string | null
           created_at: string | null
           disciplinas: string[] | null
           etapas_ensino: string[] | null
@@ -24,6 +25,7 @@ export type Database = {
         }
         Insert: {
           anos_serie?: string[] | null
+          celular?: string | null
           created_at?: string | null
           disciplinas?: string[] | null
           etapas_ensino?: string[] | null
@@ -36,6 +38,7 @@ export type Database = {
         }
         Update: {
           anos_serie?: string[] | null
+          celular?: string | null
           created_at?: string | null
           disciplinas?: string[] | null
           etapas_ensino?: string[] | null

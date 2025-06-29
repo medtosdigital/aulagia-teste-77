@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, GraduationCap, BookOpen, School, FileText, ArrowLeft, ArrowRight, CheckCircle, Star, ClipboardList, Presentation } from 'lucide-react';
+import { User, GraduationCap, BookOpen, School, FileText, ArrowLeft, ArrowRight, CheckCircle, Star, ClipboardList, Presentation, Phone } from 'lucide-react';
 interface UserInfo {
   teachingLevel: string;
   grades: string[];
@@ -12,6 +12,7 @@ interface UserInfo {
   school: string;
   materialTypes: string[];
   name: string;
+  celular: string;
 }
 interface FirstAccessModalProps {
   isOpen: boolean;
@@ -30,7 +31,8 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
     subjects: [],
     school: '',
     materialTypes: [],
-    name: 'Professor(a)'
+    name: 'Professor(a)',
+    celular: ''
   });
   const teachingLevels = ['Educação Infantil', 'Ensino Fundamental I', 'Ensino Fundamental II', 'Ensino Médio', 'Ensino Superior'];
   const gradesByLevel: {
@@ -104,14 +106,25 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
           </div>
 
           <div>
+            <Label htmlFor="celular" className="flex items-center mb-2 text-sm font-medium">
+              <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-green-500" />
+              Celular (opcional)
+            </Label>
+            <Input id="celular" placeholder="(11) 99999-9999" value={userInfo.celular} onChange={e => setUserInfo(prev => ({
+            ...prev,
+            celular: e.target.value
+          }))} className="border-2 focus:border-green-500 text-sm h-8 rounded-lg" />
+          </div>
+
+          <div>
             <Label htmlFor="school" className="flex items-center mb-2 text-sm font-medium">
-              <School className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-green-500" />
+              <School className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-purple-500" />
               Escola (opcional)
             </Label>
             <Input id="school" placeholder="Nome da sua escola" value={userInfo.school} onChange={e => setUserInfo(prev => ({
             ...prev,
             school: e.target.value
-          }))} className="border-2 focus:border-green-500 text-sm h-8 rounded-lg" />
+          }))} className="border-2 focus:border-purple-500 text-sm h-8 rounded-lg" />
           </div>
         </div>
       </div>

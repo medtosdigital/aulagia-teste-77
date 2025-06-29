@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { User, Camera, Shield, Crown, Save, Edit2, Lock } from 'lucide-react';
+import { User, Camera, Shield, Crown, Save, Edit2, Lock, Phone } from 'lucide-react';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { userMaterialsService } from '@/services/userMaterialsService';
 import { statsService } from '@/services/statsService';
@@ -37,7 +37,8 @@ const ProfilePage = () => {
     grades: [] as string[],
     subjects: [] as string[],
     school: '',
-    materialTypes: [] as string[]
+    materialTypes: [] as string[],
+    celular: ''
   });
 
   const [materialStats, setMaterialStats] = useState({
@@ -114,7 +115,8 @@ const ProfilePage = () => {
           grades: profile.anos_serie || [],
           subjects: profile.disciplinas || [],
           school: '', // Campo não existe na nova estrutura
-          materialTypes: profile.tipo_material_favorito || []
+          materialTypes: profile.tipo_material_favorito || [],
+          celular: profile.celular || ''
         });
       } else {
         // Perfil não existe, usar dados básicos do usuário
@@ -242,7 +244,8 @@ const ProfilePage = () => {
         anos_serie: formData.grades,
         disciplinas: formData.subjects,
         tipo_material_favorito: formData.materialTypes,
-        preferencia_bncc: false // valor padrão
+        preferencia_bncc: false, // valor padrão
+        celular: formData.celular
       };
 
       // Upsert na tabela perfis
@@ -467,6 +470,20 @@ const ProfilePage = () => {
                       value={user?.email || ''}
                       disabled={true}
                       className="mt-1 bg-gray-50"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="celular" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      Celular (opcional)
+                    </Label>
+                    <Input
+                      id="celular"
+                      value={formData.celular}
+                      onChange={(e) => handleInputChange('celular', e.target.value)}
+                      disabled={!isEditing}
+                      placeholder="(11) 99999-9999"
+                      className="mt-1"
                     />
                   </div>
                   <div>
