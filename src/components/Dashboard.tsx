@@ -31,7 +31,16 @@ const Dashboard: React.FC<DashboardProps> = ({
     console.log('🏠 Dashboard mounted');
 
     // Carregar dados quando o componente montar
-    setMaterialStats(statsService.getMaterialStats());
+    const loadMaterialStats = async () => {
+      try {
+        const stats = await statsService.getMaterialStats();
+        setMaterialStats(stats);
+      } catch (error) {
+        console.error('Error loading material stats:', error);
+      }
+    };
+    
+    loadMaterialStats();
     
     // Carregar atividades recentes usando o mesmo padrão das estatísticas
     const activities = activityService.getRecentActivities(10);

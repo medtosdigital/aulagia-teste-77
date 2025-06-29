@@ -145,25 +145,29 @@ const ProfilePage = () => {
   };
 
   useEffect(() => {
-    try {
-      // Carregar estatísticas dos materiais
-      const stats = statsService.getMaterialStats();
-      setMaterialStats(stats);
+    const loadMaterialStats = async () => {
+      try {
+        // Carregar estatísticas dos materiais
+        const stats = await statsService.getMaterialStats();
+        setMaterialStats(stats);
 
-      // Inicializar materiais de exemplo se necessário
-      if (user) {
-        userMaterialsService.initializeSampleMaterials();
+        // Inicializar materiais de exemplo se necessário
+        if (user) {
+          userMaterialsService.initializeSampleMaterials();
+        }
+      } catch (error) {
+        console.error('Error loading material stats:', error);
+        setMaterialStats({
+          totalMaterials: 0,
+          planoAula: 0,
+          slides: 0,
+          atividades: 0,
+          avaliacoes: 0
+        });
       }
-    } catch (error) {
-      console.error('Error loading material stats:', error);
-      setMaterialStats({
-        totalMaterials: 0,
-        planoAula: 0,
-        slides: 0,
-        atividades: 0,
-        avaliacoes: 0
-      });
-    }
+    };
+
+    loadMaterialStats();
   }, [user]);
 
   useEffect(() => {
