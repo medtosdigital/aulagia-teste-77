@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, Eye, Edit3, Trash2, Download, Search, Filter, Plus, Calendar, Printer, FileDown, Lock } from 'lucide-react';
@@ -573,9 +574,8 @@ const MaterialsList: React.FC = () => {
       <UpgradeModal
         isOpen={isUpgradeModalOpen}
         onClose={closeUpgradeModal}
-        onSelectPlan={handlePlanSelection}
-        availablePlans={availablePlans}
-        currentPlanName={currentPlan.name}
+        onPlanSelect={handlePlanSelection}
+        currentPlan={currentPlan}
       />
     </div>
   );
