@@ -102,7 +102,7 @@ const MaterialsList: React.FC = () => {
       // Load materials from Supabase only (removed localStorage)
       const supabaseMaterials = await userMaterialsService.getMaterialsByUser(user.id);
       
-      console.log('Supabase materials count:', supababMaterials.length);
+      console.log('Supabase materials count:', supabaseMaterials.length);
       
       // Convert user materials to the expected format
       const convertedMaterials = supabaseMaterials.map(convertUserMaterialToGenerated);
