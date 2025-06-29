@@ -1,211 +1,168 @@
 
-import { useState, useEffect } from 'react';
-import { planPermissionsService, UserPlan, UserUsage } from '@/services/planPermissionsService';
 import { useSupabasePlanPermissions } from './useSupabasePlanPermissions';
-import { useFeedback } from './useFeedback';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const usePlanPermissions = () => {
   const { user } = useAuth();
   const supabasePermissions = useSupabasePlanPermissions();
-  const { incrementMaterialsCreated } = useFeedback();
-  
-  // Estados do sistema antigo (localStorage) - mantidos para compatibilidade
-  const [currentPlan, setCurrentPlan] = useState<UserPlan>(planPermissionsService.getCurrentPlan());
-  const [usage, setUsage] = useState<UserUsage>(planPermissionsService.getUserUsage());
-  const [shouldShowUpgrade, setShouldShowUpgrade] = useState(false);
-  const [shouldShowSupportModal, setShouldShowSupportModal] = useState(false);
 
-  // Se o usuário estiver logado, usar o Supabase. Caso contrário, usar o localStorage
-  const useSupabase = !!user;
-
-  const refreshData = () => {
-    if (useSupabase) {
-      supabasePermissions.refreshData();
-    } else {
-      setCurrentPlan(planPermissionsService.getCurrentPlan());
-      setUsage(planPermissionsService.getUserUsage());
-    }
-  };
-
-  const createMaterial = async (): Promise<boolean> => {
-    if (useSupabase) {
-      const success = await supabasePermissions.createMaterial();
-      if (!success && supabasePermissions.currentPlan?.plano_ativo === 'gratuito') {
-        incrementMaterialsCreated();
-      }
-      return success;
-    } else {
-      // Lógica original para usuários não logados
-      const canCreate = planPermissionsService.incrementMaterialUsage();
+  // Se não estiver logado, retornar valores padrão para plano gratuito
+  if (!user) {
+    return {
+      // Estados
+      currentPlan: {
+        id: 'gratuito',
+        name: 'Plano Gratuito',
+        limits: {
+          materialsPerMonth: 0,
+          canDownloadWord: false,
+          canDownloadPPT: false,
+          canEditMaterials: false,
+          canCreateSlides: false,
+          canCreateAssessments: false,
+          hasCalendar: false,
+          hasHistory: false
+        },
+        price: { monthly: 0, yearly: 0 }
+      },
+      usage: { materialsThisMonth: 0 },
+      shouldShowUpgrade: false,
+      shouldShowSupportModal: false,
+      loading: false,
       
-      if (!canCreate) {
-        if (planPermissionsService.shouldShowSupportModal()) {
-          setShouldShowSupportModal(true);
-        } else {
-          setShouldShowUpgrade(true);
-        }
-        return false;
-      }
+      // Ações
+      createMaterial: async () => false,
+      getRemainingMaterials: () => 0,
+      isLimitReached: () => true,
+      changePlan: () => {},
+      dismissUpgradeModal: () => {},
+      dismissSupportModal: () => {},
+      refreshData: () => {},
       
-      if (currentPlan.id === 'gratuito') {
-        incrementMaterialsCreated();
-      }
+      // Permissões - todas negativas para não logados
+      canEditMaterials: () => false,
+      canDownloadWord: () => false,
+      canDownloadPPT: () => false,
+      canCreateSlides: () => false,
+      canCreateAssessments: () => false,
+      hasCalendar: () => false,
+      canAccessCalendarPage: () => false,
+      canAccessSchool: () => false,
+      canAccessCreateMaterial: () => false,
+      canAccessMaterials: () => false,
       
-      refreshData();
-      return true;
-    }
-  };
-
-  const getRemainingMaterials = (): number => {
-    if (useSupabase) {
-      return supabasePermissions.remainingMaterials;
-    } else {
-      return planPermissionsService.getRemainingMaterials();
-    }
-  };
-
-  const isLimitReached = (): boolean => {
-    if (useSupabase) {
-      return supabasePermissions.isLimitReached();
-    } else {
-      return planPermissionsService.isLimitReached();
-    }
-  };
-
-  const changePlan = (planId: string): void => {
-    if (useSupabase) {
-      // Para usuários logados, usar a função do Supabase
-      supabasePermissions.changePlan(planId as any);
-    } else {
-      planPermissionsService.setCurrentPlan(planId);
-      refreshData();
-      setShouldShowUpgrade(false);
-      setShouldShowSupportModal(false);
-    }
-  };
-
-  // Funções de permissão - usar Supabase se logado, senão localStorage
-  const canEditMaterials = (): boolean => {
-    return useSupabase ? supabasePermissions.canEditMaterials() : planPermissionsService.canPerformAction('canEditMaterials');
-  };
-
-  const canDownloadWord = (): boolean => {
-    return useSupabase ? supabasePermissions.canDownloadWord() : planPermissionsService.canPerformAction('canDownloadWord');
-  };
-
-  const canDownloadPPT = (): boolean => {
-    return useSupabase ? supabasePermissions.canDownloadPPT() : planPermissionsService.canPerformAction('canDownloadPPT');
-  };
-
-  const canCreateSlides = (): boolean => {
-    return useSupabase ? supabasePermissions.canCreateSlides() : planPermissionsService.canPerformAction('canCreateSlides');
-  };
-
-  const canCreateAssessments = (): boolean => {
-    return useSupabase ? supabasePermissions.canCreateAssessments() : planPermissionsService.canPerformAction('canCreateAssessments');
-  };
-
-  const hasCalendar = (): boolean => {
-    return useSupabase ? supabasePermissions.hasCalendar() : planPermissionsService.canPerformAction('hasCalendar');
-  };
-
-  const canAccessCalendarPage = (): boolean => {
-    return useSupabase ? supabasePermissions.canAccessCalendarPage() : true;
-  };
-
-  const canAccessSchool = (): boolean => {
-    return useSupabase ? supabasePermissions.canAccessSchool() : currentPlan.id === 'grupo-escolar';
-  };
-
-  const canAccessCreateMaterial = (): boolean => {
-    return useSupabase ? supabasePermissions.canAccessCreateMaterial() : true;
-  };
-
-  const canAccessMaterials = (): boolean => {
-    return useSupabase ? supabasePermissions.canAccessMaterials() : true;
-  };
-
-  // Manter compatibilidade com funções do sistema antigo
-  const dismissUpgradeModal = (): void => {
-    if (useSupabase) {
-      supabasePermissions.dismissUpgradeModal();
-    } else {
-      setShouldShowUpgrade(false);
-    }
-  };
-
-  const dismissSupportModal = (): void => {
-    setShouldShowSupportModal(false);
-  };
-
-  // Estados combinados
-  const combinedShouldShowUpgrade = useSupabase ? supabasePermissions.shouldShowUpgrade : shouldShowUpgrade;
-
-  useEffect(() => {
-    if (!useSupabase) {
-      const plan = planPermissionsService.getCurrentPlan();
+      // Funções auxiliares
+      canPerformAction: () => false,
+      getNextResetDate: () => new Date(),
+      getAvailablePlansForUpgrade: () => [],
       
-      if (planPermissionsService.isLimitReached()) {
-        if (plan.id === 'professor') {
-          setShouldShowSupportModal(true);
-        } else if (plan.id === 'gratuito') {
-          setShouldShowUpgrade(true);
-        }
-      }
+      // Funções administrativas
+      canAccessSettings: () => false,
+      isAdminAuthenticated: () => false,
+      authenticateAdmin: () => false,
+      logoutAdmin: () => {},
+      
+      // Grupo escolar
+      isSchoolOwner: () => false,
+      getRemainingMaterialsToDistribute: () => 0,
+      getTotalMaterialsUsedBySchool: () => 0,
+      updateUserMaterialLimit: () => {},
+      redistributeMaterialLimits: () => {}
+    };
+  }
+
+  // Mapear dados do Supabase para o formato esperado
+  const mappedCurrentPlan = {
+    id: supabasePermissions.currentPlan?.plano_ativo || 'gratuito',
+    name: supabasePermissions.getPlanDisplayName(),
+    limits: {
+      materialsPerMonth: supabasePermissions.currentPlan?.plano_ativo === 'gratuito' ? 5 : 
+                        supabasePermissions.currentPlan?.plano_ativo === 'professor' ? 50 : 300,
+      canDownloadWord: supabasePermissions.canDownloadWord(),
+      canDownloadPPT: supabasePermissions.canDownloadPPT(),
+      canEditMaterials: supabasePermissions.canEditMaterials(),
+      canCreateSlides: supabasePermissions.canCreateSlides(),
+      canCreateAssessments: supabasePermissions.canCreateAssessments(),
+      hasCalendar: supabasePermissions.hasCalendar(),
+      hasHistory: supabasePermissions.currentPlan?.plano_ativo !== 'gratuito'
+    },
+    price: {
+      monthly: supabasePermissions.currentPlan?.plano_ativo === 'gratuito' ? 0 :
+               supabasePermissions.currentPlan?.plano_ativo === 'professor' ? 29.90 : 89.90,
+      yearly: supabasePermissions.currentPlan?.plano_ativo === 'gratuito' ? 0 :
+              supabasePermissions.currentPlan?.plano_ativo === 'professor' ? 299 : 849
     }
-  }, [useSupabase]);
+  };
+
+  const mappedUsage = {
+    materialsThisMonth: mappedCurrentPlan.limits.materialsPerMonth - supabasePermissions.remainingMaterials
+  };
 
   return {
-    // Estados - usar Supabase se disponível
-    currentPlan: useSupabase ? {
-      id: supabasePermissions.currentPlan?.plano_ativo || 'gratuito',
-      name: supabasePermissions.getPlanDisplayName(),
-      limits: {} as any,
-      price: { monthly: 0, yearly: 0 }
-    } : currentPlan,
-    usage,
-    shouldShowUpgrade: combinedShouldShowUpgrade,
-    shouldShowSupportModal,
-    loading: useSupabase ? supabasePermissions.loading : false,
+    // Estados - usar apenas dados do Supabase
+    currentPlan: mappedCurrentPlan,
+    usage: mappedUsage,
+    shouldShowUpgrade: supabasePermissions.shouldShowUpgrade,
+    shouldShowSupportModal: false,
+    loading: supabasePermissions.loading,
     
     // Ações
-    createMaterial,
-    getRemainingMaterials,
-    isLimitReached,
-    changePlan,
-    dismissUpgradeModal,
-    dismissSupportModal,
-    refreshData,
+    createMaterial: supabasePermissions.createMaterial,
+    getRemainingMaterials: () => supabasePermissions.remainingMaterials,
+    isLimitReached: supabasePermissions.isLimitReached,
+    changePlan: async (planId: string) => {
+      const planTypeMap: Record<string, 'gratuito' | 'professor' | 'grupo_escolar'> = {
+        'gratuito': 'gratuito',
+        'professor': 'professor',
+        'grupo-escolar': 'grupo_escolar'
+      };
+      const mappedPlanType = planTypeMap[planId] || 'gratuito';
+      return await supabasePermissions.changePlan(mappedPlanType);
+    },
+    dismissUpgradeModal: supabasePermissions.dismissUpgradeModal,
+    dismissSupportModal: () => {},
+    refreshData: supabasePermissions.refreshData,
     
     // Permissões
-    canEditMaterials,
-    canDownloadWord,
-    canDownloadPPT,
-    canCreateSlides,
-    canCreateAssessments,
-    hasCalendar,
-    canAccessCalendarPage,
-    canAccessSchool,
-    canAccessCreateMaterial,
-    canAccessMaterials,
+    canEditMaterials: supabasePermissions.canEditMaterials,
+    canDownloadWord: supabasePermissions.canDownloadWord,
+    canDownloadPPT: supabasePermissions.canDownloadPPT,
+    canCreateSlides: supabasePermissions.canCreateSlides,
+    canCreateAssessments: supabasePermissions.canCreateAssessments,
+    hasCalendar: supabasePermissions.hasCalendar,
+    canAccessCalendarPage: supabasePermissions.canAccessCalendarPage,
+    canAccessSchool: supabasePermissions.canAccessSchool,
+    canAccessCreateMaterial: supabasePermissions.canAccessCreateMaterial,
+    canAccessMaterials: supabasePermissions.canAccessMaterials,
     
-    // Manter funções do sistema antigo para compatibilidade
-    canPerformAction: (action: any) => useSupabase ? false : planPermissionsService.canPerformAction(action),
-    getNextResetDate: () => useSupabase ? new Date() : planPermissionsService.getNextResetDate(),
-    getAvailablePlansForUpgrade: () => useSupabase ? [] : planPermissionsService.getAvailablePlansForUpgrade(),
+    // Funções auxiliares
+    canPerformAction: () => false,
+    getNextResetDate: () => {
+      const nextMonth = new Date();
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      nextMonth.setDate(1);
+      return nextMonth;
+    },
+    getAvailablePlansForUpgrade: () => {
+      const currentPlanId = mappedCurrentPlan.id;
+      const allPlans = [
+        { id: 'professor', name: 'Professor', price: { monthly: 29.90, yearly: 299 } },
+        { id: 'grupo-escolar', name: 'Grupo Escolar', price: { monthly: 89.90, yearly: 849 } }
+      ];
+      return allPlans.filter(plan => plan.id !== currentPlanId);
+    },
     
-    // Funções administrativas (manter do sistema antigo)
-    canAccessSettings: () => planPermissionsService.isAdminAuthenticated(),
-    isAdminAuthenticated: () => planPermissionsService.isAdminAuthenticated(),
-    authenticateAdmin: planPermissionsService.authenticateAdmin.bind(planPermissionsService),
-    logoutAdmin: planPermissionsService.logoutAdmin.bind(planPermissionsService),
+    // Funções administrativas (mantidas vazias)
+    canAccessSettings: () => false,
+    isAdminAuthenticated: () => false,
+    authenticateAdmin: () => false,
+    logoutAdmin: () => {},
     
-    // Grupo escolar (manter do sistema antigo por enquanto)
-    isSchoolOwner: () => planPermissionsService.isSchoolOwner(),
-    getRemainingMaterialsToDistribute: () => planPermissionsService.getRemainingMaterialsToDistribute(),
-    getTotalMaterialsUsedBySchool: () => planPermissionsService.getTotalMaterialsUsedBySchool(),
-    updateUserMaterialLimit: planPermissionsService.updateUserMaterialLimit.bind(planPermissionsService),
-    redistributeMaterialLimits: planPermissionsService.redistributeMaterialLimits.bind(planPermissionsService)
+    // Grupo escolar (implementar quando necessário)
+    isSchoolOwner: () => mappedCurrentPlan.id === 'grupo-escolar',
+    getRemainingMaterialsToDistribute: () => 0,
+    getTotalMaterialsUsedBySchool: () => 0,
+    updateUserMaterialLimit: () => {},
+    redistributeMaterialLimits: () => {}
   };
 };

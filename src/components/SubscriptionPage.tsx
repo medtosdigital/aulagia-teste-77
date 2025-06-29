@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown, Brain, Presentation, ClipboardList, GraduationCap, MoreHorizontal, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,7 +62,8 @@ const SubscriptionPage = () => {
     getRemainingMaterials, 
     getNextResetDate,
     changePlan,
-    refreshData
+    refreshData,
+    loading
   } = usePlanPermissions();
 
   // Determine subscription status based on real plan data
@@ -73,10 +75,10 @@ const SubscriptionPage = () => {
     refreshData();
   }, [refreshData]);
 
-  // Refresh data when component mounts, but avoid setting up interval that calls refreshData
+  // Refresh data when component mounts
   useEffect(() => {
     stableRefreshData();
-  }, []); // Empty dependency array - only run on mount
+  }, [stableRefreshData]);
 
   const plans: Plan[] = [
     {
@@ -108,7 +110,7 @@ const SubscriptionPage = () => {
       name: 'Professor',
       price: { monthly: 29.90, yearly: 299 },
       features: [
-        '60 materiais por mês',
+        '50 materiais por mês',
         'Download em PDF, Word e PPT',
         'Edição completa de materiais',
         'Todos os templates disponíveis',
@@ -171,8 +173,8 @@ const SubscriptionPage = () => {
     return Brain;
   };
 
-  const handlePlanChange = (planId: string) => {
-    changePlan(planId);
+  const handlePlanChange = async (planId: string) => {
+    await changePlan(planId);
   };
 
   const handleCancelSubscription = () => {
@@ -284,6 +286,21 @@ const SubscriptionPage = () => {
     return resources;
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
+        <div className="max-w-6xl mx-auto">
+          <Card className="p-6">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando informações do plano...</p>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
       {/* Current Plan Section */}
@@ -299,7 +316,7 @@ const SubscriptionPage = () => {
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold mb-1">Seu Plano Atual</h1>
                 <p className="opacity-90 text-sm sm:text-base">
-                  Plano {currentPlan.name} - {isSubscriptionActive ? 'Mensal' : 'Gratuito'}
+                  {currentPlan.name} - {isSubscriptionActive ? 'Mensal' : 'Gratuito'}
                 </p>
               </div>
               <div className={`rounded-full px-3 sm:px-4 py-1 flex items-center self-start ${
