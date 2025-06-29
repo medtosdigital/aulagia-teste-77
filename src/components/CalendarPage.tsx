@@ -12,7 +12,7 @@ import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import ScheduleModal from './ScheduleModal';
 import MaterialModal from './MaterialModal';
-import UpgradeModal from './UpgradeModal';
+import { UpgradeModal } from './UpgradeModal';
 import { toast } from 'sonner';
 import DayView from './calendar/DayView';
 import WeekView from './calendar/WeekView';
