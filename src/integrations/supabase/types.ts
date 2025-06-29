@@ -9,6 +9,90 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      atividades: {
+        Row: {
+          conteudo: string
+          created_at: string
+          data_criacao: string
+          disciplina: string | null
+          id: string
+          serie: string | null
+          template_usado: string | null
+          tipo_material: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          data_criacao?: string
+          disciplina?: string | null
+          id?: string
+          serie?: string | null
+          template_usado?: string | null
+          tipo_material?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          data_criacao?: string
+          disciplina?: string | null
+          id?: string
+          serie?: string | null
+          template_usado?: string | null
+          tipo_material?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      avaliacoes: {
+        Row: {
+          conteudo: string
+          created_at: string
+          data_criacao: string
+          disciplina: string | null
+          id: string
+          serie: string | null
+          template_usado: string | null
+          tipo_material: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          data_criacao?: string
+          disciplina?: string | null
+          id?: string
+          serie?: string | null
+          template_usado?: string | null
+          tipo_material?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          data_criacao?: string
+          disciplina?: string | null
+          id?: string
+          serie?: string | null
+          template_usado?: string | null
+          tipo_material?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       perfis: {
         Row: {
           anos_serie: string[] | null
@@ -51,6 +135,48 @@ export type Database = {
         }
         Relationships: []
       }
+      planos_de_aula: {
+        Row: {
+          conteudo: string
+          created_at: string
+          data_criacao: string
+          disciplina: string | null
+          id: string
+          serie: string | null
+          template_usado: string | null
+          tipo_material: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          data_criacao?: string
+          disciplina?: string | null
+          id?: string
+          serie?: string | null
+          template_usado?: string | null
+          tipo_material?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          data_criacao?: string
+          disciplina?: string | null
+          id?: string
+          serie?: string | null
+          template_usado?: string | null
+          tipo_material?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -75,6 +201,48 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      slides: {
+        Row: {
+          conteudo: string
+          created_at: string
+          data_criacao: string
+          disciplina: string | null
+          id: string
+          serie: string | null
+          template_usado: string | null
+          tipo_material: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          data_criacao?: string
+          disciplina?: string | null
+          id?: string
+          serie?: string | null
+          template_usado?: string | null
+          tipo_material?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          data_criacao?: string
+          disciplina?: string | null
+          id?: string
+          serie?: string | null
+          template_usado?: string | null
+          tipo_material?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

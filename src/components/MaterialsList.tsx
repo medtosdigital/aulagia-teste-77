@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
+import { userMaterialsService, UserMaterial } from '@/services/userMaterialsService';
 import { exportService } from '@/services/exportService';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
+import { supabase } from '@/integrations/supabase/client';
 import MaterialModal from './MaterialModal';
 import MaterialEditModal from './MaterialEditModal';
 import MaterialInlineEditModal from './MaterialInlineEditModal';
@@ -29,6 +31,8 @@ const MaterialsList: React.FC = () => {
   const [exportDropdownOpen, setExportDropdownOpen] = useState<string | null>(null);
   const [inlineEditModalOpen, setInlineEditModalOpen] = useState(false);
   const [materialToEdit, setMaterialToEdit] = useState<GeneratedMaterial | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
   // Hooks para gerenciamento de planos
   const { canEditMaterials, canDownloadWord, canDownloadPPT } = usePlanPermissions();
@@ -42,16 +46,83 @@ const MaterialsList: React.FC = () => {
   } = useUpgradeModal();
 
   useEffect(() => {
-    loadMaterials();
+    checkUser();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      loadMaterials();
+    }
+  }, [user]);
 
   useEffect(() => {
     filterMaterials();
   }, [materials, searchTerm, filterType, filterSubject]);
 
-  const loadMaterials = () => {
-    const allMaterials = materialService.getMaterials();
-    setMaterials(allMaterials);
+  const checkUser = async () => {
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        setUser(currentUser);
+        // Initialize sample materials for new users
+        await userMaterialsService.initializeSampleMaterials(currentUser.id);
+      } else {
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Error checking user:', error);
+      navigate('/login');
+    }
+  };
+
+  const convertUserMaterialToGenerated = (userMaterial: UserMaterial): GeneratedMaterial => {
+    // Parse content if it's a JSON string, otherwise use as is
+    let parsedContent;
+    try {
+      parsedContent = typeof userMaterial.content === 'string' 
+        ? JSON.parse(userMaterial.content) 
+        : userMaterial.content;
+    } catch {
+      parsedContent = userMaterial.content;
+    }
+
+    return {
+      id: userMaterial.id,
+      title: userMaterial.title,
+      type: userMaterial.type === 'plano-aula' ? 'plano-de-aula' : userMaterial.type,
+      subject: userMaterial.subject,
+      grade: userMaterial.grade,
+      createdAt: userMaterial.createdAt,
+      content: parsedContent
+    };
+  };
+
+  const loadMaterials = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      
+      // Load from both old materialService (localStorage) and new userMaterialsService (Supabase)
+      const localMaterials = materialService.getMaterials();
+      const supabaseMaterials = await userMaterialsService.getMaterialsByUser(user.id);
+      
+      // Convert user materials to the expected format
+      const convertedSupabaseMaterials = supabaseMaterials.map(convertUserMaterialToGenerated);
+      
+      // Combine and deduplicate materials (prioritize Supabase over localStorage)
+      const allMaterials = [...convertedSupabaseMaterials, ...localMaterials];
+      const uniqueMaterials = allMaterials.filter((material, index, self) => 
+        index === self.findIndex(m => m.id === material.id)
+      );
+      
+      setMaterials(uniqueMaterials);
+    } catch (error) {
+      console.error('Error loading materials:', error);
+      toast.error('Erro ao carregar materiais');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filterMaterials = () => {
@@ -115,17 +186,27 @@ const MaterialsList: React.FC = () => {
   };
 
   const handleInlineEditSave = () => {
-    setMaterials(materialService.getMaterials());
+    loadMaterials();
     setMaterialToEdit(null);
   };
 
-  const handleDelete = (id: string, title: string) => {
+  const handleDelete = async (id: string, title: string) => {
     if (window.confirm(`Tem certeza que deseja excluir "${title}"?`)) {
-      const success = materialService.deleteMaterial(id);
-      if (success) {
-        toast.success('Material excluído com sucesso!');
-        loadMaterials();
-      } else {
+      try {
+        // Try to delete from Supabase first
+        const supabaseSuccess = await userMaterialsService.deleteMaterial(id);
+        
+        // If not found in Supabase, try localStorage
+        const localSuccess = supabaseSuccess || materialService.deleteMaterial(id);
+        
+        if (localSuccess || supabaseSuccess) {
+          toast.success('Material excluído com sucesso!');
+          loadMaterials();
+        } else {
+          toast.error('Erro ao excluir material');
+        }
+      } catch (error) {
+        console.error('Error deleting material:', error);
         toast.error('Erro ao excluir material');
       }
     }
@@ -209,6 +290,17 @@ const MaterialsList: React.FC = () => {
   };
 
   const uniqueSubjects = [...new Set(materials.map(m => m.subject))];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando materiais...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
