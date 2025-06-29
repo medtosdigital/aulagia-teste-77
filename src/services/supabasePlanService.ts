@@ -24,11 +24,16 @@ export interface UsoMensalMateriais {
 }
 
 class SupabasePlanService {
-  // Obter plano atual do usuário
+  // Obter plano atual do usuário com fallback
   async getCurrentUserPlan(): Promise<PlanoUsuario | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!user) {
+        console.log('Nenhum usuário autenticado');
+        return null;
+      }
+
+      console.log('Buscando plano para usuário:', user.id);
 
       const { data, error } = await supabase
         .from('planos_usuarios')
@@ -37,13 +42,47 @@ class SupabasePlanService {
         .single();
 
       if (error) {
-        console.error('Error fetching user plan:', error);
+        console.error('Erro ao buscar plano do usuário:', error);
+        
+        // Se não encontrou o plano, criar um plano gratuito
+        if (error.code === 'PGRST116') {
+          console.log('Plano não encontrado, criando plano gratuito');
+          return await this.createDefaultPlan(user.id);
+        }
+        
         return null;
       }
 
+      console.log('Plano encontrado:', data);
       return data;
     } catch (error) {
-      console.error('Error in getCurrentUserPlan:', error);
+      console.error('Erro em getCurrentUserPlan:', error);
+      return null;
+    }
+  }
+
+  // Criar plano padrão gratuito
+  private async createDefaultPlan(userId: string): Promise<PlanoUsuario | null> {
+    try {
+      const { data, error } = await supabase
+        .from('planos_usuarios')
+        .insert({
+          user_id: userId,
+          plano_ativo: 'gratuito' as TipoPlano,
+          data_inicio: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao criar plano padrão:', error);
+        return null;
+      }
+
+      console.log('Plano padrão criado:', data);
+      return data;
+    } catch (error) {
+      console.error('Erro em createDefaultPlan:', error);
       return null;
     }
   }
@@ -52,20 +91,24 @@ class SupabasePlanService {
   async canCreateMaterial(): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
+      if (!user) {
+        console.log('Usuário não autenticado para criar material');
+        return false;
+      }
 
       const { data, error } = await supabase.rpc('can_create_material', {
         p_user_id: user.id
       });
 
       if (error) {
-        console.error('Error checking material creation permission:', error);
+        console.error('Erro ao verificar permissão de criação:', error);
         return false;
       }
 
+      console.log('Pode criar material:', data);
       return data || false;
     } catch (error) {
-      console.error('Error in canCreateMaterial:', error);
+      console.error('Erro em canCreateMaterial:', error);
       return false;
     }
   }
@@ -81,13 +124,14 @@ class SupabasePlanService {
       });
 
       if (error) {
-        console.error('Error incrementing material usage:', error);
+        console.error('Erro ao incrementar uso de material:', error);
         return false;
       }
 
+      console.log('Uso de material incrementado:', data);
       return data || false;
     } catch (error) {
-      console.error('Error in incrementMaterialUsage:', error);
+      console.error('Erro em incrementMaterialUsage:', error);
       return false;
     }
   }
@@ -107,16 +151,18 @@ class SupabasePlanService {
         .eq('user_id', user.id)
         .eq('ano', currentYear)
         .eq('mes', currentMonth)
-        .single();
+        .maybeSingle(); // Usar maybeSingle ao invés de single
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching current usage:', error);
+      if (error) {
+        console.error('Erro ao buscar uso atual:', error);
         return 0;
       }
 
-      return data?.materiais_criados || 0;
+      const usage = data?.materiais_criados || 0;
+      console.log('Uso atual do mês:', usage);
+      return usage;
     } catch (error) {
-      console.error('Error in getCurrentMonthUsage:', error);
+      console.error('Erro em getCurrentMonthUsage:', error);
       return 0;
     }
   }
@@ -139,14 +185,19 @@ class SupabasePlanService {
   async getRemainingMaterials(): Promise<number> {
     try {
       const plan = await this.getCurrentUserPlan();
-      if (!plan) return 0;
+      if (!plan) {
+        console.log('Nenhum plano encontrado, retornando 0 materiais');
+        return 0;
+      }
 
       const currentUsage = await this.getCurrentMonthUsage();
       const planLimit = this.getPlanLimits(plan.plano_ativo);
+      const remaining = Math.max(0, planLimit - currentUsage);
 
-      return Math.max(0, planLimit - currentUsage);
+      console.log(`Plano: ${plan.plano_ativo}, Limite: ${planLimit}, Usado: ${currentUsage}, Restante: ${remaining}`);
+      return remaining;
     } catch (error) {
-      console.error('Error in getRemainingMaterials:', error);
+      console.error('Erro em getRemainingMaterials:', error);
       return 0;
     }
   }
@@ -155,7 +206,10 @@ class SupabasePlanService {
   async updateUserPlan(newPlan: TipoPlano, expirationDate?: Date): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
+      if (!user) {
+        console.log('Usuário não autenticado para atualizar plano');
+        return false;
+      }
 
       const updateData: any = {
         plano_ativo: newPlan,
@@ -172,13 +226,14 @@ class SupabasePlanService {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error updating user plan:', error);
+        console.error('Erro ao atualizar plano do usuário:', error);
         return false;
       }
 
+      console.log('Plano atualizado com sucesso para:', newPlan);
       return true;
     } catch (error) {
-      console.error('Error in updateUserPlan:', error);
+      console.error('Erro em updateUserPlan:', error);
       return false;
     }
   }
@@ -190,9 +245,12 @@ class SupabasePlanService {
       if (!plan || !plan.data_expiracao) return false;
 
       const expirationDate = new Date(plan.data_expiracao);
-      return expirationDate < new Date();
+      const isExpired = expirationDate < new Date();
+      
+      console.log('Verificação de expiração:', { expirationDate, isExpired });
+      return isExpired;
     } catch (error) {
-      console.error('Error checking plan expiration:', error);
+      console.error('Erro ao verificar expiração do plano:', error);
       return false;
     }
   }
@@ -212,13 +270,13 @@ class SupabasePlanService {
         .limit(months);
 
       if (error) {
-        console.error('Error fetching usage history:', error);
+        console.error('Erro ao buscar histórico de uso:', error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('Error in getUsageHistory:', error);
+      console.error('Erro em getUsageHistory:', error);
       return [];
     }
   }

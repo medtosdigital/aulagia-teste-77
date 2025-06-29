@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabasePlanService, TipoPlano, PlanoUsuario } from '@/services/supabasePlanService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -11,32 +11,67 @@ export const useSupabasePlanPermissions = () => {
   const [remainingMaterials, setRemainingMaterials] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [shouldShowUpgrade, setShouldShowUpgrade] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
-  // Carregar dados do plano
-  const loadPlanData = async () => {
+  // Criar função de carregamento com useCallback para evitar loops
+  const loadPlanData = useCallback(async () => {
     if (!user) {
       setLoading(false);
+      setDataLoaded(true);
       return;
     }
 
     try {
       setLoading(true);
-      const plan = await supabasePlanService.getCurrentUserPlan();
-      const remaining = await supabasePlanService.getRemainingMaterials();
+      console.log('Carregando dados do plano para usuário:', user.id);
+      
+      const [plan, remaining] = await Promise.all([
+        supabasePlanService.getCurrentUserPlan(),
+        supabasePlanService.getRemainingMaterials()
+      ]);
+      
+      console.log('Plano carregado:', plan);
+      console.log('Materiais restantes:', remaining);
       
       setCurrentPlan(plan);
       setRemainingMaterials(remaining);
+      setDataLoaded(true);
     } catch (error) {
-      console.error('Error loading plan data:', error);
+      console.error('Erro ao carregar dados do plano:', error);
+      // Em caso de erro, definir plano gratuito como padrão
+      setCurrentPlan({
+        id: 'default',
+        user_id: user.id,
+        plano_ativo: 'gratuito',
+        data_inicio: new Date().toISOString(),
+        data_expiracao: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      setRemainingMaterials(5);
+      setDataLoaded(true);
+      
       toast({
         title: "Erro ao carregar dados do plano",
-        description: "Não foi possível carregar as informações do seu plano.",
+        description: "Definindo plano gratuito como padrão.",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
+
+  // Carregar dados apenas uma vez quando o usuário mudar
+  useEffect(() => {
+    if (user && !dataLoaded) {
+      loadPlanData();
+    } else if (!user) {
+      setCurrentPlan(null);
+      setRemainingMaterials(0);
+      setLoading(false);
+      setDataLoaded(true);
+    }
+  }, [user, loadPlanData, dataLoaded]);
 
   // Criar material (verifica permissões e incrementa uso)
   const createMaterial = async (): Promise<boolean> => {
@@ -60,8 +95,9 @@ export const useSupabasePlanPermissions = () => {
       const success = await supabasePlanService.incrementMaterialUsage();
       
       if (success) {
-        // Recarregar dados após criar material
-        await loadPlanData();
+        // Recarregar apenas os materiais restantes
+        const newRemaining = await supabasePlanService.getRemainingMaterials();
+        setRemainingMaterials(newRemaining);
         return true;
       } else {
         toast({
@@ -72,7 +108,7 @@ export const useSupabasePlanPermissions = () => {
         return false;
       }
     } catch (error) {
-      console.error('Error creating material:', error);
+      console.error('Erro ao criar material:', error);
       toast({
         title: "Erro inesperado",
         description: "Ocorreu um erro ao tentar criar o material.",
@@ -88,11 +124,19 @@ export const useSupabasePlanPermissions = () => {
       const success = await supabasePlanService.updateUserPlan(newPlan, expirationDate);
       
       if (success) {
+        // Recarregar dados após mudança de plano
         await loadPlanData();
         setShouldShowUpgrade(false);
+        
+        const planNames: Record<TipoPlano, string> = {
+          'gratuito': 'Gratuito',
+          'professor': 'Professor',
+          'grupo_escolar': 'Grupo Escolar'
+        };
+        
         toast({
           title: "Plano atualizado",
-          description: `Seu plano foi alterado para ${newPlan}.`,
+          description: `Seu plano foi alterado para ${planNames[newPlan]}.`,
         });
         return true;
       } else {
@@ -104,7 +148,7 @@ export const useSupabasePlanPermissions = () => {
         return false;
       }
     } catch (error) {
-      console.error('Error changing plan:', error);
+      console.error('Erro ao alterar plano:', error);
       toast({
         title: "Erro inesperado",
         description: "Ocorreu um erro ao alterar o plano.",
@@ -185,9 +229,11 @@ export const useSupabasePlanPermissions = () => {
     setShouldShowUpgrade(false);
   };
 
-  // Carregar dados quando o usuário mudar
-  useEffect(() => {
-    loadPlanData();
+  // Função de refresh que pode ser chamada externamente
+  const refreshData = useCallback(() => {
+    if (user) {
+      setDataLoaded(false); // Força recarregamento
+    }
   }, [user]);
 
   return {
@@ -201,7 +247,7 @@ export const useSupabasePlanPermissions = () => {
     createMaterial,
     changePlan,
     dismissUpgradeModal,
-    refreshData: loadPlanData,
+    refreshData,
     
     // Verificações de permissões
     canDownloadWord,
