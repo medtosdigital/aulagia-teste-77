@@ -94,20 +94,20 @@ const MaterialsList: React.FC = () => {
     
     try {
       setLoading(true);
-      console.log('Loading materials for user:', user.id);
+      console.log('Loading materials for authenticated user:', user.id);
       
       // Primeiro, inicializar materiais de exemplo se necessário
-      await userMaterialsService.initializeSampleMaterials(user.id);
+      await userMaterialsService.initializeSampleMaterials();
       
-      // Load materials from Supabase only (removed localStorage)
-      const supabaseMaterials = await userMaterialsService.getMaterialsByUser(user.id);
+      // Load materials from Supabase with RLS ensuring user isolation
+      const supabaseMaterials = await userMaterialsService.getMaterialsByUser();
       
       console.log('Supabase materials count:', supabaseMaterials.length);
       
       // Convert user materials to the expected format
       const convertedMaterials = supabaseMaterials.map(convertUserMaterialToGenerated);
       
-      console.log('Total materials:', convertedMaterials.length);
+      console.log('Total materials for authenticated user:', convertedMaterials.length);
       setMaterials(convertedMaterials);
     } catch (error) {
       console.error('Error loading materials:', error);
@@ -186,7 +186,7 @@ const MaterialsList: React.FC = () => {
   const handleDelete = async (id: string, title: string) => {
     if (window.confirm(`Tem certeza que deseja excluir "${title}"?`)) {
       try {
-        // Delete from Supabase only (removed localStorage)
+        // Delete from Supabase with RLS ensuring user can only delete their own materials
         const success = await userMaterialsService.deleteMaterial(id);
         
         if (success) {

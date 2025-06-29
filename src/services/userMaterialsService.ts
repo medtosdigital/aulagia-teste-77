@@ -58,17 +58,14 @@ class UserMaterialsService {
 
   async getMaterialsByUser(userId?: string): Promise<UserMaterial[]> {
     try {
-      // If no userId provided, get current authenticated user
-      if (!userId) {
-        const user = await this.getCurrentUser();
-        if (!user) {
-          console.log('No authenticated user found');
-          return [];
-        }
-        userId = user.id;
+      // Always get current authenticated user - ignore passed userId for security
+      const user = await this.getCurrentUser();
+      if (!user) {
+        console.log('No authenticated user found');
+        return [];
       }
 
-      console.log('Loading materials for user:', userId);
+      console.log('Loading materials for authenticated user:', user.id);
       const allMaterials: UserMaterial[] = [];
 
       // Buscar planos de aula - RLS automaticamente filtra por user_id
@@ -132,7 +129,7 @@ class UserMaterialsService {
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
 
-      console.log('Total materials loaded for user:', sortedMaterials.length);
+      console.log('Total materials loaded for authenticated user:', sortedMaterials.length);
       return sortedMaterials;
     } catch (error) {
       console.error('Error getting materials:', error);
@@ -144,18 +141,14 @@ class UserMaterialsService {
     try {
       console.log('Adding material:', material);
       
-      // Get current user if userId not provided
-      let userId = material.userId;
-      if (!userId) {
-        const user = await this.getCurrentUser();
-        if (!user) {
-          console.error('User must be authenticated to add material');
-          return null;
-        }
-        userId = user.id;
+      // Get current authenticated user - ignore passed userId for security
+      const user = await this.getCurrentUser();
+      if (!user) {
+        console.error('User must be authenticated to add material');
+        return null;
       }
 
-      const supabaseData = this.mapToSupabase({ ...material, userId });
+      const supabaseData = this.mapToSupabase({ ...material, userId: user.id });
       const tableName = TABLE_MAPPING[material.type];
 
       if (!tableName) {
@@ -193,7 +186,7 @@ class UserMaterialsService {
       }
       
       console.log('Getting all materials for authenticated user:', user.id);
-      return await this.getMaterialsByUser(user.id);
+      return await this.getMaterialsByUser();
     } catch (error) {
       console.error('Error getting all materials:', error);
       return [];
@@ -203,6 +196,13 @@ class UserMaterialsService {
   async deleteMaterial(id: string): Promise<boolean> {
     try {
       console.log('Deleting material with id:', id);
+
+      // Get current authenticated user
+      const user = await this.getCurrentUser();
+      if (!user) {
+        console.error('User must be authenticated to delete material');
+        return false;
+      }
 
       // Try to delete from each table - RLS will ensure only user's own materials can be deleted
       for (const [type, tableName] of Object.entries(TABLE_MAPPING)) {
@@ -228,6 +228,13 @@ class UserMaterialsService {
   async updateMaterial(id: string, updates: Partial<UserMaterial>): Promise<boolean> {
     try {
       console.log('Updating material:', id, updates);
+
+      // Get current authenticated user
+      const user = await this.getCurrentUser();
+      if (!user) {
+        console.error('User must be authenticated to update material');
+        return false;
+      }
 
       const updateData: any = {};
       
@@ -265,21 +272,18 @@ class UserMaterialsService {
     }
   }
 
-  async initializeSampleMaterials(userId?: string): Promise<void> {
+  async initializeSampleMaterials(): Promise<void> {
     try {
-      // Get current user if userId not provided
-      if (!userId) {
-        const user = await this.getCurrentUser();
-        if (!user) {
-          console.error('User must be authenticated to initialize sample materials');
-          return;
-        }
-        userId = user.id;
+      // Get current authenticated user
+      const user = await this.getCurrentUser();
+      if (!user) {
+        console.error('User must be authenticated to initialize sample materials');
+        return;
       }
 
-      console.log('Initializing sample materials for user:', userId);
+      console.log('Initializing sample materials for authenticated user:', user.id);
       
-      const existingMaterials = await this.getMaterialsByUser(userId);
+      const existingMaterials = await this.getMaterialsByUser();
       
       if (existingMaterials.length === 0) {
         console.log('No existing materials found, creating sample materials');
@@ -290,7 +294,7 @@ class UserMaterialsService {
             type: 'plano-aula' as const,
             subject: 'Matemática',
             grade: '6º ano',
-            userId: userId,
+            userId: user.id,
             content: JSON.stringify({
               objetivo: 'Ensinar conceitos básicos de frações',
               desenvolvimento: 'Explicação teórica seguida de exercícios práticos',
@@ -303,7 +307,7 @@ class UserMaterialsService {
             type: 'atividade' as const,
             subject: 'Matemática',
             grade: '6º ano',
-            userId: userId,
+            userId: user.id,
             content: JSON.stringify({
               instrucoes: 'Resolva as operações básicas abaixo',
               exercicios: ['2 + 3 = ?', '5 - 2 = ?', '4 × 3 = ?', '8 ÷ 2 = ?']
@@ -314,7 +318,7 @@ class UserMaterialsService {
             type: 'slides' as const,
             subject: 'Matemática',
             grade: '7º ano',
-            userId: userId,
+            userId: user.id,
             content: JSON.stringify({
               slides: [
                 { titulo: 'Introdução à Geometria', conteudo: 'Conceitos básicos' },
