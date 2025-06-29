@@ -11,13 +11,14 @@ export const useSupabasePlanPermissions = () => {
   const [remainingMaterials, setRemainingMaterials] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [shouldShowUpgrade, setShouldShowUpgrade] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
 
-  // Criar função de carregamento com useCallback para evitar loops
+  // Função de carregamento dos dados do plano
   const loadPlanData = useCallback(async () => {
     if (!user) {
+      console.log('Nenhum usuário autenticado, definindo valores padrão');
+      setCurrentPlan(null);
+      setRemainingMaterials(0);
       setLoading(false);
-      setDataLoaded(true);
       return;
     }
 
@@ -25,6 +26,7 @@ export const useSupabasePlanPermissions = () => {
       setLoading(true);
       console.log('Carregando dados do plano para usuário:', user.id);
       
+      // Carregar plano e materiais restantes em paralelo
       const [plan, remaining] = await Promise.all([
         supabasePlanService.getCurrentUserPlan(),
         supabasePlanService.getRemainingMaterials()
@@ -33,14 +35,29 @@ export const useSupabasePlanPermissions = () => {
       console.log('Plano carregado:', plan);
       console.log('Materiais restantes:', remaining);
       
-      setCurrentPlan(plan);
-      setRemainingMaterials(remaining);
-      setDataLoaded(true);
+      if (plan) {
+        setCurrentPlan(plan);
+        setRemainingMaterials(remaining);
+      } else {
+        // Se não conseguiu carregar o plano, definir valores padrão
+        console.log('Nenhum plano encontrado, definindo plano gratuito como padrão');
+        setCurrentPlan({
+          id: 'default',
+          user_id: user.id,
+          plano_ativo: 'gratuito',
+          data_inicio: new Date().toISOString(),
+          data_expiracao: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+        setRemainingMaterials(5); // Limite do plano gratuito
+      }
     } catch (error) {
       console.error('Erro ao carregar dados do plano:', error);
+      
       // Em caso de erro, definir plano gratuito como padrão
       setCurrentPlan({
-        id: 'default',
+        id: 'error-fallback',
         user_id: user.id,
         plano_ativo: 'gratuito',
         data_inicio: new Date().toISOString(),
@@ -49,11 +66,10 @@ export const useSupabasePlanPermissions = () => {
         updated_at: new Date().toISOString()
       });
       setRemainingMaterials(5);
-      setDataLoaded(true);
       
       toast({
         title: "Erro ao carregar dados do plano",
-        description: "Definindo plano gratuito como padrão.",
+        description: "Usando configurações padrão do plano gratuito.",
         variant: "destructive"
       });
     } finally {
@@ -61,17 +77,10 @@ export const useSupabasePlanPermissions = () => {
     }
   }, [user, toast]);
 
-  // Carregar dados apenas uma vez quando o usuário mudar
+  // Carregar dados quando o usuário mudar
   useEffect(() => {
-    if (user && !dataLoaded) {
-      loadPlanData();
-    } else if (!user) {
-      setCurrentPlan(null);
-      setRemainingMaterials(0);
-      setLoading(false);
-      setDataLoaded(true);
-    }
-  }, [user, loadPlanData, dataLoaded]);
+    loadPlanData();
+  }, [loadPlanData]);
 
   // Criar material (verifica permissões e incrementa uso)
   const createMaterial = async (): Promise<boolean> => {
@@ -211,7 +220,8 @@ export const useSupabasePlanPermissions = () => {
   };
 
   const getPlanDisplayName = (): string => {
-    if (!currentPlan) return 'Carregando...';
+    if (loading) return 'Carregando...';
+    if (!currentPlan) return 'Plano Gratuito';
     
     switch (currentPlan.plano_ativo) {
       case 'gratuito':
@@ -232,9 +242,9 @@ export const useSupabasePlanPermissions = () => {
   // Função de refresh que pode ser chamada externamente
   const refreshData = useCallback(() => {
     if (user) {
-      setDataLoaded(false); // Força recarregamento
+      loadPlanData();
     }
-  }, [user]);
+  }, [user, loadPlanData]);
 
   return {
     // Estado

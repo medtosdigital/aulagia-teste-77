@@ -93,6 +93,63 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_events: {
+        Row: {
+          classroom: string | null
+          created_at: string
+          description: string | null
+          end_date: string
+          end_time: string
+          event_type: string
+          grade: string | null
+          id: string
+          material_id: string | null
+          recurrence: Json | null
+          start_date: string
+          start_time: string
+          subject: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          classroom?: string | null
+          created_at?: string
+          description?: string | null
+          end_date: string
+          end_time: string
+          event_type?: string
+          grade?: string | null
+          id?: string
+          material_id?: string | null
+          recurrence?: Json | null
+          start_date: string
+          start_time: string
+          subject?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          classroom?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          end_time?: string
+          event_type?: string
+          grade?: string | null
+          id?: string
+          material_id?: string | null
+          recurrence?: Json | null
+          start_date?: string
+          start_time?: string
+          subject?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       perfis: {
         Row: {
           anos_serie: string[] | null

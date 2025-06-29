@@ -1,4 +1,3 @@
-
 import { useSupabasePlanPermissions } from './useSupabasePlanPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -160,7 +159,7 @@ export const usePlanPermissions = () => {
   };
 
   const mappedUsage = {
-    materialsThisMonth: planLimits.materialsPerMonth - supabasePermissions.remainingMaterials
+    materialsThisMonth: Math.max(0, planLimits.materialsPerMonth - supabasePermissions.remainingMaterials)
   };
 
   return {
@@ -169,7 +168,7 @@ export const usePlanPermissions = () => {
     usage: mappedUsage,
     shouldShowUpgrade: supabasePermissions.shouldShowUpgrade,
     shouldShowSupportModal: false,
-    loading: false,
+    loading: supabasePermissions.loading,
     
     // Ações
     createMaterial: supabasePermissions.createMaterial,
@@ -223,7 +222,7 @@ export const usePlanPermissions = () => {
     authenticateAdmin: () => false,
     logoutAdmin: () => {},
     
-    // Grupo escolar (implementar quando necessário)
+    // Grupo escolar
     isSchoolOwner: () => mappedCurrentPlan.id === 'grupo_escolar',
     getRemainingMaterialsToDistribute: () => 0,
     getTotalMaterialsUsedBySchool: () => 0,
