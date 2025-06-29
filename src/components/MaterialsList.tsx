@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, Eye, Edit3, Trash2, Download, Search, Filter, Plus, Calendar, Printer, FileDown, Lock } from 'lucide-react';
@@ -18,19 +19,24 @@ import MaterialEditModal from './MaterialEditModal';
 import MaterialInlineEditModal from './MaterialInlineEditModal';
 import UpgradeModal from './UpgradeModal';
 
+// Tornar formData opcional para compatibilidade com dados do Supabase
+interface GeneratedMaterialWithOptionalFormData extends Omit<GeneratedMaterial, 'formData'> {
+  formData?: any;
+}
+
 const MaterialsList: React.FC = () => {
   const navigate = useNavigate();
-  const [materials, setMaterials] = useState<GeneratedMaterial[]>([]);
-  const [filteredMaterials, setFilteredMaterials] = useState<GeneratedMaterial[]>([]);
+  const [materials, setMaterials] = useState<GeneratedMaterialWithOptionalFormData[]>([]);
+  const [filteredMaterials, setFilteredMaterials] = useState<GeneratedMaterialWithOptionalFormData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterSubject, setFilterSubject] = useState('all');
-  const [selectedMaterial, setSelectedMaterial] = useState<GeneratedMaterial | null>(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<GeneratedMaterialWithOptionalFormData | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [exportDropdownOpen, setExportDropdownOpen] = useState<string | null>(null);
   const [inlineEditModalOpen, setInlineEditModalOpen] = useState(false);
-  const [materialToEdit, setMaterialToEdit] = useState<GeneratedMaterial | null>(null);
+  const [materialToEdit, setMaterialToEdit] = useState<GeneratedMaterialWithOptionalFormData | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
@@ -63,10 +69,10 @@ const MaterialsList: React.FC = () => {
     try {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (currentUser) {
+        console.log('User authenticated:', currentUser.id);
         setUser(currentUser);
-        // Initialize sample materials for new users
-        await userMaterialsService.initializeSampleMaterials(currentUser.id);
       } else {
+        console.log('No authenticated user, redirecting to login');
         navigate('/login');
       }
     } catch (error) {
@@ -75,7 +81,7 @@ const MaterialsList: React.FC = () => {
     }
   };
 
-  const convertUserMaterialToGenerated = (userMaterial: UserMaterial): GeneratedMaterial => {
+  const convertUserMaterialToGenerated = (userMaterial: UserMaterial): GeneratedMaterialWithOptionalFormData => {
     // Parse content if it's a JSON string, otherwise use as is
     let parsedContent;
     try {
@@ -99,14 +105,24 @@ const MaterialsList: React.FC = () => {
   };
 
   const loadMaterials = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user available for loading materials');
+      return;
+    }
     
     try {
       setLoading(true);
+      console.log('Loading materials for user:', user.id);
+      
+      // Primeiro, inicializar materiais de exemplo se necessário
+      await userMaterialsService.initializeSampleMaterials(user.id);
       
       // Load from both old materialService (localStorage) and new userMaterialsService (Supabase)
       const localMaterials = materialService.getMaterials();
       const supabaseMaterials = await userMaterialsService.getMaterialsByUser(user.id);
+      
+      console.log('Local materials count:', localMaterials.length);
+      console.log('Supabase materials count:', supabaseMaterials.length);
       
       // Convert user materials to the expected format
       const convertedSupabaseMaterials = supabaseMaterials.map(convertUserMaterialToGenerated);
@@ -117,10 +133,12 @@ const MaterialsList: React.FC = () => {
         index === self.findIndex(m => m.id === material.id)
       );
       
+      console.log('Total unique materials:', uniqueMaterials.length);
       setMaterials(uniqueMaterials);
     } catch (error) {
       console.error('Error loading materials:', error);
       toast.error('Erro ao carregar materiais');
+      setMaterials([]);
     } finally {
       setLoading(false);
     }
@@ -147,12 +165,12 @@ const MaterialsList: React.FC = () => {
     setFilteredMaterials(filtered);
   };
 
-  const handleViewMaterial = (material: GeneratedMaterial) => {
+  const handleViewMaterial = (material: GeneratedMaterialWithOptionalFormData) => {
     setSelectedMaterial(material);
     setModalOpen(true);
   };
 
-  const handleEdit = (material: GeneratedMaterial) => {
+  const handleEdit = (material: GeneratedMaterialWithOptionalFormData) => {
     if (!canEditMaterials()) {
       toast.error('Edição de materiais disponível apenas em planos pagos');
       openUpgradeModal();
@@ -162,7 +180,7 @@ const MaterialsList: React.FC = () => {
     setInlineEditModalOpen(true);
   };
 
-  const handleEditMaterial = (material: GeneratedMaterial) => {
+  const handleEditMaterial = (material: GeneratedMaterialWithOptionalFormData) => {
     if (!canEditMaterials()) {
       toast.error('Edição de materiais disponível apenas em planos pagos');
       openUpgradeModal();
@@ -213,7 +231,7 @@ const MaterialsList: React.FC = () => {
     }
   };
 
-  const handleExport = async (material: GeneratedMaterial, format: 'pdf' | 'word' | 'ppt' | 'print') => {
+  const handleExport = async (material: GeneratedMaterialWithOptionalFormData, format: 'pdf' | 'word' | 'ppt' | 'print') => {
     // Verificar permissões para download
     if (format === 'word' && !canDownloadWord()) {
       toast.error('Download em Word disponível apenas em planos pagos');
@@ -229,16 +247,16 @@ const MaterialsList: React.FC = () => {
 
     try {
       if (format === 'pdf') {
-        await exportService.exportToPDF(material);
+        await exportService.exportToPDF(material as GeneratedMaterial);
         toast.success('PDF exportado com sucesso!');
       } else if (format === 'word') {
-        await exportService.exportToWord(material);
+        await exportService.exportToWord(material as GeneratedMaterial);
         toast.success('Documento Word exportado com sucesso!');
       } else if (format === 'ppt') {
-        await exportService.exportToPPT(material);
+        await exportService.exportToPPT(material as GeneratedMaterial);
         toast.success('PowerPoint exportado com sucesso!');
       } else if (format === 'print') {
-        await exportService.exportToPDF(material);
+        await exportService.exportToPDF(material as GeneratedMaterial);
         toast.success('Material enviado para impressão!');
       }
     } catch (error) {
@@ -561,17 +579,17 @@ const MaterialsList: React.FC = () => {
         <div className="fixed inset-0 z-40" onClick={() => setExportDropdownOpen(null)} />
       )}
 
-      <MaterialModal material={selectedMaterial} open={modalOpen} onClose={handleCloseModal} />
+      <MaterialModal material={selectedMaterial as GeneratedMaterial} open={modalOpen} onClose={handleCloseModal} />
 
       <MaterialEditModal 
-        material={selectedMaterial} 
+        material={selectedMaterial as GeneratedMaterial} 
         open={editModalOpen} 
         onClose={handleCloseEditModal} 
         onSave={handleSaveEdit} 
       />
 
       <MaterialInlineEditModal 
-        material={materialToEdit} 
+        material={materialToEdit as GeneratedMaterial} 
         open={inlineEditModalOpen} 
         onClose={() => {
           setInlineEditModalOpen(false);
