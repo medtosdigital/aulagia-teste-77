@@ -1,16 +1,21 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { BookOpen, Mail, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/AuthContext';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { user, signIn, signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({ 
     name: '', 
@@ -19,20 +24,61 @@ const LoginPage = () => {
     confirmPassword: '' 
   });
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Simulação de login - em produção, integrar com backend
-    if (loginData.email && loginData.password) {
-      navigate('/');
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true });
     }
+  }, [user, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    const { error } = await signIn(loginData.email, loginData.password);
+    
+    if (error) {
+      setError(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
+    } else {
+      navigate('/', { replace: true });
+    }
+    
+    setLoading(false);
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulação de cadastro - em produção, integrar com backend
-    if (registerData.password === registerData.confirmPassword) {
-      navigate('/');
+    setLoading(true);
+    setError('');
+
+    if (registerData.password !== registerData.confirmPassword) {
+      setError('As senhas não coincidem.');
+      setLoading(false);
+      return;
     }
+
+    if (registerData.password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres.');
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await signUp(registerData.email, registerData.password, registerData.name);
+    
+    if (error) {
+      if (error.message.includes('User already registered')) {
+        setError('Este e-mail já está cadastrado. Tente fazer login.');
+      } else {
+        setError(error.message || 'Erro ao criar conta. Tente novamente.');
+      }
+    } else {
+      setError('');
+      // Show success message or redirect
+      navigate('/', { replace: true });
+    }
+    
+    setLoading(false);
   };
 
   return (
@@ -60,6 +106,15 @@ const LoginPage = () => {
           </CardHeader>
           
           <CardContent>
+            {error && (
+              <Alert className="mb-4 border-red-200 bg-red-50">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-700">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Entrar</TabsTrigger>
@@ -80,6 +135,7 @@ const LoginPage = () => {
                         value={loginData.email}
                         onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                         required
+                        disabled={loading}
                       />
                     </div>
                   </div>
@@ -96,26 +152,26 @@ const LoginPage = () => {
                         value={loginData.password}
                         onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                         required
+                        disabled={loading}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                        disabled={loading}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
                   
-                  <Button type="submit" className="w-full btn-magic">
-                    Entrar
+                  <Button 
+                    type="submit" 
+                    className="w-full btn-magic"
+                    disabled={loading}
+                  >
+                    {loading ? 'Entrando...' : 'Entrar'}
                   </Button>
-                  
-                  <div className="text-center">
-                    <a href="#" className="text-sm text-primary-600 hover:underline">
-                      Esqueceu sua senha?
-                    </a>
-                  </div>
                 </form>
               </TabsContent>
               
@@ -133,6 +189,7 @@ const LoginPage = () => {
                         value={registerData.name}
                         onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
                         required
+                        disabled={loading}
                       />
                     </div>
                   </div>
@@ -149,6 +206,7 @@ const LoginPage = () => {
                         value={registerData.email}
                         onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
                         required
+                        disabled={loading}
                       />
                     </div>
                   </div>
@@ -160,16 +218,18 @@ const LoginPage = () => {
                       <Input
                         id="register-password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Sua senha"
+                        placeholder="Sua senha (mín. 6 caracteres)"
                         className="pl-10 pr-10"
                         value={registerData.password}
                         onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
                         required
+                        disabled={loading}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                        disabled={loading}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -188,12 +248,17 @@ const LoginPage = () => {
                         value={registerData.confirmPassword}
                         onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
                         required
+                        disabled={loading}
                       />
                     </div>
                   </div>
                   
-                  <Button type="submit" className="w-full btn-magic">
-                    Criar conta
+                  <Button 
+                    type="submit" 
+                    className="w-full btn-magic"
+                    disabled={loading}
+                  >
+                    {loading ? 'Criando conta...' : 'Criar conta'}
                   </Button>
                 </form>
               </TabsContent>

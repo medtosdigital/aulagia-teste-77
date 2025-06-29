@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,8 +10,11 @@ import { User, Camera, Shield, Crown, Save, Edit2, Lock } from 'lucide-react';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { userMaterialsService } from '@/services/userMaterialsService';
 import { statsService } from '@/services/statsService';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProfilePage = () => {
+  const { user } = useAuth();
   const { currentPlan } = usePlanPermissions();
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -23,7 +25,7 @@ const ProfilePage = () => {
   });
   
   const [formData, setFormData] = useState({
-    name: 'Professor(a)',
+    name: '',
     photo: '',
     teachingLevel: '',
     grades: [] as string[],
@@ -40,6 +42,7 @@ const ProfilePage = () => {
     avaliacoes: 0
   });
 
+  // ... keep existing code (teachingLevels, gradesByLevel, subjects, materialTypes arrays)
   const teachingLevels = [
     'Educação Infantil',
     'Ensino Fundamental I',
@@ -79,7 +82,9 @@ const ProfilePage = () => {
       setMaterialStats(stats);
 
       // Inicializar materiais de exemplo se necessário
-      userMaterialsService.initializeSampleMaterials('user1');
+      if (user) {
+        userMaterialsService.initializeSampleMaterials(user.id);
+      }
     } catch (error) {
       console.error('Error loading material stats:', error);
       // Fallback para estatísticas vazias
@@ -91,35 +96,43 @@ const ProfilePage = () => {
         avaliacoes: 0
       });
     }
-  }, []);
+  }, [user]);
 
-  // Carregar dados salvos
+  // Carregar dados do usuário
   useEffect(() => {
-    try {
-      const savedProfile = localStorage.getItem('userProfile');
-      const savedPhoto = localStorage.getItem('userPhoto');
-      
-      if (savedProfile) {
-        const profile = JSON.parse(savedProfile);
-        setFormData(prev => ({
-          ...prev,
-          ...profile,
-          grades: profile.grades || [],
-          subjects: profile.subjects || [],
-          materialTypes: profile.materialTypes || []
-        }));
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário'
+      }));
+
+      // Carregar dados salvos do localStorage
+      try {
+        const savedProfile = localStorage.getItem('userProfile');
+        const savedPhoto = localStorage.getItem('userPhoto');
+        
+        if (savedProfile) {
+          const profile = JSON.parse(savedProfile);
+          setFormData(prev => ({
+            ...prev,
+            ...profile,
+            grades: profile.grades || [],
+            subjects: profile.subjects || [],
+            materialTypes: profile.materialTypes || []
+          }));
+        }
+        
+        if (savedPhoto) {
+          setFormData(prev => ({
+            ...prev,
+            photo: savedPhoto
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading profile data:', error);
       }
-      
-      if (savedPhoto) {
-        setFormData(prev => ({
-          ...prev,
-          photo: savedPhoto
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading profile data:', error);
     }
-  }, []);
+  }, [user]);
 
   const getPlanDisplayName = () => {
     switch (currentPlan.id) {
@@ -179,10 +192,26 @@ const ProfilePage = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
-      // Salvar dados do perfil
+      // Salvar dados do perfil no localStorage
       localStorage.setItem('userProfile', JSON.stringify(formData));
+      
+      // Atualizar perfil no Supabase
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            full_name: formData.name,
+            avatar_url: formData.photo,
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) {
+          console.error('Error updating profile:', error);
+        }
+      }
       
       // Disparar evento para atualizar header
       window.dispatchEvent(new CustomEvent('profileUpdated'));
@@ -193,7 +222,7 @@ const ProfilePage = () => {
     }
   };
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       alert('As senhas não coincidem!');
       return;
@@ -204,15 +233,27 @@ const ProfilePage = () => {
       return;
     }
 
-    // Simular alteração de senha
-    console.log('Senha alterada com sucesso!');
-    setShowPasswordModal(false);
-    setPasswordForm({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
-    alert('Senha alterada com sucesso!');
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordForm.newPassword
+      });
+
+      if (error) {
+        alert('Erro ao alterar senha: ' + error.message);
+        return;
+      }
+
+      alert('Senha alterada com sucesso!');
+      setShowPasswordModal(false);
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      alert('Erro ao alterar senha. Tente novamente.');
+    }
   };
 
   const handleManageSubscription = () => {
@@ -294,6 +335,15 @@ const ProfilePage = () => {
                       disabled={!isEditing}
                       placeholder="Como deseja ser chamado(a)?"
                       className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">E-mail</Label>
+                    <Input
+                      id="email"
+                      value={user?.email || ''}
+                      disabled={true}
+                      className="mt-1 bg-gray-50"
                     />
                   </div>
                   <div>
@@ -498,16 +548,6 @@ const ProfilePage = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="currentPassword">Senha Atual</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={passwordForm.currentPassword}
-                onChange={(e) => setPasswordForm(prev => ({...prev, currentPassword: e.target.value}))}
-                placeholder="Digite sua senha atual"
-              />
-            </div>
-            <div>
               <Label htmlFor="newPassword">Nova Senha</Label>
               <Input
                 id="newPassword"
@@ -537,7 +577,7 @@ const ProfilePage = () => {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog>   
     </div>
   );
 };
