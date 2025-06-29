@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,12 +13,17 @@ import { userMaterialsService } from '@/services/userMaterialsService';
 import { statsService } from '@/services/statsService';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const ProfilePage = () => {
   const { user } = useAuth();
   const { currentPlan } = usePlanPermissions();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -75,6 +81,70 @@ const ProfilePage = () => {
     'Projetos'
   ];
 
+  // Carregar dados do perfil do Supabase
+  const loadProfile = async () => {
+    if (!user?.id) return;
+
+    try {
+      setLoading(true);
+      
+      // Buscar perfil do usuário
+      const { data: profile, error } = await supabase
+        .from('perfis')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // Não é erro de "não encontrado"
+        console.error('Error loading profile:', error);
+        toast({
+          title: "Erro ao carregar perfil",
+          description: "Não foi possível carregar os dados do perfil.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Preencher dados do formulário
+      if (profile) {
+        setFormData({
+          name: profile.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
+          photo: '', // Avatar será carregado separadamente do Supabase profiles
+          teachingLevel: profile.etapas_ensino?.[0] || '',
+          grades: profile.anos_serie || [],
+          subjects: profile.disciplinas || [],
+          school: '', // Campo não existe na nova estrutura
+          materialTypes: profile.tipo_material_favorito || []
+        });
+      } else {
+        // Perfil não existe, usar dados básicos do usuário
+        setFormData(prev => ({
+          ...prev,
+          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário'
+        }));
+      }
+
+      // Carregar avatar do profiles (tabela existente)
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single();
+
+      if (userProfile?.avatar_url) {
+        setFormData(prev => ({
+          ...prev,
+          photo: userProfile.avatar_url
+        }));
+      }
+
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     try {
       // Carregar estatísticas dos materiais
@@ -87,7 +157,6 @@ const ProfilePage = () => {
       }
     } catch (error) {
       console.error('Error loading material stats:', error);
-      // Fallback para estatísticas vazias
       setMaterialStats({
         totalMaterials: 0,
         planoAula: 0,
@@ -98,39 +167,9 @@ const ProfilePage = () => {
     }
   }, [user]);
 
-  // Carregar dados do usuário
   useEffect(() => {
     if (user) {
-      setFormData(prev => ({
-        ...prev,
-        name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário'
-      }));
-
-      // Carregar dados salvos do localStorage
-      try {
-        const savedProfile = localStorage.getItem('userProfile');
-        const savedPhoto = localStorage.getItem('userPhoto');
-        
-        if (savedProfile) {
-          const profile = JSON.parse(savedProfile);
-          setFormData(prev => ({
-            ...prev,
-            ...profile,
-            grades: profile.grades || [],
-            subjects: profile.subjects || [],
-            materialTypes: profile.materialTypes || []
-          }));
-        }
-        
-        if (savedPhoto) {
-          setFormData(prev => ({
-            ...prev,
-            photo: savedPhoto
-          }));
-        }
-      } catch (error) {
-        console.error('Error loading profile data:', error);
-      }
+      loadProfile();
     }
   }, [user]);
 
@@ -184,52 +223,98 @@ const ProfilePage = () => {
           ...prev,
           photo: photoUrl
         }));
-        
-        // Salvar no localStorage para persistir
-        localStorage.setItem('userPhoto', photoUrl);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleSave = async () => {
+    if (!user?.id) return;
+
     try {
-      // Salvar dados do perfil no localStorage
-      localStorage.setItem('userProfile', JSON.stringify(formData));
-      
-      // Atualizar perfil no Supabase
-      if (user) {
-        const { error } = await supabase
+      setSaving(true);
+
+      // Preparar dados para salvar na tabela perfis
+      const profileData = {
+        user_id: user.id,
+        nome_preferido: formData.name,
+        etapas_ensino: formData.teachingLevel ? [formData.teachingLevel] : [],
+        anos_serie: formData.grades,
+        disciplinas: formData.subjects,
+        tipo_material_favorito: formData.materialTypes,
+        preferencia_bncc: false // valor padrão
+      };
+
+      // Upsert na tabela perfis
+      const { error: profileError } = await supabase
+        .from('perfis')
+        .upsert(profileData, { onConflict: 'user_id' });
+
+      if (profileError) {
+        console.error('Error saving profile:', profileError);
+        toast({
+          title: "Erro ao salvar perfil",
+          description: "Não foi possível salvar os dados do perfil.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Atualizar avatar na tabela profiles se houver foto
+      if (formData.photo) {
+        const { error: avatarError } = await supabase
           .from('profiles')
           .upsert({
             id: user.id,
             full_name: formData.name,
             avatar_url: formData.photo,
+            email: user.email,
             updated_at: new Date().toISOString()
           });
 
-        if (error) {
-          console.error('Error updating profile:', error);
+        if (avatarError) {
+          console.error('Error updating avatar:', avatarError);
         }
       }
-      
+
       // Disparar evento para atualizar header
       window.dispatchEvent(new CustomEvent('profileUpdated'));
       
+      toast({
+        title: "Perfil salvo",
+        description: "Suas informações foram atualizadas com sucesso!"
+      });
+      
       setIsEditing(false);
+
     } catch (error) {
       console.error('Error saving profile:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
   const handlePasswordChange = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert('As senhas não coincidem!');
+      toast({
+        title: "Erro na validação",
+        description: "As senhas não coincidem!",
+        variant: "destructive"
+      });
       return;
     }
     
     if (passwordForm.newPassword.length < 6) {
-      alert('A nova senha deve ter pelo menos 6 caracteres!');
+      toast({
+        title: "Senha muito curta",
+        description: "A nova senha deve ter pelo menos 6 caracteres!",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -239,11 +324,19 @@ const ProfilePage = () => {
       });
 
       if (error) {
-        alert('Erro ao alterar senha: ' + error.message);
+        toast({
+          title: "Erro ao alterar senha",
+          description: error.message,
+          variant: "destructive"
+        });
         return;
       }
 
-      alert('Senha alterada com sucesso!');
+      toast({
+        title: "Senha alterada",
+        description: "Sua senha foi alterada com sucesso!"
+      });
+      
       setShowPasswordModal(false);
       setPasswordForm({
         currentPassword: '',
@@ -252,7 +345,11 @@ const ProfilePage = () => {
       });
     } catch (error) {
       console.error('Error changing password:', error);
-      alert('Erro ao alterar senha. Tente novamente.');
+      toast({
+        title: "Erro inesperado",
+        description: "Erro ao alterar senha. Tente novamente.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -260,6 +357,26 @@ const ProfilePage = () => {
     // Disparar evento para navegar para página de assinatura
     window.dispatchEvent(new CustomEvent('navigateToSubscription'));
   };
+
+  if (loading) {
+    return (
+      <div className="p-4 md:p-6 max-w-6xl mx-auto">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="h-96 bg-gray-200 rounded"></div>
+              <div className="h-96 bg-gray-200 rounded"></div>
+            </div>
+            <div className="space-y-6">
+              <div className="h-48 bg-gray-200 rounded"></div>
+              <div className="h-32 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
@@ -273,8 +390,14 @@ const ProfilePage = () => {
           onClick={() => isEditing ? handleSave() : setIsEditing(true)}
           className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           size="lg"
+          disabled={saving}
         >
-          {isEditing ? (
+          {saving ? (
+            <>
+              <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Salvando...
+            </>
+          ) : isEditing ? (
             <>
               <Save className="w-4 h-4 mr-2" />
               Salvar Alterações

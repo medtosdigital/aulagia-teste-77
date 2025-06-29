@@ -1,8 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SidebarProps {
   activeItem?: string;
@@ -13,6 +16,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeItem = 'dashboard',
   onItemClick
 }) => {
+  const { user } = useAuth();
   const {
     hasCalendar,
     canAccessCalendarPage,
@@ -28,53 +32,65 @@ const Sidebar: React.FC<SidebarProps> = ({
     photo: ''
   });
 
-  // Carregar dados do perfil do localStorage
-  useEffect(() => {
-    const savedProfile = localStorage.getItem('userProfile');
-    const savedPhoto = localStorage.getItem('userPhoto');
-    
-    if (savedProfile) {
-      const profile = JSON.parse(savedProfile);
-      setUserProfile({
-        name: profile.name || 'Professor(a)',
-        photo: profile.photo || savedPhoto || ''
-      });
-    } else if (savedPhoto) {
-      setUserProfile(prev => ({
-        ...prev,
-        photo: savedPhoto
-      }));
-    }
+  const loadUserProfile = async () => {
+    if (!user?.id) return;
 
-    // Adicionar listener para mudanças no localStorage
-    const handleStorageChange = () => {
-      const updatedProfile = localStorage.getItem('userProfile');
-      const updatedPhoto = localStorage.getItem('userPhoto');
+    try {
+      // Buscar dados do perfil do usuário
+      const { data: profile } = await supabase
+        .from('perfis')
+        .select('nome_preferido')
+        .eq('user_id', user.id)
+        .single();
+
+      // Buscar avatar do usuário
+      const { data: userProfileData } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single();
+
+      // Definir nome preferido
+      const preferredName = profile?.nome_preferido || 
+                           user.user_metadata?.full_name || 
+                           user.email?.split('@')[0] || 
+                           'Professor(a)';
       
-      if (updatedProfile) {
-        const profile = JSON.parse(updatedProfile);
-        setUserProfile({
-          name: profile.name || 'Professor(a)',
-          photo: profile.photo || updatedPhoto || ''
-        });
-      } else if (updatedPhoto) {
-        setUserProfile(prev => ({
-          ...prev,
-          photo: updatedPhoto
-        }));
+      setUserProfile({
+        name: preferredName,
+        photo: userProfileData?.avatar_url || ''
+      });
+
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      // Fallback para dados básicos do usuário
+      setUserProfile({
+        name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Professor(a)',
+        photo: ''
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadUserProfile();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Listener personalizado para mudanças no perfil
+    const handleProfileUpdate = () => {
+      if (user) {
+        loadUserProfile();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Listener personalizado para mudanças no perfil
-    window.addEventListener('profileUpdated', handleStorageChange);
+    window.addEventListener('profileUpdated', handleProfileUpdate);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('profileUpdated', handleStorageChange);
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
-  }, []);
+  }, [user]);
 
   const mobileMenuItems = [{
     id: 'dashboard',
@@ -104,6 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     label: 'Assinatura',
     icon: User
   }];
+  
   const desktopMenuItems = [{
     id: 'dashboard',
     label: 'Dashboard',
@@ -156,9 +173,11 @@ const Sidebar: React.FC<SidebarProps> = ({
     label: 'Templates',
     icon: FileText
   }] : [])];
+  
   const handleItemClick = (itemId: string) => {
     onItemClick?.(itemId);
   };
+  
   const getPlanDisplayName = () => {
     switch (currentPlan.id) {
       case 'gratuito':
@@ -171,6 +190,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         return 'Plano Gratuito';
     }
   };
+  
   return <>
       {/* Desktop Sidebar */}
       <div className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-40 flex-col">

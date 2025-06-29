@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HeaderProps {
   title: string;
@@ -22,21 +23,55 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
   const { user, signOut } = useAuth();
   const { currentPlan } = usePlanPermissions();
   const [userName, setUserName] = useState('');
+  const [userPhoto, setUserPhoto] = useState('');
+
+  const loadUserData = async () => {
+    if (!user?.id) return;
+
+    try {
+      // Buscar dados do perfil do usuário
+      const { data: profile } = await supabase
+        .from('perfis')
+        .select('nome_preferido')
+        .eq('user_id', user.id)
+        .single();
+
+      // Buscar avatar do usuário
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single();
+
+      // Definir nome preferido
+      const preferredName = profile?.nome_preferido || 
+                           user.user_metadata?.full_name || 
+                           user.email?.split('@')[0] || 
+                           'Usuário';
+      
+      setUserName(preferredName);
+      setUserPhoto(userProfile?.avatar_url || '');
+
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      // Fallback para dados básicos do usuário
+      setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário');
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadUserData();
+    }
+  }, [user]);
 
   useEffect(() => {
     // Listen for profile updates
     const handleProfileUpdate = () => {
-      const savedProfile = localStorage.getItem('userProfile');
-      if (savedProfile) {
-        const profile = JSON.parse(savedProfile);
-        setUserName(profile.name || 'Usuário');
-      } else {
-        setUserName(user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário');
+      if (user) {
+        loadUserData();
       }
     };
-
-    // Initial load
-    handleProfileUpdate();
 
     // Listen for profile updates
     window.addEventListener('profileUpdated', handleProfileUpdate);
@@ -98,7 +133,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2 px-2">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src="" />
+                  <AvatarImage src={userPhoto} />
                   <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-400 text-white text-sm">
                     {userName.charAt(0).toUpperCase()}
                   </AvatarFallback>

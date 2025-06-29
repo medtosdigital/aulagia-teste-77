@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      perfis: {
+        Row: {
+          anos_serie: string[] | null
+          created_at: string | null
+          disciplinas: string[] | null
+          etapas_ensino: string[] | null
+          id: string
+          nome_preferido: string | null
+          preferencia_bncc: boolean | null
+          tipo_material_favorito: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          anos_serie?: string[] | null
+          created_at?: string | null
+          disciplinas?: string[] | null
+          etapas_ensino?: string[] | null
+          id?: string
+          nome_preferido?: string | null
+          preferencia_bncc?: boolean | null
+          tipo_material_favorito?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          anos_serie?: string[] | null
+          created_at?: string | null
+          disciplinas?: string[] | null
+          etapas_ensino?: string[] | null
+          id?: string
+          nome_preferido?: string | null
+          preferencia_bncc?: boolean | null
+          tipo_material_favorito?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
