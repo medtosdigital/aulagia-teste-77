@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -11,7 +12,7 @@ import SchoolPage from '@/components/SchoolPage';
 import SubscriptionPage from '@/components/SubscriptionPage';
 import ProfilePage from '@/components/ProfilePage';
 import PageBlockedOverlay from '@/components/PageBlockedOverlay';
-import UpgradeModal from '@/components/UpgradeModal';
+import { UpgradeModal } from '@/components/UpgradeModal';
 import SupportModal from '@/components/SupportModal';
 import AdminLoginModal from '@/components/AdminLoginModal';
 import FirstAccessModal from '@/components/FirstAccessModal';
@@ -270,9 +271,8 @@ const Index = () => {
       <UpgradeModal
         isOpen={isUpgradeModalOpen}
         onClose={closeUpgradeModal}
-        onSelectPlan={handlePlanSelection}
-        availablePlans={availablePlans}
-        currentPlanName={currentPlan.name}
+        currentPlan={currentPlan}
+        onPlanSelect={handlePlanSelection}
       />
 
       {/* Modal de suporte para plano Professor */}

@@ -13,7 +13,7 @@ import { materialService, GeneratedMaterial } from '@/services/materialService';
 import MaterialModal from './MaterialModal';
 import NextStepsModal from './NextStepsModal';
 import BNCCValidationModal from './BNCCValidationModal';
-import UpgradeModal from './UpgradeModal';
+import { UpgradeModal } from './UpgradeModal';
 import BlockedFeature from './BlockedFeature';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
@@ -53,7 +53,7 @@ const CreateLesson: React.FC = () => {
   const [showBNCCValidation, setShowBNCCValidation] = useState(false);
 
   // Hooks para gerenciamento de planos e limites
-  const { createMaterial, isLimitReached, getRemainingMaterials, currentPlan, canPerformAction } = usePlanPermissions();
+  const { createMaterial, isLimitReached, getRemainingMaterials, currentPlan, canPerformAction, canEditMaterials, canCreateAssessments } = usePlanPermissions();
   const { 
     isOpen: isUpgradeModalOpen, 
     closeModal: closeUpgradeModal, 
@@ -82,7 +82,7 @@ const CreateLesson: React.FC = () => {
       bgGradient: 'bg-gradient-to-br from-slate-50 to-slate-100',
       iconBg: 'bg-slate-500',
       hoverEffect: 'hover:shadow-slate-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-150',
-      blocked: currentPlan.id === 'gratuito' && !canPerformAction('canCreateSlides')
+      blocked: currentPlan.id === 'gratuito' && !canEditMaterials()
     },
     {
       id: 'atividade',
@@ -103,7 +103,7 @@ const CreateLesson: React.FC = () => {
       bgGradient: 'bg-gradient-to-br from-purple-50 to-purple-100',
       iconBg: 'bg-purple-500',
       hoverEffect: 'hover:shadow-purple-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-purple-100 hover:to-purple-150',
-      blocked: currentPlan.id === 'gratuito' && !canPerformAction('canCreateAssessments')
+      blocked: currentPlan.id === 'gratuito' && !canCreateAssessments()
     }
   ];
 
@@ -467,9 +467,8 @@ const CreateLesson: React.FC = () => {
         <UpgradeModal
           isOpen={isUpgradeModalOpen}
           onClose={closeUpgradeModal}
-          onSelectPlan={handlePlanSelection}
-          availablePlans={availablePlans}
-          currentPlanName={currentPlan.name}
+          currentPlan={currentPlan}
+          onPlanSelect={handlePlanSelection}
         />
       </>
     );
@@ -772,9 +771,8 @@ const CreateLesson: React.FC = () => {
         <UpgradeModal
           isOpen={isUpgradeModalOpen}
           onClose={closeUpgradeModal}
-          onSelectPlan={handlePlanSelection}
-          availablePlans={availablePlans}
-          currentPlanName={currentPlan.name}
+          currentPlan={currentPlan}
+          onPlanSelect={handlePlanSelection}
         />
       </>
     );
