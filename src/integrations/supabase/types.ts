@@ -177,6 +177,36 @@ export type Database = {
         }
         Relationships: []
       }
+      planos_usuarios: {
+        Row: {
+          created_at: string
+          data_expiracao: string | null
+          data_inicio: string
+          id: string
+          plano_ativo: Database["public"]["Enums"]["tipo_plano"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_expiracao?: string | null
+          data_inicio?: string
+          id?: string
+          plano_ativo?: Database["public"]["Enums"]["tipo_plano"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_expiracao?: string | null
+          data_inicio?: string
+          id?: string
+          plano_ativo?: Database["public"]["Enums"]["tipo_plano"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -246,15 +276,56 @@ export type Database = {
         }
         Relationships: []
       }
+      uso_mensal_materiais: {
+        Row: {
+          ano: number
+          created_at: string
+          id: string
+          materiais_criados: number
+          mes: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          id?: string
+          materiais_criados?: number
+          mes: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          id?: string
+          materiais_criados?: number
+          mes?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_create_material: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      get_plan_limits: {
+        Args: { plan_type: Database["public"]["Enums"]["tipo_plano"] }
+        Returns: number
+      }
+      increment_material_usage: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      tipo_plano: "gratuito" | "professor" | "grupo_escolar"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -369,6 +440,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      tipo_plano: ["gratuito", "professor", "grupo_escolar"],
+    },
   },
 } as const
