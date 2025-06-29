@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface UserMaterial {
@@ -139,24 +138,56 @@ class UserMaterialsService {
 
   async addMaterial(material: Omit<UserMaterial, 'id' | 'createdAt' | 'status'>): Promise<UserMaterial | null> {
     try {
-      console.log('Adding material:', material);
+      console.log('🚀 Starting addMaterial process');
+      console.log('📋 Input material data:', {
+        title: material.title,
+        type: material.type,
+        subject: material.subject,
+        grade: material.grade,
+        contentLength: material.content?.length || 0
+      });
       
       // Get current authenticated user - ignore passed userId for security
       const user = await this.getCurrentUser();
       if (!user) {
-        console.error('User must be authenticated to add material');
-        return null;
+        console.error('❌ User must be authenticated to add material');
+        throw new Error('Usuário deve estar logado para salvar material');
       }
 
-      const supabaseData = this.mapToSupabase({ ...material, userId: user.id });
+      console.log('✅ Authenticated user found:', user.id);
+
+      // Validate required fields
+      if (!material.title?.trim()) {
+        console.error('❌ Material title is required');
+        throw new Error('Título do material é obrigatório');
+      }
+
+      if (!material.type) {
+        console.error('❌ Material type is required');
+        throw new Error('Tipo do material é obrigatório');
+      }
+
+      // Create material data with authenticated user ID
+      const materialWithUser = { ...material, userId: user.id };
+      const supabaseData = this.mapToSupabase(materialWithUser);
       const tableName = TABLE_MAPPING[material.type];
 
       if (!tableName) {
-        console.error('Invalid material type:', material.type);
-        return null;
+        console.error('❌ Invalid material type:', material.type);
+        throw new Error(`Tipo de material inválido: ${material.type}`);
       }
 
-      console.log('Inserting into table:', tableName, 'with data:', supabaseData);
+      console.log('📊 Supabase data prepared:', {
+        tableName,
+        titulo: supabaseData.titulo,
+        tipo_material: supabaseData.tipo_material,
+        disciplina: supabaseData.disciplina,
+        serie: supabaseData.serie,
+        user_id: supabaseData.user_id,
+        contentLength: supabaseData.conteudo?.length || 0
+      });
+
+      console.log(`💾 Inserting into table: ${tableName}`);
 
       const { data, error } = await supabase
         .from(tableName)
@@ -165,15 +196,38 @@ class UserMaterialsService {
         .single();
 
       if (error) {
-        console.error(`Error adding ${material.type}:`, error);
-        return null;
+        console.error(`❌ Error adding ${material.type}:`, error);
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw new Error(`Erro ao salvar ${material.type}: ${error.message}`);
       }
 
-      console.log('Material added successfully:', data);
-      return this.mapFromSupabase(data, material.type);
+      if (!data) {
+        console.error('❌ No data returned from insert');
+        throw new Error('Nenhum dado retornado após inserção');
+      }
+
+      console.log('✅ Material saved successfully:', {
+        id: data.id,
+        titulo: data.titulo,
+        created_at: data.created_at
+      });
+
+      const savedMaterial = this.mapFromSupabase(data, material.type);
+      console.log('🔄 Material mapped back to UserMaterial format:', savedMaterial.id);
+
+      return savedMaterial;
     } catch (error) {
-      console.error('Error adding material:', error);
-      return null;
+      console.error('❌ Error in addMaterial:', error);
+      // Re-throw with user-friendly message if it's not already one
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Erro interno ao salvar material');
     }
   }
 

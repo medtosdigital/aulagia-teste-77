@@ -225,17 +225,27 @@ const CreateLesson: React.FC = () => {
     setIsGenerating(true);
     setGenerationProgress(0);
 
-    // Simulate progress
+    // Create progress simulation with more detailed steps
+    const progressSteps = [
+      { progress: 20, message: 'Analisando dados do formulário...' },
+      { progress: 40, message: 'Gerando conteúdo pedagógico...' },
+      { progress: 60, message: 'Aplicando padrões da BNCC...' },
+      { progress: 80, message: 'Salvando material...' },
+      { progress: 95, message: 'Finalizando...' }
+    ];
+
+    let stepIndex = 0;
     const progressInterval = setInterval(() => {
-      setGenerationProgress(prev => {
-        if (prev >= 90) {
-          return prev;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 300);
+      if (stepIndex < progressSteps.length) {
+        setGenerationProgress(progressSteps[stepIndex].progress);
+        console.log('Progress:', progressSteps[stepIndex].message);
+        stepIndex++;
+      }
+    }, 800);
 
     try {
+      console.log('🚀 Starting material generation process');
+      
       // Para avaliações, usar os múltiplos assuntos como tema
       const materialFormData = {
         tema: selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic,
@@ -258,25 +268,34 @@ const CreateLesson: React.FC = () => {
         } : {})
       };
 
-      console.log('Material form data being sent:', materialFormData);
+      console.log('📋 Material form data being sent:', materialFormData);
+      
+      // Generate and save material through materialService
       const material = await materialService.generateMaterial(selectedType!, materialFormData);
+      
+      console.log('✅ Material generated and saved successfully:', material.id);
       
       clearInterval(progressInterval);
       setGenerationProgress(100);
       
+      // Show success feedback before transitioning
       setTimeout(() => {
         setIsGenerating(false);
         setGeneratedMaterial(material);
         setShowNextStepsModal(true); // Mostrar o modal de próximos passos primeiro
         setStep('selection');
-        toast.success(`${getCurrentTypeInfo()?.title} criado com sucesso!`);
+        toast.success(`${getCurrentTypeInfo()?.title} criado e salvo com sucesso!`);
       }, 1000);
     } catch (error) {
+      console.error('❌ Generation error:', error);
       clearInterval(progressInterval);
       setIsGenerating(false);
       setStep('form');
-      toast.error('Erro ao gerar material. Tente novamente.');
-      console.error('Generation error:', error);
+      
+      // Show specific error message
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao gerar material';
+      toast.error(`Erro ao criar material: ${errorMessage}`);
+      console.error('Detailed error:', error);
     }
   };
 
@@ -340,7 +359,7 @@ const CreateLesson: React.FC = () => {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-4 sm:mb-6">
               <div className="relative mb-3">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-50 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg">
                   <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                 </div>
                 <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-yellow-400 rounded-full animate-bounce"></div>
@@ -781,10 +800,10 @@ const CreateLesson: React.FC = () => {
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-                    Preparando seu material...
+                    Criando seu material...
                   </h2>
                   <p className="text-sm sm:text-base text-gray-600">
-                    Você ensina, a gente facilita!
+                    Gerando conteúdo e salvando no seu perfil
                   </p>
                 </div>
                 
@@ -792,7 +811,9 @@ const CreateLesson: React.FC = () => {
                 <div className="space-y-3">
                   <Progress value={generationProgress} className="h-2 bg-gray-200" />
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Gerando material...</span>
+                    <span className="text-sm text-gray-600">
+                      {generationProgress < 100 ? 'Processando...' : 'Salvando material...'}
+                    </span>
                     <span className="text-sm font-semibold text-gray-900">
                       {Math.round(generationProgress)}%
                     </span>
