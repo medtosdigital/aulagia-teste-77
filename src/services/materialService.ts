@@ -1,4 +1,3 @@
-
 import { userMaterialsService, UserMaterial } from './userMaterialsService';
 
 export interface GeneratedMaterial {
@@ -25,6 +24,61 @@ export interface MaterialFormData {
   tiposQuestoes?: string[];
   numeroQuestoes?: number;
   quantidadeQuestoes?: number;
+}
+
+// Type exports for backward compatibility
+export interface LessonPlan {
+  titulo?: string;
+  professor: string;
+  disciplina: string;
+  serie: string;
+  tema: string;
+  data: string;
+  duracao: string;
+  bncc: string;
+  objetivos: string[];
+  habilidades: string[];
+  desenvolvimento: Array<{
+    etapa: string;
+    atividade: string;
+    tempo: string;
+    recursos: string;
+  }>;
+  recursos: string[];
+  avaliacao: string;
+}
+
+export interface Activity {
+  titulo?: string;
+  instrucoes: string;
+  questoes: Array<{
+    numero: number;
+    tipo: string;
+    pergunta: string;
+    opcoes?: string[];
+    resposta?: string;
+  }>;
+}
+
+export interface Slide {
+  numero: number;
+  titulo: string;
+  conteudo: string[] | string;
+  tipo?: string;
+}
+
+export interface Assessment {
+  titulo?: string;
+  instrucoes: string;
+  tempoLimite?: string;
+  questoes: Array<{
+    numero: number;
+    tipo: string;
+    pergunta: string;
+    opcoes?: string[];
+    pontuacao?: number;
+  }>;
+  htmlContent?: string;
 }
 
 class MaterialService {
@@ -60,6 +114,98 @@ class MaterialService {
       console.error('❌ Error in generateMaterial:', error);
       throw error;
     }
+  }
+
+  // Backward compatibility methods
+  async getMaterials(): Promise<GeneratedMaterial[]> {
+    console.log('📋 Getting all materials from Supabase...');
+    try {
+      const userMaterials = await userMaterialsService.getAllMaterials();
+      console.log('✅ Loaded materials from Supabase:', userMaterials.length);
+      
+      return userMaterials.map(material => this.convertUserMaterialToGenerated(material));
+    } catch (error) {
+      console.error('❌ Error getting materials:', error);
+      return [];
+    }
+  }
+
+  async getMaterialById(id: string): Promise<GeneratedMaterial | null> {
+    console.log('🔍 Getting material by ID:', id);
+    try {
+      const userMaterials = await userMaterialsService.getAllMaterials();
+      const material = userMaterials.find(m => m.id === id);
+      
+      if (!material) {
+        console.log('❌ Material not found:', id);
+        return null;
+      }
+      
+      console.log('✅ Material found:', material.title);
+      return this.convertUserMaterialToGenerated(material);
+    } catch (error) {
+      console.error('❌ Error getting material by ID:', error);
+      return null;
+    }
+  }
+
+  async deleteMaterial(id: string): Promise<boolean> {
+    console.log('🗑️ Deleting material:', id);
+    try {
+      const success = await userMaterialsService.deleteMaterial(id);
+      if (success) {
+        console.log('✅ Material deleted successfully');
+      } else {
+        console.log('❌ Failed to delete material');
+      }
+      return success;
+    } catch (error) {
+      console.error('❌ Error deleting material:', error);
+      return false;
+    }
+  }
+
+  async updateMaterial(id: string, updates: Partial<GeneratedMaterial>): Promise<boolean> {
+    console.log('📝 Updating material:', id, updates);
+    try {
+      const userMaterialUpdates: Partial<UserMaterial> = {};
+      
+      if (updates.title) userMaterialUpdates.title = updates.title;
+      if (updates.subject) userMaterialUpdates.subject = updates.subject;
+      if (updates.grade) userMaterialUpdates.grade = updates.grade;
+      if (updates.content) userMaterialUpdates.content = JSON.stringify(updates.content);
+      
+      const success = await userMaterialsService.updateMaterial(id, userMaterialUpdates);
+      if (success) {
+        console.log('✅ Material updated successfully');
+      } else {
+        console.log('❌ Failed to update material');
+      }
+      return success;
+    } catch (error) {
+      console.error('❌ Error updating material:', error);
+      return false;
+    }
+  }
+
+  private convertUserMaterialToGenerated(userMaterial: UserMaterial): GeneratedMaterial {
+    let content;
+    try {
+      content = userMaterial.content ? JSON.parse(userMaterial.content) : {};
+    } catch (error) {
+      console.error('Error parsing content:', error);
+      content = {};
+    }
+
+    return {
+      id: userMaterial.id,
+      title: userMaterial.title,
+      type: userMaterial.type === 'plano-aula' ? 'plano-de-aula' : userMaterial.type,
+      subject: userMaterial.subject,
+      grade: userMaterial.grade,
+      createdAt: userMaterial.createdAt,
+      content
+    };
   }
 
   private mapToUserMaterial(type: string, formData: MaterialFormData, content: any): Omit<UserMaterial, 'id' | 'createdAt' | 'status'> {
