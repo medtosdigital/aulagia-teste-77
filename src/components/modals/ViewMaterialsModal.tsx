@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -46,10 +45,10 @@ const ViewMaterialsModal: React.FC<ViewMaterialsModalProps> = ({
     try {
       setLoading(true);
       // Inicializar materiais de exemplo se não existirem
-      await userMaterialsService.initializeSampleMaterials(teacher.id);
+      await userMaterialsService.initializeSampleMaterials();
       
       // Carregar materiais reais do usuário com await
-      const userMaterials = await userMaterialsService.getMaterialsByUser(teacher.id);
+      const userMaterials = await userMaterialsService.getMaterialsByUser();
       setMaterials(userMaterials);
     } catch (error) {
       console.error('Error loading materials:', error);

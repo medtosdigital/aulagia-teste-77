@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,7 +48,6 @@ const ProfilePage = () => {
     avaliacoes: 0
   });
 
-  // ... keep existing code (teachingLevels, gradesByLevel, subjects, materialTypes arrays)
   const teachingLevels = [
     'Educação Infantil',
     'Ensino Fundamental I',
@@ -82,7 +80,6 @@ const ProfilePage = () => {
     'Projetos'
   ];
 
-  // Carregar dados do perfil do Supabase
   const loadProfile = async () => {
     if (!user?.id) return;
 
@@ -155,7 +152,7 @@ const ProfilePage = () => {
 
       // Inicializar materiais de exemplo se necessário
       if (user) {
-        userMaterialsService.initializeSampleMaterials(user.id);
+        userMaterialsService.initializeSampleMaterials();
       }
     } catch (error) {
       console.error('Error loading material stats:', error);
