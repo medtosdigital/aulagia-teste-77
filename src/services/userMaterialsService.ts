@@ -22,6 +22,15 @@ const TABLE_MAPPING = {
 } as const;
 
 class UserMaterialsService {
+  private async getCurrentUser() {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
+    return user;
+  }
+
   private mapFromSupabase(item: any, type: string): UserMaterial {
     return {
       id: item.id,
@@ -47,61 +56,75 @@ class UserMaterialsService {
     };
   }
 
-  async getMaterialsByUser(userId: string): Promise<UserMaterial[]> {
+  async getMaterialsByUser(userId?: string): Promise<UserMaterial[]> {
     try {
+      // If no userId provided, get current authenticated user
+      if (!userId) {
+        const user = await this.getCurrentUser();
+        if (!user) {
+          console.log('No authenticated user found');
+          return [];
+        }
+        userId = user.id;
+      }
+
       console.log('Loading materials for user:', userId);
       const allMaterials: UserMaterial[] = [];
 
-      // Buscar planos de aula filtrados por user_id
+      // Buscar planos de aula - RLS automaticamente filtra por user_id
       const { data: planosData, error: planosError } = await supabase
         .from('planos_de_aula')
         .select('*')
-        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (!planosError && planosData) {
         const mappedPlanos = planosData.map(item => this.mapFromSupabase(item, 'plano-aula'));
         allMaterials.push(...mappedPlanos);
         console.log('Loaded planos de aula:', mappedPlanos.length);
+      } else if (planosError) {
+        console.error('Error loading planos de aula:', planosError);
       }
 
-      // Buscar atividades filtradas por user_id
+      // Buscar atividades - RLS automaticamente filtra por user_id
       const { data: atividadesData, error: atividadesError } = await supabase
         .from('atividades')
         .select('*')
-        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (!atividadesError && atividadesData) {
         const mappedAtividades = atividadesData.map(item => this.mapFromSupabase(item, 'atividade'));
         allMaterials.push(...mappedAtividades);
         console.log('Loaded atividades:', mappedAtividades.length);
+      } else if (atividadesError) {
+        console.error('Error loading atividades:', atividadesError);
       }
 
-      // Buscar slides filtrados por user_id
+      // Buscar slides - RLS automaticamente filtra por user_id
       const { data: slidesData, error: slidesError } = await supabase
         .from('slides')
         .select('*')
-        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (!slidesError && slidesData) {
         const mappedSlides = slidesData.map(item => this.mapFromSupabase(item, 'slides'));
         allMaterials.push(...mappedSlides);
         console.log('Loaded slides:', mappedSlides.length);
+      } else if (slidesError) {
+        console.error('Error loading slides:', slidesError);
       }
 
-      // Buscar avaliações filtradas por user_id
+      // Buscar avaliações - RLS automaticamente filtra por user_id
       const { data: avaliacoesData, error: avaliacoesError } = await supabase
         .from('avaliacoes')
         .select('*')
-        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (!avaliacoesError && avaliacoesData) {
         const mappedAvaliacoes = avaliacoesData.map(item => this.mapFromSupabase(item, 'avaliacao'));
         allMaterials.push(...mappedAvaliacoes);
         console.log('Loaded avaliacoes:', mappedAvaliacoes.length);
+      } else if (avaliacoesError) {
+        console.error('Error loading avaliacoes:', avaliacoesError);
       }
 
       // Sort by creation date
@@ -121,12 +144,18 @@ class UserMaterialsService {
     try {
       console.log('Adding material:', material);
       
-      if (!material.userId) {
-        console.error('User ID is required to add material');
-        return null;
+      // Get current user if userId not provided
+      let userId = material.userId;
+      if (!userId) {
+        const user = await this.getCurrentUser();
+        if (!user) {
+          console.error('User must be authenticated to add material');
+          return null;
+        }
+        userId = user.id;
       }
 
-      const supabaseData = this.mapToSupabase(material);
+      const supabaseData = this.mapToSupabase({ ...material, userId });
       const tableName = TABLE_MAPPING[material.type];
 
       if (!tableName) {
@@ -157,7 +186,7 @@ class UserMaterialsService {
 
   async getAllMaterials(): Promise<UserMaterial[]> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await this.getCurrentUser();
       if (!user) {
         console.log('No authenticated user found');
         return [];
@@ -175,7 +204,7 @@ class UserMaterialsService {
     try {
       console.log('Deleting material with id:', id);
 
-      // Tentar deletar de cada tabela usando o mapeamento correto
+      // Try to delete from each table - RLS will ensure only user's own materials can be deleted
       for (const [type, tableName] of Object.entries(TABLE_MAPPING)) {
         const { error } = await supabase
           .from(tableName)
@@ -207,7 +236,7 @@ class UserMaterialsService {
       if (updates.subject) updateData.disciplina = updates.subject;
       if (updates.grade) updateData.serie = updates.grade;
 
-      // Tentar atualizar em cada tabela usando o mapeamento correto
+      // Try to update in each table - RLS will ensure only user's own materials can be updated
       for (const [type, tableName] of Object.entries(TABLE_MAPPING)) {
         const { data: existingData } = await supabase
           .from(tableName)
@@ -236,15 +265,20 @@ class UserMaterialsService {
     }
   }
 
-  async initializeSampleMaterials(userId: string): Promise<void> {
+  async initializeSampleMaterials(userId?: string): Promise<void> {
     try {
-      console.log('Initializing sample materials for user:', userId);
-      
+      // Get current user if userId not provided
       if (!userId) {
-        console.error('User ID is required to initialize sample materials');
-        return;
+        const user = await this.getCurrentUser();
+        if (!user) {
+          console.error('User must be authenticated to initialize sample materials');
+          return;
+        }
+        userId = user.id;
       }
 
+      console.log('Initializing sample materials for user:', userId);
+      
       const existingMaterials = await this.getMaterialsByUser(userId);
       
       if (existingMaterials.length === 0) {

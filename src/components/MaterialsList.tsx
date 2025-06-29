@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, Eye, Edit3, Trash2, Download, Search, Filter, Plus, Calendar, Printer, FileDown, Lock } from 'lucide-react';
@@ -8,24 +7,25 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { materialService, GeneratedMaterial } from '@/services/materialService';
+import { GeneratedMaterial } from '@/services/materialService';
 import { userMaterialsService, UserMaterial } from '@/services/userMaterialsService';
 import { exportService } from '@/services/exportService';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import MaterialModal from './MaterialModal';
 import MaterialEditModal from './MaterialEditModal';
 import MaterialInlineEditModal from './MaterialInlineEditModal';
 import UpgradeModal from './UpgradeModal';
 
-// Tornar formData opcional para compatibilidade com dados do Supabase
+// Interface para compatibilidade com GeneratedMaterial
 interface GeneratedMaterialWithOptionalFormData extends Omit<GeneratedMaterial, 'formData'> {
   formData?: any;
 }
 
 const MaterialsList: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [materials, setMaterials] = useState<GeneratedMaterialWithOptionalFormData[]>([]);
   const [filteredMaterials, setFilteredMaterials] = useState<GeneratedMaterialWithOptionalFormData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,7 +38,6 @@ const MaterialsList: React.FC = () => {
   const [inlineEditModalOpen, setInlineEditModalOpen] = useState(false);
   const [materialToEdit, setMaterialToEdit] = useState<GeneratedMaterialWithOptionalFormData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
 
   // Hooks para gerenciamento de planos
   const { canEditMaterials, canDownloadWord, canDownloadPPT } = usePlanPermissions();
@@ -52,34 +51,17 @@ const MaterialsList: React.FC = () => {
   } = useUpgradeModal();
 
   useEffect(() => {
-    checkUser();
-  }, []);
-
-  useEffect(() => {
     if (user) {
       loadMaterials();
+    } else {
+      console.log('No authenticated user, redirecting to login');
+      navigate('/login');
     }
-  }, [user]);
+  }, [user, navigate]);
 
   useEffect(() => {
     filterMaterials();
   }, [materials, searchTerm, filterType, filterSubject]);
-
-  const checkUser = async () => {
-    try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser) {
-        console.log('User authenticated:', currentUser.id);
-        setUser(currentUser);
-      } else {
-        console.log('No authenticated user, redirecting to login');
-        navigate('/login');
-      }
-    } catch (error) {
-      console.error('Error checking user:', error);
-      navigate('/login');
-    }
-  };
 
   const convertUserMaterialToGenerated = (userMaterial: UserMaterial): GeneratedMaterialWithOptionalFormData => {
     // Parse content if it's a JSON string, otherwise use as is
@@ -117,24 +99,16 @@ const MaterialsList: React.FC = () => {
       // Primeiro, inicializar materiais de exemplo se necessário
       await userMaterialsService.initializeSampleMaterials(user.id);
       
-      // Load from both old materialService (localStorage) and new userMaterialsService (Supabase)
-      const localMaterials = materialService.getMaterials();
+      // Load materials from Supabase only (removed localStorage)
       const supabaseMaterials = await userMaterialsService.getMaterialsByUser(user.id);
       
-      console.log('Local materials count:', localMaterials.length);
-      console.log('Supabase materials count:', supabaseMaterials.length);
+      console.log('Supabase materials count:', supababMaterials.length);
       
       // Convert user materials to the expected format
-      const convertedSupabaseMaterials = supabaseMaterials.map(convertUserMaterialToGenerated);
+      const convertedMaterials = supabaseMaterials.map(convertUserMaterialToGenerated);
       
-      // Combine and deduplicate materials (prioritize Supabase over localStorage)
-      const allMaterials = [...convertedSupabaseMaterials, ...localMaterials];
-      const uniqueMaterials = allMaterials.filter((material, index, self) => 
-        index === self.findIndex(m => m.id === material.id)
-      );
-      
-      console.log('Total unique materials:', uniqueMaterials.length);
-      setMaterials(uniqueMaterials);
+      console.log('Total materials:', convertedMaterials.length);
+      setMaterials(convertedMaterials);
     } catch (error) {
       console.error('Error loading materials:', error);
       toast.error('Erro ao carregar materiais');
@@ -212,13 +186,10 @@ const MaterialsList: React.FC = () => {
   const handleDelete = async (id: string, title: string) => {
     if (window.confirm(`Tem certeza que deseja excluir "${title}"?`)) {
       try {
-        // Try to delete from Supabase first
-        const supabaseSuccess = await userMaterialsService.deleteMaterial(id);
+        // Delete from Supabase only (removed localStorage)
+        const success = await userMaterialsService.deleteMaterial(id);
         
-        // If not found in Supabase, try localStorage
-        const localSuccess = supabaseSuccess || materialService.deleteMaterial(id);
-        
-        if (localSuccess || supabaseSuccess) {
+        if (success) {
           toast.success('Material excluído com sucesso!');
           loadMaterials();
         } else {
