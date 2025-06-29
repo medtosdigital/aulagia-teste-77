@@ -11,6 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import MaterialModal from './MaterialModal';
+import NextStepsModal from './NextStepsModal';
 import BNCCValidationModal from './BNCCValidationModal';
 import UpgradeModal from './UpgradeModal';
 import BlockedFeature from './BlockedFeature';
@@ -47,7 +48,8 @@ const CreateLesson: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generatedMaterial, setGeneratedMaterial] = useState<GeneratedMaterial | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showMaterialModal, setShowMaterialModal] = useState(false);
+  const [showNextStepsModal, setShowNextStepsModal] = useState(false);
   const [showBNCCValidation, setShowBNCCValidation] = useState(false);
 
   // Hooks para gerenciamento de planos e limites
@@ -265,7 +267,7 @@ const CreateLesson: React.FC = () => {
       setTimeout(() => {
         setIsGenerating(false);
         setGeneratedMaterial(material);
-        setShowModal(true);
+        setShowNextStepsModal(true); // Mostrar o modal de próximos passos primeiro
         setStep('selection');
         toast.success(`${getCurrentTypeInfo()?.title} criado com sucesso!`);
       }, 1000);
@@ -282,8 +284,30 @@ const CreateLesson: React.FC = () => {
     return materialTypes.find(type => type.id === selectedType);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
+  // Função para fechar o modal de próximos passos e abrir o de visualização
+  const handleNextStepsClose = () => {
+    setShowNextStepsModal(false);
+    // Reset form
+    setFormData({
+      topic: '',
+      subject: '',
+      grade: '',
+      questionType: 'mistas',
+      questionCount: [5],
+      subjects: ['']
+    });
+    setSelectedType(null);
+  };
+
+  // Função para continuar do modal de próximos passos para visualização
+  const handleNextStepsContinue = () => {
+    setShowNextStepsModal(false);
+    setShowMaterialModal(true);
+  };
+
+  // Função para fechar o modal de visualização do material
+  const handleMaterialModalClose = () => {
+    setShowMaterialModal(false);
     setGeneratedMaterial(null);
     // Reset form
     setFormData({
@@ -405,7 +429,20 @@ const CreateLesson: React.FC = () => {
           </div>
         </main>
         
-        <MaterialModal material={generatedMaterial} open={showModal} onClose={handleCloseModal} />
+        {/* Modal de próximos passos - aparece primeiro */}
+        <NextStepsModal
+          open={showNextStepsModal}
+          onClose={handleNextStepsClose}
+          onContinue={handleNextStepsContinue}
+          materialType={selectedType || ''}
+        />
+        
+        {/* Modal de visualização do material - aparece depois */}
+        <MaterialModal 
+          material={generatedMaterial} 
+          open={showMaterialModal} 
+          onClose={handleMaterialModalClose} 
+        />
         
         {/* Modal de upgrade que aparece quando o limite é atingido */}
         <UpgradeModal
@@ -697,7 +734,20 @@ const CreateLesson: React.FC = () => {
           onAccept={handleBNCCValidationAccept} 
         />
 
-        <MaterialModal material={generatedMaterial} open={showModal} onClose={handleCloseModal} />
+        {/* Modal de próximos passos - aparece primeiro */}
+        <NextStepsModal
+          open={showNextStepsModal}
+          onClose={handleNextStepsClose}
+          onContinue={handleNextStepsContinue}
+          materialType={selectedType || ''}
+        />
+
+        {/* Modal de visualização do material - aparece depois */}
+        <MaterialModal 
+          material={generatedMaterial} 
+          open={showMaterialModal} 
+          onClose={handleMaterialModalClose} 
+        />
         
         {/* Modal de upgrade que aparece quando o limite é atingido */}
         <UpgradeModal
