@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -57,7 +56,11 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   ];
 
   useEffect(() => {
-    setMaterials(materialService.getMaterials());
+    const loadMaterials = async () => {
+      const loadedMaterials = await materialService.getMaterials();
+      setMaterials(loadedMaterials);
+    };
+    loadMaterials();
   }, []);
 
   useEffect(() => {

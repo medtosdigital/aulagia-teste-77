@@ -32,8 +32,8 @@ export interface ScheduleStats {
 }
 
 class StatsService {
-  getMaterialStats(): MaterialStats {
-    const materials = materialService.getMaterials();
+  async getMaterialStats(): Promise<MaterialStats> {
+    const materials = await materialService.getMaterials();
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 

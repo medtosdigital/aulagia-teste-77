@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Lock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -160,12 +161,13 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  const handleViewMaterial = (event: ScheduleEvent) => {
+  const handleViewMaterial = async (event: ScheduleEvent) => {
     if (!hasCalendarAccess) {
       openUpgradeModal();
       return;
     }
-    const material = materialService.getMaterials().find(m => m.id === event.materialId);
+    const materials = await materialService.getMaterials();
+    const material = materials.find(m => m.id === event.materialId);
     if (material) {
       setSelectedMaterial(material);
       setMaterialModalOpen(true);

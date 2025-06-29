@@ -28,13 +28,22 @@ const EventCard: React.FC<EventCardProps> = ({
   onDelete,
   onViewMaterial
 }) => {
-  const getMaterialTypeFromEvent = (event: ScheduleEvent): 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' => {
-    const material = materialService.getMaterials().find(m => m.id === event.materialId);
-    return (material?.type as 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao') || 'atividade';
-  };
+  const [materialType, setMaterialType] = React.useState<'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao'>('atividade');
+
+  React.useEffect(() => {
+    const loadMaterialType = async () => {
+      const materials = await materialService.getMaterials();
+      const material = materials.find(m => m.id === event.materialId);
+      if (material) {
+        setMaterialType((material.type as 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao') || 'atividade');
+      }
+    };
+    loadMaterialType();
+  }, [event.materialId]);
 
   const handleExportMaterial = async (event: ScheduleEvent, format: 'print' | 'pdf' | 'word' | 'ppt') => {
-    const material = materialService.getMaterials().find(m => m.id === event.materialId);
+    const materials = await materialService.getMaterials();
+    const material = materials.find(m => m.id === event.materialId);
     if (!material) {
       toast.error('Material não encontrado');
       return;
@@ -75,7 +84,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
   return (
     <Card className={`group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] overflow-hidden ${compact ? 'text-xs' : ''}`}>
-      <MaterialCardHeader materialType={getMaterialTypeFromEvent(event)} subject={event.subject} />
+      <MaterialCardHeader materialType={materialType} subject={event.subject} />
       <CardContent className={`${compact ? 'p-3' : 'p-4'}`}>
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
@@ -197,7 +206,7 @@ const EventCard: React.FC<EventCardProps> = ({
                 <FileText className="w-3 h-3" />
                 PDF
               </button>
-              {getMaterialTypeFromEvent(event) === 'slides' ? (
+              {materialType === 'slides' ? (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

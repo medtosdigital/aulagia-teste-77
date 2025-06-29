@@ -18,10 +18,10 @@ const MaterialViewer = () => {
   const [loading, setLoading] = React.useState(true);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
 
-  const loadMaterial = React.useCallback(() => {
+  const loadMaterial = React.useCallback(async () => {
     if (id) {
       console.log('Loading material with ID:', id);
-      const foundMaterial = materialService.getMaterialById(id);
+      const foundMaterial = await materialService.getMaterialById(id);
       console.log('Found material:', foundMaterial);
       setMaterial(foundMaterial || null);
       setLoading(false);
@@ -59,10 +59,10 @@ const MaterialViewer = () => {
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!material) return;
     
-    const success = materialService.deleteMaterial(material.id);
+    const success = await materialService.deleteMaterial(material.id);
     if (success) {
       toast.success('Material excluído com sucesso!');
       navigate('/');
