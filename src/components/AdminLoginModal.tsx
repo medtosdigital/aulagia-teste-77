@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
@@ -28,7 +27,7 @@ const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
     setIsLoading(true);
 
     try {
-      const isAuthenticated = authenticateAdmin(email, password);
+      const isAuthenticated = authenticateAdmin();
       
       if (isAuthenticated) {
         onSuccess();

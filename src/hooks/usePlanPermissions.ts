@@ -159,7 +159,7 @@ export const usePlanPermissions = () => {
     logoutAdmin: () => {},
     
     // Grupo escolar (implementar quando necessário)
-    isSchoolOwner: () => mappedCurrentPlan.id === 'grupo-escolar',
+    isSchoolOwner: () => mappedCurrentPlan.id === 'grupo_escolar',
     getRemainingMaterialsToDistribute: () => 0,
     getTotalMaterialsUsedBySchool: () => 0,
     updateUserMaterialLimit: () => {},
