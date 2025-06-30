@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Lock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,8 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addW
 import { ptBR } from 'date-fns/locale';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { materialService } from '@/services/materialService';
-import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import ScheduleModal from './ScheduleModal';
 import MaterialModal from './MaterialModal';
@@ -30,8 +32,11 @@ const CalendarPage: React.FC = () => {
   const [showFullWeek, setShowFullWeek] = useState(false);
   const [showWeekends, setShowWeekends] = useState(false);
 
-  // Hooks para verificar permissões
-  const { hasCalendar } = usePlanPermissions();
+  // Hook para verificar se o usuário está logado
+  const { user } = useAuth();
+  
+  // Hooks para verificar funcionalidades específicas do plano
+  const { hasCalendar } = useSupabasePlanPermissions();
   const { 
     isOpen: isUpgradeModalOpen, 
     closeModal: closeUpgradeModal, 
@@ -41,14 +46,14 @@ const CalendarPage: React.FC = () => {
     availablePlans 
   } = useUpgradeModal();
 
-  // Verificar se tem acesso ao calendário
-  const hasCalendarAccess = hasCalendar();
+  // Verificar se tem funcionalidades específicas do calendário
+  const hasCalendarFeatures = hasCalendar();
 
   useEffect(() => {
-    if (hasCalendarAccess) {
+    if (user) {
       loadEvents();
     }
-  }, [currentDate, view, hasCalendarAccess]);
+  }, [currentDate, view, user]);
 
   const loadEvents = () => {
     let startDate: Date, endDate: Date;
@@ -115,40 +120,24 @@ const CalendarPage: React.FC = () => {
   };
 
   const handleDateClick = (date: Date) => {
-    if (!hasCalendarAccess) {
-      openUpgradeModal();
-      return;
-    }
     setSelectedDate(date);
     setSelectedEvent(null);
     setModalOpen(true);
   };
 
   const handleEventClick = (event: ScheduleEvent) => {
-    if (!hasCalendarAccess) {
-      openUpgradeModal();
-      return;
-    }
     setSelectedEvent(event);
     setSelectedDate(undefined);
     setModalOpen(true);
   };
 
   const handleEditEvent = (event: ScheduleEvent) => {
-    if (!hasCalendarAccess) {
-      openUpgradeModal();
-      return;
-    }
     setSelectedEvent(event);
     setSelectedDate(undefined);
     setModalOpen(true);
   };
 
   const handleDeleteEvent = (event: ScheduleEvent) => {
-    if (!hasCalendarAccess) {
-      openUpgradeModal();
-      return;
-    }
     if (window.confirm(`Tem certeza que deseja excluir "${event.title}"?`)) {
       const success = scheduleService.deleteEvent(event.id.split('-')[0]);
       if (success) {
@@ -161,10 +150,6 @@ const CalendarPage: React.FC = () => {
   };
 
   const handleViewMaterial = async (event: ScheduleEvent) => {
-    if (!hasCalendarAccess) {
-      openUpgradeModal();
-      return;
-    }
     const materials = await materialService.getMaterials();
     const material = materials.find(m => m.id === event.materialId);
     if (material) {
@@ -176,10 +161,6 @@ const CalendarPage: React.FC = () => {
   };
 
   const handleMonthClick = (month: Date, newView: 'month') => {
-    if (!hasCalendarAccess) {
-      openUpgradeModal();
-      return;
-    }
     setCurrentDate(month);
     setView(newView);
   };
@@ -278,7 +259,7 @@ const CalendarPage: React.FC = () => {
           {view === 'day' && (
             <DayView
               currentDate={currentDate}
-              dayEvents={hasCalendarAccess ? getEventsForDate(currentDate) : []}
+              dayEvents={user ? getEventsForDate(currentDate) : []}
               onDateClick={handleDateClick}
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
@@ -288,7 +269,7 @@ const CalendarPage: React.FC = () => {
           {view === 'week' && (
             <WeekView
               currentDate={currentDate}
-              events={hasCalendarAccess ? events : []}
+              events={user ? events : []}
               showFullWeek={showFullWeek}
               showWeekends={showWeekends}
               onDateClick={handleDateClick}
@@ -304,7 +285,7 @@ const CalendarPage: React.FC = () => {
           {view === 'month' && (
             <MonthView
               currentDate={currentDate}
-              events={hasCalendarAccess ? events : []}
+              events={user ? events : []}
               showWeekends={showWeekends}
               onDateClick={handleDateClick}
               onEventClick={handleEventClick}
@@ -318,7 +299,7 @@ const CalendarPage: React.FC = () => {
           {view === 'year' && (
             <YearView
               currentDate={currentDate}
-              events={hasCalendarAccess ? events : []}
+              events={user ? events : []}
               onMonthClick={handleMonthClick}
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
@@ -326,36 +307,23 @@ const CalendarPage: React.FC = () => {
             />
           )}
 
-          {/* Overlay de bloqueio para plano gratuito - posicionado sobre o conteúdo do calendário */}
-          {!hasCalendarAccess && (
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
-              <Card className="max-w-md w-full mx-4 shadow-2xl border-0 bg-white">
-                <CardContent className="p-8 text-center">
-                  <div className="w-20 h-20 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                      <Lock className="w-8 h-8 text-gray-600" />
-                    </div>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-gray-900 mb-3">Calendário Premium</h2>
-                    <p className="text-gray-600 leading-relaxed">
-                      O calendário de materiais está disponível apenas em planos pagos. Faça upgrade para organizar e agendar seus materiais pedagógicos com eficiência.
-                    </p>
-                  </div>
-                  
+          {/* Overlay de bloqueio para funcionalidades premium - apenas para recursos específicos */}
+          {!hasCalendarFeatures && (
+            <div className="absolute top-0 right-0 m-4 z-10">
+              <Card className="max-w-sm shadow-lg border-0 bg-white/95 backdrop-blur-sm">
+                <CardContent className="p-4 text-center">
+                  <Crown className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600 mb-3">
+                    Alguns recursos avançados do calendário estão disponíveis apenas em planos premium.
+                  </p>
                   <Button 
                     onClick={openUpgradeModal}
-                    className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all w-full"
+                    size="sm"
+                    className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white"
                   >
-                    <Crown className="w-5 h-5 mr-2" />
-                    Fazer Upgrade Agora
+                    <Crown className="w-4 h-4 mr-1" />
+                    Upgrade
                   </Button>
-                  
-                  <p className="text-xs text-gray-500 mt-4">
-                    Desbloqueie todos os recursos com um plano premium
-                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -363,32 +331,28 @@ const CalendarPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Modais - só funcionam se tiver acesso */}
-      {hasCalendarAccess && (
-        <>
-          <ScheduleModal
-            open={modalOpen}
-            onClose={() => {
-              setModalOpen(false);
-              setSelectedEvent(null);
-              setSelectedDate(undefined);
-            }}
-            onSave={loadEvents}
-            event={selectedEvent}
-            selectedDate={selectedDate}
-          />
+      {/* Modais */}
+      <ScheduleModal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedEvent(null);
+          setSelectedDate(undefined);
+        }}
+        onSave={loadEvents}
+        event={selectedEvent}
+        selectedDate={selectedDate}
+      />
 
-          <MaterialModal
-            material={selectedMaterial}
-            open={materialModalOpen}
-            onClose={() => {
-              setMaterialModalOpen(false);
-              setSelectedMaterial(null);
-            }}
-            showNextSteps={false}
-          />
-        </>
-      )}
+      <MaterialModal
+        material={selectedMaterial}
+        open={materialModalOpen}
+        onClose={() => {
+          setMaterialModalOpen(false);
+          setSelectedMaterial(null);
+        }}
+        showNextSteps={false}
+      />
 
       {/* Modal de upgrade global */}
       <UpgradeModal

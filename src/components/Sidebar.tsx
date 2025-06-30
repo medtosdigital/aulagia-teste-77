@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePlanPermissions } from '@/hooks/usePlanPermissions';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SidebarProps {
@@ -17,15 +17,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onItemClick
 }) => {
   const { user } = useAuth();
-  const {
-    hasCalendar,
-    canAccessCalendarPage,
-    canAccessSchool,
-    canAccessSettings,
-    canAccessCreateMaterial,
-    canAccessMaterials,
-    currentPlan
-  } = usePlanPermissions();
+  const { canAccessSchool, canAccessSettings, currentPlan } = useSupabasePlanPermissions();
 
   const [userProfile, setUserProfile] = useState({
     name: 'Professor(a)',
@@ -92,26 +84,27 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
   }, [user]);
 
+  // Simplificados - apenas verificar se usuário está logado
   const mobileMenuItems = [{
     id: 'dashboard',
     label: 'Início',
     icon: LayoutDashboard
   },
-  // Para plano grupo escolar, sempre mostrar materiais
-  ...(canAccessMaterials() ? [{
+  // Materiais - para todos os usuários logados
+  ...(user ? [{
     id: 'lessons',
     label: 'Materiais',
     icon: BookOpen
   }] : []),
-  // Para plano grupo escolar, sempre mostrar criar
-  ...(canAccessCreateMaterial() ? [{
+  // Criar - para todos os usuários logados
+  ...(user ? [{
     id: 'create',
     label: 'Criar',
     icon: Plus,
     isCenter: true
   }] : []),
-  // Calendário aparece para todos os planos
-  ...(canAccessCalendarPage() ? [{
+  // Calendário - para todos os usuários logados
+  ...(user ? [{
     id: 'calendar',
     label: 'Agenda',
     icon: Calendar
@@ -126,25 +119,25 @@ const Sidebar: React.FC<SidebarProps> = ({
     label: 'Dashboard',
     icon: LayoutDashboard
   },
-  // Para plano grupo escolar, sempre mostrar criar
-  ...(canAccessCreateMaterial() ? [{
+  // Criar - para todos os usuários logados
+  ...(user ? [{
     id: 'create',
     label: 'Criar Material',
     icon: Plus
   }] : []),
-  // Para plano grupo escolar, sempre mostrar materiais
-  ...(canAccessMaterials() ? [{
+  // Materiais - para todos os usuários logados
+  ...(user ? [{
     id: 'lessons',
     label: 'Meus Materiais',
     icon: BookOpen
   }] : []),
-  // Calendário aparece para todos os planos
-  ...(canAccessCalendarPage() ? [{
+  // Calendário - para todos os usuários logados
+  ...(user ? [{
     id: 'calendar',
     label: 'Calendário',
     icon: Calendar
   }] : []),
-  // Escola aparece para plano grupo-escolar
+  // Escola - apenas para plano grupo-escolar
   ...(canAccessSchool() ? [{
     id: 'school',
     label: 'Escola',
@@ -179,12 +172,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
   
   const getPlanDisplayName = () => {
-    switch (currentPlan.id) {
+    if (!currentPlan) return 'Plano Gratuito';
+    
+    switch (currentPlan.plano_ativo) {
       case 'gratuito':
         return 'Plano Gratuito';
       case 'professor':
         return 'Plano Professor';
-      case 'grupo-escolar':
+      case 'grupo_escolar':
         return 'Grupo Escolar';
       default:
         return 'Plano Gratuito';

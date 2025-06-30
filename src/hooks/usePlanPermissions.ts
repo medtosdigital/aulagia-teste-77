@@ -1,3 +1,4 @@
+
 import { useSupabasePlanPermissions } from './useSupabasePlanPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -103,17 +104,17 @@ export const usePlanPermissions = () => {
       dismissSupportModal: () => {},
       refreshData: supabasePermissions.refreshData,
       
-      // Permissões desabilitadas durante loading
+      // Permissões - permitir acesso básico durante loading para usuários logados
       canEditMaterials: () => false,
       canDownloadWord: () => false,
       canDownloadPPT: () => false,
       canCreateSlides: () => false,
       canCreateAssessments: () => false,
       hasCalendar: () => false,
-      canAccessCalendarPage: () => false,
+      canAccessCalendarPage: () => true, // Permitir acesso ao calendário para usuários logados
       canAccessSchool: () => false,
-      canAccessCreateMaterial: () => false,
-      canAccessMaterials: () => false,
+      canAccessCreateMaterial: () => true, // Permitir acesso para criar material para usuários logados
+      canAccessMaterials: () => true, // Permitir acesso aos materiais para usuários logados
       
       // Funções auxiliares
       canPerformAction: () => false,
@@ -187,17 +188,17 @@ export const usePlanPermissions = () => {
     dismissSupportModal: () => {},
     refreshData: supabasePermissions.refreshData,
     
-    // Permissões
+    // Permissões - simplificadas para melhor performance
     canEditMaterials: supabasePermissions.canEditMaterials,
     canDownloadWord: supabasePermissions.canDownloadWord,
     canDownloadPPT: supabasePermissions.canDownloadPPT,
     canCreateSlides: supabasePermissions.canCreateSlides,
     canCreateAssessments: supabasePermissions.canCreateAssessments,
     hasCalendar: supabasePermissions.hasCalendar,
-    canAccessCalendarPage: supabasePermissions.canAccessCalendarPage,
-    canAccessSchool: supabasePermissions.canAccessSchool,
-    canAccessCreateMaterial: supabasePermissions.canAccessCreateMaterial,
-    canAccessMaterials: supabasePermissions.canAccessMaterials,
+    canAccessCalendarPage: () => true, // Todos os usuários logados podem acessar
+    canAccessSchool: supabasePermissions.canAccessSchool, // Apenas Grupo Escolar
+    canAccessCreateMaterial: () => true, // Todos os usuários logados podem acessar
+    canAccessMaterials: () => true, // Todos os usuários logados podem acessar
     
     // Funções auxiliares
     canPerformAction: () => !supabasePermissions.isLimitReached(),

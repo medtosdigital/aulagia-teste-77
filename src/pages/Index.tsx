@@ -18,7 +18,8 @@ import AdminLoginModal from '@/components/AdminLoginModal';
 import FirstAccessModal from '@/components/FirstAccessModal';
 import FeedbackModal from '@/components/FeedbackModal';
 import Footer from '@/components/Footer';
-import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { useFirstAccess } from '@/hooks/useFirstAccess';
 import { useFeedback } from '@/hooks/useFeedback';
@@ -26,20 +27,17 @@ import { useFeedback } from '@/hooks/useFeedback';
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const { user } = useAuth();
   
   const { 
     canAccessSchool, 
     canAccessSettings, 
-    canAccessCreateMaterial,
-    canAccessMaterials,
-    hasCalendar,
-    canAccessCalendarPage,
     shouldShowSupportModal,
     dismissSupportModal,
     currentPlan,
     getNextResetDate,
     isAdminAuthenticated
-  } = usePlanPermissions();
+  } = useSupabasePlanPermissions();
   
   const { 
     isOpen: isUpgradeModalOpen, 
@@ -133,14 +131,14 @@ const Index = () => {
         return <Dashboard onNavigate={handleNavigate} />;
         
       case 'create':
-        // Para plano grupo escolar, sempre permitir acesso
-        if (!canAccessCreateMaterial()) {
+        // Verificar apenas se o usuário está logado
+        if (!user) {
           return (
             <PageBlockedOverlay
-              title="Recurso Restrito"
-              description="Para acessar a criação de materiais, faça upgrade para um plano pago."
+              title="Acesso Restrito"
+              description="Você precisa estar logado para acessar a criação de materiais."
               icon="plus"
-              onUpgrade={openUpgradeModal}
+              onUpgrade={() => {}} // Não precisa de upgrade, apenas login
             >
               <div className="p-8 text-center">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Criar Material</h2>
@@ -152,14 +150,14 @@ const Index = () => {
         return <CreateLesson />;
         
       case 'lessons':
-        // Para plano grupo escolar, sempre permitir acesso
-        if (!canAccessMaterials()) {
+        // Verificar apenas se o usuário está logado
+        if (!user) {
           return (
             <PageBlockedOverlay
-              title="Recurso Restrito"
-              description="Para acessar seus materiais, faça upgrade para um plano pago."
+              title="Acesso Restrito"
+              description="Você precisa estar logado para acessar seus materiais."
               icon="book"
-              onUpgrade={openUpgradeModal}
+              onUpgrade={() => {}} // Não precisa de upgrade, apenas login
             >
               <div className="p-8 text-center">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Meus Materiais</h2>
@@ -171,6 +169,22 @@ const Index = () => {
         return <MaterialsList />;
         
       case 'calendar':
+        // Verificar apenas se o usuário está logado
+        if (!user) {
+          return (
+            <PageBlockedOverlay
+              title="Acesso Restrito"
+              description="Você precisa estar logado para acessar o calendário."
+              icon="calendar"
+              onUpgrade={() => {}} // Não precisa de upgrade, apenas login
+            >
+              <div className="p-8 text-center">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Calendário</h2>
+                <p className="text-gray-600">Organize seus materiais pedagogicos</p>
+              </div>
+            </PageBlockedOverlay>
+          );
+        }
         return <CalendarPage />;
         
       case 'school':
@@ -238,6 +252,43 @@ const Index = () => {
     }
   };
 
+  const mappedCurrentPlan = currentPlan ? {
+    id: currentPlan.plano_ativo,
+    name: currentPlan.plano_ativo === 'gratuito' ? 'Plano Gratuito' : 
+          currentPlan.plano_ativo === 'professor' ? 'Plano Professor' : 'Grupo Escolar',
+    limits: {
+      materialsPerMonth: currentPlan.plano_ativo === 'gratuito' ? 5 : 
+                        currentPlan.plano_ativo === 'professor' ? 50 : 300,
+      canDownloadWord: currentPlan.plano_ativo !== 'gratuito',
+      canDownloadPPT: currentPlan.plano_ativo !== 'gratuito',
+      canEditMaterials: currentPlan.plano_ativo !== 'gratuito',
+      canCreateSlides: currentPlan.plano_ativo !== 'gratuito',
+      canCreateAssessments: currentPlan.plano_ativo !== 'gratuito',
+      hasCalendar: currentPlan.plano_ativo !== 'gratuito',
+      hasHistory: currentPlan.plano_ativo !== 'gratuito'
+    },
+    price: {
+      monthly: currentPlan.plano_ativo === 'gratuito' ? 0 : 
+               currentPlan.plano_ativo === 'professor' ? 29.90 : 89.90,
+      yearly: currentPlan.plano_ativo === 'gratuito' ? 0 : 
+              currentPlan.plano_ativo === 'professor' ? 299 : 849
+    }
+  } : {
+    id: 'gratuito',
+    name: 'Plano Gratuito',
+    limits: {
+      materialsPerMonth: 5,
+      canDownloadWord: false,
+      canDownloadPPT: false,
+      canEditMaterials: false,
+      canCreateSlides: false,
+      canCreateAssessments: false,
+      hasCalendar: false,
+      hasHistory: false
+    },
+    price: { monthly: 0, yearly: 0 }
+  };
+
   return (
     <>
       <Routes>
@@ -271,7 +322,7 @@ const Index = () => {
       <UpgradeModal
         isOpen={isUpgradeModalOpen}
         onClose={closeUpgradeModal}
-        currentPlan={currentPlan}
+        currentPlan={mappedCurrentPlan}
         onPlanSelect={handlePlanSelection}
       />
 
@@ -279,7 +330,7 @@ const Index = () => {
       <SupportModal
         isOpen={shouldShowSupportModal}
         onClose={dismissSupportModal}
-        currentPlanName={currentPlan.name}
+        currentPlanName={mappedCurrentPlan.name}
         remainingDays={calculateRemainingDays()}
       />
 
