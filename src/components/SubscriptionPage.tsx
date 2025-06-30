@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown, Brain, Presentation, ClipboardList, GraduationCap, MoreHorizontal, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -520,7 +519,7 @@ const SubscriptionPage = () => {
         </Card>
       </div>
 
-      {/* Plans Section - keep existing code */}
+      {/* Plans Section - Updated to highlight current plan */}
       <div className="max-w-6xl mx-auto mb-6 sm:mb-8">
         <Card className="p-4 sm:p-6">
           <div className="flex flex-col gap-4 mb-6">
@@ -565,7 +564,7 @@ const SubscriptionPage = () => {
             </div>
           </div>
 
-          {/* Plans Grid - keep existing code */}
+          {/* Plans Grid - Updated to highlight current plan */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {plans.map((plan) => {
               const Icon = plan.icon;
@@ -576,11 +575,13 @@ const SubscriptionPage = () => {
               return (
                 <div
                   key={plan.id}
-                  className={`relative transition-all duration-300 hover:shadow-xl border rounded-xl p-4 sm:p-6 flex flex-col ${
-                    plan.popular ? 'ring-2 ring-blue-500 lg:scale-105 border-blue-200' : 'border-gray-200'
-                  } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
+                  className={`relative transition-all duration-300 hover:shadow-xl rounded-xl p-4 sm:p-6 flex flex-col ${
+                    plan.popular && !isCurrentPlan ? 'ring-2 ring-blue-500 lg:scale-105 border-2 border-blue-200' : 
+                    isCurrentPlan ? 'ring-2 ring-green-500 border-2 border-green-500 bg-green-50' : 
+                    'border-2 border-gray-200'
+                  }`}
                 >
-                  {plan.popular && (
+                  {plan.popular && !isCurrentPlan && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                       <Badge className="bg-blue-500 text-white px-3 sm:px-4 py-1 text-xs">
                         POPULAR
@@ -589,9 +590,9 @@ const SubscriptionPage = () => {
                   )}
 
                   {isCurrentPlan && (
-                    <div className="absolute -top-3 right-4">
-                      <Badge className="bg-green-500 text-white px-2 sm:px-3 py-1 text-xs">
-                        Plano Atual
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-green-500 text-white px-3 sm:px-4 py-1 text-xs">
+                        PLANO ATUAL
                       </Badge>
                     </div>
                   )}
@@ -679,7 +680,7 @@ const SubscriptionPage = () => {
                     onClick={() => handlePlanChange(plan.id)}
                     className={`w-full py-2 sm:py-3 text-sm ${
                       isCurrentPlan
-                        ? 'bg-gray-100 text-gray-600 cursor-not-allowed'
+                        ? 'bg-gray-400 text-white cursor-not-allowed hover:bg-gray-400'
                         : plan.popular
                         ? 'bg-blue-600 hover:bg-blue-700'
                         : plan.id === 'grupo-escolar'
