@@ -1,20 +1,25 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabasePlanService, TipoPlano, PlanoUsuario } from '@/services/supabasePlanService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+
+// Cache global para evitar múltiplas consultas
+const planCache = new Map<string, { data: PlanoUsuario | null; timestamp: number; materials: number }>();
+const CACHE_DURATION = 30000; // 30 segundos
 
 export const useSupabasePlanPermissions = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentPlan, setCurrentPlan] = useState<PlanoUsuario | null>(null);
   const [remainingMaterials, setRemainingMaterials] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Mudado para false por padrão
   const [shouldShowUpgrade, setShouldShowUpgrade] = useState(false);
+  const loadingRef = useRef(false);
 
-  // Função de carregamento dos dados do plano
-  const loadPlanData = useCallback(async () => {
-    if (!user) {
+  // Função otimizada de carregamento com cache
+  const loadPlanData = useCallback(async (forceReload = false) => {
+    if (!user?.id) {
       console.log('Nenhum usuário autenticado, definindo valores padrão');
       setCurrentPlan(null);
       setRemainingMaterials(0);
@@ -22,26 +27,50 @@ export const useSupabasePlanPermissions = () => {
       return;
     }
 
+    // Verificar cache primeiro
+    const cacheKey = `plan_${user.id}`;
+    const cached = planCache.get(cacheKey);
+    const now = Date.now();
+    
+    if (!forceReload && cached && (now - cached.timestamp) < CACHE_DURATION) {
+      console.log('Usando dados do cache para plano');
+      setCurrentPlan(cached.data);
+      setRemainingMaterials(cached.materials);
+      setLoading(false);
+      return;
+    }
+
+    // Evitar múltiplas consultas simultâneas
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+
     try {
       setLoading(true);
-      console.log('Carregando dados do plano para usuário:', user.id);
+      console.log('Carregando dados do plano para usuário (otimizado):', user.id);
       
-      // Carregar plano e materiais restantes em paralelo
-      const [plan, remaining] = await Promise.all([
+      // Carregar dados em paralelo com timeout
+      const loadPromise = Promise.all([
         supabasePlanService.getCurrentUserPlan(),
         supabasePlanService.getRemainingMaterials()
       ]);
+
+      // Timeout para evitar carregamento infinito
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 10000)
+      );
+
+      const [plan, remaining] = await Promise.race([loadPromise, timeoutPromise]) as [PlanoUsuario | null, number];
       
-      console.log('Plano carregado:', plan);
-      console.log('Materiais restantes:', remaining);
+      console.log('Plano carregado (otimizado):', plan);
+      console.log('Materiais restantes (otimizado):', remaining);
       
-      if (plan) {
-        setCurrentPlan(plan);
-        setRemainingMaterials(remaining);
-      } else {
-        // Se não conseguiu carregar o plano, definir valores padrão
-        console.log('Nenhum plano encontrado, definindo plano gratuito como padrão');
-        setCurrentPlan({
+      let finalPlan = plan;
+      let finalRemaining = remaining;
+
+      if (!plan) {
+        // Plano padrão mais simples
+        console.log('Usando plano gratuito como padrão (otimizado)');
+        finalPlan = {
           id: 'default',
           user_id: user.id,
           plano_ativo: 'gratuito',
@@ -49,41 +78,54 @@ export const useSupabasePlanPermissions = () => {
           data_expiracao: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        });
-        setRemainingMaterials(5); // Limite do plano gratuito
+        };
+        finalRemaining = 5; // Limite do plano gratuito
       }
+
+      // Atualizar cache
+      planCache.set(cacheKey, {
+        data: finalPlan,
+        timestamp: now,
+        materials: finalRemaining
+      });
+
+      setCurrentPlan(finalPlan);
+      setRemainingMaterials(finalRemaining);
+
     } catch (error) {
-      console.error('Erro ao carregar dados do plano:', error);
+      console.error('Erro ao carregar dados do plano (usando fallback):', error);
       
-      // Em caso de erro, definir plano gratuito como padrão
-      setCurrentPlan({
+      // Fallback rápido
+      const fallbackPlan = {
         id: 'error-fallback',
         user_id: user.id,
-        plano_ativo: 'gratuito',
+        plano_ativo: 'gratuito' as TipoPlano,
         data_inicio: new Date().toISOString(),
         data_expiracao: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      });
+      };
+      
+      setCurrentPlan(fallbackPlan);
       setRemainingMaterials(5);
       
-      toast({
-        title: "Erro ao carregar dados do plano",
-        description: "Usando configurações padrão do plano gratuito.",
-        variant: "destructive"
-      });
+      // Não mostrar toast de erro para melhorar UX
+      console.warn('Usando configurações padrão devido ao erro');
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   }, [user, toast]);
 
-  // Carregar dados quando o usuário mudar
+  // Carregar dados apenas quando necessário
   useEffect(() => {
-    loadPlanData();
-  }, [loadPlanData]);
+    if (user?.id) {
+      loadPlanData();
+    }
+  }, [user?.id]); // Removido loadPlanData das dependências para evitar loops
 
-  // Criar material (verifica permissões e incrementa uso)
-  const createMaterial = async (): Promise<boolean> => {
+  // Criar material otimizado
+  const createMaterial = useCallback(async (): Promise<boolean> => {
     if (!user) {
       toast({
         title: "Faça login",
@@ -104,9 +146,18 @@ export const useSupabasePlanPermissions = () => {
       const success = await supabasePlanService.incrementMaterialUsage();
       
       if (success) {
-        // Recarregar apenas os materiais restantes
+        // Atualizar apenas materiais restantes e cache
         const newRemaining = await supabasePlanService.getRemainingMaterials();
         setRemainingMaterials(newRemaining);
+        
+        // Atualizar cache
+        const cacheKey = `plan_${user.id}`;
+        const cached = planCache.get(cacheKey);
+        if (cached) {
+          cached.materials = newRemaining;
+          cached.timestamp = Date.now();
+        }
+        
         return true;
       } else {
         toast({
@@ -125,16 +176,19 @@ export const useSupabasePlanPermissions = () => {
       });
       return false;
     }
-  };
+  }, [user, toast]);
 
-  // Atualizar plano
-  const changePlan = async (newPlan: TipoPlano, expirationDate?: Date): Promise<boolean> => {
+  // Atualizar plano otimizado
+  const changePlan = useCallback(async (newPlan: TipoPlano, expirationDate?: Date): Promise<boolean> => {
     try {
       const success = await supabasePlanService.updateUserPlan(newPlan, expirationDate);
       
       if (success) {
-        // Recarregar dados após mudança de plano
-        await loadPlanData();
+        // Limpar cache e recarregar
+        if (user?.id) {
+          planCache.delete(`plan_${user.id}`);
+        }
+        await loadPlanData(true);
         setShouldShowUpgrade(false);
         
         const planNames: Record<TipoPlano, string> = {
@@ -165,61 +219,54 @@ export const useSupabasePlanPermissions = () => {
       });
       return false;
     }
-  };
+  }, [user?.id, loadPlanData, toast]);
 
-  // Verificar permissões específicas baseadas no plano
-  const canDownloadWord = (): boolean => {
-    if (!currentPlan) return false;
-    return currentPlan.plano_ativo !== 'gratuito';
-  };
+  // Verificações de permissões otimizadas (sem consultas)
+  const canDownloadWord = useCallback((): boolean => {
+    return currentPlan?.plano_ativo !== 'gratuito';
+  }, [currentPlan?.plano_ativo]);
 
-  const canDownloadPPT = (): boolean => {
-    if (!currentPlan) return false;
-    return currentPlan.plano_ativo !== 'gratuito';
-  };
+  const canDownloadPPT = useCallback((): boolean => {
+    return currentPlan?.plano_ativo !== 'gratuito';
+  }, [currentPlan?.plano_ativo]);
 
-  const canEditMaterials = (): boolean => {
-    if (!currentPlan) return false;
-    return currentPlan.plano_ativo !== 'gratuito';
-  };
+  const canEditMaterials = useCallback((): boolean => {
+    return currentPlan?.plano_ativo !== 'gratuito';
+  }, [currentPlan?.plano_ativo]);
 
-  const canCreateSlides = (): boolean => {
-    if (!currentPlan) return false;
-    return currentPlan.plano_ativo !== 'gratuito';
-  };
+  const canCreateSlides = useCallback((): boolean => {
+    return currentPlan?.plano_ativo !== 'gratuito';
+  }, [currentPlan?.plano_ativo]);
 
-  const canCreateAssessments = (): boolean => {
-    if (!currentPlan) return false;
-    return currentPlan.plano_ativo !== 'gratuito';
-  };
+  const canCreateAssessments = useCallback((): boolean => {
+    return currentPlan?.plano_ativo !== 'gratuito';
+  }, [currentPlan?.plano_ativo]);
 
-  const hasCalendar = (): boolean => {
-    if (!currentPlan) return false;
-    return currentPlan.plano_ativo !== 'gratuito';
-  };
+  const hasCalendar = useCallback((): boolean => {
+    return currentPlan?.plano_ativo !== 'gratuito';
+  }, [currentPlan?.plano_ativo]);
 
-  const canAccessSchool = (): boolean => {
-    if (!currentPlan) return false;
-    return currentPlan.plano_ativo === 'grupo_escolar';
-  };
+  const canAccessSchool = useCallback((): boolean => {
+    return currentPlan?.plano_ativo === 'grupo_escolar';
+  }, [currentPlan?.plano_ativo]);
 
-  const canAccessCreateMaterial = (): boolean => {
-    return !!user; // Todos os usuários logados podem tentar criar
-  };
+  const canAccessCreateMaterial = useCallback((): boolean => {
+    return !!user;
+  }, [user]);
 
-  const canAccessMaterials = (): boolean => {
-    return !!user; // Todos os usuários logados podem ver materiais
-  };
+  const canAccessMaterials = useCallback((): boolean => {
+    return !!user;
+  }, [user]);
 
-  const canAccessCalendarPage = (): boolean => {
-    return !!user; // Todos podem acessar a página do calendário
-  };
+  const canAccessCalendarPage = useCallback((): boolean => {
+    return !!user;
+  }, [user]);
 
-  const isLimitReached = (): boolean => {
+  const isLimitReached = useCallback((): boolean => {
     return remainingMaterials <= 0;
-  };
+  }, [remainingMaterials]);
 
-  const getPlanDisplayName = (): string => {
+  const getPlanDisplayName = useCallback((): string => {
     if (loading) return 'Carregando...';
     if (!currentPlan) return 'Plano Gratuito';
     
@@ -231,44 +278,44 @@ export const useSupabasePlanPermissions = () => {
       case 'grupo_escolar':
         return 'Grupo Escolar';
       default:
-        return 'Plano Desconhecido';
+        return 'Plano Gratuito';
     }
-  };
+  }, [loading, currentPlan]);
 
-  const dismissUpgradeModal = (): void => {
+  const dismissUpgradeModal = useCallback((): void => {
     setShouldShowUpgrade(false);
-  };
+  }, []);
 
-  // Função de refresh que pode ser chamada externamente
+  // Função de refresh otimizada
   const refreshData = useCallback(() => {
-    if (user) {
-      loadPlanData();
+    if (user?.id) {
+      // Limpar cache e recarregar
+      planCache.delete(`plan_${user.id}`);
+      loadPlanData(true);
     }
-  }, [user, loadPlanData]);
+  }, [user?.id, loadPlanData]);
 
-  // Funções administrativas e de suporte que estavam faltando
-  const canAccessSettings = (): boolean => {
-    // Por enquanto, retornar false - implementar lógica admin depois se necessário
-    return false;
-  };
+  // Funções administrativas otimizadas
+  const canAccessSettings = useCallback((): boolean => {
+    return false; // Por enquanto sempre false
+  }, []);
 
-  const shouldShowSupportModal = false; // Desabilitado por enquanto
+  const shouldShowSupportModal = false;
 
-  const dismissSupportModal = (): void => {
+  const dismissSupportModal = useCallback((): void => {
     // Função vazia por enquanto
-  };
+  }, []);
 
-  const getNextResetDate = (): Date => {
+  const getNextResetDate = useCallback((): Date => {
     const nextMonth = new Date();
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     nextMonth.setDate(1);
     return nextMonth;
-  };
+  }, []);
 
-  const isAdminAuthenticated = (): boolean => {
-    // Por enquanto, retornar false - implementar lógica admin depois se necessário
-    return false;
-  };
+  const isAdminAuthenticated = useCallback((): boolean => {
+    return false; // Por enquanto sempre false
+  }, []);
 
   return {
     // Estado
@@ -285,7 +332,7 @@ export const useSupabasePlanPermissions = () => {
     dismissSupportModal,
     refreshData,
     
-    // Verificações de permissões
+    // Verificações de permissões (todas otimizadas)
     canDownloadWord,
     canDownloadPPT,
     canEditMaterials,
