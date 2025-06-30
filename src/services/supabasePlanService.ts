@@ -23,134 +23,130 @@ export interface UsoMensalMateriais {
   updated_at: string;
 }
 
-// Cache otimizado com TTL mais agressivo
+// Cache local para melhorar performance
 const queryCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 5000; // 5 segundos para dados críticos
-const LONG_CACHE_DURATION = 30000; // 30 segundos para dados estáticos
-
-// Cache global para evitar múltiplas consultas simultâneas
-const pendingQueries = new Map<string, Promise<any>>();
+const CACHE_DURATION = 10000; // 10 segundos para consultas rápidas
 
 class SupabasePlanService {
-  private async cachedQuery<T>(
-    key: string, 
-    queryFn: () => Promise<T>, 
-    cacheDuration = CACHE_DURATION,
-    usePendingCache = true
-  ): Promise<T> {
+  private async cachedQuery<T>(key: string, queryFn: () => Promise<T>, cacheDuration = CACHE_DURATION): Promise<T> {
     const cached = queryCache.get(key);
     const now = Date.now();
     
-    // Verificar cache primeiro
     if (cached && (now - cached.timestamp) < cacheDuration) {
+      console.log(`Cache hit para: ${key}`);
       return cached.data;
     }
     
-    // Verificar se já há uma query pendente para evitar duplicação
-    if (usePendingCache && pendingQueries.has(key)) {
-      return await pendingQueries.get(key);
-    }
-    
-    // Executar query e cachear resultado
-    const queryPromise = queryFn();
-    if (usePendingCache) {
-      pendingQueries.set(key, queryPromise);
-    }
-    
-    try {
-      const result = await queryPromise;
-      queryCache.set(key, { data: result, timestamp: now });
-      return result;
-    } finally {
-      if (usePendingCache) {
-        pendingQueries.delete(key);
-      }
-    }
+    const result = await queryFn();
+    queryCache.set(key, { data: result, timestamp: now });
+    console.log(`Cache miss, dados carregados para: ${key}`);
+    return result;
   }
 
-  // Obter plano atual super otimizado
+  // Obter plano atual do usuário com cache e otimizações
   async getCurrentUserPlan(): Promise<PlanoUsuario | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!user) {
+        console.log('Nenhum usuário autenticado');
+        return null;
+      }
 
       const cacheKey = `plan_${user.id}`;
       
       return await this.cachedQuery(cacheKey, async () => {
+        console.log('Buscando plano para usuário (otimizado):', user.id);
+
         const { data, error } = await supabase
           .from('planos_usuarios')
           .select('*')
           .eq('user_id', user.id)
+          .limit(1) // Adicionar limite para otimizar
           .single();
 
-        if (error && error.code === 'PGRST116') {
-          // Criar plano padrão sem esperar
-          this.createDefaultPlan(user.id).catch(console.error);
-          return {
-            id: 'temp',
-            user_id: user.id,
-            plano_ativo: 'gratuito' as TipoPlano,
-            data_inicio: new Date().toISOString(),
-            data_expiracao: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
+        if (error) {
+          console.error('Erro ao buscar plano do usuário:', error);
+          
+          // Se não encontrou o plano, criar um plano gratuito
+          if (error.code === 'PGRST116') {
+            console.log('Plano não encontrado, criando plano gratuito');
+            return await this.createDefaultPlan(user.id);
+          }
+          
+          return null;
         }
 
-        if (error) throw error;
+        console.log('Plano encontrado (cache):', data);
         return data;
-      }, CACHE_DURATION);
+      });
     } catch (error) {
       console.error('Erro em getCurrentUserPlan:', error);
       return null;
     }
   }
 
-  // Criar plano padrão de forma assíncrona
-  private async createDefaultPlan(userId: string): Promise<void> {
+  // Criar plano padrão gratuito otimizado
+  private async createDefaultPlan(userId: string): Promise<PlanoUsuario | null> {
     try {
-      await supabase
+      const { data, error } = await supabase
         .from('planos_usuarios')
         .insert({
           user_id: userId,
           plano_ativo: 'gratuito' as TipoPlano,
           data_inicio: new Date().toISOString()
-        });
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao criar plano padrão:', error);
+        return null;
+      }
+
+      console.log('Plano padrão criado:', data);
       
-      // Limpar cache após criar
+      // Limpar cache relacionado
       queryCache.delete(`plan_${userId}`);
+      queryCache.delete(`usage_${userId}`);
+      
+      return data;
     } catch (error) {
-      console.error('Erro ao criar plano padrão:', error);
+      console.error('Erro em createDefaultPlan:', error);
+      return null;
     }
   }
 
-  // Verificação super rápida usando cache
+  // Verificar se usuário pode criar material com cache
   async canCreateMaterial(): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
+      if (!user) {
+        console.log('Usuário não autenticado para criar material');
+        return false;
+      }
 
       const cacheKey = `can_create_${user.id}`;
       
       return await this.cachedQuery(cacheKey, async () => {
-        // Buscar dados em paralelo
-        const [plan, usage] = await Promise.all([
-          this.getCurrentUserPlan(),
-          this.getCurrentMonthUsage()
-        ]);
+        const { data, error } = await supabase.rpc('can_create_material', {
+          p_user_id: user.id
+        });
 
-        if (!plan) return false;
-        
-        const limit = this.getPlanLimits(plan.plano_ativo);
-        return usage < limit;
-      }, 3000); // Cache mais curto para verificação crítica
+        if (error) {
+          console.error('Erro ao verificar permissão de criação:', error);
+          return false;
+        }
+
+        console.log('Pode criar material (cache):', data);
+        return data || false;
+      }, 5000); // Cache mais curto para esta verificação crítica
     } catch (error) {
       console.error('Erro em canCreateMaterial:', error);
       return false;
     }
   }
 
-  // Incrementar uso otimizado
+  // Incrementar uso de materiais com limpeza de cache
   async incrementMaterialUsage(): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -160,22 +156,25 @@ class SupabasePlanService {
         p_user_id: user.id
       });
 
-      if (!error && data) {
-        // Limpar caches relacionados imediatamente
-        const keysToDelete = Array.from(queryCache.keys()).filter(key => 
-          key.includes(user.id) && (key.includes('usage') || key.includes('can_create') || key.includes('remaining'))
-        );
-        keysToDelete.forEach(key => queryCache.delete(key));
+      if (error) {
+        console.error('Erro ao incrementar uso de material:', error);
+        return false;
       }
 
-      return !error && data;
+      // Limpar caches relacionados
+      queryCache.delete(`usage_${user.id}`);
+      queryCache.delete(`can_create_${user.id}`);
+      queryCache.delete(`remaining_${user.id}`);
+
+      console.log('Uso de material incrementado:', data);
+      return data || false;
     } catch (error) {
       console.error('Erro em incrementMaterialUsage:', error);
       return false;
     }
   }
 
-  // Uso mensal super otimizado
+  // Obter uso mensal atual com cache
   async getCurrentMonthUsage(): Promise<number> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -192,57 +191,81 @@ class SupabasePlanService {
           .eq('user_id', user.id)
           .eq('ano', currentYear)
           .eq('mes', currentMonth)
+          .limit(1) // Otimização
           .maybeSingle();
 
-        if (error) throw error;
-        return data?.materiais_criados || 0;
-      }, CACHE_DURATION);
+        if (error) {
+          console.error('Erro ao buscar uso atual:', error);
+          return 0;
+        }
+
+        const usage = data?.materiais_criados || 0;
+        console.log('Uso atual do mês (cache):', usage);
+        return usage;
+      });
     } catch (error) {
       console.error('Erro em getCurrentMonthUsage:', error);
       return 0;
     }
   }
 
-  // Limites do plano (função pura, sem consultas)
+  // Obter limites do plano (função pura, sem consultas)
   getPlanLimits(planType: TipoPlano): number {
     switch (planType) {
-      case 'gratuito': return 5;
-      case 'professor': return 50;
-      case 'grupo_escolar': return 300;
-      default: return 0;
+      case 'gratuito':
+        return 5;
+      case 'professor':
+        return 50;
+      case 'grupo_escolar':
+        return 300;
+      default:
+        return 0;
     }
   }
 
-  // Materiais restantes super otimizado
+  // Obter materiais restantes no mês com cache otimizado
   async getRemainingMaterials(): Promise<number> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return 0;
+      if (!user) {
+        console.log('Nenhum usuário para calcular materiais restantes');
+        return 0;
+      }
 
       const cacheKey = `remaining_${user.id}`;
       
       return await this.cachedQuery(cacheKey, async () => {
+        // Buscar dados em paralelo
         const [plan, currentUsage] = await Promise.all([
           this.getCurrentUserPlan(),
           this.getCurrentMonthUsage()
         ]);
 
-        if (!plan) return 0;
-        
+        if (!plan) {
+          console.log('Nenhum plano encontrado, retornando 0 materiais');
+          return 0;
+        }
+
         const planLimit = this.getPlanLimits(plan.plano_ativo);
-        return Math.max(0, planLimit - currentUsage);
-      }, 3000); // Cache mais curto para dados críticos
+        const remaining = Math.max(0, planLimit - currentUsage);
+
+        console.log(`Plano: ${plan.plano_ativo}, Limite: ${planLimit}, Usado: ${currentUsage}, Restante: ${remaining}`);
+        return remaining;
+      }, 5000); // Cache mais curto para dados críticos
     } catch (error) {
       console.error('Erro em getRemainingMaterials:', error);
       return 0;
     }
   }
 
-  // Atualizar plano otimizado
+  // Atualizar plano do usuário com limpeza de cache
   async updateUserPlan(newPlan: TipoPlano, expirationDate?: Date): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
+      if (!user) {
+        console.log('Usuário não autenticado para atualizar plano');
+        return false;
+      }
 
       const updateData: any = {
         plano_ativo: newPlan,
@@ -258,32 +281,41 @@ class SupabasePlanService {
         .update(updateData)
         .eq('user_id', user.id);
 
-      if (!error) {
-        // Limpar todo o cache do usuário
-        this.clearCache(user.id);
+      if (error) {
+        console.error('Erro ao atualizar plano do usuário:', error);
+        return false;
       }
 
-      return !error;
+      // Limpar todos os caches relacionados ao usuário
+      const keysToDelete = Array.from(queryCache.keys()).filter(key => key.includes(user.id));
+      keysToDelete.forEach(key => queryCache.delete(key));
+
+      console.log('Plano atualizado com sucesso para:', newPlan);
+      return true;
     } catch (error) {
       console.error('Erro em updateUserPlan:', error);
       return false;
     }
   }
 
-  // Verificar expiração com cache
+  // Verificar se plano expirou com cache
   async isPlanExpired(): Promise<boolean> {
     try {
       const plan = await this.getCurrentUserPlan();
       if (!plan || !plan.data_expiracao) return false;
+
+      const expirationDate = new Date(plan.data_expiracao);
+      const isExpired = expirationDate < new Date();
       
-      return new Date(plan.data_expiracao) < new Date();
+      console.log('Verificação de expiração:', { expirationDate, isExpired });
+      return isExpired;
     } catch (error) {
-      console.error('Erro ao verificar expiração:', error);
+      console.error('Erro ao verificar expiração do plano:', error);
       return false;
     }
   }
 
-  // Histórico com cache longo
+  // Obter histórico de uso com cache
   async getUsageHistory(months: number = 12): Promise<UsoMensalMateriais[]> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -300,45 +332,28 @@ class SupabasePlanService {
           .order('mes', { ascending: false })
           .limit(months);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao buscar histórico de uso:', error);
+          return [];
+        }
+
         return data || [];
-      }, LONG_CACHE_DURATION);
+      }, 30000); // Cache mais longo para histórico
     } catch (error) {
       console.error('Erro em getUsageHistory:', error);
       return [];
     }
   }
 
-  // Limpar cache otimizado
+  // Método para limpar cache quando necessário
   clearCache(userId?: string): void {
     if (userId) {
       const keysToDelete = Array.from(queryCache.keys()).filter(key => key.includes(userId));
       keysToDelete.forEach(key => queryCache.delete(key));
-      
-      // Limpar queries pendentes também
-      const pendingKeysToDelete = Array.from(pendingQueries.keys()).filter(key => key.includes(userId));
-      pendingKeysToDelete.forEach(key => pendingQueries.delete(key));
     } else {
       queryCache.clear();
-      pendingQueries.clear();
     }
-  }
-
-  // Método para pré-carregar dados críticos
-  async preloadCriticalData(): Promise<void> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Carregar dados críticos em paralelo sem esperar
-      Promise.all([
-        this.getCurrentUserPlan(),
-        this.getCurrentMonthUsage(),
-        this.getRemainingMaterials()
-      ]).catch(console.error);
-    } catch (error) {
-      console.error('Erro ao pré-carregar dados:', error);
-    }
+    console.log('Cache limpo', userId ? `para usuário: ${userId}` : 'completamente');
   }
 }
 

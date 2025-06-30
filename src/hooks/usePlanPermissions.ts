@@ -7,7 +7,7 @@ export const usePlanPermissions = () => {
   const { user } = useAuth();
   const supabasePermissions = useSupabasePlanPermissions();
 
-  // Memoizar valores computados para evitar recálculos
+  // Memoizar valores computados para evitar recálculos desnecessários
   const memoizedPlan = useMemo(() => {
     if (!user) {
       return {
@@ -73,7 +73,7 @@ export const usePlanPermissions = () => {
     materialsThisMonth: Math.max(0, memoizedPlan.limits.materialsPerMonth - supabasePermissions.remainingMaterials)
   }), [memoizedPlan.limits.materialsPerMonth, supabasePermissions.remainingMaterials]);
 
-  // Memoizar funções para evitar recriações
+  // Memoizar funções para evitar recriações desnecessárias
   const memoizedFunctions = useMemo(() => ({
     changePlan: async (planId: string) => {
       const planTypeMap: Record<string, 'gratuito' | 'professor' | 'grupo_escolar'> = {
@@ -100,7 +100,7 @@ export const usePlanPermissions = () => {
     }
   }), [supabasePermissions.changePlan, memoizedPlan.id]);
 
-  // Se não estiver logado, retornar valores padrão
+  // Se não estiver logado, retornar valores padrão otimizados
   if (!user) {
     return {
       currentPlan: memoizedPlan,
@@ -147,14 +147,14 @@ export const usePlanPermissions = () => {
 
   // Retornar dados otimizados
   return {
-    // Estados
+    // Estados - usar apenas dados do Supabase
     currentPlan: memoizedPlan,
     usage: memoizedUsage,
     shouldShowUpgrade: supabasePermissions.shouldShowUpgrade,
     shouldShowSupportModal: false,
     loading: supabasePermissions.loading,
     
-    // Ações
+    // Ações (já otimizadas)
     createMaterial: supabasePermissions.createMaterial,
     getRemainingMaterials: () => supabasePermissions.remainingMaterials,
     isLimitReached: supabasePermissions.isLimitReached,
@@ -163,7 +163,7 @@ export const usePlanPermissions = () => {
     dismissSupportModal: () => {},
     refreshData: supabasePermissions.refreshData,
     
-    // Permissões (todas super rápidas)
+    // Permissões (já otimizadas com useCallback)
     canEditMaterials: supabasePermissions.canEditMaterials,
     canDownloadWord: supabasePermissions.canDownloadWord,
     canDownloadPPT: supabasePermissions.canDownloadPPT,
@@ -175,7 +175,7 @@ export const usePlanPermissions = () => {
     canAccessCreateMaterial: () => true,
     canAccessMaterials: () => true,
     
-    // Funções auxiliares
+    // Funções auxiliares otimizadas
     canPerformAction: () => !supabasePermissions.isLimitReached(),
     getNextResetDate: memoizedFunctions.getNextResetDate,
     getAvailablePlansForUpgrade: memoizedFunctions.getAvailablePlansForUpgrade,
