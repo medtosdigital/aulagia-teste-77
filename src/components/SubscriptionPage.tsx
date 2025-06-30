@@ -65,8 +65,27 @@ const SubscriptionPage = () => {
     loading
   } = usePlanPermissions();
 
+  // Mapear o ID do plano atual para comparação
+  const getCurrentPlanId = () => {
+    if (!currentPlan || loading) return 'gratuito';
+    
+    // Mapear os IDs do sistema para os IDs da interface
+    switch (currentPlan.id) {
+      case 'gratuito':
+        return 'gratuito';
+      case 'professor':
+        return 'professor';
+      case 'grupo_escolar':
+        return 'grupo-escolar';
+      default:
+        return 'gratuito';
+    }
+  };
+
+  const currentPlanId = getCurrentPlanId();
+
   // Determine subscription status based on real plan data
-  const isSubscriptionActive = currentPlan.id !== 'gratuito';
+  const isSubscriptionActive = currentPlanId !== 'gratuito';
   const subscriptionStatus = isSubscriptionActive ? 'Ativo' : 'Inativo';
 
   // Create a stable callback for refreshData to prevent infinite loops
@@ -202,7 +221,7 @@ const SubscriptionPage = () => {
     const resources = [];
     
     // Basic resources
-    if (currentPlan.id === 'grupo-escolar') {
+    if (currentPlan.id === 'grupo_escolar') {
       resources.push({
         name: `${currentPlan.limits.materialsPerMonth} materiais por mês (total)`,
         icon: FileText,
@@ -222,7 +241,7 @@ const SubscriptionPage = () => {
         { name: 'Planos de Aula básicos', icon: GraduationCap, available: true },
         { name: 'Atividades simples', icon: ClipboardList, available: true }
       );
-    } else if (currentPlan.id === 'professor' || currentPlan.id === 'grupo-escolar') {
+    } else if (currentPlan.id === 'professor' || currentPlan.id === 'grupo_escolar') {
       resources.push(
         { name: 'Planos de Aula completos', icon: GraduationCap, available: true },
         { name: 'Slides interativos', icon: Presentation, available: true },
@@ -268,7 +287,7 @@ const SubscriptionPage = () => {
     }
 
     // Collaboration (only for school plan)
-    if (currentPlan.id === 'grupo-escolar') {
+    if (currentPlan.id === 'grupo_escolar') {
       resources.push(
         { name: 'Dashboard colaborativo', icon: Users, available: true },
         { name: 'Compartilhamento entre professores', icon: Users, available: true },
@@ -365,7 +384,7 @@ const SubscriptionPage = () => {
                 </div>
                 
                 {/* Special note for Grupo Escolar plan */}
-                {currentPlan.id === 'grupo-escolar' && (
+                {currentPlan.id === 'grupo_escolar' && (
                   <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
                     <span className="font-medium">Plano Grupo Escolar:</span> Os materiais podem ser distribuídos entre até 5 professores
                   </div>
@@ -568,9 +587,11 @@ const SubscriptionPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {plans.map((plan) => {
               const Icon = plan.icon;
-              const isCurrentPlan = currentPlan.id === plan.id;
+              const isCurrentPlan = currentPlanId === plan.id;
               const price = billingType === 'monthly' ? plan.price.monthly : plan.price.yearly;
               const yearlyDiscount = getYearlyDiscount(plan);
+
+              console.log('Comparando planos:', { currentPlanId, planId: plan.id, isCurrentPlan });
 
               return (
                 <div
