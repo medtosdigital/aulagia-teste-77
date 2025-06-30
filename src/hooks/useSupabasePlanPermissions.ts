@@ -246,17 +246,43 @@ export const useSupabasePlanPermissions = () => {
     }
   }, [user, loadPlanData]);
 
+  // Funções administrativas e de suporte que estavam faltando
+  const canAccessSettings = (): boolean => {
+    // Por enquanto, retornar false - implementar lógica admin depois se necessário
+    return false;
+  };
+
+  const shouldShowSupportModal = false; // Desabilitado por enquanto
+
+  const dismissSupportModal = (): void => {
+    // Função vazia por enquanto
+  };
+
+  const getNextResetDate = (): Date => {
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    nextMonth.setDate(1);
+    return nextMonth;
+  };
+
+  const isAdminAuthenticated = (): boolean => {
+    // Por enquanto, retornar false - implementar lógica admin depois se necessário
+    return false;
+  };
+
   return {
     // Estado
     currentPlan,
     remainingMaterials,
     loading,
     shouldShowUpgrade,
+    shouldShowSupportModal,
     
     // Ações
     createMaterial,
     changePlan,
     dismissUpgradeModal,
+    dismissSupportModal,
     refreshData,
     
     // Verificações de permissões
@@ -273,6 +299,9 @@ export const useSupabasePlanPermissions = () => {
     isLimitReached,
     
     // Utilitários
-    getPlanDisplayName
+    getPlanDisplayName,
+    canAccessSettings,
+    getNextResetDate,
+    isAdminAuthenticated
   };
 };
