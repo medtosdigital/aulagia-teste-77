@@ -4,39 +4,28 @@ import { supabasePlanService, TipoPlano, PlanoUsuario } from '@/services/supabas
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
-// Cache global para evitar múltiplas consultas
-const planCache = new Map<string, { data: PlanoUsuario | null; timestamp: number; materials: number }>();
-const CACHE_DURATION = 30000; // 30 segundos
-
 export const useSupabasePlanPermissions = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentPlan, setCurrentPlan] = useState<PlanoUsuario | null>(null);
   const [remainingMaterials, setRemainingMaterials] = useState<number>(0);
-  const [loading, setLoading] = useState(false); // Mudado para false por padrão
+  const [loading, setLoading] = useState(false);
   const [shouldShowUpgrade, setShouldShowUpgrade] = useState(false);
   const loadingRef = useRef(false);
+  const dataLoadedRef = useRef(false);
 
-  // Função otimizada de carregamento com cache
+  // Função super otimizada de carregamento
   const loadPlanData = useCallback(async (forceReload = false) => {
     if (!user?.id) {
-      console.log('Nenhum usuário autenticado, definindo valores padrão');
       setCurrentPlan(null);
       setRemainingMaterials(0);
       setLoading(false);
+      dataLoadedRef.current = true;
       return;
     }
 
-    // Verificar cache primeiro
-    const cacheKey = `plan_${user.id}`;
-    const cached = planCache.get(cacheKey);
-    const now = Date.now();
-    
-    if (!forceReload && cached && (now - cached.timestamp) < CACHE_DURATION) {
-      console.log('Usando dados do cache para plano');
-      setCurrentPlan(cached.data);
-      setRemainingMaterials(cached.materials);
-      setLoading(false);
+    // Se já carregou e não é force reload, não fazer nada
+    if (dataLoadedRef.current && !forceReload) {
       return;
     }
 
@@ -46,30 +35,25 @@ export const useSupabasePlanPermissions = () => {
 
     try {
       setLoading(true);
-      console.log('Carregando dados do plano para usuário (otimizado):', user.id);
       
-      // Carregar dados em paralelo com timeout
+      // Carregar dados em paralelo com timeout agressivo
       const loadPromise = Promise.all([
         supabasePlanService.getCurrentUserPlan(),
         supabasePlanService.getRemainingMaterials()
       ]);
 
-      // Timeout para evitar carregamento infinito
+      // Timeout de 5 segundos
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 10000)
+        setTimeout(() => reject(new Error('Timeout')), 5000)
       );
 
       const [plan, remaining] = await Promise.race([loadPromise, timeoutPromise]) as [PlanoUsuario | null, number];
-      
-      console.log('Plano carregado (otimizado):', plan);
-      console.log('Materiais restantes (otimizado):', remaining);
       
       let finalPlan = plan;
       let finalRemaining = remaining;
 
       if (!plan) {
-        // Plano padrão mais simples
-        console.log('Usando plano gratuito como padrão (otimizado)');
+        // Plano padrão super rápido
         finalPlan = {
           id: 'default',
           user_id: user.id,
@@ -79,23 +63,17 @@ export const useSupabasePlanPermissions = () => {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
-        finalRemaining = 5; // Limite do plano gratuito
+        finalRemaining = 5;
       }
-
-      // Atualizar cache
-      planCache.set(cacheKey, {
-        data: finalPlan,
-        timestamp: now,
-        materials: finalRemaining
-      });
 
       setCurrentPlan(finalPlan);
       setRemainingMaterials(finalRemaining);
+      dataLoadedRef.current = true;
 
     } catch (error) {
-      console.error('Erro ao carregar dados do plano (usando fallback):', error);
+      console.error('Erro ao carregar dados do plano (usando fallback rápido):', error);
       
-      // Fallback rápido
+      // Fallback instantâneo
       const fallbackPlan = {
         id: 'error-fallback',
         user_id: user.id,
@@ -108,23 +86,24 @@ export const useSupabasePlanPermissions = () => {
       
       setCurrentPlan(fallbackPlan);
       setRemainingMaterials(5);
-      
-      // Não mostrar toast de erro para melhorar UX
-      console.warn('Usando configurações padrão devido ao erro');
+      dataLoadedRef.current = true;
     } finally {
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [user, toast]);
+  }, [user]);
 
-  // Carregar dados apenas quando necessário
+  // Carregar dados apenas uma vez
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !dataLoadedRef.current) {
       loadPlanData();
+      
+      // Pré-carregar dados em background
+      supabasePlanService.preloadCriticalData();
     }
-  }, [user?.id]); // Removido loadPlanData das dependências para evitar loops
+  }, [user?.id, loadPlanData]);
 
-  // Criar material otimizado
+  // Criar material super otimizado
   const createMaterial = useCallback(async (): Promise<boolean> => {
     if (!user) {
       toast({
@@ -146,17 +125,11 @@ export const useSupabasePlanPermissions = () => {
       const success = await supabasePlanService.incrementMaterialUsage();
       
       if (success) {
-        // Atualizar apenas materiais restantes e cache
-        const newRemaining = await supabasePlanService.getRemainingMaterials();
-        setRemainingMaterials(newRemaining);
+        // Atualizar estado local imediatamente para responsividade
+        setRemainingMaterials(prev => Math.max(0, prev - 1));
         
-        // Atualizar cache
-        const cacheKey = `plan_${user.id}`;
-        const cached = planCache.get(cacheKey);
-        if (cached) {
-          cached.materials = newRemaining;
-          cached.timestamp = Date.now();
-        }
+        // Atualizar dados reais em background
+        supabasePlanService.getRemainingMaterials().then(setRemainingMaterials).catch(console.error);
         
         return true;
       } else {
@@ -184,11 +157,13 @@ export const useSupabasePlanPermissions = () => {
       const success = await supabasePlanService.updateUserPlan(newPlan, expirationDate);
       
       if (success) {
-        // Limpar cache e recarregar
-        if (user?.id) {
-          planCache.delete(`plan_${user.id}`);
+        // Atualizar estado local imediatamente
+        if (currentPlan) {
+          setCurrentPlan(prev => prev ? { ...prev, plano_ativo: newPlan } : null);
         }
-        await loadPlanData(true);
+        
+        // Recarregar dados em background
+        setTimeout(() => loadPlanData(true), 100);
         setShouldShowUpgrade(false);
         
         const planNames: Record<TipoPlano, string> = {
@@ -219,9 +194,9 @@ export const useSupabasePlanPermissions = () => {
       });
       return false;
     }
-  }, [user?.id, loadPlanData, toast]);
+  }, [currentPlan, loadPlanData, toast]);
 
-  // Verificações de permissões otimizadas (sem consultas)
+  // Verificações de permissões super rápidas (usando apenas estado local)
   const canDownloadWord = useCallback((): boolean => {
     return currentPlan?.plano_ativo !== 'gratuito';
   }, [currentPlan?.plano_ativo]);
@@ -267,7 +242,7 @@ export const useSupabasePlanPermissions = () => {
   }, [remainingMaterials]);
 
   const getPlanDisplayName = useCallback((): string => {
-    if (loading) return 'Carregando...';
+    if (loading && !currentPlan) return 'Carregando...';
     if (!currentPlan) return 'Plano Gratuito';
     
     switch (currentPlan.plano_ativo) {
@@ -286,24 +261,18 @@ export const useSupabasePlanPermissions = () => {
     setShouldShowUpgrade(false);
   }, []);
 
-  // Função de refresh otimizada
+  // Função de refresh super otimizada
   const refreshData = useCallback(() => {
     if (user?.id) {
-      // Limpar cache e recarregar
-      planCache.delete(`plan_${user.id}`);
+      dataLoadedRef.current = false;
+      supabasePlanService.clearCache(user.id);
       loadPlanData(true);
     }
   }, [user?.id, loadPlanData]);
 
-  // Funções administrativas otimizadas
+  // Funções auxiliares otimizadas
   const canAccessSettings = useCallback((): boolean => {
-    return false; // Por enquanto sempre false
-  }, []);
-
-  const shouldShowSupportModal = false;
-
-  const dismissSupportModal = useCallback((): void => {
-    // Função vazia por enquanto
+    return false;
   }, []);
 
   const getNextResetDate = useCallback((): Date => {
@@ -314,25 +283,25 @@ export const useSupabasePlanPermissions = () => {
   }, []);
 
   const isAdminAuthenticated = useCallback((): boolean => {
-    return false; // Por enquanto sempre false
+    return false;
   }, []);
 
   return {
     // Estado
     currentPlan,
     remainingMaterials,
-    loading,
+    loading: loading && !dataLoadedRef.current, // Mostrar loading apenas se não tiver dados
     shouldShowUpgrade,
-    shouldShowSupportModal,
+    shouldShowSupportModal: false,
     
     // Ações
     createMaterial,
     changePlan,
     dismissUpgradeModal,
-    dismissSupportModal,
+    dismissSupportModal: () => {},
     refreshData,
     
-    // Verificações de permissões (todas otimizadas)
+    // Verificações de permissões (todas super rápidas)
     canDownloadWord,
     canDownloadPPT,
     canEditMaterials,

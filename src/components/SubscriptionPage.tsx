@@ -65,9 +65,13 @@ const SubscriptionPage = () => {
     loading
   } = usePlanPermissions();
 
-  // Mapear o ID do plano atual para comparação
+  // Mapear o ID do plano atual corretamente
   const getCurrentPlanId = () => {
     if (!currentPlan || loading) return 'gratuito';
+    
+    // DEBUG: Log para verificar o plano atual
+    console.log('Plano atual completo:', currentPlan);
+    console.log('ID do plano atual:', currentPlan.id);
     
     // Mapear os IDs do sistema para os IDs da interface
     switch (currentPlan.id) {
@@ -97,124 +101,6 @@ const SubscriptionPage = () => {
   useEffect(() => {
     stableRefreshData();
   }, [stableRefreshData]);
-
-  const plans: Plan[] = [
-    {
-      id: 'gratuito',
-      name: 'Gratuito',
-      price: { monthly: 0, yearly: 0 },
-      features: [
-        '5 materiais por mês',
-        'Download em PDF',
-        'Suporte básico',
-        'Acesso aos templates básicos'
-      ],
-      materialTypes: [
-        'Planos de Aula básicos',
-        'Atividades simples'
-      ],
-      limitations: [
-        'Sem download em Word/PPT',
-        '5 materiais por mês',
-        'Sem edição avançada',
-        'Sem Slides Interativos',
-        'Sem Avaliações Personalizadas'
-      ],
-      color: 'from-gray-400 to-gray-600',
-      icon: FileText
-    },
-    {
-      id: 'professor',
-      name: 'Professor',
-      price: { monthly: 29.90, yearly: 299 },
-      features: [
-        '50 materiais por mês',
-        'Download em PDF, Word e PPT',
-        'Edição completa de materiais',
-        'Todos os templates disponíveis',
-        'Suporte por e-mail',
-        'Calendário de aulas',
-        'Histórico completo'
-      ],
-      materialTypes: [
-        'Planos de Aula completos',
-        'Slides interativos',
-        'Atividades diversificadas',
-        'Avaliações personalizadas'
-      ],
-      limitations: [],
-      color: 'from-blue-500 to-purple-600',
-      icon: Crown,
-      popular: true
-    },
-    {
-      id: 'grupo-escolar',
-      name: 'Grupo Escolar',
-      price: { monthly: 89.90, yearly: 849 },
-      features: [
-        'Até 5 professores',
-        '300 materiais por mês (total)',
-        'Todos os recursos do plano Professor',
-        'Dashboard de gestão colaborativa',
-        'Compartilhamento de materiais entre professores',
-        'Relatórios detalhados de uso',
-        'Suporte prioritário',
-        'Gestão centralizada de usuários',
-        'Controle de permissões',
-        'Distribuição flexível de materiais entre professores'
-      ],
-      materialTypes: [],
-      limitations: [],
-      color: 'from-green-500 to-emerald-600',
-      icon: Users
-    }
-  ];
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(price);
-  };
-
-  const getYearlyDiscount = (plan: Plan) => {
-    const monthlyTotal = plan.price.monthly * 12;
-    if (monthlyTotal === 0) return 0;
-    return Math.round(((monthlyTotal - plan.price.yearly) / monthlyTotal) * 100);
-  };
-
-  const getMaterialTypeIcon = (materialType: string) => {
-    if (materialType.includes('Planos de Aula')) return GraduationCap;
-    if (materialType.includes('Slides')) return Presentation;
-    if (materialType.includes('Atividades')) return ClipboardList;
-    if (materialType.includes('Avaliações')) return FileText;
-    return Brain;
-  };
-
-  const handlePlanChange = async (planId: string) => {
-    await changePlan(planId);
-  };
-
-  const handleCancelSubscription = () => {
-    // Logic to cancel subscription
-    console.log('Cancelar assinatura');
-    setIsCancelModalOpen(false);
-    // Add actual cancellation logic here
-  };
-
-  // Calculate usage percentage with real-time data from the hook
-  const usagePercentage = currentPlan.limits.materialsPerMonth > 0 
-    ? Math.min((usage.materialsThisMonth / currentPlan.limits.materialsPerMonth) * 100, 100)
-    : 0;
-
-  // Format next reset date using real data
-  const nextResetDate = getNextResetDate();
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  };
-
-  // Get remaining materials using real data
-  const remainingMaterials = getRemainingMaterials();
 
   // Function to get all resources for current plan
   const getAllResourcesForCurrentPlan = () => {
@@ -364,7 +250,10 @@ const SubscriptionPage = () => {
                 
                 {/* Progress Bar using shadcn/ui Progress component */}
                 <Progress 
-                  value={usagePercentage} 
+                  value={currentPlan.limits.materialsPerMonth > 0 
+                    ? Math.min((usage.materialsThisMonth / currentPlan.limits.materialsPerMonth) * 100, 100)
+                    : 0
+                  } 
                   className="w-full h-2.5 mb-2" 
                 />
                 
@@ -376,10 +265,10 @@ const SubscriptionPage = () => {
                 <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <p className="text-xs text-gray-500 flex items-center">
                     <Calendar className="w-3 h-3 mr-1" />
-                    Renova em {formatDate(nextResetDate)}
+                    Renova em {formatDate(getNextResetDate())}
                   </p>
                   <p className="text-xs text-blue-600 font-medium">
-                    {remainingMaterials} restantes
+                    {getRemainingMaterials()} restantes
                   </p>
                 </div>
                 
@@ -391,15 +280,19 @@ const SubscriptionPage = () => {
                 )}
                 
                 {/* Warning messages based on real usage */}
-                {usagePercentage >= 80 && remainingMaterials > 0 && (
-                  <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700">
-                    <span className="font-medium">Atenção:</span> Você já usou {Math.round(usagePercentage)}% dos seus materiais este mês
-                  </div>
-                )}
-                {remainingMaterials === 0 && (
-                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-                    <span className="font-medium">Limite atingido:</span> Faça upgrade para continuar gerando materiais
-                  </div>
+                {currentPlan.limits.materialsPerMonth > 0 && (
+                  <>
+                    {(usage.materialsThisMonth / currentPlan.limits.materialsPerMonth) >= 0.8 && getRemainingMaterials() > 0 && (
+                      <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700">
+                        <span className="font-medium">Atenção:</span> Você já usou {Math.round((usage.materialsThisMonth / currentPlan.limits.materialsPerMonth) * 100)}% dos seus materiais este mês
+                      </div>
+                    )}
+                    {getRemainingMaterials() === 0 && (
+                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                        <span className="font-medium">Limite atingido:</span> Faça upgrade para continuar gerando materiais
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -538,7 +431,7 @@ const SubscriptionPage = () => {
         </Card>
       </div>
 
-      {/* Plans Section - Updated to highlight current plan */}
+      {/* Plans Section - Updated to highlight current plan correctly */}
       <div className="max-w-6xl mx-auto mb-6 sm:mb-8">
         <Card className="p-4 sm:p-6">
           <div className="flex flex-col gap-4 mb-6">
@@ -583,7 +476,7 @@ const SubscriptionPage = () => {
             </div>
           </div>
 
-          {/* Plans Grid - Updated to highlight current plan */}
+          {/* Plans Grid - Updated to highlight current plan correctly */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {plans.map((plan) => {
               const Icon = plan.icon;
@@ -591,7 +484,13 @@ const SubscriptionPage = () => {
               const price = billingType === 'monthly' ? plan.price.monthly : plan.price.yearly;
               const yearlyDiscount = getYearlyDiscount(plan);
 
-              console.log('Comparando planos:', { currentPlanId, planId: plan.id, isCurrentPlan });
+              // DEBUG: Log para verificar comparação
+              console.log('Comparando planos:', { 
+                currentPlanId, 
+                planId: plan.id, 
+                isCurrentPlan,
+                planName: plan.name 
+              });
 
               return (
                 <div
@@ -719,7 +618,7 @@ const SubscriptionPage = () => {
         </Card>
       </div>
 
-      {/* FAQ Section - keep existing code */}
+      {/* FAQ Section */}
       <div className="max-w-6xl mx-auto">
         <Card>
           <CardHeader className="p-4 sm:p-6">
@@ -776,7 +675,7 @@ const SubscriptionPage = () => {
         </Card>
       </div>
 
-      {/* Modals - keep existing code */}
+      {/* Modals */}
       <ChangeCardModal 
         isOpen={isChangeCardModalOpen} 
         onClose={() => setIsChangeCardModalOpen(false)} 
@@ -825,5 +724,120 @@ const SubscriptionPage = () => {
     </div>
   );
 };
+
+const handlePlanChange = async (planId: string) => {
+  await changePlan(planId);
+};
+
+const handleCancelSubscription = () => {
+  // Logic to cancel subscription
+  console.log('Cancelar assinatura');
+  setIsCancelModalOpen(false);
+  // Add actual cancellation logic here
+};
+
+const usagePercentage = currentPlan.limits.materialsPerMonth > 0 
+  ? Math.min((usage.materialsThisMonth / currentPlan.limits.materialsPerMonth) * 100, 100)
+  : 0;
+
+const nextResetDate = getNextResetDate();
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+const remainingMaterials = getRemainingMaterials();
+
+const getMaterialTypeIcon = (materialType: string) => {
+  if (materialType.includes('Planos de Aula')) return GraduationCap;
+  if (materialType.includes('Slides')) return Presentation;
+  if (materialType.includes('Atividades')) return ClipboardList;
+  if (materialType.includes('Avaliações')) return FileText;
+  return Brain;
+};
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(price);
+};
+
+const getYearlyDiscount = (plan: Plan) => {
+  const monthlyTotal = plan.price.monthly * 12;
+  if (monthlyTotal === 0) return 0;
+  return Math.round(((monthlyTotal - plan.price.yearly) / monthlyTotal) * 100);
+};
+
+const plans: Plan[] = [
+  {
+    id: 'gratuito',
+    name: 'Gratuito',
+    price: { monthly: 0, yearly: 0 },
+    features: [
+      '5 materiais por mês',
+      'Download em PDF',
+      'Suporte básico',
+      'Acesso aos templates básicos'
+    ],
+    materialTypes: [
+      'Planos de Aula básicos',
+      'Atividades simples'
+    ],
+    limitations: [
+      'Sem download em Word/PPT',
+      '5 materiais por mês',
+      'Sem edição avançada',
+      'Sem Slides Interativos',
+      'Sem Avaliações Personalizadas'
+    ],
+    color: 'from-gray-400 to-gray-600',
+    icon: FileText
+  },
+  {
+    id: 'professor',
+    name: 'Professor',
+    price: { monthly: 29.90, yearly: 299 },
+    features: [
+      '50 materiais por mês',
+      'Download em PDF, Word e PPT',
+      'Edição completa de materiais',
+      'Todos os templates disponíveis',
+      'Suporte por e-mail',
+      'Calendário de aulas',
+      'Histórico completo'
+    ],
+    materialTypes: [
+      'Planos de Aula completos',
+      'Slides interativos',
+      'Atividades diversificadas',
+      'Avaliações personalizadas'
+    ],
+    limitations: [],
+    color: 'from-blue-500 to-purple-600',
+    icon: Crown,
+    popular: true
+  },
+  {
+    id: 'grupo-escolar',
+    name: 'Grupo Escolar',
+    price: { monthly: 89.90, yearly: 849 },
+    features: [
+      'Até 5 professores',
+      '300 materiais por mês (total)',
+      'Todos os recursos do plano Professor',
+      'Dashboard de gestão colaborativa',
+      'Compartilhamento de materiais entre professores',
+      'Relatórios detalhados de uso',
+      'Suporte prioritário',
+      'Gestão centralizada de usuários',
+      'Controle de permissões',
+      'Distribuição flexível de materiais entre professores'
+    ],
+    materialTypes: [],
+    limitations: [],
+    color: 'from-green-500 to-emerald-600',
+    icon: Users
+  }
+];
 
 export default SubscriptionPage;
