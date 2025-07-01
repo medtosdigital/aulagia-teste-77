@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabasePlanService, TipoPlano, PlanoUsuario } from '@/services/supabasePlanService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -54,9 +53,9 @@ export const useSupabasePlanPermissions = () => {
         supabasePlanService.getRemainingMaterials()
       ]);
 
-      // Timeout para evitar carregamento infinito
+      // Timeout aumentado para 30 segundos para evitar carregamento infinito
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 10000)
+        setTimeout(() => reject(new Error('Timeout')), 30000)
       );
 
       const [plan, remaining] = await Promise.race([loadPromise, timeoutPromise]) as [PlanoUsuario | null, number];
