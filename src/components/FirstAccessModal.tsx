@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -312,6 +312,14 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
   const currentTourStep = tourSteps[currentStep];
   return <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="w-[90vw] sm:w-full sm:max-w-lg max-h-[85vh] overflow-y-auto p-0 border-0 shadow-2xl rounded-2xl bg-white">
+        <DialogHeader>
+          <DialogTitle className="text-lg sm:text-xl font-bold text-center">
+            {currentTourStep.title}
+          </DialogTitle>
+          <DialogDescription className="text-gray-600 text-xs sm:text-sm text-center">
+            {currentTourStep.subtitle}
+          </DialogDescription>
+        </DialogHeader>
         <div className="p-4 sm:p-6">
           <div className="mb-4">
             {currentTourStep.content}

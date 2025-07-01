@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -113,6 +112,9 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
     return (
       <Dialog open={isOpen} onOpenChange={() => {}}>
         <DialogContent className="w-[90vw] sm:w-full sm:max-w-md p-0 border-0 shadow-2xl rounded-2xl bg-white">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Feedback Enviado</DialogTitle>
+          </DialogHeader>
           <div className="p-4 text-center">
             <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3">
               <CheckCircle className="w-6 h-6 text-white" />
@@ -135,18 +137,20 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="w-[95vw] sm:w-full sm:max-w-2xl p-0 border-0 shadow-2xl rounded-2xl bg-white max-h-[95vh] overflow-hidden">
+        <DialogHeader>
+          <DialogTitle className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
+            Sua Opinião é Importante!
+          </DialogTitle>
+          <DialogDescription className="text-gray-600 text-xs sm:text-sm text-center">
+            Ajude-nos a melhorar o AulagIA
+          </DialogDescription>
+        </DialogHeader>
         <div className="p-4 sm:p-5">
           {/* Header Compacto */}
           <div className="text-center mb-4">
             <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-2">
               <MessageCircle className="w-6 h-6 text-white" />
             </div>
-            <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-1">
-              Sua Opinião é Importante!
-            </h2>
-            <p className="text-gray-600 text-xs sm:text-sm">
-              Ajude-nos a melhorar o AulagIA
-            </p>
           </div>
 
           {/* Tipo de Feedback em Colunas */}
