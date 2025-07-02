@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CalendarIcon, Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,6 @@ import { format, startOfWeek, endOfWeek, addDays, isToday, isSameMonth, isWeeken
 import { ptBR } from 'date-fns/locale';
 import { ScheduleEvent } from '@/services/scheduleService';
 import EventCard from './EventCard';
-import CalendarBlockedOverlay from './CalendarBlockedOverlay';
 
 interface WeekViewProps {
   currentDate: Date;
@@ -21,8 +21,6 @@ interface WeekViewProps {
   onToggleFullWeek: () => void;
   onToggleWeekends: () => void;
   getEventsForDate: (date: Date) => ScheduleEvent[];
-  hasCalendarAccess?: boolean;
-  onUpgrade?: () => void;
 }
 
 const WeekView: React.FC<WeekViewProps> = ({
@@ -37,9 +35,7 @@ const WeekView: React.FC<WeekViewProps> = ({
   onViewMaterial,
   onToggleFullWeek,
   onToggleWeekends,
-  getEventsForDate,
-  hasCalendarAccess = true,
-  onUpgrade = () => {}
+  getEventsForDate
 }) => {
   let weekDays: Date[];
   
@@ -55,45 +51,6 @@ const WeekView: React.FC<WeekViewProps> = ({
 
   if (!showWeekends) {
     weekDays = weekDays.filter(day => !isWeekend(day));
-  }
-
-  if (!hasCalendarAccess) {
-    return (
-      <CalendarBlockedOverlay onUpgrade={onUpgrade}>
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">Visão Semanal</h2>
-                <p className="text-gray-600">Semana de exemplo</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-            {[...Array(5)].map((_, index) => (
-              <div key={index} className="space-y-3">
-                <div className="text-center p-4 rounded-xl bg-white border-2 border-gray-200">
-                  <div className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                    Exemplo
-                  </div>
-                  <div className="text-2xl font-bold mt-1 text-gray-400">
-                    {index + 1}
-                  </div>
-                </div>
-                
-                <div className="space-y-2 min-h-[300px]">
-                  <Card className="p-3 bg-blue-50 border-blue-200">
-                    <div className="text-sm font-medium text-blue-800">Material exemplo</div>
-                    <div className="text-xs text-blue-600">09:00 - Matemática</div>
-                  </Card>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </CalendarBlockedOverlay>
-    );
   }
 
   return (

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Lock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -286,8 +287,6 @@ const CalendarPage: React.FC = () => {
               onToggleFullWeek={() => setShowFullWeek(!showFullWeek)}
               onToggleWeekends={() => setShowWeekends(!showWeekends)}
               getEventsForDate={getEventsForDate}
-              hasCalendarAccess={hasCalendarFeatures}
-              onUpgrade={openUpgradeModal}
             />
           )}
           {view === 'month' && (
@@ -302,8 +301,6 @@ const CalendarPage: React.FC = () => {
               onViewMaterial={handleViewMaterial}
               onToggleWeekends={() => setShowWeekends(!showWeekends)}
               getEventsForDate={getEventsForDate}
-              hasCalendarAccess={hasCalendarFeatures}
-              onUpgrade={openUpgradeModal}
             />
           )}
           {view === 'year' && (
@@ -314,8 +311,6 @@ const CalendarPage: React.FC = () => {
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
               onViewMaterial={handleViewMaterial}
-              hasCalendarAccess={hasCalendarFeatures}
-              onUpgrade={openUpgradeModal}
             />
           )}
         </div>

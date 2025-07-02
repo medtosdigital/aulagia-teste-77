@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ScheduleEvent } from '@/services/scheduleService';
 import EventCard from './EventCard';
-import CalendarBlockedOverlay from './CalendarBlockedOverlay';
 
 interface YearViewProps {
   currentDate: Date;
@@ -13,8 +13,6 @@ interface YearViewProps {
   onEditEvent: (event: ScheduleEvent) => void;
   onDeleteEvent: (event: ScheduleEvent) => void;
   onViewMaterial: (event: ScheduleEvent) => void;
-  hasCalendarAccess?: boolean;
-  onUpgrade?: () => void;
 }
 
 const YearView: React.FC<YearViewProps> = ({
@@ -23,54 +21,10 @@ const YearView: React.FC<YearViewProps> = ({
   onMonthClick,
   onEditEvent,
   onDeleteEvent,
-  onViewMaterial,
-  hasCalendarAccess = true,
-  onUpgrade = () => {}
+  onViewMaterial
 }) => {
   const year = currentDate.getFullYear();
   const months = Array.from({ length: 12 }, (_, i) => new Date(year, i, 1));
-
-  if (!hasCalendarAccess) {
-    return (
-      <CalendarBlockedOverlay onUpgrade={onUpgrade}>
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{year}</h2>
-            <p className="text-gray-600">Exemplo de calendário anual</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {months.map(month => (
-              <Card 
-                key={month.toString()} 
-                className="border-2 border-gray-200 overflow-hidden opacity-50"
-              >
-                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50">
-                  <CardTitle className="text-lg text-center font-bold text-gray-500">
-                    {format(month, 'MMMM', { locale: ptBR })}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="text-center mb-4">
-                    <div className="text-3xl font-bold text-gray-400 mb-1">
-                      {Math.floor(Math.random() * 5)}
-                    </div>
-                    <div className="text-sm text-gray-400">materiais</div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Card className="p-2 bg-blue-50 border-blue-200">
-                      <div className="text-xs text-blue-600">Material exemplo</div>
-                    </Card>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </CalendarBlockedOverlay>
-    );
-  }
 
   return (
     <div className="space-y-6">
