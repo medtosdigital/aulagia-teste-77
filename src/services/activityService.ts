@@ -82,19 +82,23 @@ export const activityService = new ActivityService();
 
 // Limpar atividades de teste existentes se elas estiverem presentes
 if (typeof window !== 'undefined') {
-  setTimeout(() => {
-    const existingActivities = activityService.getActivities();
-    
-    // Verificar se há atividades de teste e removê-las
-    const hasTestActivities = existingActivities.some(activity => 
-      (activity.title === 'Plano de Aula - Matemática' && activity.description === 'Criado plano de aula sobre frações') ||
-      (activity.title === 'Slides - História' && activity.description === 'Exportado slides sobre Brasil Colonial') ||
-      (activity.title === 'Atividade - Português' && activity.description === 'Atualizada atividade de interpretação de texto')
-    );
-    
-    if (hasTestActivities) {
-      console.log('🧹 Removing test activities...');
-      activityService.clearActivities();
+  setTimeout(async () => {
+    try {
+      const existingActivities = await activityService.getRecentActivities(50);
+      
+      // Verificar se há atividades de teste e removê-las
+      const hasTestActivities = existingActivities.some(activity => 
+        (activity.title === 'Plano de Aula - Matemática' && activity.description === 'Criado plano de aula sobre frações') ||
+        (activity.title === 'Slides - História' && activity.description === 'Exportado slides sobre Brasil Colonial') ||
+        (activity.title === 'Atividade - Português' && activity.description === 'Atualizada atividade de interpretação de texto')
+      );
+      
+      if (hasTestActivities) {
+        console.log('🧹 Removing test activities...');
+        await activityService.clearActivities();
+      }
+    } catch (error) {
+      console.error('Error checking test activities:', error);
     }
   }, 500);
 }
