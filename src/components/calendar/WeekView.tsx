@@ -7,6 +7,7 @@ import { format, startOfWeek, endOfWeek, addDays, isToday, isSameMonth, isWeeken
 import { ptBR } from 'date-fns/locale';
 import { ScheduleEvent } from '@/services/scheduleService';
 import EventCard from './EventCard';
+import BlockedFeature from '../BlockedFeature';
 
 interface WeekViewProps {
   currentDate: Date;
@@ -21,6 +22,8 @@ interface WeekViewProps {
   onToggleFullWeek: () => void;
   onToggleWeekends: () => void;
   getEventsForDate: (date: Date) => ScheduleEvent[];
+  hasCalendarAccess?: boolean;
+  onUpgrade?: () => void;
 }
 
 const WeekView: React.FC<WeekViewProps> = ({
@@ -35,7 +38,9 @@ const WeekView: React.FC<WeekViewProps> = ({
   onViewMaterial,
   onToggleFullWeek,
   onToggleWeekends,
-  getEventsForDate
+  getEventsForDate,
+  hasCalendarAccess = true,
+  onUpgrade = () => {}
 }) => {
   let weekDays: Date[];
   
@@ -53,6 +58,98 @@ const WeekView: React.FC<WeekViewProps> = ({
     weekDays = weekDays.filter(day => !isWeekend(day));
   }
 
+  // Se não tem acesso ao calendário, mostrar versão bloqueada
+  if (!hasCalendarAccess) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 opacity-60">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-gray-500 mb-2">Visão Semanal</h2>
+              <p className="text-gray-400">
+                {showFullWeek 
+                  ? `${format(weekDays[0], "dd/MM", { locale: ptBR })} - ${format(weekDays[weekDays.length - 1], "dd/MM/yyyy", { locale: ptBR })}`
+                  : `A partir de hoje - ${format(weekDays[weekDays.length - 1], "dd/MM/yyyy", { locale: ptBR })}`
+                }
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto opacity-50">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                className="flex items-center justify-center gap-2 w-full sm:w-auto"
+              >
+                <CalendarIcon className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">{showFullWeek ? 'A partir de hoje' : 'Semana completa'}</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                className="flex items-center justify-center gap-2 w-full sm:w-auto"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">{showWeekends ? 'Ocultar fins de semana' : 'Mostrar fins de semana'}</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <BlockedFeature
+          title="Recurso Premium"
+          description="Calendário disponível apenas em planos pagos"
+          onUpgrade={onUpgrade}
+          className="min-h-[400px]"
+        >
+          <div className={`grid grid-cols-1 gap-4 ${weekDays.length <= 5 ? 'lg:grid-cols-5' : weekDays.length === 6 ? 'lg:grid-cols-6' : 'lg:grid-cols-7'}`}>
+            {weekDays.map(day => {
+              const isCurrentDay = isToday(day);
+              const isCurrentMonth = isSameMonth(day, currentDate);
+              
+              return (
+                <div key={day.toString()} className="space-y-3">
+                  <div className={`text-center p-4 rounded-xl transition-all ${
+                    isCurrentDay 
+                      ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-600' 
+                      : isCurrentMonth 
+                        ? 'bg-gray-200 border-2 border-gray-300' 
+                        : 'bg-gray-100 text-gray-400'
+                  }`}>
+                    <div className="text-xs font-medium uppercase tracking-wide">
+                      {format(day, 'EEE', { locale: ptBR })}
+                    </div>
+                    <div className={`text-2xl font-bold mt-1 ${
+                      isCurrentDay ? 'text-gray-600' : isCurrentMonth ? 'text-gray-500' : 'text-gray-400'
+                    }`}>
+                      {format(day, 'd')}
+                    </div>
+                    <div className={`text-xs mt-2 px-2 py-1 rounded-full ${
+                      isCurrentDay ? 'bg-gray-400/20 text-gray-600' : 'bg-gray-300 text-gray-500'
+                    }`}>
+                      0 materiais
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 min-h-[300px]">
+                    <button
+                      disabled
+                      className="w-full text-sm p-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 cursor-not-allowed transition-all"
+                    >
+                      <Plus className="w-4 h-4 mx-auto mb-1" />
+                      <div>Adicionar</div>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </BlockedFeature>
+      </div>
+    );
+  }
+
+  // Versão normal para usuários com acesso
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
