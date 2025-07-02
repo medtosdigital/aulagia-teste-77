@@ -1,4 +1,3 @@
-
 import { materialService, GeneratedMaterial } from './materialService';
 import { activityService } from './activityService';
 import { scheduleService } from './scheduleService';
@@ -52,7 +51,7 @@ class StatsService {
     };
 
     // Calcular crescimento semanal baseado nas atividades
-    const recentActivities = activityService.getActivities().filter(
+    const recentActivities = activityService.getRecentActivities().filter(
       activity => activity.timestamp >= oneWeekAgo && activity.type === 'created'
     );
 
@@ -79,7 +78,7 @@ class StatsService {
   }
 
   getActivityStats(): ActivityStats {
-    const activities = activityService.getActivities();
+    const activities = activityService.getRecentActivities();
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
