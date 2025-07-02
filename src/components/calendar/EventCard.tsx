@@ -27,18 +27,19 @@ const EventCard: React.FC<EventCardProps> = ({
   onDelete,
   onViewMaterial
 }) => {
-  const [materialType, setMaterialType] = React.useState<'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao'>('atividade');
+  const [materials, setMaterials] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    const loadMaterialType = async () => {
-      const materials = await materialService.getMaterials();
-      const material = materials.find(m => m.id === event.material_id);
-      if (material) {
-        setMaterialType((material.type as 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao') || 'atividade');
+    const loadMaterials = async () => {
+      if (event.material_ids && event.material_ids.length > 0) {
+        const allMaterials = await materialService.getMaterials();
+        setMaterials(allMaterials.filter(m => event.material_ids?.includes(m.id)));
+      } else {
+        setMaterials([]);
       }
     };
-    loadMaterialType();
-  }, [event.material_id]);
+    loadMaterials();
+  }, [event.material_ids]);
 
   const handleExportMaterial = async (event: CalendarEvent, format: 'print' | 'pdf' | 'word' | 'ppt') => {
     const materials = await materialService.getMaterials();
@@ -83,7 +84,17 @@ const EventCard: React.FC<EventCardProps> = ({
 
   return (
     <Card className={`group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] overflow-hidden ${compact ? 'text-xs' : ''}`}>
-      <MaterialCardHeader materialType={materialType} subject={event.subject} />
+      {/* Exibe os tipos dos materiais da aula */}
+      {materials.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {materials.map((mat) => (
+            <span key={mat.id} className="px-2 py-1 rounded bg-gray-100 text-xs font-medium">
+              {mat.title} <span className="text-gray-400">({mat.type})</span>
+            </span>
+          ))}
+        </div>
+      )}
+      <MaterialCardHeader subject={event.subject} />
       <CardContent className={`${compact ? 'p-3' : 'p-4'}`}>
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
@@ -205,7 +216,7 @@ const EventCard: React.FC<EventCardProps> = ({
                 <FileText className="w-3 h-3" />
                 PDF
               </button>
-              {materialType === 'slides' ? (
+              {materials.length > 0 && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -216,18 +227,6 @@ const EventCard: React.FC<EventCardProps> = ({
                 >
                   <FileText className="w-3 h-3" />
                   PPT
-                </button>
-              ) : (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleExportMaterial(event, 'word');
-                    (e.target as HTMLElement).closest('div')!.style.display = 'none';
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 rounded-b-lg"
-                >
-                  <FileText className="w-3 h-3" />
-                  Word
                 </button>
               )}
             </div>

@@ -3,7 +3,7 @@ import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Lock, Crown } 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, addYears, isSameDay, startOfDay, endOfDay, startOfYear, endOfYear } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, addYears, isSameDay, startOfDay, endOfDay, startOfYear, endOfYear, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { materialService } from '@/services/materialService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +19,7 @@ import MonthView from './calendar/MonthView';
 import YearView from './calendar/YearView';
 import { useSupabaseSchedule } from '@/hooks/useSupabaseSchedule';
 import { CalendarEvent } from '@/services/supabaseScheduleService';
+import { activityService } from '@/services/activityService';
 
 const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -80,7 +81,7 @@ const CalendarPage: React.FC = () => {
   const getEventsForDate = (date: Date): CalendarEvent[] => {
     return events.filter(event => {
       if (!event.start_date) return false;
-      return isSameDay(new Date(event.start_date), date);
+      return isSameDay(parseISO(event.start_date), date);
     });
   };
 
@@ -111,6 +112,20 @@ const CalendarPage: React.FC = () => {
       const success = await deleteSupabaseEvent(event.id);
       if (success) {
         toast.success('Agendamento excluído com sucesso!');
+        let materialType: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' | undefined = undefined;
+        if (event.material_ids && event.material_ids.length > 0) {
+          const material = await materialService.getMaterialById(event.material_ids[0]);
+          materialType = material?.type;
+        }
+        activityService.addActivity({
+          type: 'updated',
+          title: event.title,
+          description: `Agendamento excluído: ${event.title} (${event.subject}, ${event.grade}) para ${event.start_date} das ${event.start_time} às ${event.end_time}`,
+          materialType: materialType,
+          materialIds: event.material_ids,
+          subject: event.subject,
+          grade: event.grade
+        });
         refreshEvents();
       } else {
         toast.error('Erro ao excluir agendamento');
@@ -120,12 +135,22 @@ const CalendarPage: React.FC = () => {
 
   const handleViewMaterial = async (event: CalendarEvent) => {
     const materials = await materialService.getMaterials();
-    const material = materials.find(m => m.id === event.material_id);
-    if (material) {
-      setSelectedMaterial(material);
+    if (event.material_ids && event.material_ids.length > 1) {
+      // Se houver mais de um material, pode abrir um modal de seleção ou mostrar todos
+      // Aqui, para simplificar, mostraremos o primeiro material
+      setSelectedMaterial(materials.find(m => event.material_ids?.includes(m.id)));
       setMaterialModalOpen(true);
+      toast.info('Esta aula possui múltiplos materiais. Em breve será possível visualizar todos.');
+    } else if (event.material_ids && event.material_ids.length === 1) {
+      const material = materials.find(m => m.id === event.material_ids[0]);
+      if (material) {
+        setSelectedMaterial(material);
+        setMaterialModalOpen(true);
+      } else {
+        toast.error('Material não encontrado');
+      }
     } else {
-      toast.error('Material não encontrado');
+      toast.error('Nenhum material vinculado a esta aula.');
     }
   };
 
@@ -297,7 +322,22 @@ const CalendarPage: React.FC = () => {
             setSelectedDate(undefined);
           }}
           onSave={refreshEvents}
-          event={selectedEvent}
+          event={selectedEvent ? {
+            id: selectedEvent.id,
+            materialIds: selectedEvent.material_ids || [],
+            title: selectedEvent.title,
+            subject: selectedEvent.subject || '',
+            grade: selectedEvent.grade || '',
+            type: selectedEvent.event_type,
+            startDate: new Date(selectedEvent.start_date),
+            endDate: new Date(selectedEvent.end_date),
+            startTime: selectedEvent.start_time,
+            endTime: selectedEvent.end_time,
+            recurrence: selectedEvent.recurrence,
+            description: selectedEvent.description,
+            classroom: selectedEvent.classroom,
+            createdAt: new Date(selectedEvent.created_at)
+          } : undefined}
           selectedDate={selectedDate}
         />
       )}

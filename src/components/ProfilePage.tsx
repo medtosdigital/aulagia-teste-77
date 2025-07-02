@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { User, Camera, Shield, Crown, Save, Edit2, Lock, Phone } from 'lucide-react';
+import { User, Camera, Shield, Crown, Save, Edit2, Lock, Phone, FileText, Plus, CheckCircle, Download, Calendar as CalendarIcon } from 'lucide-react';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { userMaterialsService } from '@/services/userMaterialsService';
 import { statsService } from '@/services/statsService';
@@ -14,6 +14,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { activityService } from '@/services/activityService';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -48,6 +50,8 @@ const ProfilePage = () => {
     atividades: 0,
     avaliacoes: 0
   });
+
+  const [recentActivities, setRecentActivities] = useState([]);
 
   const teachingLevels = [
     'Educação Infantil',
@@ -172,6 +176,14 @@ const ProfilePage = () => {
       loadProfile();
     }
   }, [user]);
+
+  useEffect(() => {
+    const loadActivities = async () => {
+      const activities = await activityService.getRecentActivities(10);
+      setRecentActivities(activities);
+    };
+    loadActivities();
+  }, []);
 
   const getPlanDisplayName = () => {
     switch (currentPlan.id) {
@@ -680,6 +692,64 @@ const ProfilePage = () => {
                 <span className="text-sm text-gray-600">Avaliações:</span>
                 <span className="font-semibold">{materialStats.avaliacoes}</span>
               </div>
+            </CardContent>
+          </Card>
+          {/* Atividades Recentes */}
+          <Card className="shadow-lg border-0">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b">
+              <CardTitle>Atividades Recentes</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4 max-h-96 overflow-y-auto">
+              {recentActivities.length > 0 ? (
+                recentActivities.map((activity, index) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition animate-fade-in"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="mt-1">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        activity.type === 'created' ? 'bg-green-100 text-green-600' :
+                        activity.type === 'exported' ? 'bg-blue-100 text-blue-600' :
+                        activity.type === 'updated' ? 'bg-purple-100 text-purple-600' :
+                        activity.type === 'scheduled' ? 'bg-orange-100 text-orange-600' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {activity.type === 'created' && <Plus size={16} />}
+                        {activity.type === 'exported' && <Download size={16} />}
+                        {activity.type === 'updated' && <CheckCircle size={16} />}
+                        {activity.type === 'scheduled' && <CalendarIcon size={16} />}
+                        {!['created','exported','updated','scheduled'].includes(activity.type) && <FileText size={16} />}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{activity.title}</p>
+                      <p className="text-sm text-gray-500">{activity.description}</p>
+                      <div className="flex items-center space-x-3 mt-1">
+                        <p className="text-xs text-gray-400">{format(new Date(activity.timestamp), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
+                        {activity.subject && (
+                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                            {activity.subject}
+                          </span>
+                        )}
+                        {activity.grade && (
+                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                            {activity.grade}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h4 className="font-medium text-gray-800 mb-2">Ainda não há atividades</h4>
+                  <p className="text-gray-500 mb-4">Suas atividades aparecerão aqui quando você começar a criar materiais</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

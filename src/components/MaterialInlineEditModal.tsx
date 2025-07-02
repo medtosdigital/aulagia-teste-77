@@ -9,6 +9,7 @@ import { templateService } from '@/services/templateService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SlideViewer from './SlideViewer';
+import { activityService } from '@/services/activityService';
 
 interface MaterialInlineEditModalProps {
   material: GeneratedMaterial | null;
@@ -99,6 +100,15 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
       const success = materialService.updateMaterial(materialToSave.id, materialToSave);
       if (success) {
         toast.success('Material atualizado com sucesso!');
+        activityService.addActivity({
+          type: 'updated',
+          title: materialToSave.title,
+          description: `Material editado: ${materialToSave.title} (${materialToSave.type})`,
+          materialType: materialToSave.type,
+          materialId: materialToSave.id,
+          subject: materialToSave.subject,
+          grade: materialToSave.grade
+        });
         onSave();
         onClose();
       } else {

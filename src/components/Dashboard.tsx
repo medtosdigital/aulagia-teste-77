@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabaseScheduleService } from '@/services/supabaseScheduleService';
 import { CalendarEvent } from '@/services/supabaseScheduleService';
+import { parseISO } from 'date-fns';
 
 interface DashboardProps {
   onNavigate?: (page: string) => void;
@@ -64,17 +65,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, []);
 
   const tabs = [{
-    id: 'recent-activities',
-    label: 'Atividades Recentes',
-    shortLabel: 'Atividades'
-  }, {
     id: 'upcoming-classes',
     label: 'Próximas Aulas',
     shortLabel: 'Aulas'
-  }, {
-    id: 'quick-stats',
-    label: 'Estatísticas',
-    shortLabel: 'Stats'
   }];
 
   const handleNavigate = (page: string) => {
@@ -223,225 +216,137 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Main Content Tabs */}
+      {/* Próximas aulas + Estatísticas rápidas */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="grid grid-cols-3">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-3 px-1 text-center border-b-2 font-medium text-xs sm:text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-        
         <div className="p-4 md:p-6">
-          {activeTab === 'recent-activities' && (
-            <div>
-              <div className="mb-4">
-                <h3 className="font-semibold text-lg">Suas atividades recentes</h3>
+          <h3 className="font-semibold text-lg mb-4">Suas próximas aulas</h3>
+          <div className="space-y-4">
+            {upcomingClasses.length > 0 ? (
+              upcomingClasses.map(event => (
+                <div
+                  key={event.id}
+                  className={`flex items-start space-x-4 p-3 rounded-lg ${
+                    parseISO(event.start_date).toDateString() === new Date().toDateString()
+                      ? 'bg-blue-50 border border-blue-200'
+                      : 'hover:bg-gray-50'
+                  } transition`}
+                >
+                  <div className="mt-1">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      parseISO(event.start_date).toDateString() === new Date().toDateString()
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-green-100 text-green-600'
+                    }`}>
+                      <Users size={16} />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{event.title}</p>
+                    <p className="text-sm text-gray-700">{event.grade} - {event.subject}</p>
+                    <p className={`text-xs mt-1 font-medium ${
+                      parseISO(event.start_date).toDateString() === new Date().toDateString()
+                        ? 'text-blue-600'
+                        : 'text-gray-400'
+                    }`}>
+                      {format(parseISO(event.start_date), "dd/MM/yyyy", { locale: ptBR })} - {event.start_time} às {event.end_time}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">Nenhuma aula agendada para os próximos dias</p>
+                <p className="text-sm text-gray-400">Vá ao calendário para agendar suas aulas</p>
               </div>
-              
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {recentActivities.length > 0 ? (
-                  recentActivities.map((activity, index) => (
+            )}
+          </div>
+          {/* Estatísticas rápidas logo abaixo */}
+          <div className="mt-8">
+            <h3 className="font-semibold text-lg mb-4">Estatísticas rápidas</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Planos de aula</p>
+                    <p className="text-2xl font-bold text-gray-800">{materialStats?.planoAula || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                    <ClipboardList size={24} />
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      key={activity.id}
-                      className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition animate-fade-in"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <div className="mt-1">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getActivityIconColor(activity.type)}`}>
-                          {getActivityIcon(activity.type)}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{activity.title}</p>
-                        <p className="text-sm text-gray-500">{activity.description}</p>
-                        <div className="flex items-center space-x-3 mt-1">
-                          <p className="text-xs text-gray-400">{formatTimeAgo(activity.timestamp)}</p>
-                          {activity.subject && (
-                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                              {activity.subject}
-                            </span>
-                          )}
-                          {activity.grade && (
-                            <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
-                              {activity.grade}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FileText className="w-8 h-8 text-gray-400" />
-                    </div>
-                    <h4 className="font-medium text-gray-800 mb-2">Ainda não há atividades</h4>
-                    <p className="text-gray-500 mb-4">Suas atividades aparecerão aqui quando você começar a criar materiais</p>
-                    {canAccessCreateMaterial() && (
-                      <button
-                        onClick={() => handleNavigate('create')}
-                        className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Criar Primeiro Material
-                      </button>
-                    )}
+                      className="bg-blue-500 h-2 rounded-full"
+                      style={{ width: `${Math.min((materialStats?.planoAula || 0) * 10, 100)}%` }}
+                    ></div>
                   </div>
-                )}
+                  <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.planoAula || 0} na última semana</p>
+                </div>
               </div>
-            </div>
-          )}
-
-          {activeTab === 'upcoming-classes' && (
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Suas próximas aulas</h3>
-              <div className="space-y-4">
-                {upcomingClasses.length > 0 ? (
-                  upcomingClasses.map(event => (
+              <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Slides</p>
+                    <p className="text-2xl font-bold text-gray-800">{materialStats?.slides || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                    <Presentation size={24} />
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      key={event.id}
-                      className={`flex items-start space-x-4 p-3 rounded-lg ${
-                        new Date(event.start_date).toDateString() === new Date().toDateString()
-                          ? 'bg-blue-50 border border-blue-200'
-                          : 'hover:bg-gray-50'
-                      } transition`}
-                    >
-                      <div className="mt-1">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          new Date(event.start_date).toDateString() === new Date().toDateString()
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-green-100 text-green-600'
-                        }`}>
-                          <Users size={16} />
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{event.title}</p>
-                        <p className="text-sm text-gray-700">{event.grade} - {event.subject}</p>
-                        <p className={`text-xs mt-1 font-medium ${
-                          new Date(event.start_date).toDateString() === new Date().toDateString()
-                            ? 'text-blue-600'
-                            : 'text-gray-400'
-                        }`}>
-                          {format(new Date(event.start_date), "dd/MM/yyyy", { locale: ptBR })} - {event.start_time} às {event.end_time}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Nenhuma aula agendada para os próximos dias</p>
-                    <p className="text-sm text-gray-400">Vá ao calendário para agendar suas aulas</p>
+                      className="bg-gray-500 h-2 rounded-full"
+                      style={{ width: `${Math.min((materialStats?.slides || 0) * 15, 100)}%` }}
+                    ></div>
                   </div>
-                )}
+                  <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.slides || 0} na última semana</p>
+                </div>
               </div>
-            </div>
-          )}
-
-          {activeTab === 'quick-stats' && (
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Estatísticas rápidas</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500">Planos de aula</p>
-                      <p className="text-2xl font-bold text-gray-800">{materialStats?.planoAula || 0}</p>
-                    </div>
-                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                      <ClipboardList size={24} />
-                    </div>
+              <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Atividades</p>
+                    <p className="text-2xl font-bold text-gray-800">{materialStats?.atividades || 0}</p>
                   </div>
-                  <div className="mt-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full"
-                        style={{ width: `${Math.min((materialStats?.planoAula || 0) * 10, 100)}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.planoAula || 0} na última semana</p>
+                  <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                    <FileText size={24} />
                   </div>
                 </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500">Slides</p>
-                      <p className="text-2xl font-bold text-gray-800">{materialStats?.slides || 0}</p>
-                    </div>
-                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                      <Presentation size={24} />
-                    </div>
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-green-500 h-2 rounded-full"
+                      style={{ width: `${Math.min((materialStats?.atividades || 0) * 8, 100)}%` }}
+                    ></div>
                   </div>
-                  <div className="mt-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-gray-500 h-2 rounded-full"
-                        style={{ width: `${Math.min((materialStats?.slides || 0) * 15, 100)}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.slides || 0} na última semana</p>
+                  <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.atividades || 0} na última semana</p>
+                </div>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Avaliações</p>
+                    <p className="text-2xl font-bold text-gray-800">{materialStats?.avaliacoes || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                    <FileText size={24} />
                   </div>
                 </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500">Atividades</p>
-                      <p className="text-2xl font-bold text-gray-800">{materialStats?.atividades || 0}</p>
-                    </div>
-                    <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                      <FileText size={24} />
-                    </div>
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-purple-500 h-2 rounded-full"
+                      style={{ width: `${Math.min((materialStats?.avaliacoes || 0) * 20, 100)}%` }}
+                    ></div>
                   </div>
-                  <div className="mt-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-500 h-2 rounded-full"
-                        style={{ width: `${Math.min((materialStats?.atividades || 0) * 8, 100)}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.atividades || 0} na última semana</p>
-                  </div>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500">Avaliações</p>
-                      <p className="text-2xl font-bold text-gray-800">{materialStats?.avaliacoes || 0}</p>
-                    </div>
-                    <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                      <FileText size={24} />
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-purple-500 h-2 rounded-full"
-                        style={{ width: `${Math.min((materialStats?.avaliacoes || 0) * 20, 100)}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.avaliacoes || 0} na última semana</p>
-                  </div>
+                  <p className="text-xs text-gray-500 mt-1">+{materialStats?.weeklyGrowth.avaliacoes || 0} na última semana</p>
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 

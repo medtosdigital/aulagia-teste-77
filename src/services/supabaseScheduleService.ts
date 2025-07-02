@@ -7,10 +7,8 @@ type DatabaseCalendarEventInsert = Database['public']['Tables']['calendar_events
 export interface CalendarEvent {
   id: string;
   user_id: string;
-  material_id?: string;
+  material_ids?: string[];
   title: string;
-  subject?: string;
-  grade?: string;
   event_type: 'single' | 'multiple';
   start_date: string;
   end_date: string;
@@ -28,10 +26,8 @@ const convertDatabaseEventToCalendarEvent = (dbEvent: DatabaseCalendarEvent): Ca
   return {
     id: dbEvent.id,
     user_id: dbEvent.user_id,
-    material_id: dbEvent.material_id || undefined,
+    material_ids: dbEvent.material_ids ? JSON.parse(dbEvent.material_ids) : [],
     title: dbEvent.title,
-    subject: dbEvent.subject || undefined,
-    grade: dbEvent.grade || undefined,
     event_type: (dbEvent.event_type === 'multiple' ? 'multiple' : 'single') as 'single' | 'multiple',
     start_date: dbEvent.start_date,
     end_date: dbEvent.end_date,
@@ -64,19 +60,14 @@ export const supabaseScheduleService = {
 
   async saveEvent(eventData: Omit<CalendarEvent, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<CalendarEvent | null> {
     console.log('Salvando evento no Supabase:', eventData);
-    
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) {
       throw new Error('Usuário não autenticado');
     }
-
     const insertData: DatabaseCalendarEventInsert = {
       user_id: user.id,
-      material_id: eventData.material_id || null,
+      material_ids: JSON.stringify(eventData.material_ids || []),
       title: eventData.title,
-      subject: eventData.subject || null,
-      grade: eventData.grade || null,
       event_type: eventData.event_type,
       start_date: eventData.start_date,
       end_date: eventData.end_date,
@@ -86,52 +77,41 @@ export const supabaseScheduleService = {
       classroom: eventData.classroom || null,
       recurrence: eventData.recurrence || null
     };
-
     const { data, error } = await supabase
       .from('calendar_events')
       .insert(insertData)
       .select()
       .single();
-
     if (error) {
       console.error('Erro ao salvar evento:', error);
       throw error;
     }
-
     return data ? convertDatabaseEventToCalendarEvent(data) : null;
   },
 
   async updateEvent(id: string, eventData: Partial<CalendarEvent>): Promise<boolean> {
     console.log('Atualizando evento no Supabase:', id, eventData);
-    
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) {
       throw new Error('Usuário não autenticado');
     }
-
     // Remove campos que não devem ser atualizados
     const { id: _, user_id, created_at, updated_at, ...updateData } = eventData;
-
     const { error } = await supabase
       .from('calendar_events')
       .update({
         ...updateData,
-        material_id: updateData.material_id || null,
-        subject: updateData.subject || null,
-        grade: updateData.grade || null,
+        material_ids: updateData.material_ids ? JSON.stringify(updateData.material_ids) : JSON.stringify([]),
         description: updateData.description || null,
         classroom: updateData.classroom || null,
         recurrence: updateData.recurrence || null
       })
       .eq('id', id)
       .eq('user_id', user.id);
-
     if (error) {
       console.error('Erro ao atualizar evento:', error);
       throw error;
     }
-
     return true;
   },
 

@@ -17,6 +17,7 @@ import MaterialModal from './MaterialModal';
 import MaterialEditModal from './MaterialEditModal';
 import MaterialInlineEditModal from './MaterialInlineEditModal';
 import { UpgradeModal } from './UpgradeModal';
+import { activityService } from '@/services/activityService';
 
 // Interface para compatibilidade com GeneratedMaterial
 interface GeneratedMaterialWithOptionalFormData extends Omit<GeneratedMaterial, 'formData'> {
@@ -183,11 +184,18 @@ const MaterialsList: React.FC = () => {
   const handleDelete = async (id: string, title: string) => {
     if (window.confirm(`Tem certeza que deseja excluir "${title}"?`)) {
       try {
-        // Delete from Supabase with RLS ensuring user can only delete their own materials
         const success = await userMaterialsService.deleteMaterial(id);
-        
         if (success) {
           toast.success('Material excluído com sucesso!');
+          activityService.addActivity({
+            type: 'deleted',
+            title: title,
+            description: `Material excluído: ${title}`,
+            materialType: materials.find(m => m.id === id)?.type,
+            materialId: id,
+            subject: materials.find(m => m.id === id)?.subject,
+            grade: materials.find(m => m.id === id)?.grade
+          });
           loadMaterials();
         } else {
           toast.error('Erro ao excluir material');
@@ -227,6 +235,15 @@ const MaterialsList: React.FC = () => {
         await exportService.exportToPDF(material as GeneratedMaterial);
         toast.success('Material enviado para impressão!');
       }
+      activityService.addActivity({
+        type: 'exported',
+        title: material.title,
+        description: `Material exportado (${format.toUpperCase()}): ${material.title}`,
+        materialType: material.type,
+        materialId: material.id,
+        subject: material.subject,
+        grade: material.grade
+      });
     } catch (error) {
       toast.error('Erro ao exportar material');
       console.error('Export error:', error);

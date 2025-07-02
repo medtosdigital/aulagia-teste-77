@@ -33,7 +33,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   selectedDate
 }) => {
   const [materials, setMaterials] = useState<GeneratedMaterial[]>([]);
-  const [selectedMaterial, setSelectedMaterial] = useState<string>('');
+  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [type, setType] = useState<'single' | 'multiple'>('single');
   const [startDate, setStartDate] = useState<Date>(selectedDate || new Date());
@@ -69,7 +69,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
 
   useEffect(() => {
     if (event) {
-      setSelectedMaterial(event.materialId);
+      setSelectedMaterials(Array.isArray(event.materialIds) ? event.materialIds : event.materialId ? [event.materialId] : []);
       setTitle(event.title);
       setType(event.type);
       setStartDate(event.startDate);
@@ -86,8 +86,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
         setRecurrenceEndDate(event.recurrence.endDate);
       }
     } else {
-      // Reset form for new event
-      setSelectedMaterial('');
+      setSelectedMaterials([]);
       setTitle('');
       setType('single');
       setStartDate(selectedDate || new Date());
@@ -103,25 +102,24 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     }
   }, [event, selectedDate, open]);
 
-  const handleMaterialChange = (materialId: string) => {
-    setSelectedMaterial(materialId);
-    const material = materials.find(m => m.id === materialId);
-    if (material && !title) {
-      setTitle(material.title);
-    }
-  };
-
-  const handleDayToggle = (day: string) => {
-    setSelectedDays(prev => 
-      prev.includes(day) 
-        ? prev.filter(d => d !== day)
-        : [...prev, day]
+  const handleMaterialToggle = (materialId: string) => {
+    setSelectedMaterials(prev =>
+      prev.includes(materialId)
+        ? prev.filter(id => id !== materialId)
+        : [...prev, materialId]
     );
   };
 
+  function formatDateOnly(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   const handleSave = async () => {
-    if (!selectedMaterial) {
-      toast.error('Selecione um material');
+    if (selectedMaterials.length === 0) {
+      toast.error('Selecione pelo menos um material para a aula');
       return;
     }
     if (!title.trim()) {
@@ -132,16 +130,13 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       toast.error('Para múltiplas aulas, selecione pelo menos um dia da semana');
       return;
     }
-    const material = materials.find(m => m.id === selectedMaterial);
-    if (!material) return;
+    const selectedMaterialsData = materials.filter(m => selectedMaterials.includes(m.id));
     const eventData = {
-      material_id: selectedMaterial,
+      material_ids: selectedMaterials,
       title,
-      subject: material.subject,
-      grade: material.grade,
       event_type: type,
-      start_date: startDate.toISOString().split('T')[0],
-      end_date: (type === 'single' ? startDate : endDate).toISOString().split('T')[0],
+      start_date: formatDateOnly(startDate),
+      end_date: formatDateOnly(type === 'single' ? startDate : endDate),
       start_time: startTime,
       end_time: endTime,
       description,
@@ -149,31 +144,29 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       recurrence: type === 'multiple' ? {
         frequency: frequency,
         days: selectedDays,
-        endDate: endDate.toISOString().split('T')[0]
+        endDate: formatDateOnly(endDate)
       } : null
     };
     try {
       if (event) {
         await updateEvent(event.id, eventData);
-        toast.success('Agendamento atualizado com sucesso!');
+        toast.success('Aula agendada atualizada com sucesso!');
+        activityService.addActivity({
+          type: 'updated',
+          title: `${title}`,
+          description: `Aula editada: ${title} com ${selectedMaterialsData.length} material(is) para ${format(startDate, 'dd/MM/yyyy')} das ${startTime} às ${endTime}`
+        });
       } else {
-        await saveEvent(eventData);
-        toast.success('Agendamento criado com sucesso!');
-      }
-      onSave();
-      onClose();
-
-      if (!event) {
+        const saved = await saveEvent(eventData);
+        toast.success('Aula agendada com sucesso!');
         activityService.addActivity({
           type: 'scheduled',
           title: `${title}`,
-          description: `Aula agendada: ${title} (${material.subject}, ${material.grade}) para ${format(startDate, 'dd/MM/yyyy')} das ${startTime} às ${endTime}`,
-          materialType: material.type,
-          materialId: material.id,
-          subject: material.subject,
-          grade: material.grade
+          description: `Aula agendada: ${title} com ${selectedMaterialsData.length} material(is) para ${format(startDate, 'dd/MM/yyyy')} das ${startTime} às ${endTime}`
         });
       }
+      onSave();
+      onClose();
     } catch (error) {
       toast.error('Erro ao salvar agendamento');
     }
@@ -185,42 +178,32 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CalendarIcon className="w-5 h-5" />
-            {event ? 'Editar Agendamento' : 'Novo Agendamento'}
+            Agendar Aula
           </DialogTitle>
         </DialogHeader>
+        <div className="space-y-4 mt-4">
+          <Label className="font-medium">Título da Aula</Label>
+          <Input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Ex: Aula de Geometria, Revisão de Prova, etc."
+          />
+          <Label className="font-medium">Materiais da Aula</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {materials.map(material => (
+              <label key={material.id} className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedMaterials.includes(material.id)}
+                  onChange={() => handleMaterialToggle(material.id)}
+                />
+                <span className="truncate">{material.title} <span className="text-xs text-gray-400">({material.type})</span></span>
+              </label>
+            ))}
+          </div>
+        </div>
 
         <div className="space-y-6 py-4">
-          {/* Seleção de Material */}
-          <div className="space-y-2">
-            <Label>Material</Label>
-            <Select value={selectedMaterial} onValueChange={handleMaterialChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um material" />
-              </SelectTrigger>
-              <SelectContent>
-                {materials.map(material => (
-                  <SelectItem key={material.id} value={material.id}>
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4" />
-                      <span>{material.title} - {material.subject}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Título */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Título do Agendamento</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex: Aula de Matemática - Frações"
-            />
-          </div>
-
           {/* Tipo de Agendamento */}
           <div className="space-y-3">
             <Label>Tipo de Agendamento</Label>
