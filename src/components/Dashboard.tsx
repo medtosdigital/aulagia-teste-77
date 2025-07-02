@@ -43,9 +43,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     loadMaterialStats();
     
     // Carregar atividades recentes usando o mesmo padrão das estatísticas
-    const activities = activityService.getRecentActivities(10);
-    console.log('📊 Recent activities loaded:', activities);
-    setRecentActivities(activities);
+    const loadActivities = async () => {
+      const activities = await activityService.getRecentActivities(10);
+      console.log('📊 Recent activities loaded:', activities);
+      setRecentActivities(activities);
+    };
+    loadActivities();
 
     // Carregar próximas aulas (próximos 7 dias)
     const now = new Date();

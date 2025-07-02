@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Activity {
   id: string;
@@ -12,73 +14,67 @@ export interface Activity {
 }
 
 class ActivityService {
-  private storageKey = 'teaching-materials-activities';
+  // Adiciona uma atividade no Supabase
+  async addActivity(activity: Omit<Activity, 'id' | 'timestamp'>) {
+    // Buscar usuário logado
+    const user = JSON.parse(localStorage.getItem('supabase.auth.user') || 'null');
+    if (!user || !user.id) return null;
+    const { data, error } = await supabase
+      .from('user_activities')
+      .insert({
+        user_id: user.id,
+        type: activity.type,
+        title: activity.title,
+        description: activity.description,
+        material_type: activity.materialType,
+        material_id: activity.materialId,
+        subject: activity.subject,
+        grade: activity.grade
+      })
+      .select()
+      .single();
+    if (error) {
+      console.error('Erro ao registrar atividade no Supabase:', error);
+      return null;
+    }
+    return data;
+  }
 
-  getActivities(): Activity[] {
-    const stored = localStorage.getItem(this.storageKey);
-    console.log('📦 Raw stored activities:', stored);
-    
-    if (!stored) {
-      console.log('❌ No activities found in localStorage');
+  // Busca as atividades recentes do usuário logado
+  async getRecentActivities(limit: number = 10): Promise<Activity[]> {
+    const user = JSON.parse(localStorage.getItem('supabase.auth.user') || 'null');
+    if (!user || !user.id) return [];
+    const { data, error } = await supabase
+      .from('user_activities')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) {
+      console.error('Erro ao buscar atividades no Supabase:', error);
       return [];
     }
-    
-    try {
-      const activities = JSON.parse(stored);
-      const processedActivities = activities.map((activity: any) => ({
-        ...activity,
-        timestamp: new Date(activity.timestamp)
-      })).sort((a: Activity, b: Activity) => b.timestamp.getTime() - a.timestamp.getTime());
-      
-      console.log('✅ Processed activities:', processedActivities);
-      return processedActivities;
-    } catch (error) {
-      console.error('❌ Error parsing activities:', error);
-      return [];
-    }
+    return (data || []).map((a: any) => ({
+      id: a.id,
+      type: a.type,
+      title: a.title,
+      description: a.description,
+      materialType: a.material_type,
+      materialId: a.material_id,
+      timestamp: new Date(a.created_at),
+      subject: a.subject,
+      grade: a.grade
+    }));
   }
 
-  addActivity(activity: Omit<Activity, 'id' | 'timestamp'>): Activity {
-    console.log('➕ Adding activity to service:', activity);
-    
-    const activities = this.getActivities();
-    const newActivity: Activity = {
-      ...activity,
-      id: Date.now().toString(),
-      timestamp: new Date()
-    };
-    
-    console.log('🆕 New activity created:', newActivity);
-    
-    activities.unshift(newActivity);
-    
-    // Manter apenas os últimos 50 registros
-    const limitedActivities = activities.slice(0, 50);
-    
-    try {
-      localStorage.setItem(this.storageKey, JSON.stringify(limitedActivities));
-      console.log('💾 Activities saved to localStorage:', limitedActivities.length, 'total');
-    } catch (error) {
-      console.error('❌ Error saving activities:', error);
-    }
-    
-    return newActivity;
-  }
-
-  getRecentActivities(limit: number = 10): Activity[] {
-    const activities = this.getActivities();
-    const recent = activities.slice(0, limit);
-    console.log(`📋 Getting ${limit} recent activities:`, recent);
-    return recent;
-  }
-
-  getActivitiesByType(type: Activity['type']): Activity[] {
-    return this.getActivities().filter(activity => activity.type === type);
-  }
-
-  clearActivities(): void {
-    console.log('🗑️ Clearing all activities');
-    localStorage.removeItem(this.storageKey);
+  // Limpa todas as atividades do usuário logado
+  async clearActivities() {
+    const user = JSON.parse(localStorage.getItem('supabase.auth.user') || 'null');
+    if (!user || !user.id) return;
+    await supabase
+      .from('user_activities')
+      .delete()
+      .eq('user_id', user.id);
   }
 }
 
