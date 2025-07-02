@@ -96,9 +96,6 @@ const MaterialsList: React.FC = () => {
       setLoading(true);
       console.log('Loading materials for authenticated user:', user.id);
       
-      // Primeiro, inicializar materiais de exemplo se necessário
-      await userMaterialsService.initializeSampleMaterials();
-      
       // Load materials from Supabase with RLS ensuring user isolation
       const supabaseMaterials = await userMaterialsService.getMaterialsByUser();
       

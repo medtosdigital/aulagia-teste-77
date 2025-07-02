@@ -152,10 +152,6 @@ const ProfilePage = () => {
         const stats = await statsService.getMaterialStats();
         setMaterialStats(stats);
 
-        // Inicializar materiais de exemplo se necessário
-        if (user) {
-          userMaterialsService.initializeSampleMaterials();
-        }
       } catch (error) {
         console.error('Error loading material stats:', error);
         setMaterialStats({
