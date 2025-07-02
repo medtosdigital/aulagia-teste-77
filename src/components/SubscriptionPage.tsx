@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { Crown, Check, Users, Download, FileText, Calendar, Zap, Star, CreditCard, Ban, ArrowUpDown, ChevronDown, Brain, Presentation, ClipboardList, GraduationCap, MoreHorizontal, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,7 +46,7 @@ interface Plan {
   materialTypes: string[];
   limitations: string[];
   color: string;
-  icon: React.ComponentType<any>;
+  icon: LucideIcon;
   popular?: boolean;
 }
 
