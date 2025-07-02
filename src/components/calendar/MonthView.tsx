@@ -7,6 +7,7 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSa
 import { ptBR } from 'date-fns/locale';
 import { ScheduleEvent } from '@/services/scheduleService';
 import EventCard from './EventCard';
+import CalendarBlockedOverlay from './CalendarBlockedOverlay';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -19,6 +20,8 @@ interface MonthViewProps {
   onViewMaterial: (event: ScheduleEvent) => void;
   onToggleWeekends: () => void;
   getEventsForDate: (date: Date) => ScheduleEvent[];
+  hasCalendarAccess?: boolean;
+  onUpgrade?: () => void;
 }
 
 const MonthView: React.FC<MonthViewProps> = ({
@@ -31,7 +34,9 @@ const MonthView: React.FC<MonthViewProps> = ({
   onDeleteEvent,
   onViewMaterial,
   onToggleWeekends,
-  getEventsForDate
+  getEventsForDate,
+  hasCalendarAccess = true,
+  onUpgrade = () => {}
 }) => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -47,6 +52,49 @@ const MonthView: React.FC<MonthViewProps> = ({
     : ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
 
   const daysToShow = showWeekends ? 7 : 5;
+
+  if (!hasCalendarAccess) {
+    return (
+      <CalendarBlockedOverlay onUpgrade={onUpgrade}>
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">
+                  {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
+                </h2>
+                <p className="text-gray-600">Exemplo de calendário mensal</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+            <div className="grid gap-0 grid-cols-7 border-b border-gray-200">
+              {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(dayName => (
+                <div key={dayName} className="p-4 text-center font-bold text-gray-400 bg-gray-50 border-r border-gray-200 last:border-r-0">
+                  {dayName}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-0">
+              {[...Array(35)].map((_, index) => (
+                <div key={index} className="min-h-[120px] border border-gray-200 p-3 bg-gray-50">
+                  <div className="text-sm font-bold mb-2 text-gray-400">
+                    {(index % 31) + 1}
+                  </div>
+                  {index % 7 === 2 && (
+                    <Card className="p-2 bg-blue-50 border-blue-200">
+                      <div className="text-xs text-blue-600">Material exemplo</div>
+                    </Card>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </CalendarBlockedOverlay>
+    );
+  }
 
   while (day <= endDate) {
     for (let i = 0; i < 7; i++) {
