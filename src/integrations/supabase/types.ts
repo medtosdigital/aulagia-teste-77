@@ -363,45 +363,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_activities: {
-        Row: {
-          id: string;
-          user_id: string;
-          type: string;
-          title: string;
-          description: string;
-          material_type: string | null;
-          material_id: string | null;
-          subject: string | null;
-          grade: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          type: string;
-          title: string;
-          description: string;
-          material_type?: string | null;
-          material_id?: string | null;
-          subject?: string | null;
-          grade?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          type?: string;
-          title?: string;
-          description?: string;
-          material_type?: string | null;
-          material_id?: string | null;
-          subject?: string | null;
-          grade?: string | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
     }
     Views: {
       [_ in never]: never

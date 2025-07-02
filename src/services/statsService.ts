@@ -1,18 +1,6 @@
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 import { materialService, GeneratedMaterial } from './materialService';
-=======
-import { supabase } from '@/integrations/supabase/client';
->>>>>>> Stashed changes
-=======
-import { supabase } from '@/integrations/supabase/client';
->>>>>>> Stashed changes
-=======
-import { supabase } from '@/integrations/supabase/client';
->>>>>>> Stashed changes
 import { activityService } from './activityService';
-import { supabaseScheduleService } from './supabaseScheduleService';
+import { scheduleService } from './scheduleService';
 
 export interface MaterialStats {
   totalMaterials: number;
@@ -44,17 +32,16 @@ export interface ScheduleStats {
 
 class StatsService {
   async getMaterialStats(): Promise<MaterialStats> {
-    // Busca todas as atividades de criação de material do usuário
-    const activities = await activityService.getRecentActivities(1000);
+    const materials = await materialService.getMaterials();
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
     const stats: MaterialStats = {
-      totalMaterials: activities.length,
-      planoAula: activities.filter(m => m.materialType === 'plano-de-aula').length,
-      slides: activities.filter(m => m.materialType === 'slides').length,
-      atividades: activities.filter(m => m.materialType === 'atividade').length,
-      avaliacoes: activities.filter(m => m.materialType === 'avaliacao').length,
+      totalMaterials: materials.length,
+      planoAula: materials.filter(m => m.type === 'plano-de-aula').length,
+      slides: materials.filter(m => m.type === 'slides').length,
+      atividades: materials.filter(m => m.type === 'atividade').length,
+      avaliacoes: materials.filter(m => m.type === 'avaliacao').length,
       weeklyGrowth: {
         planoAula: 0,
         slides: 0,
@@ -63,9 +50,6 @@ class StatsService {
       }
     };
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
     // Calcular crescimento semanal baseado nas atividades
     const recentActivities = await activityService.getRecentActivities();
     const filteredActivities = recentActivities.filter(
@@ -74,18 +58,6 @@ class StatsService {
 
     filteredActivities.forEach(activity => {
       if (activity.materialType) {
-=======
-    activities.forEach(activity => {
-      if (activity.materialType && activity.timestamp >= oneWeekAgo && activity.type === 'created') {
->>>>>>> Stashed changes
-=======
-    activities.forEach(activity => {
-      if (activity.materialType && activity.timestamp >= oneWeekAgo && activity.type === 'created') {
->>>>>>> Stashed changes
-=======
-    activities.forEach(activity => {
-      if (activity.materialType && activity.timestamp >= oneWeekAgo && activity.type === 'created') {
->>>>>>> Stashed changes
         switch (activity.materialType) {
           case 'plano-de-aula':
             stats.weeklyGrowth.planoAula++;
@@ -107,19 +79,7 @@ class StatsService {
   }
 
   async getActivityStats(): Promise<ActivityStats> {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
     const activities = await activityService.getRecentActivities();
-=======
-    const activities = await activityService.getRecentActivities(1000);
->>>>>>> Stashed changes
-=======
-    const activities = await activityService.getRecentActivities(1000);
->>>>>>> Stashed changes
-=======
-    const activities = await activityService.getRecentActivities(1000);
->>>>>>> Stashed changes
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
@@ -139,7 +99,8 @@ class StatsService {
     };
   }
 
-  async getScheduleStats(): Promise<ScheduleStats> {
+  getScheduleStats(): ScheduleStats {
+    const events = scheduleService.getEvents();
     const now = new Date();
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
@@ -154,20 +115,17 @@ class StatsService {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    // Buscar eventos do Supabase
-    const events = await supabaseScheduleService.getEventsByDateRange(startOfMonth, endOfMonth);
-
     return {
       totalScheduled: events.length,
-      thisWeek: events.filter(event => {
-        const eventDate = new Date(event.start_date);
-        return eventDate >= startOfWeek && eventDate <= endOfWeek;
-      }).length,
-      nextWeek: events.filter(event => {
-        const eventDate = new Date(event.start_date);
-        return eventDate >= startOfNextWeek && eventDate <= endOfNextWeek;
-      }).length,
-      thisMonth: events.length
+      thisWeek: events.filter(event => 
+        event.startDate >= startOfWeek && event.startDate <= endOfWeek
+      ).length,
+      nextWeek: events.filter(event => 
+        event.startDate >= startOfNextWeek && event.startDate <= endOfNextWeek
+      ).length,
+      thisMonth: events.filter(event => 
+        event.startDate >= startOfMonth && event.startDate <= endOfMonth
+      ).length
     };
   }
 }

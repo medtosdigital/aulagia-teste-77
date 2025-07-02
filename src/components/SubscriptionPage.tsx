@@ -197,7 +197,7 @@ const SubscriptionPage = () => {
     await changePlan(planId);
     const plan = plans.find(p => p.id === planId);
     if (plan) {
-      await activityService.addActivity({
+      activityService.addActivity({
         type: 'updated',
         title: 'Assinatura alterada',
         description: `Plano alterado para: ${plan.name}`

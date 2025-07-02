@@ -61,7 +61,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
         onClose();
 
         if (editedMaterial) {
-          await activityService.addActivity({
+          activityService.addActivity({
             type: 'updated',
             title: `${editedMaterial.title}`,
             description: `Material editado: ${editedMaterial.title} (${editedMaterial.type})`,

@@ -116,7 +116,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     );
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!selectedMaterial) {
       toast.error('Selecione um material');
       return;
@@ -166,7 +166,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       onClose();
 
       if (!event) {
-        await activityService.addActivity({
+        activityService.addActivity({
           type: 'scheduled',
           title: `${title}`,
           description: `Aula agendada: ${title} (${material.subject}, ${material.grade}) para ${format(startDate, 'dd/MM/yyyy')} das ${startTime} às ${endTime}`,
