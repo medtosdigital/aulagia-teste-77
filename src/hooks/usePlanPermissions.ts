@@ -1,4 +1,3 @@
-
 import { useSupabasePlanPermissions } from './useSupabasePlanPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMemo } from 'react';
@@ -46,7 +45,12 @@ export const usePlanPermissions = () => {
     }
 
     // Mapear dados do Supabase para o formato esperado
-    const planId = supabasePermissions.currentPlan?.plano_ativo || 'gratuito';
+    // Normalizar o id do plano para manter um padrão "kebab-case" na interface.
+    // Dessa forma evitamos inconsistências como o bug que exibia o plano grupo-escolar como gratuito.
+    const rawPlanId = supabasePermissions.currentPlan?.plano_ativo || 'gratuito';
+
+    // Converte "grupo_escolar" (vindo do banco) para "grupo-escolar" (usado na UI)
+    const planId = rawPlanId === 'grupo_escolar' ? 'grupo-escolar' : rawPlanId;
     const planLimits = {
       materialsPerMonth: planId === 'gratuito' ? 5 : planId === 'professor' ? 50 : 300,
       canDownloadWord: supabasePermissions.canDownloadWord(),

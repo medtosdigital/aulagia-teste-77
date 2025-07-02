@@ -47,11 +47,21 @@ export const useSupabasePlanPermissions = () => {
       setLoading(true);
       console.log('Carregando dados do plano para usuário (otimizado):', user.id);
       
-      // Carregar dados em paralelo com timeout
-      const loadPromise = Promise.all([
-        supabasePlanService.getCurrentUserPlan(),
-        supabasePlanService.getRemainingMaterials()
-      ]);
+      // Carregar dados em paralelo com timeout, evitando consultas duplicadas
+      // Fetch o plano do usuário e o uso corrente e calculamos o restante localmente.
+      const loadPromise = (async () => {
+        const [plan, currentUsage] = await Promise.all([
+          supabasePlanService.getCurrentUserPlan(),
+          supabasePlanService.getCurrentMonthUsage()
+        ]);
+
+        // Calcular limite do plano sem fazer uma terceira consulta
+        const planType = plan?.plano_ativo || 'gratuito';
+        const planLimit = supabasePlanService.getPlanLimits(planType);
+        const remaining = Math.max(0, planLimit - currentUsage);
+
+        return [plan, remaining] as [PlanoUsuario | null, number];
+      })();
 
       // Timeout aumentado para 30 segundos para evitar carregamento infinito
       const timeoutPromise = new Promise((_, reject) => 
