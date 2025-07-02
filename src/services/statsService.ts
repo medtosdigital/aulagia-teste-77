@@ -51,11 +51,12 @@ class StatsService {
     };
 
     // Calcular crescimento semanal baseado nas atividades
-    const recentActivities = activityService.getRecentActivities().filter(
+    const recentActivities = await activityService.getRecentActivities();
+    const filteredActivities = recentActivities.filter(
       activity => activity.timestamp >= oneWeekAgo && activity.type === 'created'
     );
 
-    recentActivities.forEach(activity => {
+    filteredActivities.forEach(activity => {
       if (activity.materialType) {
         switch (activity.materialType) {
           case 'plano-de-aula':
@@ -77,8 +78,8 @@ class StatsService {
     return stats;
   }
 
-  getActivityStats(): ActivityStats {
-    const activities = activityService.getRecentActivities();
+  async getActivityStats(): Promise<ActivityStats> {
+    const activities = await activityService.getRecentActivities();
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);

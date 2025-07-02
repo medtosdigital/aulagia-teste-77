@@ -54,9 +54,9 @@ export const useSupabasePlanPermissions = () => {
         supabasePlanService.getRemainingMaterials()
       ]);
 
-      // Timeout reduzido para 10 segundos para melhor responsividade
+      // Timeout aumentado para 30 segundos para melhor estabilidade
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 10000)
+        setTimeout(() => reject(new Error('Timeout')), 30000)
       );
 
       const [plan, remaining] = await Promise.race([loadPromise, timeoutPromise]) as [PlanoUsuario | null, number];
