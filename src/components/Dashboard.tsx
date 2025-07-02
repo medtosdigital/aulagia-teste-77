@@ -6,6 +6,7 @@ import { activityService, Activity } from '@/services/activityService';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabaseScheduleService } from '@/services/supabaseScheduleService';
 
 interface DashboardProps {
   onNavigate?: (page: string) => void;
@@ -50,14 +51,15 @@ const Dashboard: React.FC<DashboardProps> = ({
     };
     loadActivities();
 
-    // Carregar próximas aulas (próximos 7 dias)
-    const now = new Date();
-    const nextWeek = new Date();
-    nextWeek.setDate(now.getDate() + 7);
-    const upcoming = scheduleService.getEventsByDateRange(now, nextWeek)
-      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
-      .slice(0, 5);
-    setUpcomingClasses(upcoming);
+    // Carregar próximas aulas (próximos 7 dias) do Supabase
+    const loadUpcomingClasses = async () => {
+      const now = new Date();
+      const nextWeek = new Date();
+      nextWeek.setDate(now.getDate() + 7);
+      const upcoming = await supabaseScheduleService.getEventsByDateRange(now, nextWeek);
+      setUpcomingClasses(upcoming.slice(0, 5));
+    };
+    loadUpcomingClasses();
   }, []);
 
   const tabs = [{
