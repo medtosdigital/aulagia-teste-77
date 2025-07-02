@@ -4,23 +4,23 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { format, startOfWeek, endOfWeek, addDays, isToday, isSameMonth, isWeekend } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ScheduleEvent } from '@/services/scheduleService';
+import { CalendarEvent } from '@/services/supabaseScheduleService';
 import EventCard from './EventCard';
 import BlockedFeature from '../BlockedFeature';
 
 interface WeekViewProps {
   currentDate: Date;
-  events: ScheduleEvent[];
+  events: CalendarEvent[];
   showFullWeek: boolean;
   showWeekends: boolean;
   onDateClick: (date: Date) => void;
-  onEventClick: (event: ScheduleEvent) => void;
-  onEditEvent: (event: ScheduleEvent) => void;
-  onDeleteEvent: (event: ScheduleEvent) => void;
-  onViewMaterial: (event: ScheduleEvent) => void;
+  onEventClick: (event: CalendarEvent) => void;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
+  onViewMaterial: (event: CalendarEvent) => void;
   onToggleFullWeek: () => void;
   onToggleWeekends: () => void;
-  getEventsForDate: (date: Date) => ScheduleEvent[];
+  getEventsForDate: (date: Date) => CalendarEvent[];
   hasCalendarAccess?: boolean;
   onUpgrade?: () => void;
 }
@@ -219,7 +219,7 @@ const WeekView: React.FC<WeekViewProps> = ({
               
               <div className="space-y-2 min-h-[300px]">
                 {dayEvents
-                  .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                  .sort((a, b) => a.start_time.localeCompare(b.start_time))
                   .map(event => (
                     <EventCard
                       key={event.id}

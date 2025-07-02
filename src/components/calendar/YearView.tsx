@@ -2,17 +2,17 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ScheduleEvent } from '@/services/scheduleService';
+import { CalendarEvent } from '@/services/supabaseScheduleService';
 import EventCard from './EventCard';
 import BlockedFeature from '../BlockedFeature';
 
 interface YearViewProps {
   currentDate: Date;
-  events: ScheduleEvent[];
+  events: CalendarEvent[];
   onMonthClick: (month: Date, view: 'month') => void;
-  onEditEvent: (event: ScheduleEvent) => void;
-  onDeleteEvent: (event: ScheduleEvent) => void;
-  onViewMaterial: (event: ScheduleEvent) => void;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
+  onViewMaterial: (event: CalendarEvent) => void;
   hasCalendarAccess?: boolean;
   onUpgrade?: () => void;
 }
@@ -88,10 +88,10 @@ const YearView: React.FC<YearViewProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {months.map(month => {
-          const monthEvents = events.filter(event => 
-            event.startDate.getFullYear() === year && 
-            event.startDate.getMonth() === month.getMonth()
-          );
+          const monthEvents = events.filter(event => {
+            const eventDate = new Date(event.start_date);
+            return eventDate.getFullYear() === year && eventDate.getMonth() === month.getMonth();
+          });
 
           return (
             <Card 

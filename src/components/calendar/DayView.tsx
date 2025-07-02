@@ -4,17 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ScheduleEvent } from '@/services/scheduleService';
+import { CalendarEvent } from '@/services/supabaseScheduleService';
 import EventCard from './EventCard';
 import BlockedFeature from '../BlockedFeature';
 
 interface DayViewProps {
   currentDate: Date;
-  dayEvents: ScheduleEvent[];
+  dayEvents: CalendarEvent[];
   onDateClick: (date: Date) => void;
-  onEditEvent: (event: ScheduleEvent) => void;
-  onDeleteEvent: (event: ScheduleEvent) => void;
-  onViewMaterial: (event: ScheduleEvent) => void;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
+  onViewMaterial: (event: CalendarEvent) => void;
   hasCalendarAccess?: boolean;
   onUpgrade?: () => void;
 }
@@ -126,7 +126,7 @@ const DayView: React.FC<DayViewProps> = ({
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Materiais do dia</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {dayEvents
-              .sort((a, b) => a.startTime.localeCompare(b.startTime))
+              .sort((a, b) => a.start_time.localeCompare(b.start_time))
               .map(event => (
                 <EventCard 
                   key={event.id} 

@@ -3,7 +3,7 @@ import { Clock, MapPin, Eye, Edit3, Download, Trash2, Printer, FileText } from '
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, MaterialCardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ScheduleEvent } from '@/services/scheduleService';
+import { CalendarEvent } from '@/services/supabaseScheduleService';
 import { materialService } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
 import { toast } from 'sonner';
@@ -11,12 +11,12 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface EventCardProps {
-  event: ScheduleEvent;
+  event: CalendarEvent;
   showDate?: boolean;
   compact?: boolean;
-  onEdit: (event: ScheduleEvent) => void;
-  onDelete: (event: ScheduleEvent) => void;
-  onViewMaterial: (event: ScheduleEvent) => void;
+  onEdit: (event: CalendarEvent) => void;
+  onDelete: (event: CalendarEvent) => void;
+  onViewMaterial: (event: CalendarEvent) => void;
 }
 
 const EventCard: React.FC<EventCardProps> = ({ 
@@ -32,17 +32,17 @@ const EventCard: React.FC<EventCardProps> = ({
   React.useEffect(() => {
     const loadMaterialType = async () => {
       const materials = await materialService.getMaterials();
-      const material = materials.find(m => m.id === event.materialId);
+      const material = materials.find(m => m.id === event.material_id);
       if (material) {
         setMaterialType((material.type as 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao') || 'atividade');
       }
     };
     loadMaterialType();
-  }, [event.materialId]);
+  }, [event.material_id]);
 
-  const handleExportMaterial = async (event: ScheduleEvent, format: 'print' | 'pdf' | 'word' | 'ppt') => {
+  const handleExportMaterial = async (event: CalendarEvent, format: 'print' | 'pdf' | 'word' | 'ppt') => {
     const materials = await materialService.getMaterials();
-    const material = materials.find(m => m.id === event.materialId);
+    const material = materials.find(m => m.id === event.material_id);
     if (!material) {
       toast.error('Material não encontrado');
       return;
@@ -105,7 +105,7 @@ const EventCard: React.FC<EventCardProps> = ({
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-blue-500" />
                     <span className="font-medium">
-                      {format(event.startDate, "dd/MM/yyyy", { locale: ptBR })}
+                      {event.start_date ? format(new Date(event.start_date), "dd/MM/yyyy", { locale: ptBR }) : ''}
                     </span>
                   </div>
                   <Separator className="my-2" />
@@ -113,7 +113,7 @@ const EventCard: React.FC<EventCardProps> = ({
               )}
               <div className="flex items-center gap-2">
                 <Clock className="w-3 h-3 text-green-500" />
-                <span className="font-medium">{event.startTime} - {event.endTime}</span>
+                <span className="font-medium">{event.start_time} - {event.end_time}</span>
               </div>
               {event.classroom && (
                 <>

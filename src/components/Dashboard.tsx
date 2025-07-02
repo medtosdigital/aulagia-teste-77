@@ -7,6 +7,7 @@ import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabaseScheduleService } from '@/services/supabaseScheduleService';
+import { CalendarEvent } from '@/services/supabaseScheduleService';
 
 interface DashboardProps {
   onNavigate?: (page: string) => void;
@@ -17,7 +18,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('recent-activities');
   const [materialStats, setMaterialStats] = useState<MaterialStats | null>(null);
-  const [upcomingClasses, setUpcomingClasses] = useState<ScheduleEvent[]>([]);
+  const [upcomingClasses, setUpcomingClasses] = useState<CalendarEvent[]>([]);
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
 
   const {
@@ -306,21 +307,20 @@ const Dashboard: React.FC<DashboardProps> = ({
           {activeTab === 'upcoming-classes' && (
             <div>
               <h3 className="font-semibold text-lg mb-4">Suas próximas aulas</h3>
-              
               <div className="space-y-4">
                 {upcomingClasses.length > 0 ? (
                   upcomingClasses.map(event => (
                     <div
                       key={event.id}
                       className={`flex items-start space-x-4 p-3 rounded-lg ${
-                        new Date(event.startDate).toDateString() === new Date().toDateString()
+                        new Date(event.start_date).toDateString() === new Date().toDateString()
                           ? 'bg-blue-50 border border-blue-200'
                           : 'hover:bg-gray-50'
                       } transition`}
                     >
                       <div className="mt-1">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          new Date(event.startDate).toDateString() === new Date().toDateString()
+                          new Date(event.start_date).toDateString() === new Date().toDateString()
                             ? 'bg-blue-600 text-white'
                             : 'bg-green-100 text-green-600'
                         }`}>
@@ -331,11 +331,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <p className="font-medium">{event.title}</p>
                         <p className="text-sm text-gray-700">{event.grade} - {event.subject}</p>
                         <p className={`text-xs mt-1 font-medium ${
-                          new Date(event.startDate).toDateString() === new Date().toDateString()
+                          new Date(event.start_date).toDateString() === new Date().toDateString()
                             ? 'text-blue-600'
                             : 'text-gray-400'
                         }`}>
-                          {format(event.startDate, "dd/MM/yyyy", { locale: ptBR })} - {event.startTime} às {event.endTime}
+                          {format(new Date(event.start_date), "dd/MM/yyyy", { locale: ptBR })} - {event.start_time} às {event.end_time}
                         </p>
                       </div>
                     </div>

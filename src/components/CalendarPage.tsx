@@ -5,7 +5,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, addYears, isSameDay, startOfDay, endOfDay, startOfYear, endOfYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { materialService } from '@/services/materialService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
@@ -18,13 +17,14 @@ import DayView from './calendar/DayView';
 import WeekView from './calendar/WeekView';
 import MonthView from './calendar/MonthView';
 import YearView from './calendar/YearView';
+import { useSupabaseSchedule } from '@/hooks/useSupabaseSchedule';
+import { CalendarEvent } from '@/services/supabaseScheduleService';
 
 const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'day' | 'week' | 'month' | 'year'>('day');
-  const [events, setEvents] = useState<ScheduleEvent[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [materialModalOpen, setMaterialModalOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
@@ -48,50 +48,13 @@ const CalendarPage: React.FC = () => {
   // Verificar se tem funcionalidades específicas do calendário
   const hasCalendarFeatures = hasCalendar();
 
+  const { events, loading, refreshEvents, deleteEvent: deleteSupabaseEvent } = useSupabaseSchedule();
+
   useEffect(() => {
     if (user && hasCalendarFeatures) {
-      loadEvents();
+      refreshEvents();
     }
-  }, [currentDate, view, user, hasCalendarFeatures]);
-
-  const loadEvents = () => {
-    let startDate: Date, endDate: Date;
-
-    switch (view) {
-      case 'day':
-        startDate = startOfDay(currentDate);
-        endDate = endOfDay(currentDate);
-        break;
-      case 'week':
-        if (showFullWeek) {
-          startDate = startOfWeek(currentDate, { locale: ptBR });
-          endDate = endOfWeek(currentDate, { locale: ptBR });
-        } else {
-          const today = new Date();
-          startDate = startOfDay(today);
-          endDate = endOfWeek(today, { locale: ptBR });
-        }
-        break;
-      case 'month':
-        startDate = startOfWeek(startOfMonth(currentDate), { locale: ptBR });
-        endDate = endOfWeek(endOfMonth(currentDate), { locale: ptBR });
-        break;
-      case 'year':
-        startDate = startOfYear(currentDate);
-        endDate = endOfYear(currentDate);
-        break;
-    }
-
-    const rangeEvents = scheduleService.getEventsByDateRange(startDate, endDate);
-    
-    const expandedEvents: ScheduleEvent[] = [];
-    rangeEvents.forEach(event => {
-      const expanded = scheduleService.expandRecurringEvents(event, startDate, endDate);
-      expandedEvents.push(...expanded);
-    });
-
-    setEvents(expandedEvents);
-  };
+  }, [currentDate, view, user, hasCalendarFeatures, refreshEvents]);
 
   const navigateDate = (direction: 'prev' | 'next') => {
     let newDate: Date;
@@ -114,8 +77,11 @@ const CalendarPage: React.FC = () => {
     setCurrentDate(newDate);
   };
 
-  const getEventsForDate = (date: Date): ScheduleEvent[] => {
-    return events.filter(event => isSameDay(event.startDate, date));
+  const getEventsForDate = (date: Date): CalendarEvent[] => {
+    return events.filter(event => {
+      if (!event.start_date) return false;
+      return isSameDay(new Date(event.start_date), date);
+    });
   };
 
   const handleDateClick = (date: Date) => {
@@ -128,33 +94,33 @@ const CalendarPage: React.FC = () => {
     setModalOpen(true);
   };
 
-  const handleEventClick = (event: ScheduleEvent) => {
+  const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
     setSelectedDate(undefined);
     setModalOpen(true);
   };
 
-  const handleEditEvent = (event: ScheduleEvent) => {
+  const handleEditEvent = (event: CalendarEvent) => {
     setSelectedEvent(event);
     setSelectedDate(undefined);
     setModalOpen(true);
   };
 
-  const handleDeleteEvent = (event: ScheduleEvent) => {
+  const handleDeleteEvent = async (event: CalendarEvent) => {
     if (window.confirm(`Tem certeza que deseja excluir "${event.title}"?`)) {
-      const success = scheduleService.deleteEvent(event.id.split('-')[0]);
+      const success = await deleteSupabaseEvent(event.id);
       if (success) {
         toast.success('Agendamento excluído com sucesso!');
-        loadEvents();
+        refreshEvents();
       } else {
         toast.error('Erro ao excluir agendamento');
       }
     }
   };
 
-  const handleViewMaterial = async (event: ScheduleEvent) => {
+  const handleViewMaterial = async (event: CalendarEvent) => {
     const materials = await materialService.getMaterials();
-    const material = materials.find(m => m.id === event.materialId);
+    const material = materials.find(m => m.id === event.material_id);
     if (material) {
       setSelectedMaterial(material);
       setMaterialModalOpen(true);
@@ -330,7 +296,7 @@ const CalendarPage: React.FC = () => {
             setSelectedEvent(null);
             setSelectedDate(undefined);
           }}
-          onSave={loadEvents}
+          onSave={refreshEvents}
           event={selectedEvent}
           selectedDate={selectedDate}
         />

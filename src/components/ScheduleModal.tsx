@@ -15,6 +15,7 @@ import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import { toast } from 'sonner';
 import { activityService } from '@/services/activityService';
+import { useSupabaseSchedule } from '@/hooks/useSupabaseSchedule';
 
 interface ScheduleModalProps {
   open: boolean;
@@ -45,6 +46,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date>(new Date());
   const [description, setDescription] = useState('');
   const [classroom, setClassroom] = useState('');
+
+  const { saveEvent, updateEvent } = useSupabaseSchedule();
 
   const weekDays = [
     { value: 'monday', label: 'Segunda' },
@@ -116,50 +119,45 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedMaterial) {
       toast.error('Selecione um material');
       return;
     }
-
     if (!title.trim()) {
       toast.error('Digite um título para o agendamento');
       return;
     }
-
     if (type === 'multiple' && selectedDays.length === 0) {
       toast.error('Para múltiplas aulas, selecione pelo menos um dia da semana');
       return;
     }
-
     const material = materials.find(m => m.id === selectedMaterial);
     if (!material) return;
-
-    const eventData: Omit<ScheduleEvent, 'id' | 'createdAt'> = {
-      materialId: selectedMaterial,
+    const eventData = {
+      material_id: selectedMaterial,
       title,
       subject: material.subject,
       grade: material.grade,
-      type,
-      startDate,
-      endDate: type === 'single' ? startDate : endDate,
-      startTime,
-      endTime,
+      event_type: type,
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: (type === 'single' ? startDate : endDate).toISOString().split('T')[0],
+      start_time: startTime,
+      end_time: endTime,
       description,
       classroom,
       recurrence: type === 'multiple' ? {
-        frequency: 'weekly' as const,
+        frequency: frequency,
         days: selectedDays,
-        endDate: endDate
-      } : undefined
+        endDate: endDate.toISOString().split('T')[0]
+      } : null
     };
-
     try {
       if (event) {
-        scheduleService.updateEvent(event.id, eventData);
+        await updateEvent(event.id, eventData);
         toast.success('Agendamento atualizado com sucesso!');
       } else {
-        scheduleService.saveEvent(eventData);
+        await saveEvent(eventData);
         toast.success('Agendamento criado com sucesso!');
       }
       onSave();

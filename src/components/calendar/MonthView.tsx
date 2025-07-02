@@ -4,21 +4,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, isWeekend } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ScheduleEvent } from '@/services/scheduleService';
+import { CalendarEvent } from '@/services/supabaseScheduleService';
 import EventCard from './EventCard';
 import BlockedFeature from '../BlockedFeature';
 
 interface MonthViewProps {
   currentDate: Date;
-  events: ScheduleEvent[];
+  events: CalendarEvent[];
   showWeekends: boolean;
   onDateClick: (date: Date) => void;
-  onEventClick: (event: ScheduleEvent) => void;
-  onEditEvent: (event: ScheduleEvent) => void;
-  onDeleteEvent: (event: ScheduleEvent) => void;
-  onViewMaterial: (event: ScheduleEvent) => void;
+  onEventClick: (event: CalendarEvent) => void;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
+  onViewMaterial: (event: CalendarEvent) => void;
   onToggleWeekends: () => void;
-  getEventsForDate: (date: Date) => ScheduleEvent[];
+  getEventsForDate: (date: Date) => CalendarEvent[];
   hasCalendarAccess?: boolean;
   onUpgrade?: () => void;
 }
@@ -132,7 +132,7 @@ const MonthView: React.FC<MonthViewProps> = ({
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
             <div className={`grid gap-0 border-b border-gray-200 ${showWeekends ? 'grid-cols-7' : 'grid-cols-5'}`}>
               {weekDays.map(dayName => (
-                <div key={dayName} className="p-4 text-center font-bold text-gray-500 bg-gray-100 border-r border-gray-200 last:border-r-0">
+                <div key={dayName} className="p-4 text-center font-bold text-gray-500 border-r border-gray-200 last:border-r-0">
                   {dayName}
                 </div>
               ))}
@@ -237,7 +237,7 @@ const MonthView: React.FC<MonthViewProps> = ({
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div className={`grid gap-0 border-b border-gray-200 ${showWeekends ? 'grid-cols-7' : 'grid-cols-5'}`}>
           {weekDays.map(dayName => (
-            <div key={dayName} className="p-4 text-center font-bold text-gray-700 bg-gray-50 border-r border-gray-200 last:border-r-0">
+            <div key={dayName} className="p-4 text-center font-bold text-gray-700 border-r border-gray-200 last:border-r-0">
               {dayName}
             </div>
           ))}
