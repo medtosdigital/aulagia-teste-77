@@ -1,12 +1,12 @@
+
 import React from 'react';
-import { CalendarIcon, Plus, Settings, Crown, Lock } from 'lucide-react';
+import { CalendarIcon, Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { format, startOfWeek, endOfWeek, addDays, isToday, isSameMonth, isWeekend } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ScheduleEvent } from '@/services/scheduleService';
 import EventCard from './EventCard';
-import BlockedFeature from '../BlockedFeature';
 
 interface WeekViewProps {
   currentDate: Date;
@@ -21,8 +21,6 @@ interface WeekViewProps {
   onToggleFullWeek: () => void;
   onToggleWeekends: () => void;
   getEventsForDate: (date: Date) => ScheduleEvent[];
-  hasCalendarAccess?: boolean;
-  onUpgrade?: () => void;
 }
 
 const WeekView: React.FC<WeekViewProps> = ({
@@ -37,56 +35,8 @@ const WeekView: React.FC<WeekViewProps> = ({
   onViewMaterial,
   onToggleFullWeek,
   onToggleWeekends,
-  getEventsForDate,
-  hasCalendarAccess = true,
-  onUpgrade = () => {}
+  getEventsForDate
 }) => {
-  // Se não tem acesso ao calendário, mostrar versão bloqueada
-  if (!hasCalendarAccess) {
-    return (
-      <div className="space-y-6">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 opacity-60">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-gray-500 mb-2">Visão Semanal</h2>
-              <p className="text-gray-400">
-                Calendário semanal disponível apenas em planos pagos
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <BlockedFeature
-          title="Recurso Premium"
-          description="Visualização semanal do calendário disponível apenas em planos pagos"
-          onUpgrade={onUpgrade}
-          className="min-h-[400px]"
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
-            {Array.from({ length: 7 }, (_, i) => (
-              <div key={i} className="space-y-3">
-                <div className="text-center p-4 rounded-xl bg-gray-200 border-2 border-gray-300">
-                  <div className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                    Dom
-                  </div>
-                  <div className="text-2xl font-bold mt-1 text-gray-400">
-                    {i + 1}
-                  </div>
-                </div>
-                <div className="space-y-2 min-h-[300px]">
-                  <div className="w-full text-sm p-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-400">
-                    <Plus className="w-4 h-4 mx-auto mb-1" />
-                    <div>Adicionar</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </BlockedFeature>
-      </div>
-    );
-  }
-
   let weekDays: Date[];
   
   if (showFullWeek) {

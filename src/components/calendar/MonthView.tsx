@@ -1,12 +1,12 @@
+
 import React from 'react';
-import { Plus, Settings, Crown, Lock } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, isWeekend } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ScheduleEvent } from '@/services/scheduleService';
 import EventCard from './EventCard';
-import BlockedFeature from '../BlockedFeature';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -19,8 +19,6 @@ interface MonthViewProps {
   onViewMaterial: (event: ScheduleEvent) => void;
   onToggleWeekends: () => void;
   getEventsForDate: (date: Date) => ScheduleEvent[];
-  hasCalendarAccess?: boolean;
-  onUpgrade?: () => void;
 }
 
 const MonthView: React.FC<MonthViewProps> = ({
@@ -33,68 +31,8 @@ const MonthView: React.FC<MonthViewProps> = ({
   onDeleteEvent,
   onViewMaterial,
   onToggleWeekends,
-  getEventsForDate,
-  hasCalendarAccess = true,
-  onUpgrade = () => {}
+  getEventsForDate
 }) => {
-  // Se não tem acesso ao calendário, mostrar versão bloqueada
-  if (!hasCalendarAccess) {
-    const weekDays = showWeekends 
-      ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-      : ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
-
-    return (
-      <div className="space-y-6">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 opacity-60">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-gray-500 mb-2">
-                {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
-              </h2>
-              <p className="text-gray-400">
-                Calendário mensal disponível apenas em planos pagos
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <BlockedFeature
-          title="Recurso Premium"
-          description="Visualização mensal do calendário disponível apenas em planos pagos"
-          onUpgrade={onUpgrade}
-          className="min-h-[500px]"
-        >
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-            <div className={`grid gap-0 border-b border-gray-200 ${showWeekends ? 'grid-cols-7' : 'grid-cols-5'}`}>
-              {weekDays.map(dayName => (
-                <div key={dayName} className="p-4 text-center font-bold text-gray-400 bg-gray-50 border-r border-gray-200 last:border-r-0">
-                  {dayName}
-                </div>
-              ))}
-            </div>
-            <div className="space-y-0">
-              {Array.from({ length: 5 }, (_, weekIndex) => (
-                <div key={weekIndex} className={`grid gap-0 ${showWeekends ? 'grid-cols-7' : 'grid-cols-5'}`}>
-                  {Array.from({ length: showWeekends ? 7 : 5 }, (_, dayIndex) => (
-                    <div
-                      key={dayIndex}
-                      className="min-h-[120px] border border-gray-200 p-3 bg-gray-100"
-                    >
-                      <div className="text-sm font-bold mb-2 text-gray-400">
-                        {weekIndex * (showWeekends ? 7 : 5) + dayIndex + 1}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </BlockedFeature>
-      </div>
-    );
-  }
-
-  // ... keep existing code (versão normal para usuários com acesso)
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const startDate = startOfWeek(monthStart, { locale: ptBR });
