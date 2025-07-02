@@ -1,7 +1,6 @@
-
 import { useSupabasePlanPermissions } from './useSupabasePlanPermissions';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 
 export const usePlanPermissions = () => {
   const { user } = useAuth();
@@ -99,6 +98,19 @@ export const usePlanPermissions = () => {
       return nextMonth;
     }
   }), [supabasePermissions.changePlan, memoizedPlan.id]);
+
+  // Atualização em tempo real do plano ao receber evento global
+  useEffect(() => {
+    const handlePlanUpdate = () => {
+      if (typeof supabasePermissions.refreshData === 'function') {
+        supabasePermissions.refreshData();
+      }
+    };
+    window.addEventListener('planUpdated', handlePlanUpdate);
+    return () => {
+      window.removeEventListener('planUpdated', handlePlanUpdate);
+    };
+  }, [supabasePermissions]);
 
   // Se não estiver logado, retornar valores padrão otimizados
   if (!user) {

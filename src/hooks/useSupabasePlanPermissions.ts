@@ -198,6 +198,8 @@ export const useSupabasePlanPermissions = () => {
           planCache.delete(`plan_${user.id}`);
         }
         await loadPlanData(true);
+        // Disparar evento global para atualização em tempo real
+        window.dispatchEvent(new CustomEvent('planUpdated'));
         setShouldShowUpgrade(false);
         
         const planNames: Record<TipoPlano, string> = {
