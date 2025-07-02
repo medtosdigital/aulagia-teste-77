@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { activityService, Activity } from '@/services/activityService';
 

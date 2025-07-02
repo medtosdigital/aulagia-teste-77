@@ -1,4 +1,3 @@
-
 export class GrammarService {
   static async correctText(text: string): Promise<string> {
     // Simula uma chamada para API de correção gramatical

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BookOpen, Heart } from 'lucide-react';
 

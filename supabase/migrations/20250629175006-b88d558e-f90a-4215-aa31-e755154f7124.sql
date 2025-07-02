@@ -1,4 +1,3 @@
-
 -- Criar tabela perfis para armazenar dados do usuário
 CREATE TABLE public.perfis (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,

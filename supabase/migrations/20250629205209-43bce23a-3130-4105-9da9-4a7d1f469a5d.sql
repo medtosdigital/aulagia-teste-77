@@ -1,4 +1,3 @@
-
 -- Habilitar RLS na tabela planos_usuarios se ainda não estiver habilitado
 ALTER TABLE public.planos_usuarios ENABLE ROW LEVEL SECURITY;
 

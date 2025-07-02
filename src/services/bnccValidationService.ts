@@ -1,4 +1,3 @@
-
 interface BNCCValidation {
   isValid: boolean;
   confidence: number;

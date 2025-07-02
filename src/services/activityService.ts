@@ -14,11 +14,10 @@ export interface Activity {
 }
 
 class ActivityService {
-  // Adiciona uma atividade no Supabase
   async addActivity(activity: Omit<Activity, 'id' | 'timestamp'>) {
-    // Buscar usuário logado
-    const user = JSON.parse(localStorage.getItem('supabase.auth.user') || 'null');
-    if (!user || !user.id) return null;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
     const { data, error } = await supabase
       .from('user_activities')
       .insert({
@@ -33,28 +32,31 @@ class ActivityService {
       })
       .select()
       .single();
+
     if (error) {
-      console.error('Erro ao registrar atividade no Supabase:', error);
+      console.error('Error saving activity:', error);
       return null;
     }
     return data;
   }
 
-  // Busca as atividades recentes do usuário logado
   async getRecentActivities(limit: number = 10): Promise<Activity[]> {
-    const user = JSON.parse(localStorage.getItem('supabase.auth.user') || 'null');
-    if (!user || !user.id) return [];
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
     const { data, error } = await supabase
       .from('user_activities')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit);
+
     if (error) {
-      console.error('Erro ao buscar atividades no Supabase:', error);
+      console.error('Error fetching activities:', error);
       return [];
     }
-    return (data || []).map((a: any) => ({
+
+    return data.map((a: any) => ({
       id: a.id,
       type: a.type,
       title: a.title,
@@ -67,10 +69,10 @@ class ActivityService {
     }));
   }
 
-  // Limpa todas as atividades do usuário logado
   async clearActivities() {
-    const user = JSON.parse(localStorage.getItem('supabase.auth.user') || 'null');
-    if (!user || !user.id) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     await supabase
       .from('user_activities')
       .delete()
@@ -79,26 +81,3 @@ class ActivityService {
 }
 
 export const activityService = new ActivityService();
-
-// Limpar atividades de teste existentes se elas estiverem presentes
-if (typeof window !== 'undefined') {
-  setTimeout(async () => {
-    try {
-      const existingActivities = await activityService.getRecentActivities(50);
-      
-      // Verificar se há atividades de teste e removê-las
-      const hasTestActivities = existingActivities.some(activity => 
-        (activity.title === 'Plano de Aula - Matemática' && activity.description === 'Criado plano de aula sobre frações') ||
-        (activity.title === 'Slides - História' && activity.description === 'Exportado slides sobre Brasil Colonial') ||
-        (activity.title === 'Atividade - Português' && activity.description === 'Atualizada atividade de interpretação de texto')
-      );
-      
-      if (hasTestActivities) {
-        console.log('🧹 Removing test activities...');
-        await activityService.clearActivities();
-      }
-    } catch (error) {
-      console.error('Error checking test activities:', error);
-    }
-  }, 500);
-}

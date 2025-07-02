@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 type PageType = 'dashboard' | 'create' | 'materials' | 'calendar';

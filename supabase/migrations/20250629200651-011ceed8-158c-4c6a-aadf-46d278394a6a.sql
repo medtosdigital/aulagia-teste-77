@@ -1,4 +1,3 @@
-
 -- Criar enum para tipos de planos
 CREATE TYPE public.tipo_plano AS ENUM ('gratuito', 'professor', 'grupo_escolar');
 

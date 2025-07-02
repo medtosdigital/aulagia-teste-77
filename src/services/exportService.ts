@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, PageBreak, Table, TableRow, TableCell, WidthType } from 'docx';
 import { saveAs } from 'file-saver';

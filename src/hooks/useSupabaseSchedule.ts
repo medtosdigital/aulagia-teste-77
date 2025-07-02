@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabaseScheduleService, CalendarEvent } from '@/services/supabaseScheduleService';
 import { useAuth } from '@/contexts/AuthContext';

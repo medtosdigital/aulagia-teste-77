@@ -1,4 +1,3 @@
-
 -- Criar tabela para planos de aula
 CREATE TABLE public.planos_de_aula (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders } from 'lucide-react';
 import { cn } from '@/lib/utils';

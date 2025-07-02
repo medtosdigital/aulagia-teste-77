@@ -1,4 +1,3 @@
-
 -- Create a profiles table to store additional user information
 CREATE TABLE public.profiles (
   id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,

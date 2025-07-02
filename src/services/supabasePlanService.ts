@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export type TipoPlano = 'gratuito' | 'professor' | 'grupo_escolar';
