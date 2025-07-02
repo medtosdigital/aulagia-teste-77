@@ -1,6 +1,10 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { materialService, GeneratedMaterial } from './materialService';
+=======
+import { supabase } from '@/integrations/supabase/client';
+>>>>>>> Stashed changes
 =======
 import { supabase } from '@/integrations/supabase/client';
 >>>>>>> Stashed changes
@@ -61,6 +65,7 @@ class StatsService {
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     // Calcular crescimento semanal baseado nas atividades
     const recentActivities = await activityService.getRecentActivities();
     const filteredActivities = recentActivities.filter(
@@ -69,6 +74,10 @@ class StatsService {
 
     filteredActivities.forEach(activity => {
       if (activity.materialType) {
+=======
+    activities.forEach(activity => {
+      if (activity.materialType && activity.timestamp >= oneWeekAgo && activity.type === 'created') {
+>>>>>>> Stashed changes
 =======
     activities.forEach(activity => {
       if (activity.materialType && activity.timestamp >= oneWeekAgo && activity.type === 'created') {
@@ -100,7 +109,11 @@ class StatsService {
   async getActivityStats(): Promise<ActivityStats> {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     const activities = await activityService.getRecentActivities();
+=======
+    const activities = await activityService.getRecentActivities(1000);
+>>>>>>> Stashed changes
 =======
     const activities = await activityService.getRecentActivities(1000);
 >>>>>>> Stashed changes
