@@ -18,6 +18,7 @@ import BlockedFeature from './BlockedFeature';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { toast } from 'sonner';
+import { activityService } from '@/services/activityService';
 
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
 
@@ -285,6 +286,17 @@ const CreateLesson: React.FC = () => {
         setShowNextStepsModal(true); // Mostrar o modal de próximos passos primeiro
         setStep('selection');
         toast.success(`${getCurrentTypeInfo()?.title} criado e salvo com sucesso!`);
+        if (material) {
+          activityService.addActivity({
+            type: 'created',
+            title: `${material.title}`,
+            description: `Material criado: ${material.title} (${material.type})`,
+            materialType: material.type,
+            materialId: material.id,
+            subject: material.subject,
+            grade: material.grade
+          });
+        }
       }, 1000);
     } catch (error) {
       console.error('❌ Generation error:', error);

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Download, Printer, FileCheck, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
+import { activityService } from '@/services/activityService';
 
 interface MaterialModalProps {
   material: GeneratedMaterial | null;
@@ -70,6 +70,18 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
       console.log('Iniciando impressão para material:', material.type);
       await exportService.exportToPDF(material);
       toast.success('Material enviado para impressão!');
+
+      if (material) {
+        activityService.addActivity({
+          type: 'exported',
+          title: `${material.title}`,
+          description: `Material impresso: ${material.title} (${material.type})`,
+          materialType: material.type,
+          materialId: material.id,
+          subject: material.subject,
+          grade: material.grade
+        });
+      }
     } catch (error) {
       console.error('Erro ao imprimir:', error);
       toast.error('Erro ao preparar a impressão');
@@ -83,6 +95,18 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
       console.log('Iniciando exportação PDF para material:', material.type);
       await exportService.exportToPDF(material);
       toast.success('PDF baixado com sucesso!');
+
+      if (material) {
+        activityService.addActivity({
+          type: 'exported',
+          title: `${material.title}`,
+          description: `Material exportado em PDF: ${material.title} (${material.type})`,
+          materialType: material.type,
+          materialId: material.id,
+          subject: material.subject,
+          grade: material.grade
+        });
+      }
     } catch (error) {
       console.error('Erro ao exportar PDF:', error);
       toast.error('Erro ao exportar PDF');
@@ -103,6 +127,18 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
       console.log('Iniciando exportação Word para material:', material.type);
       await exportService.exportToWord(material);
       toast.success('Arquivo Word baixado com sucesso!');
+
+      if (material) {
+        activityService.addActivity({
+          type: 'exported',
+          title: `${material.title}`,
+          description: `Material exportado em Word: ${material.title} (${material.type})`,
+          materialType: material.type,
+          materialId: material.id,
+          subject: material.subject,
+          grade: material.grade
+        });
+      }
     } catch (error) {
       console.error('Erro na exportação Word:', error);
       toast.error('Erro ao exportar para Word');
@@ -124,6 +160,18 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
       if (material.type === 'slides') {
         await exportService.exportToPPT(material);
         toast.success('PowerPoint baixado com sucesso!');
+
+        if (material) {
+          activityService.addActivity({
+            type: 'exported',
+            title: `${material.title}`,
+            description: `Material exportado em PowerPoint: ${material.title} (${material.type})`,
+            materialType: material.type,
+            materialId: material.id,
+            subject: material.subject,
+            grade: material.grade
+          });
+        }
       } else {
         await exportService.exportToPDF(material);
         toast.success('Material exportado como PDF!');

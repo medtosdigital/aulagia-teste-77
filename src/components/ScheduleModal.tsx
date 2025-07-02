@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import { toast } from 'sonner';
+import { activityService } from '@/services/activityService';
 
 interface ScheduleModalProps {
   open: boolean;
@@ -163,6 +164,18 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       }
       onSave();
       onClose();
+
+      if (!event) {
+        activityService.addActivity({
+          type: 'scheduled',
+          title: `${title}`,
+          description: `Aula agendada: ${title} (${material.subject}, ${material.grade}) para ${format(startDate, 'dd/MM/yyyy')} das ${startTime} às ${endTime}`,
+          materialType: material.type,
+          materialId: material.id,
+          subject: material.subject,
+          grade: material.grade
+        });
+      }
     } catch (error) {
       toast.error('Erro ao salvar agendamento');
     }

@@ -13,6 +13,7 @@ import { statsService } from '@/services/statsService';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { activityService } from '@/services/activityService';
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -292,6 +293,12 @@ const ProfilePage = () => {
       });
       
       setIsEditing(false);
+
+      activityService.addActivity({
+        type: 'updated',
+        title: 'Perfil atualizado',
+        description: `Perfil atualizado: ${formData.name}, disciplinas: ${formData.subjects.join(', ')}, séries: ${formData.grades.join(', ')}`
+      });
 
     } catch (error) {
       console.error('Error saving profile:', error);

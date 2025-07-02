@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Save, X, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { materialService, type GeneratedMaterial, type LessonPlan, type Activity, type Assessment } from '@/services/materialService';
+import { activityService } from '@/services/activityService';
 
 interface MaterialEditModalProps {
   material: GeneratedMaterial | null;
@@ -58,6 +59,18 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
         toast.success('Material atualizado com sucesso!');
         onSave();
         onClose();
+
+        if (editedMaterial) {
+          activityService.addActivity({
+            type: 'updated',
+            title: `${editedMaterial.title}`,
+            description: `Material editado: ${editedMaterial.title} (${editedMaterial.type})`,
+            materialType: editedMaterial.type,
+            materialId: editedMaterial.id,
+            subject: editedMaterial.subject,
+            grade: editedMaterial.grade
+          });
+        }
       } else {
         console.error('Material not found');
         toast.error('Erro: Material não encontrado');

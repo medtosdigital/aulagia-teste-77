@@ -33,6 +33,7 @@ import {
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { ChangeCardModal } from '@/components/ChangeCardModal';
 import { ChangePlanModal } from '@/components/ChangePlanModal';
+import { activityService } from '@/services/activityService';
 
 interface Plan {
   id: string;
@@ -194,6 +195,14 @@ const SubscriptionPage = () => {
 
   const handlePlanChange = async (planId: string) => {
     await changePlan(planId);
+    const plan = plans.find(p => p.id === planId);
+    if (plan) {
+      activityService.addActivity({
+        type: 'updated',
+        title: 'Assinatura alterada',
+        description: `Plano alterado para: ${plan.name}`
+      });
+    }
   };
 
   const handleCancelSubscription = () => {
