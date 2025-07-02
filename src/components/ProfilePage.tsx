@@ -182,6 +182,7 @@ const ProfilePage = () => {
         return 'Plano Gratuito';
       case 'professor':
         return 'Plano Professor';
+      case 'grupo_escolar':
       case 'grupo-escolar':
         return 'Grupo Escolar';
       default:
@@ -193,6 +194,7 @@ const ProfilePage = () => {
     switch (currentPlan.id) {
       case 'professor':
         return 'bg-blue-500 text-white';
+      case 'grupo_escolar':
       case 'grupo-escolar':
         return 'bg-green-500 text-white';
       default:
@@ -612,7 +614,9 @@ const ProfilePage = () => {
                   ? 'Recursos básicos disponíveis'
                   : currentPlan.id === 'professor'
                   ? 'Acesso completo aos recursos'
-                  : 'Gerenciamento escolar completo'
+                  : (currentPlan.id === 'grupo_escolar' || currentPlan.id === 'grupo-escolar')
+                  ? 'Gerenciamento escolar completo'
+                  : 'Recursos básicos disponíveis'
                 }
               </p>
               <Button 

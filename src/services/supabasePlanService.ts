@@ -23,9 +23,10 @@ export interface UsoMensalMateriais {
   updated_at: string;
 }
 
-// Cache local para melhorar performance
+// Cache local para melhorar performance - aumentando duração do cache
 const queryCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 10000; // 10 segundos para consultas rápidas
+const CACHE_DURATION = 30000; // 30 segundos para reduzir consultas frequentes
+const CRITICAL_CACHE_DURATION = 15000; // 15 segundos para dados críticos
 
 class SupabasePlanService {
   private async cachedQuery<T>(key: string, queryFn: () => Promise<T>, cacheDuration = CACHE_DURATION): Promise<T> {
@@ -116,7 +117,7 @@ class SupabasePlanService {
     }
   }
 
-  // Verificar se usuário pode criar material com cache
+  // Verificar se usuário pode criar material com cache otimizado
   async canCreateMaterial(): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -128,18 +129,36 @@ class SupabasePlanService {
       const cacheKey = `can_create_${user.id}`;
       
       return await this.cachedQuery(cacheKey, async () => {
-        const { data, error } = await supabase.rpc('can_create_material', {
+        // Usar timeout para evitar consultas longas
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 5000)
+        );
+        
+        const queryPromise = supabase.rpc('can_create_material', {
           p_user_id: user.id
         });
 
-        if (error) {
-          console.error('Erro ao verificar permissão de criação:', error);
-          return false;
-        }
+        try {
+          const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
 
-        console.log('Pode criar material (cache):', data);
-        return data || false;
-      }, 5000); // Cache mais curto para esta verificação crítica
+          if (error) {
+            console.error('Erro ao verificar permissão de criação:', error);
+            return false;
+          }
+
+          console.log('Pode criar material (cache):', data);
+          return data || false;
+        } catch (timeoutError) {
+          console.warn('Timeout na verificação de permissão, usando fallback');
+          // Fallback rápido baseado no plano atual
+          const plan = await this.getCurrentUserPlan();
+          if (!plan) return true; // Usuário sem plano = plano gratuito
+          
+          const usage = await this.getCurrentMonthUsage();
+          const limit = this.getPlanLimits(plan.plano_ativo);
+          return usage < limit;
+        }
+      }, CRITICAL_CACHE_DURATION); // Cache mais longo para reduzir verificações
     } catch (error) {
       console.error('Erro em canCreateMaterial:', error);
       return false;
@@ -223,7 +242,7 @@ class SupabasePlanService {
     }
   }
 
-  // Obter materiais restantes no mês com cache otimizado
+  // Obter materiais restantes no mês com cache otimizado e timeout
   async getRemainingMaterials(): Promise<number> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -235,26 +254,38 @@ class SupabasePlanService {
       const cacheKey = `remaining_${user.id}`;
       
       return await this.cachedQuery(cacheKey, async () => {
-        // Buscar dados em paralelo
-        const [plan, currentUsage] = await Promise.all([
+        // Adicionar timeout para evitar lentidão
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 8000)
+        );
+        
+        const dataPromise = Promise.all([
           this.getCurrentUserPlan(),
           this.getCurrentMonthUsage()
         ]);
 
-        if (!plan) {
-          console.log('Nenhum plano encontrado, retornando 0 materiais');
-          return 0;
+        try {
+          const [plan, currentUsage] = await Promise.race([dataPromise, timeoutPromise]) as any;
+
+          if (!plan) {
+            console.log('Nenhum plano encontrado, usando plano gratuito');
+            return Math.max(0, 5 - currentUsage); // Plano gratuito = 5 materiais
+          }
+
+          const planLimit = this.getPlanLimits(plan.plano_ativo);
+          const remaining = Math.max(0, planLimit - currentUsage);
+
+          console.log(`Plano: ${plan.plano_ativo}, Limite: ${planLimit}, Usado: ${currentUsage}, Restante: ${remaining}`);
+          return remaining;
+        } catch (timeoutError) {
+          console.warn('Timeout ao calcular materiais restantes, usando fallback');
+          // Fallback rápido: assumir plano gratuito
+          return 5;
         }
-
-        const planLimit = this.getPlanLimits(plan.plano_ativo);
-        const remaining = Math.max(0, planLimit - currentUsage);
-
-        console.log(`Plano: ${plan.plano_ativo}, Limite: ${planLimit}, Usado: ${currentUsage}, Restante: ${remaining}`);
-        return remaining;
-      }, 5000); // Cache mais curto para dados críticos
+      }, CRITICAL_CACHE_DURATION); // Cache mais longo para dados críticos
     } catch (error) {
       console.error('Erro em getRemainingMaterials:', error);
-      return 0;
+      return 5; // Fallback padrão
     }
   }
 
