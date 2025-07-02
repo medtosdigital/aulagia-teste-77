@@ -191,7 +191,7 @@ export const usePlanPermissions = () => {
     logoutAdmin: () => {},
     
     // Grupo escolar
-    isSchoolOwner: () => memoizedPlan.id === 'grupo_escolar',
+    isSchoolOwner: () => memoizedPlan.id === 'grupo-escolar',
     getRemainingMaterialsToDistribute: () => 0,
     getTotalMaterialsUsedBySchool: () => 0,
     updateUserMaterialLimit: () => {},
