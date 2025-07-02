@@ -1,4 +1,4 @@
-import { useSupabasePlanPermissions } from './useSupabasePlanPermissions';
+import { useSupabasePlanPermissions, planCache } from './useSupabasePlanPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMemo } from 'react';
 

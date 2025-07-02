@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import type React from 'react';
 import { supabasePlanService, TipoPlano, PlanoUsuario } from '@/services/supabasePlanService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 // Cache global para evitar múltiplas consultas
-const planCache = new Map<string, { data: PlanoUsuario | null; timestamp: number; materials: number }>();
+export const planCache = new Map<string, { data: PlanoUsuario | null; timestamp: number; materials: number }>();
 const CACHE_DURATION = 30000; // 30 segundos
 
 export const useSupabasePlanPermissions = () => {
