@@ -18,7 +18,6 @@ import DayView from './calendar/DayView';
 import WeekView from './calendar/WeekView';
 import MonthView from './calendar/MonthView';
 import YearView from './calendar/YearView';
-import { supabaseScheduleService } from '@/services/supabaseScheduleService';
 
 const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -55,7 +54,7 @@ const CalendarPage: React.FC = () => {
     }
   }, [currentDate, view, user, hasCalendarFeatures]);
 
-  const loadEvents = async () => {
+  const loadEvents = () => {
     let startDate: Date, endDate: Date;
 
     switch (view) {
@@ -83,12 +82,14 @@ const CalendarPage: React.FC = () => {
         break;
     }
 
-    const rangeEvents = await supabaseScheduleService.getEventsByDateRange(startDate, endDate);
+    const rangeEvents = scheduleService.getEventsByDateRange(startDate, endDate);
+    
     const expandedEvents: ScheduleEvent[] = [];
     rangeEvents.forEach(event => {
-      // Se necessário, adapte para expandRecurringEvents se usar recorrência
-      expandedEvents.push(event as any);
+      const expanded = scheduleService.expandRecurringEvents(event, startDate, endDate);
+      expandedEvents.push(...expanded);
     });
+
     setEvents(expandedEvents);
   };
 

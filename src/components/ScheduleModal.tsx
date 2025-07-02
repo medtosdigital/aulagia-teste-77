@@ -15,7 +15,6 @@ import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
 import { toast } from 'sonner';
 import { activityService } from '@/services/activityService';
-import { supabaseScheduleService } from '@/services/supabaseScheduleService';
 
 interface ScheduleModalProps {
   open: boolean;
@@ -117,7 +116,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     );
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!selectedMaterial) {
       toast.error('Selecione um material');
       return;
@@ -136,46 +135,31 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     const material = materials.find(m => m.id === selectedMaterial);
     if (!material) return;
 
+    const eventData: Omit<ScheduleEvent, 'id' | 'createdAt'> = {
+      materialId: selectedMaterial,
+      title,
+      subject: material.subject,
+      grade: material.grade,
+      type,
+      startDate,
+      endDate: type === 'single' ? startDate : endDate,
+      startTime,
+      endTime,
+      description,
+      classroom,
+      recurrence: type === 'multiple' ? {
+        frequency: 'weekly' as const,
+        days: selectedDays,
+        endDate: endDate
+      } : undefined
+    };
+
     try {
       if (event) {
-        await supabaseScheduleService.updateEvent(event.id, {
-          material_id: selectedMaterial,
-          title,
-          subject: material.subject,
-          grade: material.grade,
-          event_type: type,
-          start_date: startDate.toISOString().split('T')[0],
-          end_date: (type === 'single' ? startDate : endDate).toISOString().split('T')[0],
-          start_time: startTime,
-          end_time: endTime,
-          description,
-          classroom,
-          recurrence: type === 'multiple' ? {
-            frequency,
-            days: selectedDays,
-            endDate: endDate
-          } : null
-        });
+        scheduleService.updateEvent(event.id, eventData);
         toast.success('Agendamento atualizado com sucesso!');
       } else {
-        await supabaseScheduleService.saveEvent({
-          material_id: selectedMaterial,
-          title,
-          subject: material.subject,
-          grade: material.grade,
-          event_type: type,
-          start_date: startDate.toISOString().split('T')[0],
-          end_date: (type === 'single' ? startDate : endDate).toISOString().split('T')[0],
-          start_time: startTime,
-          end_time: endTime,
-          description,
-          classroom,
-          recurrence: type === 'multiple' ? {
-            frequency,
-            days: selectedDays,
-            endDate: endDate
-          } : null
-        });
+        scheduleService.saveEvent(eventData);
         toast.success('Agendamento criado com sucesso!');
       }
       onSave();
