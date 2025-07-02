@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabasePlanService, TipoPlano, PlanoUsuario } from '@/services/supabasePlanService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { PerformanceOptimizer } from '@/utils/performanceOptimizations';
 
-// Cache global para evitar múltiplas consultas
+// Cache global para evitar múltiplas consultas - aumentando duração
 const planCache = new Map<string, { data: PlanoUsuario | null; timestamp: number; materials: number }>();
-const CACHE_DURATION = 30000; // 30 segundos
+const CACHE_DURATION = 60000; // 60 segundos para reduzir ainda mais as consultas
 
 export const useSupabasePlanPermissions = () => {
   const { user } = useAuth();
@@ -53,9 +54,9 @@ export const useSupabasePlanPermissions = () => {
         supabasePlanService.getRemainingMaterials()
       ]);
 
-      // Timeout aumentado para 30 segundos para evitar carregamento infinito
+      // Timeout reduzido para 10 segundos para melhor responsividade
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 30000)
+        setTimeout(() => reject(new Error('Timeout')), 10000)
       );
 
       const [plan, remaining] = await Promise.race([loadPromise, timeoutPromise]) as [PlanoUsuario | null, number];
@@ -122,6 +123,15 @@ export const useSupabasePlanPermissions = () => {
       loadPlanData();
     }
   }, [user?.id]); // Removido loadPlanData das dependências para evitar loops
+
+  // Limpeza automática do cache a cada 5 minutos
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      PerformanceOptimizer.cleanupExpiredEntries(planCache, CACHE_DURATION);
+    }, 300000); // 5 minutos
+
+    return () => clearInterval(cleanupInterval);
+  }, []);
 
   // Criar material otimizado
   const createMaterial = useCallback(async (): Promise<boolean> => {

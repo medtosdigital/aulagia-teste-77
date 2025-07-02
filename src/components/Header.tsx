@@ -71,6 +71,7 @@ const Header: React.FC<HeaderProps> = ({
     switch (currentPlan.id) {
       case 'professor':
         return 'bg-blue-500 text-white';
+      case 'grupo_escolar':
       case 'grupo-escolar':
         return 'bg-green-500 text-white';
       default:
@@ -83,6 +84,7 @@ const Header: React.FC<HeaderProps> = ({
         return 'Gratuito';
       case 'professor':
         return 'Professor';
+      case 'grupo_escolar':
       case 'grupo-escolar':
         return 'Grupo Escolar';
       default:

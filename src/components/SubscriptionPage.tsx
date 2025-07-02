@@ -76,6 +76,7 @@ const SubscriptionPage = () => {
       case 'professor':
         return 'professor';
       case 'grupo_escolar':
+      case 'grupo-escolar':
         return 'grupo-escolar';
       default:
         return 'gratuito';
@@ -221,7 +222,7 @@ const SubscriptionPage = () => {
     const resources = [];
     
     // Basic resources
-    if (currentPlan.id === 'grupo_escolar') {
+    if (currentPlan.id === 'grupo_escolar' || currentPlan.id === 'grupo-escolar') {
       resources.push({
         name: `${currentPlan.limits.materialsPerMonth} materiais por mês (total)`,
         icon: FileText,
@@ -241,7 +242,7 @@ const SubscriptionPage = () => {
         { name: 'Planos de Aula básicos', icon: GraduationCap, available: true },
         { name: 'Atividades simples', icon: ClipboardList, available: true }
       );
-    } else if (currentPlan.id === 'professor' || currentPlan.id === 'grupo_escolar') {
+    } else if (currentPlan.id === 'professor' || currentPlan.id === 'grupo_escolar' || currentPlan.id === 'grupo-escolar') {
       resources.push(
         { name: 'Planos de Aula completos', icon: GraduationCap, available: true },
         { name: 'Slides interativos', icon: Presentation, available: true },
@@ -287,7 +288,7 @@ const SubscriptionPage = () => {
     }
 
     // Collaboration (only for school plan)
-    if (currentPlan.id === 'grupo_escolar') {
+    if (currentPlan.id === 'grupo_escolar' || currentPlan.id === 'grupo-escolar') {
       resources.push(
         { name: 'Dashboard colaborativo', icon: Users, available: true },
         { name: 'Compartilhamento entre professores', icon: Users, available: true },
@@ -384,7 +385,7 @@ const SubscriptionPage = () => {
                 </div>
                 
                 {/* Special note for Grupo Escolar plan */}
-                {currentPlan.id === 'grupo_escolar' && (
+                {(currentPlan.id === 'grupo_escolar' || currentPlan.id === 'grupo-escolar') && (
                   <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
                     <span className="font-medium">Plano Grupo Escolar:</span> Os materiais podem ser distribuídos entre até 5 professores
                   </div>
