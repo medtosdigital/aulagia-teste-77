@@ -294,7 +294,7 @@ const ProfilePage = () => {
       
       setIsEditing(false);
 
-      activityService.addActivity({
+      await activityService.addActivity({
         type: 'updated',
         title: 'Perfil atualizado',
         description: `Perfil atualizado: ${formData.name}, disciplinas: ${formData.subjects.join(', ')}, séries: ${formData.grades.join(', ')}`

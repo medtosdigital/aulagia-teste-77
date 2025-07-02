@@ -280,14 +280,14 @@ const CreateLesson: React.FC = () => {
       setGenerationProgress(100);
       
       // Show success feedback before transitioning
-      setTimeout(() => {
+      setTimeout(async () => {
         setIsGenerating(false);
         setGeneratedMaterial(material);
         setShowNextStepsModal(true); // Mostrar o modal de próximos passos primeiro
         setStep('selection');
         toast.success(`${getCurrentTypeInfo()?.title} criado e salvo com sucesso!`);
         if (material) {
-          activityService.addActivity({
+          await activityService.addActivity({
             type: 'created',
             title: `${material.title}`,
             description: `Material criado: ${material.title} (${material.type})`,

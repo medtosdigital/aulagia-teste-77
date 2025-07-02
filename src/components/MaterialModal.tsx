@@ -72,7 +72,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
       toast.success('Material enviado para impressão!');
 
       if (material) {
-        activityService.addActivity({
+        await activityService.addActivity({
           type: 'exported',
           title: `${material.title}`,
           description: `Material impresso: ${material.title} (${material.type})`,
@@ -97,7 +97,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
       toast.success('PDF baixado com sucesso!');
 
       if (material) {
-        activityService.addActivity({
+        await activityService.addActivity({
           type: 'exported',
           title: `${material.title}`,
           description: `Material exportado em PDF: ${material.title} (${material.type})`,
@@ -129,7 +129,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
       toast.success('Arquivo Word baixado com sucesso!');
 
       if (material) {
-        activityService.addActivity({
+        await activityService.addActivity({
           type: 'exported',
           title: `${material.title}`,
           description: `Material exportado em Word: ${material.title} (${material.type})`,
@@ -162,7 +162,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
         toast.success('PowerPoint baixado com sucesso!');
 
         if (material) {
-          activityService.addActivity({
+          await activityService.addActivity({
             type: 'exported',
             title: `${material.title}`,
             description: `Material exportado em PowerPoint: ${material.title} (${material.type})`,

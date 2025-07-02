@@ -16,9 +16,17 @@ export interface Activity {
 class ActivityService {
   // Adiciona uma atividade no Supabase
   async addActivity(activity: Omit<Activity, 'id' | 'timestamp'>) {
-    // Buscar usuário logado
-    const user = JSON.parse(localStorage.getItem('supabase.auth.user') || 'null');
-    if (!user || !user.id) return null;
+    // Buscar usuário logado diretamente do Supabase
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error('Erro ao obter sessão do usuário:', sessionError);
+      return null;
+    }
+    const user = session?.user;
+    if (!user || !user.id) {
+      console.error('Usuário não autenticado ou sem ID. Atividade não será registrada.');
+      return null;
+    }
     const { data, error } = await supabase
       .from('user_activities')
       .insert({
@@ -42,8 +50,16 @@ class ActivityService {
 
   // Busca as atividades recentes do usuário logado
   async getRecentActivities(limit: number = 10): Promise<Activity[]> {
-    const user = JSON.parse(localStorage.getItem('supabase.auth.user') || 'null');
-    if (!user || !user.id) return [];
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error('Erro ao obter sessão do usuário:', sessionError);
+      return [];
+    }
+    const user = session?.user;
+    if (!user || !user.id) {
+      console.error('Usuário não autenticado ou sem ID. Não será possível buscar atividades.');
+      return [];
+    }
     const { data, error } = await supabase
       .from('user_activities')
       .select('*')
@@ -69,8 +85,16 @@ class ActivityService {
 
   // Limpa todas as atividades do usuário logado
   async clearActivities() {
-    const user = JSON.parse(localStorage.getItem('supabase.auth.user') || 'null');
-    if (!user || !user.id) return;
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error('Erro ao obter sessão do usuário:', sessionError);
+      return;
+    }
+    const user = session?.user;
+    if (!user || !user.id) {
+      console.error('Usuário não autenticado ou sem ID. Não será possível limpar atividades.');
+      return;
+    }
     await supabase
       .from('user_activities')
       .delete()
