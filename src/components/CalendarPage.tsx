@@ -50,10 +50,10 @@ const CalendarPage: React.FC = () => {
   const hasCalendarFeatures = hasCalendar();
 
   useEffect(() => {
-    if (user) {
+    if (user && hasCalendarFeatures) {
       loadEvents();
     }
-  }, [currentDate, view, user]);
+  }, [currentDate, view, user, hasCalendarFeatures]);
 
   const loadEvents = () => {
     let startDate: Date, endDate: Date;
@@ -120,6 +120,10 @@ const CalendarPage: React.FC = () => {
   };
 
   const handleDateClick = (date: Date) => {
+    if (!hasCalendarFeatures) {
+      openUpgradeModal();
+      return;
+    }
     setSelectedDate(date);
     setSelectedEvent(null);
     setModalOpen(true);
@@ -201,9 +205,10 @@ const CalendarPage: React.FC = () => {
             <Button 
               onClick={() => handleDateClick(new Date())} 
               className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all w-full md:w-auto"
+              disabled={!hasCalendarFeatures}
             >
               <Plus className="w-5 h-5 mr-2" />
-              Novo Agendamento
+              {hasCalendarFeatures ? 'Novo Agendamento' : 'Recurso Premium'}
             </Button>
           </div>
 
@@ -259,17 +264,19 @@ const CalendarPage: React.FC = () => {
           {view === 'day' && (
             <DayView
               currentDate={currentDate}
-              dayEvents={user ? getEventsForDate(currentDate) : []}
+              dayEvents={user && hasCalendarFeatures ? getEventsForDate(currentDate) : []}
               onDateClick={handleDateClick}
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
               onViewMaterial={handleViewMaterial}
+              hasCalendarAccess={hasCalendarFeatures}
+              onUpgrade={openUpgradeModal}
             />
           )}
           {view === 'week' && (
             <WeekView
               currentDate={currentDate}
-              events={user ? events : []}
+              events={user && hasCalendarFeatures ? events : []}
               showFullWeek={showFullWeek}
               showWeekends={showWeekends}
               onDateClick={handleDateClick}
@@ -285,7 +292,7 @@ const CalendarPage: React.FC = () => {
           {view === 'month' && (
             <MonthView
               currentDate={currentDate}
-              events={user ? events : []}
+              events={user && hasCalendarFeatures ? events : []}
               showWeekends={showWeekends}
               onDateClick={handleDateClick}
               onEventClick={handleEventClick}
@@ -299,50 +306,30 @@ const CalendarPage: React.FC = () => {
           {view === 'year' && (
             <YearView
               currentDate={currentDate}
-              events={user ? events : []}
+              events={user && hasCalendarFeatures ? events : []}
               onMonthClick={handleMonthClick}
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
               onViewMaterial={handleViewMaterial}
             />
           )}
-
-          {/* Overlay de bloqueio para funcionalidades premium - apenas para recursos específicos */}
-          {!hasCalendarFeatures && (
-            <div className="absolute top-0 right-0 m-4 z-10">
-              <Card className="max-w-sm shadow-lg border-0 bg-white/95 backdrop-blur-sm">
-                <CardContent className="p-4 text-center">
-                  <Crown className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600 mb-3">
-                    Alguns recursos avançados do calendário estão disponíveis apenas em planos premium.
-                  </p>
-                  <Button 
-                    onClick={openUpgradeModal}
-                    size="sm"
-                    className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white"
-                  >
-                    <Crown className="w-4 h-4 mr-1" />
-                    Upgrade
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Modais */}
-      <ScheduleModal
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setSelectedEvent(null);
-          setSelectedDate(undefined);
-        }}
-        onSave={loadEvents}
-        event={selectedEvent}
-        selectedDate={selectedDate}
-      />
+      {hasCalendarFeatures && (
+        <ScheduleModal
+          open={modalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedEvent(null);
+            setSelectedDate(undefined);
+          }}
+          onSave={loadEvents}
+          event={selectedEvent}
+          selectedDate={selectedDate}
+        />
+      )}
 
       <MaterialModal
         material={selectedMaterial}
