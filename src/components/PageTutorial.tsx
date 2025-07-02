@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, BookOpen, Calendar, FileText, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
