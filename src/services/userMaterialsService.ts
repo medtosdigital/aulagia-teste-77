@@ -22,12 +22,17 @@ const TABLE_MAPPING = {
 
 class UserMaterialsService {
   private async getCurrentUser() {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) {
-      console.error('Error getting current user:', error);
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Error getting current user:', error);
+        return null;
+      }
+      return user;
+    } catch (error) {
+      console.error('Network or unexpected error getting current user:', error);
       return null;
     }
-    return user;
   }
 
   private mapFromSupabase(item: any, type: string): UserMaterial {
