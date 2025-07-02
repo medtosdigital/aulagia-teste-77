@@ -82,8 +82,8 @@ export const activityService = new ActivityService();
 
 // Limpar atividades de teste existentes se elas estiverem presentes
 if (typeof window !== 'undefined') {
-  setTimeout(async () => {
-    const existingActivities = await activityService.getRecentActivities(100);
+  setTimeout(() => {
+    const existingActivities = activityService.getActivities();
     
     // Verificar se há atividades de teste e removê-las
     const hasTestActivities = existingActivities.some(activity => 
@@ -94,7 +94,7 @@ if (typeof window !== 'undefined') {
     
     if (hasTestActivities) {
       console.log('🧹 Removing test activities...');
-      await activityService.clearActivities();
+      activityService.clearActivities();
     }
   }, 500);
 }
