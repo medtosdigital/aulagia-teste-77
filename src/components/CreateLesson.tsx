@@ -36,7 +36,7 @@ interface MaterialTypeOption {
 
 // Cache em memória para listas auxiliares
 const subjectsCache = { data: null as string[] | null, timestamp: 0 };
-const gradesCache = { data: null as string[] | null, timestamp: 0 };
+const gradesCache = { data: null as { category: string; options: string[]; }[] | null, timestamp: 0 };
 const AUX_CACHE_DURATION = 60000; // 60 segundos
 
 const getSubjects = () => {
