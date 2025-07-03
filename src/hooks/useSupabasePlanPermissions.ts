@@ -124,6 +124,20 @@ export const useSupabasePlanPermissions = () => {
     }
   }, [user?.id]); // Removido loadPlanData das dependências para evitar loops
 
+  // Atualizar dados em tempo real ao trocar de plano
+  useEffect(() => {
+    const handlePlanChanged = () => {
+      if (user?.id) {
+        planCache.delete(`plan_${user.id}`);
+        loadPlanData(true);
+      }
+    };
+    window.addEventListener('planChanged', handlePlanChanged);
+    return () => {
+      window.removeEventListener('planChanged', handlePlanChanged);
+    };
+  }, [user?.id, loadPlanData]);
+
   // Limpeza automática do cache a cada 5 minutos
   useEffect(() => {
     const cleanupInterval = setInterval(() => {
@@ -199,7 +213,7 @@ export const useSupabasePlanPermissions = () => {
         }
         await loadPlanData(true);
         // Disparar evento global para atualização em tempo real
-        window.dispatchEvent(new CustomEvent('planUpdated'));
+        window.dispatchEvent(new CustomEvent('planChanged'));
         setShouldShowUpgrade(false);
         
         const planNames: Record<TipoPlano, string> = {
@@ -212,17 +226,10 @@ export const useSupabasePlanPermissions = () => {
           title: "Plano atualizado",
           description: `Seu plano foi alterado para ${planNames[newPlan]}.`,
         });
-        return true;
-      } else {
-        toast({
-          title: "Erro ao atualizar plano",
-          description: "Não foi possível alterar seu plano.",
-          variant: "destructive"
-        });
-        return false;
       }
+      return success;
     } catch (error) {
-      console.error('Erro ao alterar plano:', error);
+      console.error('Erro ao atualizar plano:', error);
       toast({
         title: "Erro inesperado",
         description: "Ocorreu um erro ao alterar o plano.",

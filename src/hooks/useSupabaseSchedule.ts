@@ -9,9 +9,22 @@ export const useSupabaseSchedule = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Cache em memória para eventos do calendário
+  const eventsCache = new Map<string, { data: CalendarEvent[], timestamp: number }>();
+  const EVENTS_CACHE_DURATION = 60000; // 60 segundos
+
   const loadEvents = useCallback(async () => {
     if (!user) {
       setEvents([]);
+      setLoading(false);
+      return;
+    }
+
+    const cacheKey = `events_${user.id}`;
+    const cached = eventsCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && (now - cached.timestamp) < EVENTS_CACHE_DURATION) {
+      setEvents(cached.data);
       setLoading(false);
       return;
     }
@@ -24,6 +37,7 @@ export const useSupabaseSchedule = () => {
       console.log('Eventos carregados:', userEvents);
       
       setEvents(userEvents);
+      eventsCache.set(cacheKey, { data: userEvents, timestamp: now });
     } catch (error) {
       console.error('Erro ao carregar eventos:', error);
       toast({
@@ -54,6 +68,7 @@ export const useSupabaseSchedule = () => {
       const newEvent = await supabaseScheduleService.saveEvent(eventData);
       
       if (newEvent) {
+        eventsCache.delete(`events_${user.id}`);
         await loadEvents(); // Recarregar eventos
         toast({
           title: "Evento criado",
@@ -93,6 +108,7 @@ export const useSupabaseSchedule = () => {
       const success = await supabaseScheduleService.updateEvent(id, eventData);
       
       if (success) {
+        eventsCache.delete(`events_${user.id}`);
         await loadEvents(); // Recarregar eventos
         toast({
           title: "Evento atualizado",
@@ -132,6 +148,7 @@ export const useSupabaseSchedule = () => {
       const success = await supabaseScheduleService.deleteEvent(id);
       
       if (success) {
+        eventsCache.delete(`events_${user.id}`);
         await loadEvents(); // Recarregar eventos
         toast({
           title: "Evento excluído",

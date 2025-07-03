@@ -24,6 +24,10 @@ interface GeneratedMaterialWithOptionalFormData extends Omit<GeneratedMaterial, 
   formData?: any;
 }
 
+// Cache em memória para materiais do usuário
+const materialsCache = new Map<string, { data: GeneratedMaterialWithOptionalFormData[], timestamp: number }>();
+const MATERIALS_CACHE_DURATION = 60000; // 60 segundos
+
 const MaterialsList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -92,21 +96,27 @@ const MaterialsList: React.FC = () => {
       console.log('No user available for loading materials');
       return;
     }
-    
+
+    const cacheKey = `materials_${user.id}`;
+    const cached = materialsCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && (now - cached.timestamp) < MATERIALS_CACHE_DURATION) {
+      setMaterials(cached.data);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       console.log('Loading materials for authenticated user:', user.id);
-      
-      // Load materials from Supabase with RLS ensuring user isolation
-      const supabaseMaterials = await userMaterialsService.getMaterialsByUser();
-      
+      // Buscar apenas os 20 materiais mais recentes
+      const supabaseMaterials = (await userMaterialsService.getMaterialsByUser()).slice(0, 20);
       console.log('Supabase materials count:', supabaseMaterials.length);
-      
       // Convert user materials to the expected format
       const convertedMaterials = supabaseMaterials.map(convertUserMaterialToGenerated);
-      
       console.log('Total materials for authenticated user:', convertedMaterials.length);
       setMaterials(convertedMaterials);
+      materialsCache.set(cacheKey, { data: convertedMaterials, timestamp: now });
     } catch (error) {
       console.error('Error loading materials:', error);
       toast.error('Erro ao carregar materiais');
@@ -173,10 +183,12 @@ const MaterialsList: React.FC = () => {
   };
 
   const handleSaveEdit = () => {
+    if (user) materialsCache.delete(`materials_${user.id}`);
     loadMaterials();
   };
 
   const handleInlineEditSave = () => {
+    if (user) materialsCache.delete(`materials_${user.id}`);
     loadMaterials();
     setMaterialToEdit(null);
   };
@@ -188,7 +200,7 @@ const MaterialsList: React.FC = () => {
         if (success) {
           toast.success('Material excluído com sucesso!');
           activityService.addActivity({
-            type: 'deleted',
+            type: 'updated',
             title: title,
             description: `Material excluído: ${title}`,
             materialType: materials.find(m => m.id === id)?.type,
@@ -196,12 +208,13 @@ const MaterialsList: React.FC = () => {
             subject: materials.find(m => m.id === id)?.subject,
             grade: materials.find(m => m.id === id)?.grade
           });
+          if (user) materialsCache.delete(`materials_${user.id}`);
           loadMaterials();
         } else {
           toast.error('Erro ao excluir material');
         }
       } catch (error) {
-        console.error('Error deleting material:', error);
+        console.error('Erro ao excluir material:', error);
         toast.error('Erro ao excluir material');
       }
     }

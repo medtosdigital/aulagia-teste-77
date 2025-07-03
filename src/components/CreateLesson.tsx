@@ -34,6 +34,42 @@ interface MaterialTypeOption {
   blocked?: boolean;
 }
 
+// Cache em memória para listas auxiliares
+const subjectsCache = { data: null as string[] | null, timestamp: 0 };
+const gradesCache = { data: null as typeof grades | null, timestamp: 0 };
+const AUX_CACHE_DURATION = 60000; // 60 segundos
+
+const getSubjects = () => {
+  const now = Date.now();
+  if (subjectsCache.data && (now - subjectsCache.timestamp) < AUX_CACHE_DURATION) {
+    return subjectsCache.data;
+  }
+  // Aqui poderia buscar da API/Supabase se fosse dinâmico
+  subjectsCache.data = [
+    'Matemática', 'Português', 'Ciências', 'História', 'Geografia', 'Física', 'Química', 'Biologia',
+    'Educação Física', 'Espanhol', 'Inglês', 'Filosofia', 'Sociologia', 'Informática', 'Física Quântica',
+    'Teatro', 'Literatura', 'Música', 'Dança', 'Artes'
+  ];
+  subjectsCache.timestamp = now;
+  return subjectsCache.data;
+};
+const getGrades = () => {
+  const now = Date.now();
+  if (gradesCache.data && (now - gradesCache.timestamp) < AUX_CACHE_DURATION) {
+    return gradesCache.data;
+  }
+  // Aqui poderia buscar da API/Supabase se fosse dinâmico
+  gradesCache.data = [
+    { category: 'Educação Infantil', options: ['Maternal', 'Jardim I', 'Jardim II', 'Pré-Escola'] },
+    { category: 'Ensino Fundamental I', options: ['1° Ano', '2° Ano', '3° Ano', '4° Ano', '5° Ano'] },
+    { category: 'Ensino Fundamental II', options: ['6° Ano', '7° Ano', '8° Ano', '9° Ano'] },
+    { category: 'Ensino Médio', options: ['1° Ano', '2° Ano', '3° Ano'] },
+    { category: 'Ensino Superior', options: ['Graduação'] }
+  ];
+  gradesCache.timestamp = now;
+  return gradesCache.data;
+};
+
 const CreateLesson: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<'selection' | 'form' | 'generating'>('selection');
@@ -108,25 +144,9 @@ const CreateLesson: React.FC = () => {
     }
   ];
 
-  const subjects = ['Matemática', 'Português', 'Ciências', 'História', 'Geografia', 'Física', 'Química', 'Biologia', 'Educação Física', 'Espanhol', 'Inglês', 'Filosofia', 'Sociologia', 'Informática', 'Física Quântica', 'Teatro', 'Literatura', 'Música', 'Dança', 'Artes'];
+  const subjects = getSubjects();
+  const grades = getGrades();
   
-  const grades = [{
-    category: 'Educação Infantil',
-    options: ['Maternal', 'Jardim I', 'Jardim II', 'Pré-Escola']
-  }, {
-    category: 'Ensino Fundamental I',
-    options: ['1° Ano', '2° Ano', '3° Ano', '4° Ano', '5° Ano']
-  }, {
-    category: 'Ensino Fundamental II',
-    options: ['6° Ano', '7° Ano', '8° Ano', '9° Ano']
-  }, {
-    category: 'Ensino Médio',
-    options: ['1° Ano', '2° Ano', '3° Ano']
-  }, {
-    category: 'Ensino Superior',
-    options: ['Graduação']
-  }];
-
   const addSubject = () => {
     setFormData({
       ...formData,

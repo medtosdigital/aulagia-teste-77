@@ -1,15 +1,16 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
-type DatabaseCalendarEvent = Database['public']['Tables']['calendar_events']['Row'];
-type DatabaseCalendarEventInsert = Database['public']['Tables']['calendar_events']['Insert'];
+type DatabaseCalendarEvent = Database['public']['Tables']['calendar_events']['Row'] & { schedule_type: string };
+type DatabaseCalendarEventInsert = Database['public']['Tables']['calendar_events']['Insert'] & { schedule_type?: string };
 
 export interface CalendarEvent {
   id: string;
   user_id: string;
   material_ids?: string[];
   title: string;
-  event_type: 'single' | 'multiple';
+  event_type: 'aula' | 'avaliacao';
+  schedule_type: 'unica' | 'recorrente';
   start_date: string;
   end_date: string;
   start_time: string;
@@ -19,6 +20,8 @@ export interface CalendarEvent {
   recurrence?: any;
   created_at: string;
   updated_at: string;
+  subject?: string | null;
+  grade?: string | null;
 }
 
 // Helper function to convert database event to CalendarEvent
@@ -28,7 +31,8 @@ const convertDatabaseEventToCalendarEvent = (dbEvent: DatabaseCalendarEvent): Ca
     user_id: dbEvent.user_id,
     material_ids: dbEvent.material_ids ? JSON.parse(dbEvent.material_ids) : [],
     title: dbEvent.title,
-    event_type: (dbEvent.event_type === 'multiple' ? 'multiple' : 'single') as 'single' | 'multiple',
+    event_type: (dbEvent.event_type === 'avaliacao' ? 'avaliacao' : 'aula') as 'aula' | 'avaliacao',
+    schedule_type: dbEvent.schedule_type === 'recorrente' ? 'recorrente' : 'unica',
     start_date: dbEvent.start_date,
     end_date: dbEvent.end_date,
     start_time: dbEvent.start_time,
@@ -37,24 +41,28 @@ const convertDatabaseEventToCalendarEvent = (dbEvent: DatabaseCalendarEvent): Ca
     classroom: dbEvent.classroom || undefined,
     recurrence: dbEvent.recurrence || undefined,
     created_at: dbEvent.created_at,
-    updated_at: dbEvent.updated_at
+    updated_at: dbEvent.updated_at,
+    subject: dbEvent.subject || undefined,
+    grade: dbEvent.grade || undefined,
   };
 };
 
 export const supabaseScheduleService = {
   async getEvents(): Promise<CalendarEvent[]> {
     console.log('Buscando eventos do calendário no Supabase...');
-    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return [];
+    }
     const { data, error } = await supabase
       .from('calendar_events')
       .select('*')
+      .eq('user_id', user.id)
       .order('start_date', { ascending: true });
-
     if (error) {
       console.error('Erro ao buscar eventos:', error);
       throw error;
     }
-
     return (data || []).map(convertDatabaseEventToCalendarEvent);
   },
 
@@ -69,6 +77,7 @@ export const supabaseScheduleService = {
       material_ids: JSON.stringify(eventData.material_ids || []),
       title: eventData.title,
       event_type: eventData.event_type,
+      schedule_type: eventData.schedule_type,
       start_date: eventData.start_date,
       end_date: eventData.end_date,
       start_time: eventData.start_time,

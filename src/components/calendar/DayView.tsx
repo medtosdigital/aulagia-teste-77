@@ -124,13 +124,14 @@ const DayView: React.FC<DayViewProps> = ({
       ) : (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Materiais do dia</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {dayEvents
               .sort((a, b) => a.start_time.localeCompare(b.start_time))
               .map(event => (
                 <EventCard 
                   key={event.id} 
                   event={event}
+                  compact={false}
                   onEdit={onEditEvent}
                   onDelete={onDeleteEvent}
                   onViewMaterial={onViewMaterial}

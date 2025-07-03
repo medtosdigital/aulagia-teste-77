@@ -17,6 +17,10 @@ import { activityService } from '@/services/activityService';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+// Cache em memória para perfil do usuário
+const profileCache = new Map<string, { data: any, timestamp: number }>();
+const PROFILE_CACHE_DURATION = 60000; // 60 segundos
+
 const ProfilePage = () => {
   const { user } = useAuth();
   const { currentPlan } = usePlanPermissions();
@@ -88,9 +92,17 @@ const ProfilePage = () => {
   const loadProfile = async () => {
     if (!user?.id) return;
 
+    const cacheKey = `profile_${user.id}`;
+    const cached = profileCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && (now - cached.timestamp) < PROFILE_CACHE_DURATION) {
+      setFormData(cached.data);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      
       // Buscar perfil do usuário
       const { data: profile, error } = await supabase
         .from('perfis')
@@ -98,7 +110,7 @@ const ProfilePage = () => {
         .eq('user_id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // Não é erro de "não encontrado"
+      if (error && error.code !== 'PGRST116') {
         console.error('Error loading profile:', error);
         toast({
           title: "Erro ao carregar perfil",
@@ -108,24 +120,23 @@ const ProfilePage = () => {
         return;
       }
 
-      // Preencher dados do formulário
+      let newFormData;
       if (profile) {
-        setFormData({
+        newFormData = {
           name: profile.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
-          photo: '', // Avatar será carregado separadamente do Supabase profiles
+          photo: '',
           teachingLevel: profile.etapas_ensino?.[0] || '',
           grades: profile.anos_serie || [],
           subjects: profile.disciplinas || [],
-          school: '', // Campo não existe na nova estrutura
+          school: '',
           materialTypes: profile.tipo_material_favorito || [],
           celular: profile.celular || ''
-        });
+        };
       } else {
-        // Perfil não existe, usar dados básicos do usuário
-        setFormData(prev => ({
-          ...prev,
+        newFormData = {
+          ...formData,
           name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário'
-        }));
+        };
       }
 
       // Carregar avatar do profiles (tabela existente)
@@ -136,12 +147,11 @@ const ProfilePage = () => {
         .single();
 
       if (userProfile?.avatar_url) {
-        setFormData(prev => ({
-          ...prev,
-          photo: userProfile.avatar_url
-        }));
+        newFormData.photo = userProfile.avatar_url;
       }
 
+      setFormData(newFormData);
+      profileCache.set(cacheKey, { data: newFormData, timestamp: now });
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {

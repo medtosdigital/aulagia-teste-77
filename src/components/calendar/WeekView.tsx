@@ -28,8 +28,8 @@ interface WeekViewProps {
 const WeekView: React.FC<WeekViewProps> = ({
   currentDate,
   events,
-  showFullWeek,
-  showWeekends,
+  showFullWeek = true,
+  showWeekends = false,
   onDateClick,
   onEventClick,
   onEditEvent,
@@ -185,14 +185,14 @@ const WeekView: React.FC<WeekViewProps> = ({
         </div>
       </div>
 
-      <div className={`grid grid-cols-1 gap-4 ${weekDays.length <= 5 ? 'lg:grid-cols-5' : weekDays.length === 6 ? 'lg:grid-cols-6' : 'lg:grid-cols-7'}`}>
+      <div className={`grid grid-cols-1 gap-4 ${weekDays.length <= 5 ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5' : weekDays.length === 6 ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7'}`} style={{overflowX: 'hidden', width: '100%'}}>
         {weekDays.map(day => {
           const dayEvents = getEventsForDate(day);
           const isCurrentDay = isToday(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
           
           return (
-            <div key={day.toString()} className="space-y-3">
+            <div key={day.toString()} className="space-y-3 overflow-x-hidden w-full">
               <div className={`text-center p-4 rounded-xl transition-all cursor-pointer hover:scale-105 ${
                 isCurrentDay 
                   ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg' 
@@ -204,40 +204,27 @@ const WeekView: React.FC<WeekViewProps> = ({
                   {format(day, 'EEE', { locale: ptBR })}
                 </div>
                 <div className={`text-2xl font-bold mt-1 ${
-                  isCurrentDay ? 'text-white' : isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+                  isCurrentDay ? 'text-white' : isCurrentMonth ? 'text-gray-500' : 'text-gray-400'
                 }`}>
                   {format(day, 'd')}
                 </div>
-                {dayEvents.length > 0 && (
-                  <div className={`text-xs mt-2 px-2 py-1 rounded-full ${
-                    isCurrentDay ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600'
-                  }`}>
-                    {dayEvents.length} material{dayEvents.length !== 1 ? 'is' : ''}
-                  </div>
-                )}
+                <div className={`text-xs mt-2 px-2 py-1 rounded-full ${
+                  isCurrentDay ? 'bg-white/20 text-white' : 'bg-gray-300 text-gray-500'
+                }`}>
+                  {dayEvents.length} materiais
+                </div>
               </div>
-              
-              <div className="space-y-2 min-h-[300px]">
-                {dayEvents
-                  .sort((a, b) => a.start_time.localeCompare(b.start_time))
-                  .map(event => (
-                    <EventCard
-                      key={event.id}
-                      event={event}
-                      compact={true}
-                      onEdit={onEditEvent}
-                      onDelete={onDeleteEvent}
-                      onViewMaterial={onViewMaterial}
-                    />
-                  ))}
-                
-                <button
-                  onClick={() => onDateClick(day)}
-                  className="w-full text-sm p-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
-                >
-                  <Plus className="w-4 h-4 mx-auto mb-1" />
-                  <div>Adicionar</div>
-                </button>
+              <div className="space-y-2 min-h-[120px] w-full">
+                {dayEvents.map(event => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    compact={true}
+                    onEdit={onEditEvent}
+                    onDelete={onDeleteEvent}
+                    onViewMaterial={onViewMaterial}
+                  />
+                ))}
               </div>
             </div>
           );

@@ -106,6 +106,7 @@ export type Database = {
           material_id: string | null
           material_ids: string | null
           recurrence: Json | null
+          schedule_type: string
           start_date: string
           start_time: string
           subject: string | null
@@ -125,6 +126,7 @@ export type Database = {
           material_id?: string | null
           material_ids?: string | null
           recurrence?: Json | null
+          schedule_type?: string
           start_date: string
           start_time: string
           subject?: string | null
@@ -144,6 +146,7 @@ export type Database = {
           material_id?: string | null
           material_ids?: string | null
           recurrence?: Json | null
+          schedule_type?: string
           start_date?: string
           start_time?: string
           subject?: string | null

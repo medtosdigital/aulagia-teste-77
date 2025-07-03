@@ -47,7 +47,7 @@ const YearView: React.FC<YearViewProps> = ({
           onUpgrade={onUpgrade}
           className="min-h-[600px]"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" style={{overflowX: 'hidden', width: '100%'}}>
             {months.map(month => (
               <Card 
                 key={month.toString()} 
@@ -86,7 +86,7 @@ const YearView: React.FC<YearViewProps> = ({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" style={{overflowX: 'hidden', width: '100%'}}>
         {months.map(month => {
           const monthEvents = events.filter(event => {
             const eventDate = new Date(event.start_date);
@@ -96,7 +96,7 @@ const YearView: React.FC<YearViewProps> = ({
           return (
             <Card 
               key={month.toString()} 
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 hover:border-blue-300 overflow-hidden"
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 hover:border-blue-300 overflow-hidden w-full truncate"
               onClick={() => onMonthClick(month, 'month')}
             >
               <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -117,15 +117,17 @@ const YearView: React.FC<YearViewProps> = ({
                 {monthEvents.length > 0 && (
                   <div className="space-y-2">
                     {monthEvents.slice(0, 2).map(event => (
-                      <EventCard
-                        key={event.id}
-                        event={event}
-                        compact={true}
-                        showDate={false}
-                        onEdit={onEditEvent}
-                        onDelete={onDeleteEvent}
-                        onViewMaterial={onViewMaterial}
-                      />
+                      <div className="truncate">
+                        <EventCard
+                          key={event.id}
+                          event={event}
+                          compact={true}
+                          showDate={false}
+                          onEdit={onEditEvent}
+                          onDelete={onDeleteEvent}
+                          onViewMaterial={onViewMaterial}
+                        />
+                      </div>
                     ))}
                     {monthEvents.length > 2 && (
                       <div className="text-xs text-blue-600 font-medium text-center bg-blue-100 p-2 rounded-md">

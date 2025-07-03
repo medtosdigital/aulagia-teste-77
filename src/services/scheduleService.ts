@@ -4,7 +4,8 @@ export interface ScheduleEvent {
   title: string;
   subject: string;
   grade: string;
-  type: 'single' | 'multiple';
+  schedule_type: 'unica' | 'recorrente';
+  event_type: 'aula' | 'avaliacao';
   startDate: Date;
   endDate: Date;
   startTime: string;
@@ -77,7 +78,7 @@ class ScheduleService {
     const events = this.getEvents();
     return events.filter(event => {
       // Para eventos únicos
-      if (event.type === 'single') {
+      if (event.schedule_type === 'unica') {
         return event.startDate >= startDate && event.startDate <= endDate;
       }
       
@@ -91,7 +92,7 @@ class ScheduleService {
   }
 
   expandRecurringEvents(event: ScheduleEvent, startDate: Date, endDate: Date): ScheduleEvent[] {
-    if (event.type === 'single' || !event.recurrence) {
+    if (event.schedule_type === 'unica' || !event.recurrence) {
       return [event];
     }
 

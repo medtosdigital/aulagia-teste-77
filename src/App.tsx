@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -10,8 +10,17 @@ import TermosDeServico from "./pages/TermosDeServico";
 import PoliticaDePrivacidade from "./pages/PoliticaDePrivacidade";
 import TermosDeUso from "./pages/TermosDeUso";
 import AvisoIA from "./pages/AvisoIA";
+import { useEffect } from 'react';
 
 const queryClient = new QueryClient();
+
+function ScrollToTop() {
+  const location = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname]);
+  return null;
+}
 
 function App() {
   return (
@@ -20,6 +29,7 @@ function App() {
         <AuthProvider>
           <Toaster />
           <Router>
+            <ScrollToTop />
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/termos-de-servico" element={<TermosDeServico />} />

@@ -81,7 +81,9 @@ export const usePlanPermissions = () => {
         'grupo-escolar': 'grupo_escolar'
       };
       const mappedPlanType = planTypeMap[planId] || 'gratuito';
-      return await supabasePermissions.changePlan(mappedPlanType);
+      const result = await supabasePermissions.changePlan(mappedPlanType);
+      window.dispatchEvent(new CustomEvent('planChanged'));
+      return result;
     },
     getAvailablePlansForUpgrade: () => {
       const currentPlanId = memoizedPlan.id;

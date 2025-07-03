@@ -65,62 +65,58 @@ class UserMaterialsService {
       }
 
       console.log('Loading materials for authenticated user:', user.id);
+      // Buscar todos os tipos de material em paralelo
+      const [planosData, atividadesData, slidesData, avaliacoesData] = await Promise.all([
+        supabase
+          .from('planos_de_aula')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('atividades')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('slides')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('avaliacoes')
+          .select('*')
+          .order('created_at', { ascending: false })
+      ]);
+
       const allMaterials: UserMaterial[] = [];
 
-      // Buscar planos de aula - RLS automaticamente filtra por user_id
-      const { data: planosData, error: planosError } = await supabase
-        .from('planos_de_aula')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (!planosError && planosData) {
-        const mappedPlanos = planosData.map(item => this.mapFromSupabase(item, 'plano-aula'));
+      if (!planosData.error && planosData.data) {
+        const mappedPlanos = planosData.data.map(item => this.mapFromSupabase(item, 'plano-aula'));
         allMaterials.push(...mappedPlanos);
         console.log('Loaded planos de aula:', mappedPlanos.length);
-      } else if (planosError) {
-        console.error('Error loading planos de aula:', planosError);
+      } else if (planosData.error) {
+        console.error('Error loading planos de aula:', planosData.error);
       }
 
-      // Buscar atividades - RLS automaticamente filtra por user_id
-      const { data: atividadesData, error: atividadesError } = await supabase
-        .from('atividades')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (!atividadesError && atividadesData) {
-        const mappedAtividades = atividadesData.map(item => this.mapFromSupabase(item, 'atividade'));
+      if (!atividadesData.error && atividadesData.data) {
+        const mappedAtividades = atividadesData.data.map(item => this.mapFromSupabase(item, 'atividade'));
         allMaterials.push(...mappedAtividades);
         console.log('Loaded atividades:', mappedAtividades.length);
-      } else if (atividadesError) {
-        console.error('Error loading atividades:', atividadesError);
+      } else if (atividadesData.error) {
+        console.error('Error loading atividades:', atividadesData.error);
       }
 
-      // Buscar slides - RLS automaticamente filtra por user_id
-      const { data: slidesData, error: slidesError } = await supabase
-        .from('slides')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (!slidesError && slidesData) {
-        const mappedSlides = slidesData.map(item => this.mapFromSupabase(item, 'slides'));
+      if (!slidesData.error && slidesData.data) {
+        const mappedSlides = slidesData.data.map(item => this.mapFromSupabase(item, 'slides'));
         allMaterials.push(...mappedSlides);
         console.log('Loaded slides:', mappedSlides.length);
-      } else if (slidesError) {
-        console.error('Error loading slides:', slidesError);
+      } else if (slidesData.error) {
+        console.error('Error loading slides:', slidesData.error);
       }
 
-      // Buscar avaliações - RLS automaticamente filtra por user_id
-      const { data: avaliacoesData, error: avaliacoesError } = await supabase
-        .from('avaliacoes')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (!avaliacoesError && avaliacoesData) {
-        const mappedAvaliacoes = avaliacoesData.map(item => this.mapFromSupabase(item, 'avaliacao'));
+      if (!avaliacoesData.error && avaliacoesData.data) {
+        const mappedAvaliacoes = avaliacoesData.data.map(item => this.mapFromSupabase(item, 'avaliacao'));
         allMaterials.push(...mappedAvaliacoes);
         console.log('Loaded avaliacoes:', mappedAvaliacoes.length);
-      } else if (avaliacoesError) {
-        console.error('Error loading avaliacoes:', avaliacoesError);
+      } else if (avaliacoesData.error) {
+        console.error('Error loading avaliacoes:', avaliacoesData.error);
       }
 
       // Sort by creation date

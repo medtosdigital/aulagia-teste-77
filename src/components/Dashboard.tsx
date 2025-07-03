@@ -9,6 +9,7 @@ import { ptBR } from 'date-fns/locale';
 import { supabaseScheduleService } from '@/services/supabaseScheduleService';
 import { CalendarEvent } from '@/services/supabaseScheduleService';
 import { parseISO } from 'date-fns';
+import { materialService, GeneratedMaterial } from '@/services/materialService';
 
 interface DashboardProps {
   onNavigate?: (page: string) => void;
@@ -21,6 +22,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [materialStats, setMaterialStats] = useState<MaterialStats | null>(null);
   const [upcomingClasses, setUpcomingClasses] = useState<CalendarEvent[]>([]);
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
+  const [materialsMap, setMaterialsMap] = useState<{ [id: string]: GeneratedMaterial }>({});
 
   const {
     canAccessCreateMaterial,
@@ -33,35 +35,35 @@ const Dashboard: React.FC<DashboardProps> = ({
   useEffect(() => {
     console.log('🏠 Dashboard mounted');
 
-    // Carregar dados quando o componente montar
-    const loadMaterialStats = async () => {
+    // Carregar estatísticas, atividades e próximas aulas em paralelo
+    const loadDashboardData = async () => {
       try {
-        const stats = await statsService.getMaterialStats();
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const nextWeek = new Date(now);
+        nextWeek.setDate(now.getDate() + 7);
+        // Limitar para 10 atividades e 5 próximas aulas
+        const [stats, activities, upcoming] = await Promise.all([
+          statsService.getMaterialStats(),
+          activityService.getRecentActivities(10),
+          supabaseScheduleService.getEventsByDateRange(now, nextWeek)
+        ]);
         setMaterialStats(stats);
+        setRecentActivities(activities);
+        setUpcomingClasses(upcoming.slice(0, 5));
+        // Buscar materiais vinculados das próximas aulas
+        const allMaterialIds = Array.from(new Set(upcoming.flatMap(ev => ev.material_ids || [])));
+        if (allMaterialIds.length > 0) {
+          const allMaterials = await materialService.getMaterials();
+          const map: { [id: string]: GeneratedMaterial } = {};
+          allMaterials.forEach(mat => { map[mat.id] = mat; });
+          setMaterialsMap(map);
+        }
       } catch (error) {
-        console.error('Error loading material stats:', error);
+        console.error('Erro ao carregar dados do dashboard:', error);
       }
     };
-    
-    loadMaterialStats();
-    
-    // Carregar atividades recentes usando o mesmo padrão das estatísticas
-    const loadActivities = async () => {
-      const activities = await activityService.getRecentActivities(10);
-      console.log('📊 Recent activities loaded:', activities);
-      setRecentActivities(activities);
-    };
-    loadActivities();
-
-    // Carregar próximas aulas (próximos 7 dias) do Supabase
-    const loadUpcomingClasses = async () => {
-      const now = new Date();
-      const nextWeek = new Date();
-      nextWeek.setDate(now.getDate() + 7);
-      const upcoming = await supabaseScheduleService.getEventsByDateRange(now, nextWeek);
-      setUpcomingClasses(upcoming.slice(0, 5));
-    };
-    loadUpcomingClasses();
+    loadDashboardData();
   }, []);
 
   const tabs = [{
@@ -221,39 +223,78 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="p-4 md:p-6">
           <h3 className="font-semibold text-lg mb-4">Suas próximas aulas</h3>
           <div className="space-y-4">
-            {upcomingClasses.length > 0 ? (
-              upcomingClasses.map(event => (
-                <div
-                  key={event.id}
-                  className={`flex items-start space-x-4 p-3 rounded-lg ${
-                    parseISO(event.start_date).toDateString() === new Date().toDateString()
-                      ? 'bg-blue-50 border border-blue-200'
-                      : 'hover:bg-gray-50'
-                  } transition`}
-                >
-                  <div className="mt-1">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      parseISO(event.start_date).toDateString() === new Date().toDateString()
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-green-100 text-green-600'
-                    }`}>
-                      <Users size={16} />
+            {upcomingClasses.length > 0 ? (() => {
+              // Encontrar o evento mais próximo da data/hora atual
+              const now = new Date();
+              const getEventDateTime = (ev: CalendarEvent) => {
+                // Junta data e hora para comparar corretamente
+                return new Date(`${ev.start_date}T${ev.start_time}`);
+              };
+              const sorted = [...upcomingClasses].sort((a, b) => getEventDateTime(a).getTime() - getEventDateTime(b).getTime());
+              const nextEvent = sorted.find(ev => getEventDateTime(ev) >= now) || sorted[0];
+              return upcomingClasses.map(event => {
+                const isNext = event.id === nextEvent.id;
+                const color = event.event_type === 'avaliacao'
+                  ? (isNext ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-600')
+                  : (isNext ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600');
+                const border = isNext
+                  ? (event.event_type === 'avaliacao' ? 'bg-purple-50 border border-purple-200' : 'bg-blue-50 border border-blue-200')
+                  : '';
+                const icon = event.event_type === 'avaliacao' ? <FileText size={16} /> : <Users size={16} />;
+                // Materiais vinculados
+                const eventMaterials = (event.material_ids || []).map(id => materialsMap[id]).filter(Boolean);
+                return (
+                  <div
+                    key={event.id}
+                    className={`flex flex-row items-start md:items-center gap-3 md:gap-4 p-2 md:p-3 rounded-lg ${isNext ? border : ''} transition min-h-[64px] ${isNext ? 'bg-opacity-100' : 'bg-transparent'}`}
+                  >
+                    <div className="flex-shrink-0 flex items-center justify-center mt-1">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${color}`}>{icon}</div>
+                    </div>
+                    <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                      <div className="flex flex-wrap items-center gap-1">
+                        <p className="font-semibold truncate text-base md:text-sm" title={event.title}>{event.title}</p>
+                        <span className="text-xs text-gray-500 font-medium">{event.event_type === 'avaliacao' ? 'Avaliação' : 'Aula'}</span>
+                        {event.subject && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-medium ml-1">{event.subject}</span>}
+                        {event.grade && <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-medium ml-1">{event.grade}</span>}
+                        {event.classroom && <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-medium ml-1">Sala: {event.classroom}</span>}
+                      </div>
+                      <p className="text-xs text-gray-700 leading-tight">
+                        {eventMaterials.length > 0
+                          ? `Com ${eventMaterials.length} ${eventMaterials.length === 1 ? 'material' : 'materiais'}`
+                          : ''}
+                        {` para ${format(parseISO(event.start_date), "dd/MM/yyyy", { locale: ptBR })} das ${event.start_time.slice(0,5)} às ${event.end_time.slice(0,5)}`}
+                      </p>
+                      {event.description && <p className="text-xs text-gray-600 truncate" title={event.description}>{event.description}</p>}
+                      <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                        <span
+                          className={`text-xs font-semibold px-3 py-1 rounded ${event.event_type === 'avaliacao' ? 'bg-purple-500/10 text-purple-700' : 'bg-blue-500/10 text-blue-700'}`}
+                          style={{letterSpacing: 0.2, backgroundColor: event.event_type === 'avaliacao' ? 'rgba(139, 92, 246, 0.10)' : 'rgba(59, 130, 246, 0.10)'}}
+                        >
+                          {format(parseISO(event.start_date), "dd/MM/yyyy", { locale: ptBR })} - {event.start_time.slice(0,5)} às {event.end_time.slice(0,5)}
+                        </span>
+                        {eventMaterials.length > 0 && (
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {eventMaterials.map(mat => (
+                              <span key={mat.id} className="flex items-center bg-gray-100 rounded px-2 py-0.5 text-xs font-medium mr-1 mb-1">
+                                {mat.type === 'plano-de-aula' && <ClipboardList size={12} className="mr-1" />}
+                                {mat.type === 'slides' && <Presentation size={12} className="mr-1" />}
+                                {mat.type === 'atividade' && <FileText size={12} className="mr-1" />}
+                                {mat.type === 'avaliacao' && <CheckCircle size={12} className="mr-1" />}
+                                <span className="truncate max-w-[80px]" title={mat.title}>{mat.title}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-400 block mt-0.5">
+                        {event.updated_at ? format(parseISO(event.updated_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : ''}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{event.title}</p>
-                    <p className="text-sm text-gray-700">{event.grade} - {event.subject}</p>
-                    <p className={`text-xs mt-1 font-medium ${
-                      parseISO(event.start_date).toDateString() === new Date().toDateString()
-                        ? 'text-blue-600'
-                        : 'text-gray-400'
-                    }`}>
-                      {format(parseISO(event.start_date), "dd/MM/yyyy", { locale: ptBR })} - {event.start_time} às {event.end_time}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
+                );
+              });
+            })() : (
               <div className="text-center py-8">
                 <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">Nenhuma aula agendada para os próximos dias</p>

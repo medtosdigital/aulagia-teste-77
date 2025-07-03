@@ -20,6 +20,7 @@ import YearView from './calendar/YearView';
 import { useSupabaseSchedule } from '@/hooks/useSupabaseSchedule';
 import { CalendarEvent } from '@/services/supabaseScheduleService';
 import { activityService } from '@/services/activityService';
+import LessonModal from './LessonModal';
 
 const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -31,6 +32,7 @@ const CalendarPage: React.FC = () => {
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
   const [showFullWeek, setShowFullWeek] = useState(false);
   const [showWeekends, setShowWeekends] = useState(false);
+  const [lessonModalOpen, setLessonModalOpen] = useState(false);
 
   // Hook para verificar se o usuário está logado
   const { user } = useAuth();
@@ -113,18 +115,22 @@ const CalendarPage: React.FC = () => {
       if (success) {
         toast.success('Agendamento excluído com sucesso!');
         let materialType: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' | undefined = undefined;
+        let subject = '';
+        let grade = '';
         if (event.material_ids && event.material_ids.length > 0) {
           const material = await materialService.getMaterialById(event.material_ids[0]);
           materialType = material?.type;
+          subject = material?.subject || '';
+          grade = material?.grade || '';
         }
         activityService.addActivity({
           type: 'updated',
           title: event.title,
-          description: `Agendamento excluído: ${event.title} (${event.subject}, ${event.grade}) para ${event.start_date} das ${event.start_time} às ${event.end_time}`,
+          description: `Agendamento excluído: ${event.title} para ${event.start_date} das ${event.start_time} às ${event.end_time}`,
           materialType: materialType,
-          materialIds: event.material_ids,
-          subject: event.subject,
-          grade: event.grade
+          materialId: event.material_ids && event.material_ids.length > 0 ? event.material_ids[0] : undefined,
+          subject,
+          grade
         });
         refreshEvents();
       } else {
@@ -133,25 +139,9 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  const handleViewMaterial = async (event: CalendarEvent) => {
-    const materials = await materialService.getMaterials();
-    if (event.material_ids && event.material_ids.length > 1) {
-      // Se houver mais de um material, pode abrir um modal de seleção ou mostrar todos
-      // Aqui, para simplificar, mostraremos o primeiro material
-      setSelectedMaterial(materials.find(m => event.material_ids?.includes(m.id)));
-      setMaterialModalOpen(true);
-      toast.info('Esta aula possui múltiplos materiais. Em breve será possível visualizar todos.');
-    } else if (event.material_ids && event.material_ids.length === 1) {
-      const material = materials.find(m => m.id === event.material_ids[0]);
-      if (material) {
-        setSelectedMaterial(material);
-        setMaterialModalOpen(true);
-      } else {
-        toast.error('Material não encontrado');
-      }
-    } else {
-      toast.error('Nenhum material vinculado a esta aula.');
-    }
+  const handleViewLesson = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setLessonModalOpen(true);
   };
 
   const handleMonthClick = (month: Date, newView: 'month') => {
@@ -258,7 +248,7 @@ const CalendarPage: React.FC = () => {
               onDateClick={handleDateClick}
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
-              onViewMaterial={handleViewMaterial}
+              onViewMaterial={handleViewLesson}
               hasCalendarAccess={hasCalendarFeatures}
               onUpgrade={openUpgradeModal}
             />
@@ -273,7 +263,7 @@ const CalendarPage: React.FC = () => {
               onEventClick={handleEventClick}
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
-              onViewMaterial={handleViewMaterial}
+              onViewMaterial={handleViewLesson}
               onToggleFullWeek={() => setShowFullWeek(!showFullWeek)}
               onToggleWeekends={() => setShowWeekends(!showWeekends)}
               getEventsForDate={getEventsForDate}
@@ -290,7 +280,7 @@ const CalendarPage: React.FC = () => {
               onEventClick={handleEventClick}
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
-              onViewMaterial={handleViewMaterial}
+              onViewMaterial={handleViewLesson}
               onToggleWeekends={() => setShowWeekends(!showWeekends)}
               getEventsForDate={getEventsForDate}
               hasCalendarAccess={hasCalendarFeatures}
@@ -304,7 +294,7 @@ const CalendarPage: React.FC = () => {
               onMonthClick={handleMonthClick}
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
-              onViewMaterial={handleViewMaterial}
+              onViewMaterial={handleViewLesson}
               hasCalendarAccess={hasCalendarFeatures}
               onUpgrade={openUpgradeModal}
             />
@@ -324,21 +314,24 @@ const CalendarPage: React.FC = () => {
           onSave={refreshEvents}
           event={selectedEvent ? {
             id: selectedEvent.id,
-            materialIds: selectedEvent.material_ids || [],
+            user_id: selectedEvent.user_id,
+            material_ids: selectedEvent.material_ids || [],
             title: selectedEvent.title,
-            subject: selectedEvent.subject || '',
-            grade: selectedEvent.grade || '',
-            type: selectedEvent.event_type,
-            startDate: new Date(selectedEvent.start_date),
-            endDate: new Date(selectedEvent.end_date),
-            startTime: selectedEvent.start_time,
-            endTime: selectedEvent.end_time,
+            event_type: selectedEvent.event_type,
+            schedule_type: selectedEvent.schedule_type,
+            start_date: selectedEvent.start_date,
+            end_date: selectedEvent.end_date,
+            start_time: selectedEvent.start_time,
+            end_time: selectedEvent.end_time,
             recurrence: selectedEvent.recurrence,
             description: selectedEvent.description,
             classroom: selectedEvent.classroom,
-            createdAt: new Date(selectedEvent.created_at)
+            created_at: selectedEvent.created_at,
+            updated_at: selectedEvent.updated_at
           } : undefined}
           selectedDate={selectedDate}
+          startDate={selectedEvent && selectedEvent.start_date ? parseISO(selectedEvent.start_date) : undefined}
+          endDate={selectedEvent && selectedEvent.end_date ? parseISO(selectedEvent.end_date) : undefined}
         />
       )}
 
@@ -350,6 +343,15 @@ const CalendarPage: React.FC = () => {
           setSelectedMaterial(null);
         }}
         showNextSteps={false}
+      />
+
+      <LessonModal
+        open={lessonModalOpen}
+        onClose={() => setLessonModalOpen(false)}
+        event={selectedEvent}
+        onEdit={handleEditEvent}
+        onDelete={handleDeleteEvent}
+        onRefresh={refreshEvents}
       />
 
       {/* Modal de upgrade global */}

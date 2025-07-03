@@ -148,26 +148,26 @@ const MonthView: React.FC<MonthViewProps> = ({
 
   // Versão normal para usuários com acesso
   while (day <= endDate) {
+    let weekDaysCount = 0;
     for (let i = 0; i < 7; i++) {
       if (!showWeekends && isWeekend(day)) {
         day = addDays(day, 1);
         continue;
       }
-
+      weekDaysCount++;
       const dayEvents = getEventsForDate(day);
       const isCurrentMonth = isSameMonth(day, monthStart);
       const isCurrentDay = isToday(day);
       const currentDay = new Date(day);
-
       days.push(
         <div
           key={day.toString()}
-          className={`min-h-[120px] border border-gray-200 p-3 cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
+          className={`min-h-[120px] border border-gray-200 p-1 sm:p-2 cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
             !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white hover:shadow-md'
-          } ${isCurrentDay ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-200' : ''}`}
+          } ${isCurrentDay ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-200' : ''} overflow-x-hidden w-full`}
           onClick={() => onDateClick(currentDay)}
         >
-          <div className={`text-sm font-bold mb-2 ${
+          <div className={`text-sm font-bold mb-1 sm:mb-2 ${
             isCurrentDay 
               ? 'text-blue-600' 
               : isCurrentMonth 
@@ -176,16 +176,18 @@ const MonthView: React.FC<MonthViewProps> = ({
           }`}>
             {format(day, 'd')}
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1 w-full">
             {dayEvents.slice(0, 1).map(event => (
-              <EventCard
-                key={event.id}
-                event={event}
-                compact={true}
-                onEdit={onEditEvent}
-                onDelete={onDeleteEvent}
-                onViewMaterial={onViewMaterial}
-              />
+              <div className="truncate w-full">
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  compact={true}
+                  onEdit={onEditEvent}
+                  onDelete={onDeleteEvent}
+                  onViewMaterial={onViewMaterial}
+                />
+              </div>
             ))}
             {dayEvents.length > 1 && (
               <div className="text-xs text-blue-600 font-medium bg-blue-100 p-1 rounded text-center">
@@ -196,13 +198,11 @@ const MonthView: React.FC<MonthViewProps> = ({
         </div>
       );
       day = addDays(day, 1);
-
-      if (days.length === daysToShow) break;
+      if (weekDaysCount === daysToShow) break;
     }
-    
     if (days.length > 0) {
       rows.push(
-        <div key={day.toString()} className={`grid gap-0 ${showWeekends ? 'grid-cols-7' : 'grid-cols-5'}`}>
+        <div key={day.toString()} className={`grid gap-0 ${showWeekends ? 'grid-cols-7' : 'grid-cols-5'} w-full`}>
           {days}
         </div>
       );
