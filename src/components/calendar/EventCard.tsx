@@ -150,7 +150,7 @@ const EventCard: React.FC<EventCardProps> = ({
         {disciplina && (
           <span className={`ml-1 ${typeConfig.badge} px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium truncate max-w-[70px] sm:max-w-[110px]`}>{disciplina}</span>
         )}
-      </div>
+            </div>
       {/* Informações em linhas, bem organizadas */}
       <div className="flex flex-col gap-1 px-4 py-3 bg-white h-full">
         {/* Linha de data e horário centralizada nas visões compactas */}
@@ -167,7 +167,7 @@ const EventCard: React.FC<EventCardProps> = ({
               </span>
             </div>
             <span className="font-bold text-gray-900 text-base truncate mt-1 w-full text-center block">{event.title}</span>
-          </div>
+                  </div>
         ) : (
           <div className="flex items-center justify-between mb-2 w-full">
             <span className="font-bold text-gray-900 text-lg truncate flex-1">{event.title}</span>
@@ -179,7 +179,7 @@ const EventCard: React.FC<EventCardProps> = ({
               <div className="flex items-center gap-2 text-green-600 font-medium">
                 <Clock className="w-4 h-4" />
                 <span>{timeStr}</span>
-              </div>
+                  </div>
             </div>
           </div>
         )}
@@ -213,16 +213,16 @@ const EventCard: React.FC<EventCardProps> = ({
             <Eye className="w-4 h-4" /> {isCompact ? 'Visualizar' : 'Visualizar aula'}
           </Button>
           <div className={`flex gap-2 ${isCompact ? 'ml-0' : 'sm:ml-2'} w-auto justify-end`}>
-            <Button
-              variant="outline"
-              size="sm"
+          <Button
+            variant="outline"
+            size="sm"
               onClick={e => { e.stopPropagation(); onEdit(event); }}
               className={`flex items-center justify-center px-2 py-1 ${isCompact ? 'h-8 w-8' : 'h-10 w-auto'} ${isCompact ? '' : 'gap-2 text-xs'}`}
               title="Editar"
-            >
-              <Edit3 className="w-4 h-4" />
+          >
+            <Edit3 className="w-4 h-4" />
               {!isCompact && <span>Editar</span>}
-            </Button>
+          </Button>
             <Button
               variant="outline"
               size="sm"

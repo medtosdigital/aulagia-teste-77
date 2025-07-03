@@ -17,6 +17,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { user } = useAuth();
   const { canAccessSchool, canAccessSettings, currentPlan } = useSupabasePlanPermissions();
+  const [isOwner, setIsOwner] = useState<boolean>(false);
 
   const [userProfile, setUserProfile] = useState({
     name: 'Professor(a)',
@@ -83,6 +84,22 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
   }, [user]);
 
+  useEffect(() => {
+    const checkOwner = async () => {
+      if (!user?.id) {
+        setIsOwner(false);
+        return;
+      }
+      const { data: grupo } = await supabase
+        .from('grupos_escolares')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single();
+      setIsOwner(!!grupo);
+    };
+    checkOwner();
+  }, [user]);
+
   // Simplificados - apenas verificar se usuário está logado
   const mobileMenuItems = [{
     id: 'dashboard',
@@ -136,8 +153,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     label: 'Calendário',
     icon: Calendar
   }] : []),
-  // Escola - apenas para plano grupo-escolar
-  ...(canAccessSchool() ? [{
+  // Escola - apenas para o proprietário do grupo escolar
+  ...(isOwner ? [{
     id: 'school',
     label: 'Escola',
     icon: School

@@ -230,9 +230,30 @@ const Dashboard: React.FC<DashboardProps> = ({
                 // Junta data e hora para comparar corretamente
                 return new Date(`${ev.start_date}T${ev.start_time}`);
               };
-              const sorted = [...upcomingClasses].sort((a, b) => getEventDateTime(a).getTime() - getEventDateTime(b).getTime());
+              // FILTRO: remove eventos do dia atual cujo horário já passou
+              const filtered = upcomingClasses.filter(ev => {
+                const eventDateTime = getEventDateTime(ev);
+                // Se for hoje, só mostra se o horário ainda não passou
+                if (
+                  eventDateTime.toDateString() === now.toDateString()
+                ) {
+                  return eventDateTime >= now;
+                }
+                // Se for futuro, mostra normalmente
+                return eventDateTime > now || eventDateTime.toDateString() !== now.toDateString();
+              });
+              if (filtered.length === 0) {
+                return (
+                  <div className="text-center py-8">
+                    <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">Nenhuma aula agendada para os próximos dias</p>
+                    <p className="text-sm text-gray-400">Vá ao calendário para agendar suas aulas</p>
+                  </div>
+                );
+              }
+              const sorted = [...filtered].sort((a, b) => getEventDateTime(a).getTime() - getEventDateTime(b).getTime());
               const nextEvent = sorted.find(ev => getEventDateTime(ev) >= now) || sorted[0];
-              return upcomingClasses.map(event => {
+              return filtered.map(event => {
                 const isNext = event.id === nextEvent.id;
                 const color = event.event_type === 'avaliacao'
                   ? (isNext ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-600')

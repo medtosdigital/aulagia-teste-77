@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { BookOpen, Mail, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, signIn, signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,8 @@ const LoginPage = () => {
     name: '', 
     email: '', 
     password: '', 
-    confirmPassword: '' 
+    confirmPassword: '', 
+    plano: '' 
   });
 
   // Redirect if user is already logged in
@@ -28,7 +30,17 @@ const LoginPage = () => {
     if (user) {
       navigate('/', { replace: true });
     }
-  }, [user, navigate]);
+    // Pré-preencher e-mail e plano se vierem na URL
+    const params = new URLSearchParams(location.search);
+    const email = params.get('email');
+    const plan = params.get('plan');
+    if (email) {
+      setRegisterData((prev) => ({ ...prev, email }));
+    }
+    if (plan === 'grupo_escolar') {
+      setRegisterData((prev) => ({ ...prev, plano: 'grupo_escolar' }));
+    }
+  }, [user, navigate, location.search]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +75,12 @@ const LoginPage = () => {
       return;
     }
 
-    const { error } = await signUp(registerData.email, registerData.password, registerData.name);
+    // Inclui plano_ativo no metadata se for grupo_escolar
+    const metadata: any = { full_name: registerData.name };
+    if (registerData.plano === 'grupo_escolar') {
+      metadata.plano_ativo = 'grupo_escolar';
+    }
+    const { error } = await signUp(registerData.email, registerData.password, registerData.name, metadata);
     
     if (error) {
       if (error.message.includes('User already registered')) {
@@ -73,7 +90,6 @@ const LoginPage = () => {
       }
     } else {
       setError('');
-      // Show success message or redirect
       navigate('/', { replace: true });
     }
     

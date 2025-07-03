@@ -105,7 +105,7 @@ const MaterialsList: React.FC = () => {
       setLoading(false);
       return;
     }
-
+    
     try {
       setLoading(true);
       console.log('Loading materials for authenticated user:', user.id);

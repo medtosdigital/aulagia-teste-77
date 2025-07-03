@@ -22,6 +22,7 @@ import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { useFirstAccess } from '@/hooks/useFirstAccess';
 import { useFeedback } from '@/hooks/useFeedback';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
@@ -75,11 +76,18 @@ const Index = () => {
     // Verificar modal diário de feedback ao montar o componente
     checkDailyModal();
 
+    // Se veio do magic link com plano, já associa ao plano
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get('plan');
+    if (user && plan === 'grupo_escolar') {
+      supabase.auth.updateUser({ data: { plano_ativo: 'grupo_escolar' } });
+    }
+
     return () => {
       window.removeEventListener('navigateToProfile', handleNavigateToProfile);
       window.removeEventListener('navigateToSubscription', handleNavigateToSubscription);
     };
-  }, [checkDailyModal]);
+  }, [checkDailyModal, user]);
 
   const getPageTitle = () => {
     switch (activeItem) {
@@ -353,5 +361,78 @@ const Index = () => {
     </>
   );
 };
+
+function OnboardingPage() {
+  const { user } = useAuth();
+  const [form, setForm] = useState({ name: '', subject: '', grade: '' });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    // Se veio do magic link com plano, já associa ao plano
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get('plan');
+    if (user && plan === 'grupo_escolar') {
+      supabase.auth.updateUser({ data: { plano_ativo: 'grupo_escolar' } });
+    }
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      // Atualiza perfil do usuário
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          full_name: form.name,
+          subject: form.subject,
+          grade: form.grade,
+        },
+      });
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess(true);
+      }
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!user) {
+    return <div className="min-h-screen flex items-center justify-center text-lg">Faça login pelo link mágico enviado ao seu e-mail.</div>;
+  }
+
+  if (success) {
+    return <div className="min-h-screen flex items-center justify-center text-green-600 text-xl font-bold">Cadastro concluído! Bem-vindo à plataforma.</div>;
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md space-y-6">
+        <h2 className="text-2xl font-bold text-center mb-2">Complete seu cadastro</h2>
+        <p className="text-gray-600 text-center mb-4">Preencha seus dados para acessar o Grupo Escolar.</p>
+        <div>
+          <label className="block text-sm font-medium mb-1">Nome completo</label>
+          <input type="text" className="w-full border rounded px-3 py-2" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Matéria lecionada</label>
+          <input type="text" className="w-full border rounded px-3 py-2" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} required />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Série(s)</label>
+          <input type="text" className="w-full border rounded px-3 py-2" value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })} required />
+        </div>
+        {error && <div className="text-red-600 text-sm text-center">{error}</div>}
+        <button type="submit" className="w-full bg-blue-700 text-white py-2 rounded font-semibold mt-2" disabled={loading}>{loading ? 'Salvando...' : 'Concluir cadastro'}</button>
+      </form>
+    </div>
+  );
+}
 
 export default Index;
