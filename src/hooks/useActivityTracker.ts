@@ -4,9 +4,9 @@ import { activityService, Activity } from '@/services/activityService';
 export const useActivityTracker = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
 
-  const refreshActivities = () => {
+  const refreshActivities = async () => {
     console.log('🔄 Refreshing activities...');
-    const recentActivities = activityService.getRecentActivities(10);
+    const recentActivities = await activityService.getRecentActivities(10);
     console.log('📊 Recent activities found:', recentActivities);
     setActivities(recentActivities);
   };
