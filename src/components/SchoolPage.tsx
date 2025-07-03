@@ -27,11 +27,15 @@ const SchoolPage: React.FC = () => {
   const { currentPlan, canAccessSchool } = useSupabasePlanPermissions();
 
   useEffect(() => {
-    if (canAccessSchool()) {
-      loadSchoolData();
-    } else {
-      setLoading(false);
-    }
+    const checkAccess = async () => {
+      const hasAccess = await canAccessSchool();
+      if (hasAccess) {
+        loadSchoolData();
+      } else {
+        setLoading(false);
+      }
+    };
+    checkAccess();
   }, []);
 
   const loadSchoolData = async () => {
@@ -114,7 +118,7 @@ const SchoolPage: React.FC = () => {
     );
   }
 
-  if (!canAccessSchool()) {
+  if (!loading && stats.totalMembers === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-accent/20 flex items-center justify-center">
         <Card className="max-w-md p-8 text-center">

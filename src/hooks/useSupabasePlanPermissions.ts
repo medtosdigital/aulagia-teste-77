@@ -3,6 +3,7 @@ import { supabasePlanService, TipoPlano, PlanoUsuario } from '@/services/supabas
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PerformanceOptimizer } from '@/utils/performanceOptimizations';
+import { supabase } from '@/integrations/supabase/client';
 
 // Cache global para evitar múltiplas consultas - aumentando duração
 const planCache = new Map<string, { data: PlanoUsuario | null; timestamp: number; materials: number }>();
@@ -48,18 +49,24 @@ export const useSupabasePlanPermissions = () => {
       setLoading(true);
       console.log('Carregando dados do plano para usuário (otimizado):', user.id);
       
-      // Carregar dados em paralelo com timeout
-      const loadPromise = Promise.all([
-        supabasePlanService.getCurrentUserPlan(),
-        supabasePlanService.getRemainingMaterials()
-      ]);
+  // Carregar dados em paralelo com timeout incluindo informações do grupo
+  const loadPromise = Promise.all([
+    supabasePlanService.getCurrentUserPlan(),
+    supabasePlanService.getRemainingMaterials(),
+    // Verificar se é membro de grupo escolar
+    supabase.from('membros_grupo_escolar')
+      .select('limite_materiais, status, grupos_escolares!inner(owner_id)')
+      .eq('user_id', user.id)
+      .eq('status', 'ativo')
+      .maybeSingle()
+  ]);
 
       // Timeout aumentado para 30 segundos para melhor estabilidade
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Timeout')), 30000)
       );
 
-      const [plan, remaining] = await Promise.race([loadPromise, timeoutPromise]) as [PlanoUsuario | null, number];
+      const [plan, remaining, memberInfo] = await Promise.race([loadPromise, timeoutPromise]) as [PlanoUsuario | null, number, any];
       
       console.log('Plano carregado (otimizado):', plan);
       console.log('Materiais restantes (otimizado):', remaining);
@@ -68,18 +75,38 @@ export const useSupabasePlanPermissions = () => {
       let finalRemaining = remaining;
 
       if (!plan) {
-        // Plano padrão mais simples
-        console.log('Usando plano gratuito como padrão (otimizado)');
-        finalPlan = {
-          id: 'default',
-          user_id: user.id,
-          plano_ativo: 'gratuito',
-          data_inicio: new Date().toISOString(),
-          data_expiracao: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        finalRemaining = 5; // Limite do plano gratuito
+        // Se é membro de grupo escolar mas não tem plano próprio
+        if (memberInfo) {
+          console.log('Usuário é membro de grupo escolar');
+          finalPlan = {
+            id: 'member-group',
+            user_id: user.id,
+            plano_ativo: 'grupo_escolar',
+            data_inicio: new Date().toISOString(),
+            data_expiracao: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          finalRemaining = memberInfo.limite_materiais || 60;
+        } else {
+          // Plano padrão gratuito
+          console.log('Usando plano gratuito como padrão (otimizado)');
+          finalPlan = {
+            id: 'default',
+            user_id: user.id,
+            plano_ativo: 'gratuito',
+            data_inicio: new Date().toISOString(),
+            data_expiracao: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          finalRemaining = 5; // Limite do plano gratuito
+        }
+      } else {
+        // Se tem plano próprio, verificar se é membro de grupo
+        if (memberInfo && plan.plano_ativo === 'grupo_escolar') {
+          finalRemaining = Math.max(remaining, memberInfo.limite_materiais || 60);
+        }
       }
 
       // Atualizar cache
@@ -264,9 +291,20 @@ export const useSupabasePlanPermissions = () => {
     return currentPlan?.plano_ativo !== 'gratuito';
   }, [currentPlan?.plano_ativo]);
 
-  const canAccessSchool = useCallback((): boolean => {
-    return currentPlan?.plano_ativo === 'grupo_escolar';
-  }, [currentPlan?.plano_ativo]);
+  const canAccessSchool = useCallback(async (): Promise<boolean> => {
+    if (currentPlan?.plano_ativo === 'grupo_escolar') return true;
+    
+    // Verificar se é proprietário de grupo escolar
+    if (user?.id) {
+      const { data } = await supabase
+        .from('grupos_escolares')
+        .select('id')
+        .eq('owner_id', user.id)
+        .maybeSingle();
+      return !!data;
+    }
+    return false;
+  }, [currentPlan?.plano_ativo, user?.id]);
 
   const canAccessCreateMaterial = useCallback((): boolean => {
     return !!user;
