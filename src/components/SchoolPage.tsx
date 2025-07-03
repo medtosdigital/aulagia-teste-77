@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Users, BookOpen, FileText, Award, Plus, Settings, UserPlus, Crown, TrendingUp, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { schoolGroupService, GrupoEscolar, MembroGrupoEscolar } from '@/services/schoolGroupService';
-import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 import AddTeacherModal from './modals/AddTeacherModal';
 import ManageTeacherLimitsModal from './modals/ManageTeacherLimitsModal';
 
@@ -23,10 +24,10 @@ const SchoolPage: React.FC = () => {
   });
   
   const { toast } = useToast();
-  const { currentPlan, isSchoolOwner } = usePlanPermissions();
+  const { currentPlan, canAccessSchool } = useSupabasePlanPermissions();
 
   useEffect(() => {
-    if (isSchoolOwner()) {
+    if (canAccessSchool()) {
       loadSchoolData();
     } else {
       setLoading(false);
@@ -40,7 +41,7 @@ const SchoolPage: React.FC = () => {
       // Verificar se já existe um grupo
       let schoolGroup = await schoolGroupService.getUserSchoolGroup();
       
-      // Se não existe, criar um novo
+      // Se não existe, criar um novo (o trigger automaticamente adiciona o proprietário como membro)
       if (!schoolGroup) {
         schoolGroup = await schoolGroupService.createSchoolGroup('Minha Escola');
       }
@@ -68,8 +69,18 @@ const SchoolPage: React.FC = () => {
     }
   };
 
-  const handleRemoveTeacher = async (memberId: string) => {
+  const handleRemoveTeacher = async (memberId: string, memberUserId: string) => {
     try {
+      // Verificar se não é o proprietário
+      if (grupo && grupo.owner_id === memberUserId) {
+        toast({
+          title: 'Ação não permitida',
+          description: 'Não é possível remover o proprietário do grupo.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       const success = await schoolGroupService.removeMemberFromGroup(memberId);
       if (success) {
         await loadSchoolData(); // Recarregar dados
@@ -87,6 +98,11 @@ const SchoolPage: React.FC = () => {
     }
   };
 
+  // Identificar se um membro é o proprietário
+  const isOwner = (membro: MembroGrupoEscolar): boolean => {
+    return grupo?.owner_id === membro.user_id;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-accent/20 flex items-center justify-center">
@@ -98,7 +114,7 @@ const SchoolPage: React.FC = () => {
     );
   }
 
-  if (!isSchoolOwner()) {
+  if (!canAccessSchool()) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-accent/20 flex items-center justify-center">
         <Card className="max-w-md p-8 text-center">
@@ -232,28 +248,36 @@ const SchoolPage: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center text-white font-bold text-lg">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center text-white font-bold text-lg relative">
                         {membro.user_profile?.full_name?.charAt(0) || 
                          membro.user_profile?.email?.charAt(0) || 
                          '?'}
+                        {isOwner(membro) && (
+                          <Crown className="w-4 h-4 absolute -top-1 -right-1 text-yellow-400" />
+                        )}
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground">
                           {membro.user_profile?.full_name || 'Professor'}
+                          {isOwner(membro) && (
+                            <span className="text-xs text-primary ml-2">(Proprietário)</span>
+                          )}
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           {membro.user_profile?.email}
                         </p>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveTeacher(membro.id)}
-                      className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {!isOwner(membro) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveTeacher(membro.id, membro.user_id)}
+                        className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                   
                   <div className="space-y-2">

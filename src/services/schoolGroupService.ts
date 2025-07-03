@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface GrupoEscolar {
@@ -43,6 +44,8 @@ class SchoolGroupService {
         return null;
       }
 
+      // O trigger automaticamente adiciona o proprietário como membro
+      console.log('Grupo escolar criado e proprietário adicionado automaticamente como membro');
       return data;
     } catch (error) {
       console.error('Erro ao criar grupo escolar:', error);
@@ -74,7 +77,7 @@ class SchoolGroupService {
     }
   }
 
-  // Adicionar membro ao grupo
+  // Adicionar membro ao grupo (apenas para não-proprietários)
   async addMemberToGroup(
     grupo_id: string, 
     email: string, 
@@ -90,6 +93,23 @@ class SchoolGroupService {
 
       if (profileError || !profile) {
         console.error('Usuário não encontrado:', email);
+        return false;
+      }
+
+      // Verificar se não é o proprietário do grupo
+      const { data: grupo, error: grupoError } = await supabase
+        .from('grupos_escolares')
+        .select('owner_id')
+        .eq('id', grupo_id)
+        .single();
+
+      if (grupoError || !grupo) {
+        console.error('Grupo não encontrado');
+        return false;
+      }
+
+      if (grupo.owner_id === profile.id) {
+        console.error('Não é possível adicionar o proprietário novamente como membro');
         return false;
       }
 
@@ -116,7 +136,7 @@ class SchoolGroupService {
     }
   }
 
-  // Obter membros do grupo
+  // Obter membros do grupo (incluindo o proprietário)
   async getGroupMembers(grupo_id: string): Promise<MembroGrupoEscolar[]> {
     try {
       const { data, error } = await supabase
@@ -163,9 +183,31 @@ class SchoolGroupService {
     }
   }
 
-  // Remover membro do grupo
+  // Remover membro do grupo (não permite remover o proprietário)
   async removeMemberFromGroup(membro_id: string): Promise<boolean> {
     try {
+      // Verificar se não é o proprietário antes de remover
+      const { data: membro, error: membroError } = await supabase
+        .from('membros_grupo_escolar')
+        .select(`
+          user_id,
+          grupos_escolares!inner(owner_id)
+        `)
+        .eq('id', membro_id)
+        .single();
+
+      if (membroError || !membro) {
+        console.error('Membro não encontrado');
+        return false;
+      }
+
+      // Verificar se é o proprietário
+      const grupo = membro.grupos_escolares as any;
+      if (grupo.owner_id === membro.user_id) {
+        console.error('Não é possível remover o proprietário do grupo');
+        return false;
+      }
+
       const { error } = await supabase
         .from('membros_grupo_escolar')
         .delete()

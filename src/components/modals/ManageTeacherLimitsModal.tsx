@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { schoolGroupService, MembroGrupoEscolar } from '@/services/schoolGroupService';
-import { Trash2, Users } from 'lucide-react';
+import { Trash2, Users, Crown } from 'lucide-react';
 
 interface ManageTeacherLimitsModalProps {
   isOpen: boolean;
@@ -21,21 +22,26 @@ const ManageTeacherLimitsModal: React.FC<ManageTeacherLimitsModalProps> = ({
   onSuccess
 }) => {
   const [members, setMembers] = useState<MembroGrupoEscolar[]>([]);
+  const [grupo, setGrupo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen && groupId) {
-      loadMembers();
+      loadData();
     }
   }, [isOpen, groupId]);
 
-  const loadMembers = async () => {
+  const loadData = async () => {
     try {
-      const data = await schoolGroupService.getGroupMembers(groupId);
-      setMembers(data);
+      const [groupData, membersData] = await Promise.all([
+        schoolGroupService.getUserSchoolGroup(),
+        schoolGroupService.getGroupMembers(groupId)
+      ]);
+      setGrupo(groupData);
+      setMembers(membersData);
     } catch (error) {
-      console.error('Erro ao carregar membros:', error);
+      console.error('Erro ao carregar dados:', error);
     }
   };
 
@@ -56,8 +62,18 @@ const ManageTeacherLimitsModal: React.FC<ManageTeacherLimitsModalProps> = ({
     setMembers(updatedMembers);
   };
 
-  const handleRemoveMember = async (memberId: string) => {
+  const handleRemoveMember = async (memberId: string, memberUserId: string) => {
     try {
+      // Verificar se não é o proprietário
+      if (grupo && grupo.owner_id === memberUserId) {
+        toast({
+          title: 'Ação não permitida',
+          description: 'Não é possível remover o proprietário do grupo.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       const success = await schoolGroupService.removeMemberFromGroup(memberId);
       if (success) {
         setMembers(members.filter(m => m.id !== memberId));
@@ -111,6 +127,11 @@ const ManageTeacherLimitsModal: React.FC<ManageTeacherLimitsModalProps> = ({
     }
   };
 
+  // Identificar se um membro é o proprietário
+  const isOwner = (membro: MembroGrupoEscolar): boolean => {
+    return grupo?.owner_id === membro.user_id;
+  };
+
   const totalLimit = members.reduce((sum, member) => sum + member.limite_materiais, 0);
   const isOverLimit = totalLimit > 300;
 
@@ -152,15 +173,21 @@ const ManageTeacherLimitsModal: React.FC<ManageTeacherLimitsModalProps> = ({
           <div className="space-y-3">
             {members.map((member, index) => (
               <div key={member.id} className="flex items-center gap-3 p-4 border rounded-lg">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold relative">
                   {member.user_profile?.full_name?.charAt(0) || 
                    member.user_profile?.email?.charAt(0) || 
                    '?'}
+                  {isOwner(member) && (
+                    <Crown className="w-3 h-3 absolute -top-1 -right-1 text-yellow-400" />
+                  )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">
                     {member.user_profile?.full_name || 'Professor'}
+                    {isOwner(member) && (
+                      <span className="text-xs text-primary ml-2">(Proprietário)</span>
+                    )}
                   </p>
                   <p className="text-sm text-gray-500 truncate">
                     {member.user_profile?.email}
@@ -180,14 +207,16 @@ const ManageTeacherLimitsModal: React.FC<ManageTeacherLimitsModalProps> = ({
                     onChange={(e) => handleLimitChange(index, parseInt(e.target.value) || 0)}
                     className="w-20 text-center"
                   />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveMember(member.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  {!isOwner(member) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveMember(member.id, member.user_id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
