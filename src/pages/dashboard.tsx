@@ -1,42 +1,30 @@
-import { activityService, Activity } from '@/services/activityService';
+// Add this import at the top
+import { activityService } from '@/services/activityService';
 import { useEffect, useState } from 'react';
 
-const Dashboard = () => {
-  const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
-  const [activeTab, setActiveTab] = useState('recent');
+// Inside your Dashboard component, add this state and effect
+const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
 
-  useEffect(() => {
-    const loadActivities = async () => {
-      const activities = await activityService.getRecentActivities();
-      setRecentActivities(activities);
-    };
-    loadActivities();
-  }, []);
+useEffect(() => {
+  const loadActivities = async () => {
+    const activities = await activityService.getRecentActivities();
+    setRecentActivities(activities);
+  };
+  loadActivities();
+}, []);
 
-  const ActivityCard = ({ type, title, description }: { type: string; title: string; description: string }) => (
-    <div className="p-4 border rounded-lg">
-      <h3 className="font-semibold">{title}</h3>
-      <p className="text-sm text-muted-foreground">{description}</p>
-      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">{type}</span>
-    </div>
-  );
-
-  return (
-    <div>
-      {activeTab === 'recent' && (
-        <div className="space-y-4">
-          {recentActivities.map(activity => (
-            <ActivityCard 
-              key={activity.id}
-              type={activity.type}
-              title={activity.title}
-              description={activity.description}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default Dashboard;
+// Then in your tab content, use the recentActivities state:
+{/* Recent Activities Tab */}
+{activeTab === 'recent' && (
+  <div className="space-y-4">
+    {recentActivities.map(activity => (
+      <ActivityCard 
+        key={activity.id}
+        type={activity.type}
+        title={activity.title}
+        description={activity.description}
+        timestamp={activity.timestamp}
+      />
+    ))}
+  </div>
+)}

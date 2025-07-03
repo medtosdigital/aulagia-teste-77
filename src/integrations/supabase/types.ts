@@ -103,6 +103,7 @@ export type Database = {
           event_type: string
           grade: string | null
           id: string
+          material_id: string | null
           material_ids: string | null
           recurrence: Json | null
           schedule_type: string
@@ -122,6 +123,7 @@ export type Database = {
           event_type?: string
           grade?: string | null
           id?: string
+          material_id?: string | null
           material_ids?: string | null
           recurrence?: Json | null
           schedule_type?: string
@@ -141,6 +143,7 @@ export type Database = {
           event_type?: string
           grade?: string | null
           id?: string
+          material_id?: string | null
           material_ids?: string | null
           recurrence?: Json | null
           schedule_type?: string
@@ -152,74 +155,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      grupos_escolares: {
-        Row: {
-          created_at: string
-          id: string
-          nome_grupo: string
-          owner_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          nome_grupo: string
-          owner_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          nome_grupo?: string
-          owner_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      membros_grupo_escolar: {
-        Row: {
-          aceito_em: string | null
-          convite_enviado_em: string | null
-          created_at: string
-          grupo_id: string
-          id: string
-          limite_materiais: number
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          aceito_em?: string | null
-          convite_enviado_em?: string | null
-          created_at?: string
-          grupo_id: string
-          id?: string
-          limite_materiais?: number
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          aceito_em?: string | null
-          convite_enviado_em?: string | null
-          created_at?: string
-          grupo_id?: string
-          id?: string
-          limite_materiais?: number
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "membros_grupo_escolar_grupo_id_fkey"
-            columns: ["grupo_id"]
-            isOneToOne: false
-            referencedRelation: "grupos_escolares"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       perfis: {
         Row: {
@@ -404,45 +339,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_activities: {
-        Row: {
-          created_at: string
-          description: string
-          grade: string | null
-          id: string
-          material_id: string | null
-          material_type: string | null
-          subject: string | null
-          title: string
-          type: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          grade?: string | null
-          id?: string
-          material_id?: string | null
-          material_type?: string | null
-          subject?: string | null
-          title: string
-          type: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          grade?: string | null
-          id?: string
-          material_id?: string | null
-          material_type?: string | null
-          subject?: string | null
-          title?: string
-          type?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       uso_mensal_materiais: {
         Row: {
           ano: number
@@ -484,10 +380,6 @@ export type Database = {
       }
       get_plan_limits: {
         Args: { plan_type: Database["public"]["Enums"]["tipo_plano"] }
-        Returns: number
-      }
-      get_user_material_limit: {
-        Args: { p_user_id: string }
         Returns: number
       }
       increment_material_usage: {
