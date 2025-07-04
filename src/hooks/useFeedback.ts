@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface FeedbackState {
   materialsCreated: number;
@@ -7,13 +7,17 @@ interface FeedbackState {
   lastShownDate: string | null; // Mudança: armazenar apenas a data (YYYY-MM-DD)
 }
 
-export const useFeedback = () => {
+// Helper para saber se o plano deve mostrar feedback
+const isFeedbackEligiblePlan = (plano: string) => ['gratuito', 'professor', 'grupo_escolar'].includes(plano);
+
+export const useFeedback = (planoAtivo: string, isFirstAccess: boolean) => {
   const [feedbackState, setFeedbackState] = useState<FeedbackState>({
     materialsCreated: 0,
     showFeedbackModal: false,
     dontShowAgain: false,
     lastShownDate: null
   });
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Carregar estado do localStorage
   useEffect(() => {
@@ -37,86 +41,55 @@ export const useFeedback = () => {
 
   // Verificar se deve mostrar o modal baseado na data
   const shouldShowTodayModal = (): boolean => {
-    if (feedbackState.dontShowAgain) {
-      console.log('🚫 Modal disabled by user preference');
-      return false;
-    }
-    
-    const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-    
-    // Se nunca foi mostrado, mostrar
-    if (!feedbackState.lastShownDate) {
-      console.log('🔔 First time showing modal');
-      return true;
-    }
-    
-    // Se a última exibição foi em um dia diferente de hoje, mostrar
-    const canShowToday = feedbackState.lastShownDate !== today;
-    console.log('📅 Last shown:', feedbackState.lastShownDate, '| Today:', today, '| Can show:', canShowToday);
-    
-    return canShowToday;
+    if (feedbackState.dontShowAgain) return false;
+    const today = new Date().toISOString().split('T')[0];
+    if (!feedbackState.lastShownDate) return true;
+    return feedbackState.lastShownDate !== today;
   };
 
   // Incrementar contador de materiais criados
   const incrementMaterialsCreated = () => {
+    if (!isFeedbackEligiblePlan(planoAtivo)) return;
     const newCount = feedbackState.materialsCreated + 1;
-    console.log('📊 Materials created count:', newCount);
-    
     saveFeedbackState({ materialsCreated: newCount });
-    
-    // Verificar se deve mostrar o modal (a cada 3 materiais se não foi marcado para não mostrar)
     if (!feedbackState.dontShowAgain && newCount % 3 === 0) {
-      const shouldShow = shouldShowTodayModal();
-      console.log('🔔 Should show feedback modal:', shouldShow);
-      
-      if (shouldShow) {
+      if (shouldShowTodayModal()) {
         saveFeedbackState({ showFeedbackModal: true });
       }
     }
   };
 
-  // Verificar e mostrar modal no login (uma vez por dia)
+  // Timer aleatório para mostrar modal após login (1 a 5 min)
   const checkDailyModal = () => {
-    console.log('🔍 Checking daily modal on login');
-    
-    if (shouldShowTodayModal()) {
-      console.log('✅ Showing daily modal');
+    if (!isFeedbackEligiblePlan(planoAtivo)) return;
+    if (isFirstAccess) return; // Não mostrar junto com modal de primeiro acesso
+    if (!shouldShowTodayModal()) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const randomDelay = Math.floor(Math.random() * (5 - 1 + 1) + 1) * 60 * 1000; // 1 a 5 min
+    timerRef.current = setTimeout(() => {
       saveFeedbackState({ showFeedbackModal: true });
-    } else {
-      console.log('❌ Daily modal already shown or disabled');
-    }
+    }, randomDelay);
   };
 
   // Abrir modal manualmente (botão ?)
   const openFeedbackModal = () => {
-    console.log('🔔 Opening feedback modal manually');
     saveFeedbackState({ showFeedbackModal: true });
   };
 
   // Fechar modal
   const closeFeedbackModal = () => {
-    console.log('❌ Closing feedback modal');
     const today = new Date().toISOString().split('T')[0];
-    saveFeedbackState({ 
-      showFeedbackModal: false,
-      lastShownDate: today // Marcar que foi mostrado hoje
-    });
+    saveFeedbackState({ showFeedbackModal: false, lastShownDate: today });
   };
 
   // Marcar para não mostrar novamente
   const dontShowAgain = () => {
-    console.log('🚫 User selected dont show again');
     const today = new Date().toISOString().split('T')[0];
-    saveFeedbackState({ 
-      showFeedbackModal: false,
-      dontShowAgain: true,
-      lastShownDate: today
-    });
+    saveFeedbackState({ showFeedbackModal: false, dontShowAgain: true, lastShownDate: today });
   };
 
   // Resetar configurações (para desenvolvimento/testes)
   const resetFeedbackSettings = () => {
-    console.log('🔄 Resetting feedback settings');
     const resetState: FeedbackState = {
       materialsCreated: 0,
       showFeedbackModal: false,
@@ -126,6 +99,32 @@ export const useFeedback = () => {
     setFeedbackState(resetState);
     localStorage.setItem('feedbackState', JSON.stringify(resetState));
   };
+
+  // Limpar timer ao desmontar
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  // Novo: escutar evento para abrir modal manualmente
+  useEffect(() => {
+    const handleFeedbackModalUpdated = () => {
+      const savedState = localStorage.getItem('feedbackState');
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          setFeedbackState(parsed);
+        } catch (error) {
+          console.error('Erro ao atualizar feedbackState:', error);
+        }
+      }
+    };
+    window.addEventListener('feedbackModalUpdated', handleFeedbackModalUpdated);
+    return () => {
+      window.removeEventListener('feedbackModalUpdated', handleFeedbackModalUpdated);
+    };
+  }, []);
 
   return {
     ...feedbackState,

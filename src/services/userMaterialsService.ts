@@ -254,21 +254,44 @@ class UserMaterialsService {
         return false;
       }
 
-      // Try to delete from each table - RLS will ensure only user's own materials can be deleted
+      // Buscar em qual tabela o material existe
+      let foundTable: string | null = null;
       for (const [type, tableName] of Object.entries(TABLE_MAPPING)) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from(tableName)
-          .delete()
-          .eq('id', id);
-
-        if (!error) {
-          console.log(`Material deleted successfully from ${tableName}`);
-          return true;
+          .select('id, user_id')
+          .eq('id', id)
+          .single();
+        if (data && data.id) {
+          if (data.user_id !== user.id) {
+            console.error('Usuário não tem permissão para excluir este material');
+            return false;
+          }
+          foundTable = tableName;
+          break;
         }
       }
-      
-      console.error('Material not found in any table');
-      return false;
+      if (!foundTable) {
+        console.error('Material não encontrado em nenhuma tabela');
+        return false;
+      }
+      // Garantir que foundTable é um dos nomes literais das tabelas
+      const validTables = ['planos_de_aula', 'atividades', 'slides', 'avaliacoes'] as const;
+      if (!validTables.includes(foundTable as any)) {
+        console.error('Tabela inválida para exclusão:', foundTable);
+        return false;
+      }
+      // Tentar deletar na tabela correta
+      const { error: deleteError } = await supabase
+        .from(foundTable as typeof validTables[number])
+        .delete()
+        .eq('id', id);
+      if (deleteError) {
+        console.error('Erro ao excluir material:', deleteError.message);
+        return false;
+      }
+      console.log(`Material excluído com sucesso da tabela ${foundTable}`);
+      return true;
     } catch (error) {
       console.error('Error deleting material:', error);
       return false;

@@ -18,6 +18,17 @@ import MaterialEditModal from './MaterialEditModal';
 import MaterialInlineEditModal from './MaterialInlineEditModal';
 import { UpgradeModal } from './UpgradeModal';
 import { activityService } from '@/services/activityService';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel
+} from '@/components/ui/alert-dialog';
 
 // Interface para compatibilidade com GeneratedMaterial
 interface GeneratedMaterialWithOptionalFormData extends Omit<GeneratedMaterial, 'formData'> {
@@ -43,6 +54,8 @@ const MaterialsList: React.FC = () => {
   const [inlineEditModalOpen, setInlineEditModalOpen] = useState(false);
   const [materialToEdit, setMaterialToEdit] = useState<GeneratedMaterialWithOptionalFormData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [materialToDelete, setMaterialToDelete] = useState<GeneratedMaterialWithOptionalFormData | null>(null);
 
   // Hooks para gerenciamento de planos
   const { canEditMaterials, canDownloadWord, canDownloadPPT } = usePlanPermissions();
@@ -193,30 +206,37 @@ const MaterialsList: React.FC = () => {
     setMaterialToEdit(null);
   };
 
-  const handleDelete = async (id: string, title: string) => {
-    if (window.confirm(`Tem certeza que deseja excluir "${title}"?`)) {
-      try {
-        const success = await userMaterialsService.deleteMaterial(id);
-        if (success) {
-          toast.success('Material excluído com sucesso!');
-          activityService.addActivity({
-            type: 'updated',
-            title: title,
-            description: `Material excluído: ${title}`,
-            materialType: materials.find(m => m.id === id)?.type,
-            materialId: id,
-            subject: materials.find(m => m.id === id)?.subject,
-            grade: materials.find(m => m.id === id)?.grade
-          });
-          if (user) materialsCache.delete(`materials_${user.id}`);
-          loadMaterials();
-        } else {
-          toast.error('Erro ao excluir material');
-        }
-      } catch (error) {
-        console.error('Erro ao excluir material:', error);
+  const handleDeleteClick = (material: GeneratedMaterialWithOptionalFormData) => {
+    setMaterialToDelete(material);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!materialToDelete) return;
+    try {
+      const success = await userMaterialsService.deleteMaterial(materialToDelete.id);
+      if (success) {
+        toast.success('Material excluído com sucesso!');
+        activityService.addActivity({
+          type: 'updated',
+          title: materialToDelete.title,
+          description: `Material excluído: ${materialToDelete.title}`,
+          materialType: materialToDelete.type,
+          materialId: materialToDelete.id,
+          subject: materialToDelete.subject,
+          grade: materialToDelete.grade
+        });
+        if (user) materialsCache.delete(`materials_${user.id}`);
+        loadMaterials();
+      } else {
         toast.error('Erro ao excluir material');
       }
+    } catch (error) {
+      console.error('Erro ao excluir material:', error);
+      toast.error('Erro ao excluir material');
+    } finally {
+      setDeleteDialogOpen(false);
+      setMaterialToDelete(null);
     }
   };
 
@@ -557,7 +577,7 @@ const MaterialsList: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleDelete(material.id, material.title)} 
+                        onClick={() => handleDeleteClick(material)} 
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-200 h-8 w-8 p-0" 
                         title="Excluir"
                       >
@@ -577,7 +597,15 @@ const MaterialsList: React.FC = () => {
         <div className="fixed inset-0 z-40" onClick={() => setExportDropdownOpen(null)} />
       )}
 
-      <MaterialModal material={selectedMaterial as GeneratedMaterial} open={modalOpen} onClose={handleCloseModal} />
+      <MaterialModal 
+        material={selectedMaterial as GeneratedMaterial} 
+        open={modalOpen} 
+        onClose={handleCloseModal} 
+        onEdit={() => {
+          setModalOpen(false);
+          setEditModalOpen(true);
+        }}
+      />
 
       <MaterialEditModal 
         material={selectedMaterial as GeneratedMaterial} 
@@ -603,6 +631,22 @@ const MaterialsList: React.FC = () => {
         onPlanSelect={handlePlanSelection}
         currentPlan={currentPlan}
       />
+
+      {/* Modal de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir "{materialToDelete?.title}"? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

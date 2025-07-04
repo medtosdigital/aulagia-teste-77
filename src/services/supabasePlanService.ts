@@ -288,7 +288,34 @@ class SupabasePlanService {
     }
   }
 
-  // Atualizar plano do usuário com limpeza de cache
+  // Resetar o uso mensal de materiais ao fazer upgrade de plano
+  async resetMonthlyMaterialUsage(): Promise<boolean> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      const { error } = await supabase
+        .from('uso_mensal_materiais')
+        .update({ materiais_criados: 0, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .eq('ano', currentYear)
+        .eq('mes', currentMonth);
+      if (error) {
+        console.error('Erro ao resetar uso mensal de materiais:', error);
+        return false;
+      }
+      // Limpar cache relacionado
+      queryCache.delete(`usage_${user.id}_${currentYear}_${currentMonth}`);
+      queryCache.delete(`remaining_${user.id}`);
+      return true;
+    } catch (error) {
+      console.error('Erro em resetMonthlyMaterialUsage:', error);
+      return false;
+    }
+  }
+
+  // Atualizar plano do usuário com limpeza de cache e reset de uso
   async updateUserPlan(newPlan: TipoPlano, expirationDate?: Date): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -315,6 +342,9 @@ class SupabasePlanService {
         console.error('Erro ao atualizar plano do usuário:', error);
         return false;
       }
+
+      // Resetar uso mensal ao trocar de plano
+      await this.resetMonthlyMaterialUsage();
 
       // Limpar todos os caches relacionados ao usuário
       const keysToDelete = Array.from(queryCache.keys()).filter(key => key.includes(user.id));
