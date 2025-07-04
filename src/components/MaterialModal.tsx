@@ -20,22 +20,20 @@ interface MaterialModalProps {
   open: boolean;
   onClose: () => void;
   showNextSteps?: boolean; // Nova prop para controlar se deve mostrar o modal de próximos passos
-  onEdit?: () => void; // nova prop opcional
 }
 
 const MaterialModal: React.FC<MaterialModalProps> = ({ 
   material, 
   open, 
   onClose, 
-  showNextSteps = false,
-  onEdit
+  showNextSteps = false 
 }) => {
   const isMobile = useIsMobile();
   const [answerKeyModalOpen, setAnswerKeyModalOpen] = useState(false);
   const [nextStepsModalOpen, setNextStepsModalOpen] = useState(false);
 
   // Hooks para gerenciamento de planos
-  const { canDownloadWord, canDownloadPPT, canEditMaterials } = usePlanPermissions();
+  const { canDownloadWord, canDownloadPPT } = usePlanPermissions();
   const { openModal: openUpgradeModal } = useUpgradeModal();
 
   // Só mostrar o modal de próximos passos se explicitamente solicitado
@@ -285,18 +283,6 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                   </Button>
                 )}
                 
-                {/* Edit Button */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onEdit}
-                  className={`w-full text-blue-600 border-blue-200 hover:bg-blue-50 rounded-xl ${!canEditMaterials() ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={!canEditMaterials()}
-                  title={canEditMaterials() ? 'Editar Material' : 'Edição disponível apenas em planos pagos'}
-                >
-                  {!canEditMaterials() && <Lock className="w-4 h-4 mr-2 inline" />}Editar Material{!canEditMaterials() && ' (Premium)'}
-                </Button>
-                
                 {/* Close Button */}
                 <Button
                   variant="default"
@@ -427,18 +413,6 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                   Gerar Gabarito
                 </Button>
               )}
-
-              {/* Edit Button */}
-              <Button
-                variant="outline"
-                size="default"
-                onClick={onEdit}
-                className={`w-full justify-start text-blue-600 border-blue-200 hover:bg-blue-50 rounded-lg ${!canEditMaterials() ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={!canEditMaterials()}
-                title={canEditMaterials() ? 'Editar Material' : 'Edição disponível apenas em planos pagos'}
-              >
-                {!canEditMaterials() && <Lock className="w-4 h-4 mr-2 inline" />}Editar Material{!canEditMaterials() && ' (Premium)'}
-              </Button>
             </div>
             
             <div className="p-6 border-t mt-auto rounded-br-2xl">

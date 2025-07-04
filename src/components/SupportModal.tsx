@@ -31,7 +31,7 @@ const SupportModal: React.FC<SupportModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md w-[95vw] rounded-2xl border-0 p-0">
+      <DialogContent className="max-w-md w-[95vw] rounded-xl border-0 p-0">
         <div className="p-6">
           <DialogHeader className="text-center space-y-3 mb-6">
             <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">

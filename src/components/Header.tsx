@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Settings, User, LogOut, Crown, BookOpen, HelpCircle } from 'lucide-react';
+import { Bell, Settings, User, LogOut, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -94,43 +94,32 @@ const Header: React.FC<HeaderProps> = ({
   return <header className="bg-white border-b border-gray-200 px-4 py-3 md:px-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          {/* Mobile: logo, Desktop: título */}
-          <div className="block md:hidden">
-            <div className="flex items-center space-x-2">
-              <div className="bg-primary-500 text-white p-2 rounded-lg">
-                <BookOpen className="w-6 h-6" />
-              </div>
-              <div>
-                <span className="logo-text text-xl text-primary-600 font-bold leading-tight">AulagIA</span>
-                <p className="text-xs text-gray-400 -mt-1">Sua aula com toque mágico</p>
-              </div>
-            </div>
-          </div>
-          <h1 className="hidden md:block text-xl md:text-2xl font-bold text-gray-900">{title}</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h1>
         </div>
         
         <div className="flex items-center space-x-3">
-          {/* Notificações - sempre visível no mobile, oculto em md+ */}
-          <Button variant="ghost" size="icon" className="relative md:inline-flex">
+          {/* Plan Badge */}
+          
+
+          {/* Notifications */}
+          <Button variant="ghost" size="icon" className="relative">
             <Bell className="w-5 h-5" />
           </Button>
-          {/* Botão de feedback */}
-          <Button variant="ghost" size="icon" aria-label="Enviar feedback" onClick={() => window.dispatchEvent(new CustomEvent('openFeedbackModal'))}>
-            <HelpCircle className="w-5 h-5 text-primary-500" />
-          </Button>
-          {/* User Menu - só mobile, apenas avatar */}
+
+          {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-2 px-2 md:hidden">
+              <Button variant="ghost" className="flex items-center space-x-2 px-2">
                 <Avatar className="w-8 h-8">
                   <AvatarImage src={userPhoto} />
                   <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-400 text-white text-sm">
                     {userName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
+                <span className="hidden md:block text-sm font-medium">{userName}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 md:hidden">
+            <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5">
                 <p className="text-sm font-medium">{userName}</p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
@@ -139,6 +128,10 @@ const Header: React.FC<HeaderProps> = ({
               <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent('navigateToProfile'))}>
                 <User className="w-4 h-4 mr-2" />
                 Perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="w-4 h-4 mr-2" />
+                Configurações
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">

@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
   activeItem?: string;
@@ -19,9 +18,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   const { user } = useAuth();
   const { canAccessSchool, canAccessSettings, currentPlan } = useSupabasePlanPermissions();
   const [isOwner, setIsOwner] = useState<boolean>(false);
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const [userProfile, setUserProfile] = useState({
     name: 'Professor(a)',
@@ -157,8 +153,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     label: 'Calendário',
     icon: Calendar
   }] : []),
-  // Escola - apenas para o proprietário do grupo escolar E plano grupo_escolar
-  ...(isOwner && currentPlan?.plano_ativo === 'grupo_escolar' ? [{
+  // Escola - apenas para o proprietário do grupo escolar
+  ...(isOwner ? [{
     id: 'school',
     label: 'Escola',
     icon: School
@@ -188,33 +184,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   }] : [])];
   
   const handleItemClick = (itemId: string) => {
-    // Navegação direta pelas rotas principais
-    switch (itemId) {
-      case 'dashboard':
-        navigate('/');
-        break;
-      case 'lessons':
-        navigate('/materiais');
-        break;
-      case 'create':
-        navigate('/criar');
-        break;
-      case 'calendar':
-        navigate('/agenda');
-        break;
-      case 'school':
-        navigate('/escola');
-        break;
-      case 'profile':
-        navigate('/perfil');
-        break;
-      case 'subscription':
-        navigate('/assinatura');
-        break;
-      default:
-        break;
-    }
-    if (onItemClick) onItemClick(itemId);
+    onItemClick?.(itemId);
   };
   
   const getPlanDisplayName = () => {
@@ -232,25 +202,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
   
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
-  };
-  
-  // Mapear id para path
-  const idToPath: Record<string, string> = {
-    dashboard: '/',
-    lessons: '/materiais',
-    create: '/criar',
-    calendar: '/agenda',
-    school: '/escola',
-    profile: '/perfil',
-    subscription: '/assinatura',
-    settings: '/configuracoes',
-    'api-keys': '/api-keys',
-    templates: '/templates',
-  };
-
   return <>
       {/* Desktop Sidebar */}
       <div className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-40 flex-col">
@@ -290,49 +241,37 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Navigation Menu */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
           {desktopMenuItems.map(item => {
-            const Icon = item.icon;
-            let isActive = false;
-            const path = idToPath[item.id];
-            if (path) {
-              if (path === '/') {
-                isActive = location.pathname === '/';
-              } else {
-                isActive = location.pathname.startsWith(path);
-              }
-            }
-            const isSchool = item.id === 'school';
-            return <button key={item.id} onClick={() => handleItemClick(item.id)} className={cn("sidebar-item flex items-center space-x-3 p-3 rounded-lg w-full text-left transition-colors", isSchool ? "bg-green-500 text-white font-medium hover:bg-green-600" : isActive ? "bg-primary-50 text-primary-600 font-medium" : "text-gray-700 hover:bg-gray-100")}>
-              <div className="sidebar-icon w-6 h-6 flex items-center justify-center">
-                <Icon size={18} />
-              </div>
-              <span>{item.label}</span>
-            </button>;
-          })}
+          const Icon = item.icon;
+          const isActive = activeItem === item.id;
+          const isSchool = item.id === 'school';
+          return <button key={item.id} onClick={() => handleItemClick(item.id)} className={cn("sidebar-item flex items-center space-x-3 p-3 rounded-lg w-full text-left transition-colors", isSchool ? "bg-green-500 text-white font-medium hover:bg-green-600" : isActive ? "bg-primary-50 text-primary-600 font-medium" : "text-gray-700 hover:bg-gray-100")}>
+                <div className="sidebar-icon w-6 h-6 flex items-center justify-center">
+                  <Icon size={18} />
+                </div>
+                <span>{item.label}</span>
+              </button>;
+        })}
           
           {/* Administration Section - só aparece se há itens admin disponíveis */}
           {adminMenuItems.length > 0 && <div className="pt-4">
               <p className="text-xs uppercase text-gray-400 font-semibold px-3 mb-2">ADMINISTRAÇÃO</p>
               
               {adminMenuItems.map(item => {
-                const Icon = item.icon;
-                let isActive = false;
-                const path = idToPath[item.id];
-                if (path) {
-                  isActive = location.pathname.startsWith(path);
-                }
-                return <button key={item.id} onClick={() => handleItemClick(item.id)} className={cn("sidebar-item flex items-center space-x-3 p-3 rounded-lg w-full text-left transition-colors", isActive ? "bg-primary-50 text-primary-600 font-medium" : "text-gray-700 hover:bg-gray-100")}>
-                  <div className="sidebar-icon w-6 h-6 flex items-center justify-center">
-                    <Icon size={18} />
-                  </div>
-                  <span>{item.label}</span>
-                </button>;
-              })}
+            const Icon = item.icon;
+            const isActive = activeItem === item.id;
+            return <button key={item.id} onClick={() => handleItemClick(item.id)} className={cn("sidebar-item flex items-center space-x-3 p-3 rounded-lg w-full text-left transition-colors", isActive ? "bg-primary-50 text-primary-600 font-medium" : "text-gray-700 hover:bg-gray-100")}>
+                    <div className="sidebar-icon w-6 h-6 flex items-center justify-center">
+                      <Icon size={18} />
+                    </div>
+                    <span>{item.label}</span>
+                  </button>;
+          })}
             </div>}
         </nav>
         
         {/* Footer */}
         <div className="p-4 border-t border-gray-200">
-          <button onClick={handleLogout} className="w-full flex items-center justify-center space-x-2 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+          <button className="w-full flex items-center justify-center space-x-2 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
             <LogOut size={18} />
             <span>Sair</span>
           </button>
@@ -351,28 +290,20 @@ const Sidebar: React.FC<SidebarProps> = ({
         
         <div className="flex items-center justify-around px-2 py-2">
           {mobileMenuItems.map(item => {
-            const Icon = item.icon;
-            let isActive = false;
-            const path = idToPath[item.id];
-            if (path) {
-              if (path === '/') {
-                isActive = location.pathname === '/';
-              } else {
-                isActive = location.pathname.startsWith(path);
-              }
-            }
-            const isCenter = item.isCenter;
-            if (isCenter) {
-              return <button key={item.id} onClick={() => handleItemClick(item.id)} className="relative flex flex-col items-center justify-center w-14 h-14 -mt-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg transform transition-transform hover:scale-105">
-                    <Icon size={24} className="text-white" />
-                    <span className="text-xs text-white font-medium mt-1">{item.label}</span>
-                  </button>;
-            }
-            return <button key={item.id} onClick={() => handleItemClick(item.id)} className={cn("flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-0 flex-1", isActive ? "text-primary-600" : "text-gray-500 hover:text-gray-700")}>
-                  <Icon size={20} />
-                  <span className="text-xs font-medium mt-1 truncate">{item.label}</span>
+          const Icon = item.icon;
+          const isActive = activeItem === item.id;
+          const isCenter = item.isCenter;
+          if (isCenter) {
+            return <button key={item.id} onClick={() => handleItemClick(item.id)} className="relative flex flex-col items-center justify-center w-14 h-14 -mt-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg transform transition-transform hover:scale-105">
+                  <Icon size={24} className="text-white" />
+                  <span className="text-xs text-white font-medium mt-1">{item.label}</span>
                 </button>;
-          })}
+          }
+          return <button key={item.id} onClick={() => handleItemClick(item.id)} className={cn("flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-0 flex-1", isActive ? "text-primary-600" : "text-gray-500 hover:text-gray-700")}>
+                <Icon size={20} />
+                <span className="text-xs font-medium mt-1 truncate">{item.label}</span>
+              </button>;
+        })}
         </div>
       </div>
     </>;

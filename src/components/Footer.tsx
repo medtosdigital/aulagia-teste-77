@@ -1,6 +1,5 @@
 import React from 'react';
 import { BookOpen, Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -26,19 +25,19 @@ const Footer = () => {
               <h4 className="font-semibold text-gray-800 mb-3 text-sm">Legal</h4>
               <ul className="space-y-1">
                 <li>
-                  <Link to="/termos-de-servico" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
+                  <a href="/termos-de-servico" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
                     Termos de Serviço
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="/politica-de-privacidade" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
+                  <a href="/politica-de-privacidade" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
                     Política de Privacidade
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="/aviso-ia" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
+                  <a href="/aviso-ia" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
                     Aviso sobre IA
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -48,14 +47,14 @@ const Footer = () => {
               <h4 className="font-semibold text-gray-800 mb-3 text-sm">Suporte</h4>
               <ul className="space-y-1">
                 <li>
-                  <Link to="/central-de-ajuda" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
+                  <a href="#" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
                     Central de Ajuda
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="/contato" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
+                  <a href="#" className="text-gray-600 hover:text-primary-600 text-xs transition-colors">
                     Contato
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>

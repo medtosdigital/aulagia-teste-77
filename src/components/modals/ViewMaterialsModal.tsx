@@ -85,7 +85,7 @@ const ViewMaterialsModal: React.FC<ViewMaterialsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl p-0 sm:p-6">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-blue-600" />

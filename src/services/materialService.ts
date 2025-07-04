@@ -24,10 +24,6 @@ export interface MaterialFormData {
   tiposQuestoes?: string[];
   numeroQuestoes?: number;
   quantidadeQuestoes?: number;
-  professor?: string;
-  data?: string;
-  duracao?: string;
-  bncc?: string;
 }
 
 // Type exports for backward compatibility
@@ -286,68 +282,16 @@ class MaterialService {
     const topic = formData.tema || formData.topic || 'Conteúdo';
     const subject = formData.disciplina || formData.subject || 'Disciplina';
     const grade = formData.serie || formData.grade || 'Série';
-    const professor = formData.professor || 'Professor';
-    const data = formData.data || new Date().toLocaleDateString('pt-BR');
-    const duracao = formData.duracao || '50 minutos';
-    const bncc = formData.bncc || 'Habilidade(s) da BNCC relacionada(s) ao tema';
-    // Desenvolvimento metodológico dinâmico com variáveis
-    const desenvolvimento = [
-      {
-        etapa: 'Introdução',
-        atividade: `Apresentação do tema "${topic}" contextualizando sua importância para a disciplina de ${subject}. Pergunta disparadora para engajar os alunos e levantamento de conhecimentos prévios.`,
-        tempo: '10 min',
-        recursos: 'Quadro/Lousa, Projetor multimídia'
-      },
-      {
-        etapa: 'Desenvolvimento',
-        atividade: `Exposição dialogada dos principais conceitos de ${topic}, exemplos práticos, discussão em grupo e resolução de exercícios guiados.`,
-        tempo: '25 min',
-        recursos: 'Material impresso, Projetor multimídia'
-      },
-      {
-        etapa: 'Prática',
-        atividade: `Atividade prática: os alunos aplicam os conceitos de ${topic} em situações-problema, produção de texto, experimentos ou resolução de desafios.`,
-        tempo: '10 min',
-        recursos: 'Material impresso, Recursos digitais'
-      },
-      {
-        etapa: 'Fechamento',
-        atividade: `Revisão dos pontos principais sobre ${topic}, socialização das produções dos alunos, feedback coletivo e breve avaliação diagnóstica.`,
-        tempo: '5 min',
-        recursos: 'Quadro/Lousa, Recursos digitais'
-      }
-    ];
-    // Gerar lista única de recursos usados em todas as etapas
-    const recursosSet = new Set<string>();
-    desenvolvimento.forEach(etapa => {
-      etapa.recursos.split(',').map(r => r.trim()).forEach(r => recursosSet.add(r));
-    });
-    const recursos = Array.from(recursosSet).join(', ');
+    
     return {
       titulo: `Plano de Aula - ${topic}`,
-      cabecalho: {
-        professor,
-        data,
-        disciplina: subject,
-        serie: grade,
-        tema: topic,
-        duracao,
-        bncc
-      },
-      professor,
-      data,
       disciplina: subject,
       serie: grade,
-      tema: topic,
-      duracao,
-      bncc,
       objetivos: [
         `Compreender os conceitos fundamentais sobre ${topic}`,
         `Aplicar conhecimentos de ${topic} em situações práticas`,
         `Desenvolver habilidades de análise crítica sobre o tema`
       ],
-      desenvolvimento,
-      recursos,
       conteudos: [
         `Introdução ao ${topic}`,
         `Conceitos principais e definições`,
@@ -355,6 +299,12 @@ class MaterialService {
         `Exercícios e atividades de fixação`
       ],
       metodologia: `Aula expositiva dialogada com uso de recursos visuais, seguida de atividades práticas em grupo para consolidação do aprendizado sobre ${topic}.`,
+      recursos: [
+        'Quadro/Lousa',
+        'Projetor multimídia',
+        'Material impresso',
+        'Recursos digitais'
+      ],
       avaliacao: `Avaliação formativa através da participação nas discussões e atividades práticas. Avaliação somativa através de exercícios sobre ${topic}.`,
       referencias: [
         'Referência bibliográfica 1',
@@ -367,29 +317,9 @@ class MaterialService {
   private generateSlidesContent(formData: MaterialFormData) {
     const topic = formData.tema || formData.topic || 'Conteúdo';
     const subject = formData.disciplina || formData.subject || 'Disciplina';
-    const grade = formData.serie || formData.grade || 'Série';
-    const professor = formData.professor || 'Professor';
-    const data = formData.data || new Date().toLocaleDateString('pt-BR');
-    const duracao = formData.duracao || '50 minutos';
-    const bncc = formData.bncc || 'Habilidade(s) da BNCC relacionada(s) ao tema';
+    
     return {
       titulo: `Slides - ${topic}`,
-      cabecalho: {
-        professor,
-        data,
-        disciplina: subject,
-        serie: grade,
-        tema: topic,
-        duracao,
-        bncc
-      },
-      professor,
-      data,
-      disciplina: subject,
-      serie: grade,
-      tema: topic,
-      duracao,
-      bncc,
       slides: [
         {
           numero: 1,
@@ -427,14 +357,9 @@ class MaterialService {
 
   private generateActivityContent(formData: MaterialFormData) {
     const topic = formData.tema || formData.topic || 'Conteúdo';
-    const subject = formData.disciplina || formData.subject || 'Disciplina';
-    const grade = formData.serie || formData.grade || 'Série';
-    const professor = formData.professor || 'Professor';
-    const data = formData.data || new Date().toLocaleDateString('pt-BR');
-    const duracao = formData.duracao || '50 minutos';
-    const bncc = formData.bncc || 'Habilidade(s) da BNCC relacionada(s) ao tema';
     const questionCount = formData.numeroQuestoes || formData.quantidadeQuestoes || 5;
     const questionType = formData.tipoQuestoes || 'mistas';
+    
     const questions = [];
     for (let i = 1; i <= questionCount; i++) {
       if (questionType === 'abertas' || (questionType === 'mistas' && i % 2 === 1)) {
@@ -460,24 +385,9 @@ class MaterialService {
         });
       }
     }
+    
     return {
       titulo: `Atividade - ${topic}`,
-      cabecalho: {
-        professor,
-        data,
-        disciplina: subject,
-        serie: grade,
-        tema: topic,
-        duracao,
-        bncc
-      },
-      professor,
-      data,
-      disciplina: subject,
-      serie: grade,
-      tema: topic,
-      duracao,
-      bncc,
       instrucoes: `Complete as questões abaixo sobre ${topic}. Leia atentamente cada enunciado antes de responder.`,
       questoes: questions,
       criterios_avaliacao: [
@@ -489,64 +399,56 @@ class MaterialService {
   }
 
   private generateAssessmentContent(formData: MaterialFormData) {
-    const topic = formData.tema || formData.topic || 'Conteúdo';
-    const subject = formData.disciplina || formData.subject || 'Disciplina';
-    const grade = formData.serie || formData.grade || 'Série';
-    const professor = formData.professor || 'Professor';
-    const data = formData.data || new Date().toLocaleDateString('pt-BR');
-    const duracao = formData.duracao || '50 minutos';
-    const bncc = formData.bncc || 'Habilidade(s) da BNCC relacionada(s) ao tema';
+    const subjects = formData.assuntos || formData.subjects || ['Conteúdo'];
+    const validSubjects = subjects.filter(s => s.trim() !== '');
     const questionCount = formData.numeroQuestoes || formData.quantidadeQuestoes || 5;
     const questionType = formData.tipoQuestoes || 'mistas';
+    
     const questions = [];
     for (let i = 1; i <= questionCount; i++) {
+      const currentSubject = validSubjects[(i - 1) % validSubjects.length];
+      
       if (questionType === 'abertas' || (questionType === 'mistas' && i % 2 === 1)) {
         questions.push({
           numero: i,
           tipo: 'aberta',
-          pergunta: `Explique os principais conceitos relacionados a ${topic}. (Questão ${i})`,
-          resposta: `Esta é uma questão aberta que permite ao aluno expressar seu entendimento sobre ${topic}.`
+          assunto: currentSubject,
+          pergunta: `Analise e explique os principais aspectos de ${currentSubject}. (Questão ${i})`,
+          criterios: [
+            'Domínio do conteúdo',
+            'Clareza na explicação',
+            'Uso correto da terminologia'
+          ],
+          valor: Math.round(10 / questionCount * 10) / 10
         });
       } else {
         questions.push({
           numero: i,
           tipo: 'multipla_escolha',
-          pergunta: `Qual das alternativas melhor define ${topic}? (Questão ${i})`,
+          assunto: currentSubject,
+          pergunta: `Em relação a ${currentSubject}, qual alternativa está correta? (Questão ${i})`,
           alternativas: [
-            'Primeira alternativa sobre o conceito',
-            'Segunda alternativa sobre o conceito',
-            'Terceira alternativa sobre o conceito',
-            'Quarta alternativa sobre o conceito'
+            `Primera afirmação sobre ${currentSubject}`,
+            `Segunda afirmação sobre ${currentSubject}`,
+            `Terceira afirmação sobre ${currentSubject}`,
+            `Quarta afirmação sobre ${currentSubject}`
           ],
           resposta_correta: 0,
-          explicacao: `A resposta correta é a primeira alternativa, pois define corretamente ${topic}.`
+          valor: Math.round(10 / questionCount * 10) / 10
         });
       }
     }
+    
     return {
-      titulo: `Avaliação - ${topic}`,
-      cabecalho: {
-        professor,
-        data,
-        disciplina: subject,
-        serie: grade,
-        tema: topic,
-        duracao,
-        bncc
-      },
-      professor,
-      data,
-      disciplina: subject,
-      serie: grade,
-      tema: topic,
-      duracao,
-      bncc,
-      instrucoes: `Responda às questões abaixo sobre ${topic}.`,
+      titulo: `Avaliação - ${validSubjects.join(', ')}`,
+      instrucoes: 'Leia atentamente cada questão antes de responder. Esta avaliação tem como objetivo verificar sua compreensão dos conteúdos estudados.',
       questoes: questions,
+      tempo_estimado: '50 minutos',
+      valor_total: 10,
       criterios_avaliacao: [
-        'Compreensão dos conceitos',
-        'Clareza na expressão das ideias',
-        'Aplicação correta do conhecimento'
+        'Domínio do conteúdo (40%)',
+        'Clareza e organização (30%)',
+        'Aplicação prática (30%)'
       ]
     };
   }

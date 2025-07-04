@@ -136,12 +136,12 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="w-[95vw] sm:w-full sm:max-w-2xl p-0 border-0 shadow-2xl rounded-2xl bg-white max-h-[95vh] overflow-hidden mt-6">
+      <DialogContent className="w-[95vw] sm:w-full sm:max-w-2xl p-0 border-0 shadow-2xl rounded-2xl bg-white max-h-[95vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center mt-2">
+          <DialogTitle className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
             Sua Opinião é Importante!
           </DialogTitle>
-          <DialogDescription className="text-gray-600 text-xs sm:text-sm text-center mt-1 mb-2">
+          <DialogDescription className="text-gray-600 text-xs sm:text-sm text-center">
             Ajude-nos a melhorar o AulagIA
           </DialogDescription>
         </DialogHeader>
@@ -248,10 +248,23 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
               )}
             </Button>
 
-            <div className="flex flex-row sm:flex-col gap-2 mt-4">
-              <Button variant="outline" className="flex-1" onClick={handleClose}>Fechar</Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                className="flex-1 h-8 sm:h-9 border-2 hover:bg-gray-50 rounded-lg text-xs sm:text-sm"
+              >
+                Fechar
+              </Button>
+              
               {showDontShowOption && (
-                <Button variant="outline" className="flex-1" onClick={handleDontShow}>Não mostrar novamente</Button>
+                <Button
+                  variant="outline"
+                  onClick={handleDontShow}
+                  className="flex-1 h-8 sm:h-9 border-2 border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg text-xs"
+                >
+                  Não mostrar novamente
+                </Button>
               )}
             </div>
           </div>
