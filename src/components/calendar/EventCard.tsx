@@ -140,37 +140,37 @@ const EventCard: React.FC<EventCardProps> = ({
   const isCompact = compact;
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] overflow-hidden flex flex-col p-0">
+    <Card className={`group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] overflow-hidden flex flex-col p-0 ${isCompact ? 'max-w-full w-full' : ''}`}>
       {/* Cabeçalho colorido, ocupando toda a largura */}
-      <div className={`flex items-center justify-between w-full px-2 py-1 ${typeConfig.bg}`}> 
-        <div className="flex items-center gap-1">
-          <Users className="w-4 h-4 text-white" />
-          <span className="text-white font-semibold text-sm sm:text-base truncate max-w-[90px] sm:max-w-[140px]">{typeConfig.label}</span>
+      <div className={`flex items-center justify-between w-full ${isCompact ? 'px-1 py-0.5' : 'px-2 py-1'} ${typeConfig.bg}`}> 
+        <div className={`flex items-center ${isCompact ? 'gap-0.5' : 'gap-1'}`}>
+          <Users className={`text-white ${isCompact ? 'w-3 h-3' : 'w-4 h-4'}`} />
+          <span className={`text-white font-semibold ${isCompact ? 'text-xs' : 'text-sm sm:text-base'}`}>{typeConfig.label}</span>
         </div>
         {disciplina && (
-          <span className={`ml-1 ${typeConfig.badge} px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium truncate max-w-[70px] sm:max-w-[110px]`}>{disciplina}</span>
+          <span className={`ml-1 ${typeConfig.badge} px-1 py-0.5 rounded-full text-[10px] font-medium truncate max-w-[60px]`}>{disciplina}</span>
         )}
-            </div>
+      </div>
       {/* Informações em linhas, bem organizadas */}
-      <div className="flex flex-col gap-1 px-4 py-3 bg-white h-full">
+      <div className={`flex flex-col gap-1 bg-white h-full ${isCompact ? 'px-1 py-1' : 'px-4 py-3'}`}>
         {/* Linha de data e horário centralizada nas visões compactas */}
         {isCompact ? (
-          <div className="flex flex-col items-center justify-center mb-1 w-full">
-            <div className="flex items-center gap-2 justify-center text-center">
-              <span className="flex items-center gap-1 text-blue-600 font-medium text-xs">
+          <div className="flex flex-col items-center justify-center mb-0 w-full">
+            <div className="flex items-center gap-1 justify-center text-center">
+              <span className="flex items-center gap-0.5 text-blue-600 font-medium text-[10px]">
                 <CalendarIcon className="w-3 h-3" />
                 {dateStr}
               </span>
-              <span className="flex items-center gap-1 text-green-600 font-medium text-xs">
+              <span className="flex items-center gap-0.5 text-green-600 font-medium text-[10px]">
                 <Clock className="w-3 h-3" />
                 {timeStr}
               </span>
             </div>
-            <span className="font-bold text-gray-900 text-base truncate mt-1 w-full text-center block">{event.title}</span>
-                  </div>
+            <span className="font-bold text-gray-900 text-sm truncate mt-0.5 w-full text-center block">{event.title}</span>
+          </div>
         ) : (
           <div className="flex items-center justify-between mb-2 w-full">
-            <span className="font-bold text-gray-900 text-lg truncate flex-1">{event.title}</span>
+            <span className="font-bold text-gray-900 text-xl sm:text-lg truncate flex-1">{event.title}</span>
             <div className="flex flex-col items-end min-w-[120px] ml-4">
               <div className="flex items-center gap-2 text-blue-600 font-medium">
                 <CalendarIcon className="w-4 h-4" />
@@ -179,16 +179,16 @@ const EventCard: React.FC<EventCardProps> = ({
               <div className="flex items-center gap-2 text-green-600 font-medium">
                 <Clock className="w-4 h-4" />
                 <span>{timeStr}</span>
-                  </div>
+              </div>
             </div>
           </div>
         )}
         {/* Ícones e títulos dos tipos de materiais */}
         {materialTypes.length > 0 && (
-          <div className={`flex items-center gap-2 mb-2 mt-1 flex-wrap ${isCompact ? 'justify-center' : ''}`}>
+          <div className={`flex items-center ${isCompact ? 'gap-1 mb-1 mt-0' : 'gap-2 mb-2 mt-1'} flex-wrap ${isCompact ? 'justify-center' : ''}`}>
             {materials.map(material => (
-              <span key={material.id} className="flex items-center gap-1">
-                <span title={material.type} className="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-100">
+              <span key={material.id} className="flex items-center gap-0.5">
+                <span title={material.type} className={`inline-flex items-center justify-center ${isCompact ? 'w-6 h-6' : 'w-8 h-8'} rounded bg-gray-100`}>
                   {getMaterialTypeIcon(material.type)}
                 </span>
                 {!isCompact && (
@@ -198,42 +198,42 @@ const EventCard: React.FC<EventCardProps> = ({
             ))}
           </div>
         )}
-        {(sala || observacoes) && <hr className="my-2 border-gray-200" />}
-        {sala && <span className="text-xs text-gray-500">Sala: {sala}</span>}
-        {observacoes && <span className="text-xs text-gray-500">Obs: {observacoes}</span>}
+        {(sala || observacoes) && !isCompact && <hr className="my-2 border-gray-200" />}
+        {sala && <span className={`text-xs text-gray-500 ${isCompact ? 'truncate' : ''}`}>Sala: {sala}</span>}
+        {observacoes && !isCompact && <span className="text-xs text-gray-500">Obs: {observacoes}</span>}
         <div className="flex-1" />
         {/* Rodapé dos botões, alinhamento e responsividade */}
-        <div className={`w-full pt-2 border-t border-gray-200 flex ${isCompact ? 'flex-row items-center justify-between gap-2' : 'flex-col sm:flex-row gap-2'} mt-2 sticky bottom-0 bg-white z-10`}>
+        <div className={`w-full pt-1 border-t border-gray-200 flex flex-row flex-wrap items-center justify-between ${isCompact ? 'gap-1 mt-1' : 'gap-2 mt-2'} sticky bottom-0 bg-white z-10`}>
           <Button
             variant="outline"
             size="sm"
             onClick={e => { e.stopPropagation(); onViewMaterial(event); }}
-            className={`flex-1 flex items-center justify-center gap-2 text-xs px-2 py-1 ${isCompact ? 'h-8' : 'h-10'} font-semibold w-full ${isCompact ? '' : 'text-base'}`}
+            className={`flex-1 ${isCompact ? 'min-w-[60px] h-7 text-[11px] px-1 py-1' : 'min-w-[110px] h-10 text-xs px-2 py-1'} flex items-center justify-center gap-1 font-semibold w-full`}
           >
-            <Eye className="w-4 h-4" /> {isCompact ? 'Visualizar' : 'Visualizar aula'}
+            <Eye className={`${isCompact ? 'w-3 h-3' : 'w-4 h-4'}`} />
+            <span className="block sm:hidden">Ver</span>
+            <span className="hidden sm:block">Visualizar</span>
           </Button>
-          <div className={`flex gap-2 ${isCompact ? 'ml-0' : 'sm:ml-2'} w-auto justify-end`}>
           <Button
             variant="outline"
             size="sm"
-              onClick={e => { e.stopPropagation(); onEdit(event); }}
-              className={`flex items-center justify-center px-2 py-1 ${isCompact ? 'h-8 w-8' : 'h-10 w-auto'} ${isCompact ? '' : 'gap-2 text-xs'}`}
-              title="Editar"
+            onClick={e => { e.stopPropagation(); onEdit(event); }}
+            className={`flex-1 ${isCompact ? 'min-w-[50px] h-7 text-[11px] px-1 py-1' : 'min-w-[90px] h-10 text-xs px-2 py-1'} flex items-center justify-center gap-1 w-full`}
+            title="Editar"
           >
-            <Edit3 className="w-4 h-4" />
-              {!isCompact && <span>Editar</span>}
+            <Edit3 className={`${isCompact ? 'w-3 h-3' : 'w-4 h-4'}`} />
+            <span>Editar</span>
           </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={e => { e.stopPropagation(); onDelete(event); }}
-              className={`flex items-center justify-center px-2 py-1 text-red-600 hover:text-red-700 ${isCompact ? 'h-8 w-8 ml-0' : 'h-10 w-auto'} ${isCompact ? '' : 'gap-2 text-xs'}`}
-              title="Excluir"
-            >
-              <Trash2 className="w-4 h-4" />
-              {!isCompact && <span>Excluir</span>}
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={e => { e.stopPropagation(); onDelete(event); }}
+            className={`flex-1 ${isCompact ? 'min-w-[50px] h-7 text-[11px] px-1 py-1' : 'min-w-[90px] h-10 text-xs px-2 py-1'} flex items-center justify-center gap-1 text-red-600 hover:text-red-700 w-full`}
+            title="Excluir"
+          >
+            <Trash2 className={`${isCompact ? 'w-3 h-3' : 'w-4 h-4'}`} />
+            <span>Excluir</span>
+          </Button>
         </div>
       </div>
     </Card>

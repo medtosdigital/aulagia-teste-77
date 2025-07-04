@@ -19,6 +19,8 @@ import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { toast } from 'sonner';
 import { activityService } from '@/services/activityService';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
 
@@ -36,7 +38,7 @@ interface MaterialTypeOption {
 
 // Cache em memória para listas auxiliares
 const subjectsCache = { data: null as string[] | null, timestamp: 0 };
-const gradesCache = { data: null as typeof grades | null, timestamp: 0 };
+const gradesCache = { data: null as { category: string; options: string[] }[] | null, timestamp: 0 };
 const AUX_CACHE_DURATION = 60000; // 60 segundos
 
 const getSubjects = () => {
@@ -72,6 +74,7 @@ const getGrades = () => {
 
 const CreateLesson: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState<'selection' | 'form' | 'generating'>('selection');
   const [selectedType, setSelectedType] = useState<MaterialType | null>(null);
   const [formData, setFormData] = useState({
@@ -235,18 +238,13 @@ const CreateLesson: React.FC = () => {
   const handleGenerate = async () => {
     // Verificar limite antes de gerar o material
     const canCreate = createMaterial();
-    
     if (!canCreate) {
-      // O modal de upgrade será mostrado automaticamente pelo hook
       toast.error('Limite de materiais atingido! Faça upgrade para continuar.');
       return;
     }
-
     setStep('generating');
     setIsGenerating(true);
     setGenerationProgress(0);
-
-    // Create progress simulation with more detailed steps
     const progressSteps = [
       { progress: 20, message: 'Analisando dados do formulário...' },
       { progress: 40, message: 'Gerando conteúdo pedagógico...' },
@@ -254,7 +252,6 @@ const CreateLesson: React.FC = () => {
       { progress: 80, message: 'Salvando material...' },
       { progress: 95, message: 'Finalizando...' }
     ];
-
     let stepIndex = 0;
     const progressInterval = setInterval(() => {
       if (stepIndex < progressSteps.length) {
@@ -263,24 +260,32 @@ const CreateLesson: React.FC = () => {
         stepIndex++;
       }
     }, 800);
-
     try {
-      console.log('🚀 Starting material generation process');
-      
-      // Para avaliações, usar os múltiplos assuntos como tema
+      // Buscar nome do professor (perfil)
+      let professor = '';
+      if (user?.id) {
+        const { data: profile } = await supabase.from('perfis').select('nome_preferido').eq('user_id', user.id).single();
+        professor = profile?.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Professor';
+      }
+      // Data atual formato brasileiro
+      const dataAtual = new Date().toLocaleDateString('pt-BR');
+      // Padronizar campos do cabeçalho
+      const tema = selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic;
+      const disciplina = formData.subject;
+      const serie = formData.grade;
       const materialFormData = {
-        tema: selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic,
-        topic: selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic,
-        disciplina: formData.subject,
-        subject: formData.subject,
-        serie: formData.grade,
-        grade: formData.grade,
-        // Adicionar assuntos específicos para avaliações
+        tema,
+        disciplina,
+        serie,
+        professor,
+        data: dataAtual,
+        duracao: '50 minutos',
+        bncc: 'Habilidade(s) da BNCC relacionada(s) ao tema',
+        // campos extras para outros tipos
         ...(selectedType === 'avaliacao' ? {
           assuntos: formData.subjects.filter(s => s.trim() !== ''),
           subjects: formData.subjects.filter(s => s.trim() !== '')
         } : {}),
-        // Correct mapping for question configuration
         ...(selectedType === 'atividade' || selectedType === 'avaliacao' ? {
           tipoQuestoes: formData.questionType,
           tiposQuestoes: [formData.questionType],
@@ -288,22 +293,15 @@ const CreateLesson: React.FC = () => {
           quantidadeQuestoes: formData.questionCount[0]
         } : {})
       };
-
       console.log('📋 Material form data being sent:', materialFormData);
-      
-      // Generate and save material through materialService
       const material = await materialService.generateMaterial(selectedType!, materialFormData);
-      
       console.log('✅ Material generated and saved successfully:', material.id);
-      
       clearInterval(progressInterval);
       setGenerationProgress(100);
-      
-      // Show success feedback before transitioning
       setTimeout(() => {
         setIsGenerating(false);
         setGeneratedMaterial(material);
-        setShowNextStepsModal(true); // Mostrar o modal de próximos passos primeiro
+        setShowNextStepsModal(true);
         setStep('selection');
         toast.success(`${getCurrentTypeInfo()?.title} criado e salvo com sucesso!`);
         if (material) {
@@ -323,8 +321,6 @@ const CreateLesson: React.FC = () => {
       clearInterval(progressInterval);
       setIsGenerating(false);
       setStep('form');
-      
-      // Show specific error message
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao gerar material';
       toast.error(`Erro ao criar material: ${errorMessage}`);
       console.error('Detailed error:', error);
@@ -480,19 +476,19 @@ const CreateLesson: React.FC = () => {
           </div>
         </main>
         
-        {/* Modal de próximos passos - aparece primeiro */}
+        {/* Modal de visualização do material - aparece primeiro */}
+        <MaterialModal 
+          material={generatedMaterial} 
+          open={showMaterialModal || showNextStepsModal} 
+          onClose={handleMaterialModalClose} 
+        />
+        
+        {/* Modal de próximos passos - aparece por cima */}
         <NextStepsModal
           open={showNextStepsModal}
           onClose={handleNextStepsClose}
           onContinue={handleNextStepsContinue}
           materialType={selectedType || ''}
-        />
-        
-        {/* Modal de visualização do material - aparece depois */}
-        <MaterialModal 
-          material={generatedMaterial} 
-          open={showMaterialModal} 
-          onClose={handleMaterialModalClose} 
         />
         
         {/* Modal de upgrade que aparece quando o limite é atingido */}
@@ -784,19 +780,19 @@ const CreateLesson: React.FC = () => {
           onAccept={handleBNCCValidationAccept} 
         />
 
-        {/* Modal de próximos passos - aparece primeiro */}
+        {/* Modal de visualização do material - aparece primeiro */}
+        <MaterialModal 
+          material={generatedMaterial} 
+          open={showMaterialModal || showNextStepsModal} 
+          onClose={handleMaterialModalClose} 
+        />
+        
+        {/* Modal de próximos passos - aparece por cima */}
         <NextStepsModal
           open={showNextStepsModal}
           onClose={handleNextStepsClose}
           onContinue={handleNextStepsContinue}
           materialType={selectedType || ''}
-        />
-
-        {/* Modal de visualização do material - aparece depois */}
-        <MaterialModal 
-          material={generatedMaterial} 
-          open={showMaterialModal} 
-          onClose={handleMaterialModalClose} 
         />
         
         {/* Modal de upgrade que aparece quando o limite é atingido */}

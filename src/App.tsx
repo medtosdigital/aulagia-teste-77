@@ -10,6 +10,8 @@ import TermosDeServico from "./pages/TermosDeServico";
 import PoliticaDePrivacidade from "./pages/PoliticaDePrivacidade";
 import TermosDeUso from "./pages/TermosDeUso";
 import AvisoIA from "./pages/AvisoIA";
+import CentralDeAjuda from './pages/CentralDeAjuda';
+import Contato from './pages/Contato';
 import { useEffect } from 'react';
 
 const queryClient = new QueryClient();
@@ -17,7 +19,9 @@ const queryClient = new QueryClient();
 function ScrollToTop() {
   const location = useLocation();
   useEffect(() => {
+    // Tenta scrollar para o topo de forma suave, mas garante o reset mesmo em navegação rápida
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    setTimeout(() => window.scrollTo(0, 0), 10); // fallback para garantir
   }, [location.pathname]);
   return null;
 }
@@ -36,6 +40,8 @@ function App() {
               <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
               <Route path="/termos-de-uso" element={<TermosDeUso />} />
               <Route path="/aviso-ia" element={<AvisoIA />} />
+              <Route path="/central-de-ajuda" element={<CentralDeAjuda />} />
+              <Route path="/contato" element={<Contato />} />
               <Route path="/*" element={
                 <ProtectedRoute>
                   <Index />

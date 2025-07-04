@@ -59,7 +59,7 @@ const NextStepsModal: React.FC<NextStepsModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className={`${
+      <DialogContent className={`z-50 ${
         isMobile 
           ? 'w-[95vw] h-[85vh] max-w-none max-h-none m-2' 
           : 'w-full max-w-lg max-h-[80vh] mx-auto'

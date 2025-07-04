@@ -67,8 +67,8 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
     description: 'Provas e testes personalizados'
   }];
   const tourSteps = [{
-    title: '🎉 Bem-vindo ao AulagIA!',
-    subtitle: 'Sua plataforma de ensino com inteligência artificial',
+    title: '',
+    subtitle: '',
     content: <div className="text-center py-3">
         <div className="mb-4">
           <img src="/lovable-uploads/7aab49d7-a4ac-49b2-bb76-5c85a6696a42.png" alt="AulagIA Logo" className="h-10 sm:h-12 mx-auto mb-3" />
@@ -86,51 +86,48 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
         </div>
       </div>
   }, {
-    title: '👨‍🏫 Informações Pessoais',
-    subtitle: 'Como gostaria de ser chamado e onde trabalha?',
+    title: '',
+    subtitle: '',
     content: <div className="py-2">
-        <div className="mb-4 text-center">
-          <img src="/lovable-uploads/7aab49d7-a4ac-49b2-bb76-5c85a6696a42.png" alt="AulagIA Logo" className="h-8 sm:h-10 mx-auto mb-2" />
-        </div>
-        
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="name" className="flex items-center mb-2 text-sm font-medium">
-              <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-blue-500" />
-              Como gostaria de ser chamado(a)?
-            </Label>
-            <Input id="name" placeholder="Professor(a)" value={userInfo.name} onChange={e => setUserInfo(prev => ({
+      <div className="mb-4 text-center">
+        <img src="/lovable-uploads/7aab49d7-a4ac-49b2-bb76-5c85a6696a42.png" alt="AulagIA Logo" className="h-8 sm:h-10 mx-auto mb-2" />
+      </div>
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="name" className="flex items-center mb-2 text-sm font-medium">
+            <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-blue-500" />
+            Como gostaria de ser chamado(a)?
+          </Label>
+          <Input id="name" placeholder="Professor(a)" value={userInfo.name} onChange={e => setUserInfo(prev => ({
             ...prev,
             name: e.target.value
           }))} className="border-2 focus:border-blue-500 text-sm h-8 rounded-lg" />
-          </div>
-
-          <div>
-            <Label htmlFor="celular" className="flex items-center mb-2 text-sm font-medium">
-              <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-green-500" />
-              Celular (opcional)
-            </Label>
-            <Input id="celular" placeholder="(11) 99999-9999" value={userInfo.celular} onChange={e => setUserInfo(prev => ({
+        </div>
+        <div>
+          <Label htmlFor="celular" className="flex items-center mb-2 text-sm font-medium">
+            <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-green-500" />
+            Celular (opcional)
+          </Label>
+          <Input id="celular" placeholder="(11) 99999-9999" value={userInfo.celular} onChange={e => setUserInfo(prev => ({
             ...prev,
             celular: e.target.value
           }))} className="border-2 focus:border-green-500 text-sm h-8 rounded-lg" />
-          </div>
-
-          <div>
-            <Label htmlFor="school" className="flex items-center mb-2 text-sm font-medium">
-              <School className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-purple-500" />
-              Escola (opcional)
-            </Label>
-            <Input id="school" placeholder="Nome da sua escola" value={userInfo.school} onChange={e => setUserInfo(prev => ({
+        </div>
+        <div>
+          <Label htmlFor="school" className="flex items-center mb-2 text-sm font-medium">
+            <School className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-purple-500" />
+            Escola (opcional)
+          </Label>
+          <Input id="school" placeholder="Nome da sua escola" value={userInfo.school} onChange={e => setUserInfo(prev => ({
             ...prev,
             school: e.target.value
           }))} className="border-2 focus:border-purple-500 text-sm h-8 rounded-lg" />
-          </div>
         </div>
       </div>
+    </div>
   }, {
-    title: '🎓 Etapa de Ensino',
-    subtitle: 'Qual etapa de ensino você trabalha?',
+    title: '',
+    subtitle: '',
     content: <div className="py-2">
         <div className="mb-4 text-center">
           <img src="/lovable-uploads/7aab49d7-a4ac-49b2-bb76-5c85a6696a42.png" alt="AulagIA Logo" className="h-8 sm:h-10 mx-auto mb-2" />
@@ -179,8 +176,8 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
         </div>
       </div>
   }, {
-    title: '📚 Disciplinas',
-    subtitle: 'Quais disciplinas você leciona?',
+    title: '',
+    subtitle: '',
     content: <div className="py-2">
         <div className="mb-4 text-center">
           <img src="/lovable-uploads/7aab49d7-a4ac-49b2-bb76-5c85a6696a42.png" alt="AulagIA Logo" className="h-8 sm:h-10 mx-auto mb-2" />
@@ -204,8 +201,8 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
         </div>
       </div>
   }, {
-    title: '📝 Tipos de Material',
-    subtitle: 'Que tipos de materiais você pretende criar?',
+    title: '',
+    subtitle: '',
     content: <div className="py-2">
         <div className="mb-4 text-center">
           <img src="/lovable-uploads/7aab49d7-a4ac-49b2-bb76-5c85a6696a42.png" alt="AulagIA Logo" className="h-8 sm:h-10 mx-auto mb-2" />
@@ -248,8 +245,8 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
         </div>
       </div>
   }, {
-    title: '🎉 Bem-vindo ao futuro da educação!',
-    subtitle: 'Você está preparado para revolucionar suas aulas',
+    title: '',
+    subtitle: '',
     content: <div className="text-center py-3">
         <div className="mb-4">
           <img src="/lovable-uploads/7aab49d7-a4ac-49b2-bb76-5c85a6696a42.png" alt="AulagIA Logo" className="h-12 sm:h-16 mx-auto mb-3" />

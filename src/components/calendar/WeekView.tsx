@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarIcon, Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,14 +11,12 @@ import BlockedFeature from '../BlockedFeature';
 interface WeekViewProps {
   currentDate: Date;
   events: CalendarEvent[];
-  showFullWeek: boolean;
   showWeekends: boolean;
   onDateClick: (date: Date) => void;
   onEventClick: (event: CalendarEvent) => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
   onViewMaterial: (event: CalendarEvent) => void;
-  onToggleFullWeek: () => void;
   onToggleWeekends: () => void;
   getEventsForDate: (date: Date) => CalendarEvent[];
   hasCalendarAccess?: boolean;
@@ -28,19 +26,32 @@ interface WeekViewProps {
 const WeekView: React.FC<WeekViewProps> = ({
   currentDate,
   events,
-  showFullWeek = true,
   showWeekends = false,
   onDateClick,
   onEventClick,
   onEditEvent,
   onDeleteEvent,
   onViewMaterial,
-  onToggleFullWeek,
   onToggleWeekends,
   getEventsForDate,
   hasCalendarAccess = true,
   onUpgrade = () => {}
 }) => {
+  // Detecta se é mobile
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+
+  // Estado para semana completa ou a partir de hoje
+  const [showFullWeek, setShowFullWeek] = useState(!isMobile);
+
+  // Atualiza showFullWeek se o tamanho da tela mudar
+  useEffect(() => {
+    const handleResize = () => {
+      setShowFullWeek(window.innerWidth >= 640);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   let weekDays: Date[];
   
   if (showFullWeek) {
@@ -56,6 +67,16 @@ const WeekView: React.FC<WeekViewProps> = ({
   if (!showWeekends) {
     weekDays = weekDays.filter(day => !isWeekend(day));
   }
+
+  // Estado para navegação mobile
+  const [mobileIndex, setMobileIndex] = useState(0);
+  const daysPerPage = 2;
+  const totalPages = Math.ceil(weekDays.length / daysPerPage);
+
+  // Dias a exibir no mobile
+  const visibleDays = isMobile
+    ? weekDays.slice(mobileIndex * daysPerPage, mobileIndex * daysPerPage + daysPerPage)
+    : weekDays;
 
   // Se não tem acesso ao calendário, mostrar versão bloqueada
   if (!hasCalendarAccess) {
@@ -166,7 +187,7 @@ const WeekView: React.FC<WeekViewProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={onToggleFullWeek}
+              onClick={() => setShowFullWeek((prev) => !prev)}
               className="flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <CalendarIcon className="w-4 h-4" />
@@ -185,12 +206,15 @@ const WeekView: React.FC<WeekViewProps> = ({
         </div>
       </div>
 
-      <div className={`grid grid-cols-1 gap-4 ${weekDays.length <= 5 ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5' : weekDays.length === 6 ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7'}`} style={{overflowX: 'hidden', width: '100%'}}>
-        {weekDays.map(day => {
+      <div className={
+        isMobile
+          ? 'grid grid-cols-2 gap-4 items-stretch'
+          : `grid grid-cols-1 gap-4 ${weekDays.length <= 5 ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5' : weekDays.length === 6 ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7'}`
+      } style={{overflowX: 'hidden', width: '100%'}}>
+        {visibleDays.map(day => {
           const dayEvents = getEventsForDate(day);
           const isCurrentDay = isToday(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
-          
           return (
             <div key={day.toString()} className="space-y-3 overflow-x-hidden w-full">
               <div className={`text-center p-4 rounded-xl transition-all cursor-pointer hover:scale-105 ${
@@ -211,7 +235,9 @@ const WeekView: React.FC<WeekViewProps> = ({
                 <div className={`text-xs mt-2 px-2 py-1 rounded-full ${
                   isCurrentDay ? 'bg-white/20 text-white' : 'bg-gray-300 text-gray-500'
                 }`}>
-                  {dayEvents.length} materiais
+                  {dayEvents.length === 1
+                    ? '1 material'
+                    : `${dayEvents.length} materiais`}
                 </div>
               </div>
               <div className="space-y-2 min-h-[120px] w-full">
@@ -230,6 +256,28 @@ const WeekView: React.FC<WeekViewProps> = ({
           );
         })}
       </div>
+      {/* Navegação mobile */}
+      {isMobile && (
+        <div className="flex justify-between items-center mt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setMobileIndex(i => Math.max(0, i - 1))}
+            disabled={mobileIndex === 0}
+          >
+            &#8592; Anterior
+          </Button>
+          <span className="text-xs text-gray-500">{mobileIndex + 1} / {totalPages}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setMobileIndex(i => Math.min(totalPages - 1, i + 1))}
+            disabled={mobileIndex >= totalPages - 1}
+          >
+            Próximo &#8594;
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

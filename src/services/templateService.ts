@@ -233,16 +233,29 @@ class TemplateService {
             .info-table tr:nth-child(4) td:nth-child(4) { width: 40%; }
             
             /* Desenvolvimento metodológico com tabela mais compacta */
-            .development-table th {
-              font-size: 0.8rem;
-              padding: 8px 6px;
-              text-align: center;
-              background: #f8fafc;
+            .development-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 24px;
             }
-            .development-table td {
-              font-size: 0.8rem;
-              padding: 8px 6px;
+            .development-table th, .development-table td {
+              border: 1px solid #e5e7eb;
+              padding: 6px 8px;
+              font-size: 0.75rem;
+              font-family: 'Inter', sans-serif;
+              background: #fff;
               text-align: center;
+              vertical-align: middle;
+            }
+            .development-table th {
+              background: #f3f4f6;
+              color: #1f2937;
+              font-weight: 600;
+              text-align: left;
+              width: 18%;
+            }
+            .development-table tr:last-child td {
+              border-bottom: 1px solid #e5e7eb;
             }
             .development-table th:first-child { width: 15%; }
             .development-table th:nth-child(2) { width: 50%; }
@@ -262,7 +275,7 @@ class TemplateService {
               list-style: disc inside;
               margin-bottom: 16px;
               line-height: 1.4;
-              font-size: 0.9rem;
+              font-size: 0.85rem;
               font-family: 'Inter', sans-serif;
               padding-left: 0;
             }
@@ -270,7 +283,7 @@ class TemplateService {
               margin-bottom: 0.5mm;
             }
             p {
-              font-size: 0.9rem;
+              font-size: 0.85rem;
               line-height: 1.4;
               margin-bottom: 12px;
               font-family: 'Inter', sans-serif;
@@ -410,7 +423,7 @@ class TemplateService {
 
             <!-- Rodapé -->
             <div class="footer">
-              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+              Plano de aula gerado pela AulagIA - Sua aula com toque mágico em {{data}} • aulagia.com.br
             </div>
 
             <div class="content">
@@ -454,7 +467,7 @@ class TemplateService {
               <!-- Desenvolvimento Metodológico -->
               <div class="section-title">DESENVOLVIMENTO METODOLÓGICO</div>
               <div class="development-section">
-                <table class="development-table">
+                <table class="development-table" style="margin-bottom: 24px;">
                   <thead>
                     <tr>
                       <th>Etapa</th>
@@ -477,8 +490,8 @@ class TemplateService {
               </div>
 
               <!-- Recursos Didáticos -->
-              <div class="section-title">RECURSOS DIDÁTICOS</div>
-              <p>{{recursos}}</p>
+              <div class="section-title" style="margin-top: 32px;">RECURSOS DIDÁTICOS</div>
+              <p style="margin-bottom: 24px;">{{recursos}}</p>
 
               <!-- Avaliação -->
               <div class="section-title">AVALIAÇÃO</div>
@@ -1091,7 +1104,7 @@ class TemplateService {
 
             <!-- Rodapé -->
             <div class="footer">
-              Atividade gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+              Atividade gerada pela AulagIA - Sua aula com toque mágico em {{data}} • Template Padrão
             </div>
 
             <div class="content">
@@ -1599,7 +1612,7 @@ class TemplateService {
 
             <!-- Rodapé -->
             <div class="footer">
-              Avaliação gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • Template Padrão
+              Avaliação gerada pela AulagIA - Sua aula com toque mágico em {{data}} • aulagia.com.br
             </div>
 
             <div class="content">

@@ -150,7 +150,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-4xl max-h-[95vh] overflow-y-auto rounded-xl border-0 p-4 sm:p-6">
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[95vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
         <DialogHeader className="space-y-3">
           <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Crown className="w-5 h-5 text-blue-600" />
