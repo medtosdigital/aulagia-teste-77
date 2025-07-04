@@ -88,58 +88,53 @@ export interface Assessment {
 
 class MaterialService {
   async generateMaterial(type: string, formData: MaterialFormData): Promise<GeneratedMaterial> {
-    console.log('🚀 Starting enhanced material generation:', { type, formData });
+    console.log('🚀 Starting material generation:', { type, formData });
     
     try {
-      // Parallel processing: Generate content and prepare data simultaneously
-      const [aiResponse, materialData] = await Promise.all([
-        // Generate content using optimized OpenAI Edge Function
-        supabase.functions.invoke('generate-material-content', {
-          body: { type, formData }
-        }),
-        // Prepare material data structure
-        Promise.resolve(this.mapToUserMaterial(type, formData, {}))
-      ]);
+      // Generate content using OpenAI Edge Function
+      console.log('🤖 Calling OpenAI Edge Function...');
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('generate-material-content', {
+        body: { type, formData }
+      });
 
-      if (aiResponse.error) {
-        console.error('❌ OpenAI Edge Function error:', aiResponse.error);
-        throw new Error(`Erro na geração de conteúdo: ${aiResponse.error.message}`);
+      if (aiError) {
+        console.error('❌ OpenAI Edge Function error:', aiError);
+        throw new Error(`Erro na geração de conteúdo: ${aiError.message}`);
       }
 
-      if (!aiResponse.data?.success) {
-        console.error('❌ OpenAI generation failed:', aiResponse.data?.error);
-        throw new Error(`Erro na geração de conteúdo: ${aiResponse.data?.error || 'Resposta inválida da IA'}`);
+      if (!aiResponse?.success) {
+        console.error('❌ OpenAI generation failed:', aiResponse?.error);
+        throw new Error(`Erro na geração de conteúdo: ${aiResponse?.error || 'Resposta inválida da IA'}`);
       }
 
-      console.log('✅ Enhanced AI content generated successfully');
+      console.log('✅ AI content generated successfully');
       
-      // Fast processing of AI-generated content into structured format
-      const generatedContent = this.processAIContentFast(type, aiResponse.data.content, formData);
-      console.log('📝 Content processed with enhanced speed');
+      // Process the AI-generated content into structured format
+      const generatedContent = await this.processAIContent(type, aiResponse.content, formData);
+      console.log('📝 Content processed successfully');
       
-      // Update material data with processed content
-      const finalMaterialData = {
-        ...materialData,
-        content: JSON.stringify(generatedContent)
-      };
+      // Map form data to UserMaterial format
+      const materialData = this.mapToUserMaterial(type, formData, generatedContent);
+      console.log('📝 Material data mapped:', materialData);
       
-      console.log('💾 Saving enhanced material to Supabase...');
-      const savedMaterial = await userMaterialsService.addMaterial(finalMaterialData);
+      // Save to Supabase
+      console.log('💾 Saving material to Supabase...');
+      const savedMaterial = await userMaterialsService.addMaterial(materialData);
       
       if (!savedMaterial) {
         console.error('❌ Failed to save material to Supabase');
         throw new Error('Falha ao salvar material no banco de dados');
       }
       
-      console.log('✅ Enhanced material saved successfully to Supabase:', savedMaterial.id);
+      console.log('✅ Material saved successfully to Supabase:', savedMaterial.id);
       
-      // Fast conversion to GeneratedMaterial format for UI compatibility
+      // Convert back to GeneratedMaterial format for UI compatibility
       const result = this.convertToGeneratedMaterial(savedMaterial, generatedContent, formData);
-      console.log('🔄 Material converted for UI with enhanced speed:', result.id);
+      console.log('🔄 Material converted for UI:', result.id);
       
       return result;
     } catch (error) {
-      console.error('❌ Error in enhanced generateMaterial:', error);
+      console.error('❌ Error in generateMaterial:', error);
       throw error;
     }
   }
@@ -287,16 +282,19 @@ class MaterialService {
     };
   }
 
-  private processAIContentFast(type: string, aiContent: string, formData: MaterialFormData): any {
-    console.log('🔄 Fast processing AI content for type:', type);
+  private async processAIContent(type: string, aiContent: string, formData: MaterialFormData): Promise<any> {
+    console.log('🔄 Processing AI content for type:', type);
+    
+    // For now, we'll structure the AI content with basic template structure
+    // This can be enhanced to parse and structure the AI content more intelligently
     
     const topic = formData.tema || formData.topic || 'Conteúdo';
     const subject = formData.disciplina || formData.subject || 'Disciplina';
     const grade = formData.serie || formData.grade || 'Série';
-    const professor = formData.professor || 'Professor(a)';
+    const professor = formData.professor || 'Professor';
     const data = formData.data || new Date().toLocaleDateString('pt-BR');
     const duracao = formData.duracao || '50 minutos';
-    const bncc = formData.bncc || `Habilidades da BNCC relacionadas a ${topic}`;
+    const bncc = formData.bncc || 'Habilidade(s) da BNCC relacionada(s) ao tema';
 
     // Common header for all materials
     const cabecalho = {
@@ -309,216 +307,138 @@ class MaterialService {
       bncc
     };
 
-    // Fast content structuring based on type
-    const baseStructure = {
-      titulo: `${this.getMaterialTypeLabel(type)} - ${topic}`,
-      cabecalho,
-      professor,
-      data,
-      disciplina: subject,
-      serie: grade,
-      tema: topic,
-      duracao,
-      bncc,
-      conteudo_completo: aiContent, // Store the full AI-generated content
-    };
-
     switch (type) {
       case 'plano-de-aula':
         return {
-          ...baseStructure,
-          objetivos: this.extractObjectives(aiContent),
-          habilidades: this.extractSkills(aiContent),
-          metodologia: this.extractMethodology(aiContent),
-          desenvolvimento: this.extractDevelopment(aiContent),
-          recursos: this.extractResources(aiContent),
-          avaliacao: this.extractEvaluation(aiContent),
-          adaptacoes: this.extractAdaptations(aiContent)
+          titulo: `Plano de Aula - ${topic}`,
+          cabecalho,
+          professor,
+          data,
+          disciplina: subject,
+          serie: grade,
+          tema: topic,
+          duracao,
+          bncc,
+          conteudo_ia: aiContent, // Store the AI-generated content
+          // Keep basic structure for compatibility
+          objetivos: [
+            `Compreender os conceitos fundamentais sobre ${topic}`,
+            `Aplicar conhecimentos de ${topic} em situações práticas`,
+            `Desenvolver habilidades de análise crítica sobre o tema`
+          ],
+          desenvolvimento: [
+            {
+              etapa: 'Introdução',
+              atividade: `Apresentação do tema "${topic}" baseada no conteúdo gerado por IA`,
+              tempo: '10 min',
+              recursos: 'Quadro/Lousa, Projetor multimídia'
+            },
+            {
+              etapa: 'Desenvolvimento',
+              atividade: `Desenvolvimento do conteúdo conforme orientações da IA`,
+              tempo: '25 min',
+              recursos: 'Material impresso, Projetor multimídia'
+            },
+            {
+              etapa: 'Prática',
+              atividade: `Atividades práticas sugeridas pela IA`,
+              tempo: '10 min',
+              recursos: 'Material impresso, Recursos digitais'
+            },
+            {
+              etapa: 'Fechamento',
+              atividade: `Revisão e avaliação conforme sugestões da IA`,
+              tempo: '5 min',
+              recursos: 'Quadro/Lousa, Recursos digitais'
+            }
+          ],
+          recursos: 'Quadro/Lousa, Projetor multimídia, Material impresso, Recursos digitais',
+          metodologia: `Metodologia baseada nas sugestões da IA para ${topic}`,
+          avaliacao: `Avaliação formativa e somativa conforme orientações da IA`,
+          referencias: [
+            'Referências sugeridas pela IA',
+            'Base Nacional Comum Curricular (BNCC)',
+            'Recursos online complementares'
+          ]
         };
 
       case 'slides':
         return {
-          ...baseStructure,
-          slides: this.extractSlides(aiContent),
-          objetivos: this.extractObjectives(aiContent),
-          sintese: this.extractSynthesis(aiContent),
-          referencias: this.extractReferences(aiContent)
+          titulo: `Slides - ${topic}`,
+          cabecalho,
+          professor,
+          data,
+          disciplina: subject,
+          serie: grade,
+          tema: topic,
+          duracao,
+          bncc,
+          conteudo_ia: aiContent,
+          slides: [
+            {
+              numero: 1,
+              titulo: `${topic}`,
+              conteudo: `Apresentação sobre ${topic} em ${subject}`,
+              tipo: 'capa'
+            },
+            {
+              numero: 2,
+              titulo: 'Conteúdo Gerado por IA',
+              conteudo: aiContent.substring(0, 200) + '...', // Preview of AI content
+              tipo: 'texto'
+            }
+          ]
         };
 
       case 'atividade':
         return {
-          ...baseStructure,
-          instrucoes: this.extractInstructions(aiContent),
-          questoes: this.extractQuestions(aiContent),
-          gabarito: this.extractAnswerKey(aiContent),
-          criterios_avaliacao: this.extractEvaluationCriteria(aiContent)
+          titulo: `Atividade - ${topic}`,
+          cabecalho,
+          professor,
+          data,
+          disciplina: subject,
+          serie: grade,
+          tema: topic,
+          duracao,
+          bncc,
+          conteudo_ia: aiContent,
+          instrucoes: `Atividade gerada por IA sobre ${topic}`,
+          questoes: [], // Will be populated from AI content parsing
+          criterios_avaliacao: [
+            'Compreensão dos conceitos',
+            'Clareza na expressão das ideias',
+            'Aplicação correta do conhecimento'
+          ]
         };
 
       case 'avaliacao':
         return {
-          ...baseStructure,
-          instrucoes: this.extractInstructions(aiContent),
-          questoes: this.extractQuestions(aiContent),
-          gabarito: this.extractAnswerKey(aiContent),
-          criterios_correcao: this.extractCorrectionCriteria(aiContent),
-          distribuicao_pontos: this.extractPointDistribution(aiContent)
+          titulo: `Avaliação - ${topic}`,
+          cabecalho,
+          professor,
+          data,
+          disciplina: subject,
+          serie: grade,
+          tema: topic,
+          duracao,
+          bncc,
+          conteudo_ia: aiContent,
+          instrucoes: `Avaliação gerada por IA sobre ${topic}`,
+          questoes: [], // Will be populated from AI content parsing
+          criterios_avaliacao: [
+            'Compreensão dos conceitos',
+            'Clareza na expressão das ideias',
+            'Aplicação correta do conhecimento'
+          ]
         };
 
       default:
-        return baseStructure;
+        return {
+          titulo: `Material - ${topic}`,
+          cabecalho,
+          conteudo_ia: aiContent
+        };
     }
-  }
-
-  private getMaterialTypeLabel(type: string): string {
-    const labels = {
-      'plano-de-aula': 'Plano de Aula',
-      'slides': 'Apresentação',
-      'atividade': 'Atividade',
-      'avaliacao': 'Avaliação'
-    };
-    return labels[type as keyof typeof labels] || 'Material';
-  }
-
-  // Fast extraction methods - simple parsing for speed
-  private extractObjectives(content: string): string[] {
-    const match = content.match(/OBJETIVOS[\s\S]*?(?=\*\*|$)/i);
-    if (match) {
-      return match[0].split('•').filter(obj => obj.trim().length > 10).map(obj => obj.trim());
-    }
-    return [`Compreender os conceitos fundamentais do tema`, `Aplicar conhecimentos em situações práticas`, `Desenvolver habilidades de análise crítica`];
-  }
-
-  private extractSkills(content: string): string[] {
-    const match = content.match(/HABILIDADES[\s\S]*?(?=\*\*|$)/i);
-    if (match) {
-      return match[0].split('•').filter(skill => skill.trim().length > 5).map(skill => skill.trim());
-    }
-    return [`Habilidades da BNCC relacionadas ao tema`];
-  }
-
-  private extractMethodology(content: string): string {
-    const match = content.match(/METODOLOGIA[\s\S]*?(?=\*\*|$)/i);
-    return match ? match[0].replace(/METODOLOGIA[:\s]*/i, '').trim() : 'Metodologia ativa e participativa';
-  }
-
-  private extractDevelopment(content: string): any[] {
-    const match = content.match(/DESENVOLVIMENTO[\s\S]*?(?=\*\*|$)/i);
-    if (match) {
-      const steps = match[0].split(/\d+\.\s*\*\*/).filter(step => step.trim().length > 10);
-      return steps.map((step, index) => ({
-        etapa: `Etapa ${index + 1}`,
-        atividade: step.trim().substring(0, 200),
-        tempo: '10-15 min',
-        recursos: 'Recursos didáticos diversos'
-      }));
-    }
-    return [
-      { etapa: 'Introdução', atividade: 'Apresentação do tema', tempo: '10 min', recursos: 'Quadro e projetor' },
-      { etapa: 'Desenvolvimento', atividade: 'Conteúdo principal', tempo: '25 min', recursos: 'Material didático' },
-      { etapa: 'Consolidação', atividade: 'Atividades práticas', tempo: '10 min', recursos: 'Exercícios' },
-      { etapa: 'Encerramento', atividade: 'Síntese e avaliação', tempo: '5 min', recursos: 'Avaliação formativa' }
-    ];
-  }
-
-  private extractResources(content: string): string {
-    const match = content.match(/RECURSOS[\s\S]*?(?=\*\*|$)/i);
-    return match ? match[0].replace(/RECURSOS[:\s]*/i, '').trim() : 'Quadro, projetor, material impresso, recursos digitais';
-  }
-
-  private extractEvaluation(content: string): string {
-    const match = content.match(/AVALIAÇÃO[\s\S]*?(?=\*\*|$)/i);
-    return match ? match[0].replace(/AVALIAÇÃO[:\s]*/i, '').trim() : 'Avaliação formativa e somativa baseada na participação e compreensão dos conceitos';
-  }
-
-  private extractAdaptations(content: string): string {
-    const match = content.match(/ADAPTAÇÕES[\s\S]*?(?=\*\*|$)/i);
-    return match ? match[0].replace(/ADAPTAÇÕES[:\s]*/i, '').trim() : 'Estratégias inclusivas para diferentes estilos de aprendizagem';
-  }
-
-  private extractSlides(content: string): any[] {
-    const slideMatches = content.match(/SLIDE\s+\d+[\s\S]*?(?=SLIDE\s+\d+|$)/gi);
-    if (slideMatches && slideMatches.length > 0) {
-      return slideMatches.map((slide, index) => ({
-        numero: index + 1,
-        titulo: this.extractSlideTitle(slide),
-        conteudo: this.extractSlideContent(slide),
-        tipo: index === 0 ? 'capa' : 'conteudo'
-      }));
-    }
-    return [
-      { numero: 1, titulo: 'Título da Aula', conteudo: 'Apresentação do tema', tipo: 'capa' },
-      { numero: 2, titulo: 'Objetivos', conteudo: 'O que vamos aprender', tipo: 'objetivos' },
-      { numero: 3, titulo: 'Conteúdo Principal', conteudo: 'Desenvolvimento do tema', tipo: 'conteudo' }
-    ];
-  }
-
-  private extractSlideTitle(slide: string): string {
-    const match = slide.match(/SLIDE\s+\d+[^\n]*?([^\n]+)/i);
-    return match ? match[1].trim() : 'Slide';
-  }
-
-  private extractSlideContent(slide: string): string {
-    return slide.replace(/SLIDE\s+\d+[^\n]*\n/i, '').trim().substring(0, 300);
-  }
-
-  private extractInstructions(content: string): string {
-    const match = content.match(/INSTRUÇÕES[\s\S]*?(?=\*\*|$)/i);
-    return match ? match[0].replace(/INSTRUÇÕES[:\s]*/i, '').trim() : 'Leia atentamente cada questão e responda de forma completa e fundamentada.';
-  }
-
-  private extractQuestions(content: string): any[] {
-    const questionMatches = content.match(/\d+[\.\)]\s*[\s\S]*?(?=\d+[\.\)]|$)/g);
-    if (questionMatches && questionMatches.length > 0) {
-      return questionMatches.map((question, index) => ({
-        numero: index + 1,
-        tipo: question.includes('A)') || question.includes('a)') ? 'objetiva' : 'dissertativa',
-        pergunta: question.replace(/^\d+[\.\)]\s*/, '').trim().substring(0, 500),
-        opcoes: this.extractOptions(question),
-        pontuacao: 1.0
-      }));
-    }
-    return [];
-  }
-
-  private extractOptions(question: string): string[] | undefined {
-    const optionMatches = question.match(/[A-Da-d]\)\s*[^\n]+/g);
-    return optionMatches ? optionMatches.map(opt => opt.replace(/^[A-Da-d]\)\s*/, '').trim()) : undefined;
-  }
-
-  private extractAnswerKey(content: string): string {
-    const match = content.match(/GABARITO[\s\S]*?(?=\*\*|$)/i);
-    return match ? match[0].replace(/GABARITO[:\s]*/i, '').trim() : 'Gabarito será fornecido separadamente';
-  }
-
-  private extractEvaluationCriteria(content: string): string[] {
-    const match = content.match(/CRITÉRIOS[\s\S]*?(?=\*\*|$)/i);
-    if (match) {
-      return match[0].split('•').filter(criteria => criteria.trim().length > 5).map(criteria => criteria.trim());
-    }
-    return ['Compreensão dos conceitos', 'Clareza na expressão', 'Aplicação correta do conhecimento'];
-  }
-
-  private extractCorrectionCriteria(content: string): string {
-    const match = content.match(/CRITÉRIOS DE CORREÇÃO[\s\S]*?(?=\*\*|$)/i);
-    return match ? match[0].replace(/CRITÉRIOS DE CORREÇÃO[:\s]*/i, '').trim() : 'Critérios baseados na fundamentação teórica e aplicação prática';
-  }
-
-  private extractPointDistribution(content: string): string {
-    const match = content.match(/DISTRIBUIÇÃO[\s\S]*?(?=\*\*|$)/i);
-    return match ? match[0].replace(/DISTRIBUIÇÃO[:\s]*/i, '').trim() : 'Distribuição equilibrada entre questões objetivas e dissertativas';
-  }
-
-  private extractSynthesis(content: string): string {
-    const match = content.match(/SÍNTESE[\s\S]*?(?=\*\*|$)/i);
-    return match ? match[0].replace(/SÍNTESE[:\s]*/i, '').trim() : 'Síntese dos principais conceitos abordados';
-  }
-
-  private extractReferences(content: string): string[] {
-    const match = content.match(/REFERÊNCIAS[\s\S]*?(?=\*\*|$)/i);
-    if (match) {
-      return match[0].split('\n').filter(ref => ref.trim().length > 5).map(ref => ref.trim());
-    }
-    return ['Base Nacional Comum Curricular (BNCC)', 'Recursos pedagógicos específicos do tema'];
   }
 }
 
