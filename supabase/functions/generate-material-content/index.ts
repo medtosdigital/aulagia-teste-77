@@ -36,36 +36,103 @@ function buildPromptForMaterial(type: string, formData: any): string {
   const subject = formData.disciplina || formData.subject || 'Disciplina';
   const grade = formData.serie || formData.grade || 'Série';
   
-  const baseContext = `Você é um especialista em educação brasileira e conhece profundamente a BNCC. Crie um ${type} detalhado e pedagógico sobre "${topic}" para a disciplina de ${subject}, voltado para ${grade}.`;
+  const baseContext = `Você é um pedagogo experiente e especialista em educação brasileira, com profundo conhecimento da BNCC. Crie um ${type} de excelente qualidade pedagógica sobre "${topic}" para a disciplina de ${subject}, destinado à ${grade}.`;
   
   switch (type) {
     case 'plano-de-aula':
       return `${baseContext}
 
-INSTRUÇÕES ESPECÍFICAS:
-- Crie objetivos de aprendizagem claros e mensuráveis
-- Desenvolva atividades práticas e engajadoras
-- Inclua metodologias ativas de ensino
-- Sugira recursos didáticos variados
-- Propose formas de avaliação formativa e somativa
-- Alinhe com as competências da BNCC
-- Considere diferentes estilos de aprendizagem
+ESTRUTURA OBRIGATÓRIA:
+**TEMA DA AULA:** ${topic}
+**DISCIPLINA:** ${subject}  
+**SÉRIE/ANO:** ${grade}
+**DURAÇÃO:** ${formData.duracao || '50 minutos'}
 
-O plano deve ser estruturado, prático e aplicável em sala de aula, com atividades que promovam o protagonismo do aluno e o desenvolvimento de competências essenciais.`;
+**OBJETIVOS DE APRENDIZAGEM:**
+• [Liste 3-4 objetivos específicos, mensuráveis e alinhados à BNCC]
+
+**HABILIDADES DA BNCC:**
+• [Cite habilidades específicas do tema para a série]
+
+**METODOLOGIA:**
+• [Descreva metodologias ativas apropriadas para o tema e faixa etária]
+
+**DESENVOLVIMENTO DA AULA:**
+
+1. **INTRODUÇÃO (10 min)**
+   - Atividade: [Atividade motivadora específica para ${topic}]
+   - Estratégia: [Como despertar interesse dos alunos]
+
+2. **DESENVOLVIMENTO (25 min)**
+   - Conteúdo principal: [Conceitos essenciais de ${topic}]
+   - Atividades práticas: [Exercícios específicos da disciplina]
+   - Recursos didáticos: [Materiais concretos para ${subject}]
+
+3. **CONSOLIDAÇÃO (10 min)**
+   - Atividade de fixação: [Exercício prático do tema]
+   - Verificação de aprendizagem: [Como avaliar compreensão]
+
+4. **ENCERRAMENTO (5 min)**
+   - Síntese: [Principais pontos do tema]
+   - Preparação próxima aula: [Conexão com próximos conteúdos]
+
+**RECURSOS NECESSÁRIOS:**
+• [Liste materiais específicos para ${topic} em ${subject}]
+
+**AVALIAÇÃO:**
+• Formativa: [Como avaliar durante a aula]
+• Somativa: [Critérios de avaliação do aprendizado]
+
+**ADAPTAÇÕES INCLUSIVAS:**
+• [Sugestões para diferentes estilos de aprendizagem]
+
+IMPORTANTE: Desenvolva conteúdo original, criativo e pedagogicamente fundamentado. Use linguagem profissional e técnica apropriada para educadores.`;
 
     case 'slides':
       return `${baseContext}
 
-INSTRUÇÕES ESPECÍFICAS:
-- Crie slides com conteúdo visual e objetivo
-- Use linguagem clara e acessível para a faixa etária
-- Inclua conceitos fundamentais e exemplos práticos
-- Organize o conteúdo de forma lógica e progressiva
-- Sugira elementos visuais quando relevante
-- Mantenha cada slide focado em um conceito principal
-- Inclua perguntas para engajar os alunos
+Crie uma apresentação de slides completa e didática sobre "${topic}" para ${grade} em ${subject}.
 
-Os slides devem ser didáticos, visualmente organizados e facilitar a compreensão do tema pelos estudantes.`;
+ESTRUTURA DOS SLIDES:
+
+**SLIDE 1 - CAPA**
+Título: ${topic}
+Disciplina: ${subject}
+Série: ${grade}
+
+**SLIDE 2 - OBJETIVOS**
+O que vamos aprender hoje:
+• [3-4 objetivos específicos para ${topic}]
+
+**SLIDES 3-6 - CONTEÚDO PRINCIPAL**
+Para cada slide, desenvolva:
+- Título claro e direto
+- Conteúdo didático com conceitos essenciais
+- Exemplos práticos relacionados ao cotidiano do aluno
+- Elementos visuais sugeridos (gráficos, imagens, diagramas)
+
+**SLIDE 7 - ATIVIDADE PRÁTICA**
+Exercício interativo sobre ${topic}:
+- Instrução clara para atividade
+- Exemplo de resolução
+- Critérios de avaliação
+
+**SLIDE 8 - SÍNTESE**
+Principais conceitos aprendidos:
+• [Resumo dos pontos-chave]
+
+**SLIDE 9 - PRÓXIMOS PASSOS**
+Como aplicar o conhecimento:
+- Sugestões de estudo
+- Conexões com outros temas
+- Preparação para próxima aula
+
+**SLIDE 10 - REFERÊNCIAS**
+- Bibliografia específica do tema
+- Recursos complementares
+- Links educacionais confiáveis
+
+Desenvolva conteúdo específico, técnico e pedagogicamente rico para cada slide. Use linguagem adequada à faixa etária e inclua elementos que facilitem a compreensão visual.`;
 
     case 'atividade':
       const questionCount = formData.numeroQuestoes || formData.quantidadeQuestoes || 5;
@@ -73,41 +140,123 @@ Os slides devem ser didáticos, visualmente organizados e facilitar a compreens�
       
       return `${baseContext}
 
-INSTRUÇÕES ESPECÍFICAS:
-- Crie ${questionCount} questões do tipo: ${questionType}
-- Para questões abertas: formulações que estimulem reflexão e análise crítica
-- Para questões fechadas: alternativas plausíveis com apenas uma correta
-- Para questões mistas: combine ambos os tipos equilibradamente
-- Inclua diferentes níveis de dificuldade (básico, intermediário, avançado)
-- Relacione as questões com situações do cotidiano quando possível
-- Forneça gabaritos e explicações detalhadas
-- Desenvolva critérios de avaliação claros
+Desenvolva uma atividade completa com ${questionCount} questões do tipo "${questionType}" sobre "${topic}".
 
-As questões devem avaliar diferentes habilidades cognitivas e promover o aprendizado significativo.`;
+**CABEÇALHO DA ATIVIDADE:**
+Atividade de ${subject} - ${grade}
+Tema: ${topic}
+Instruções: Leia atentamente cada questão e responda de forma completa e fundamentada.
+
+**QUESTÕES:**
+
+Para questões OBJETIVAS (múltipla escolha):
+- Enunciado claro e contextualizado
+- 4 alternativas plausíveis (A, B, C, D)
+- Apenas uma alternativa correta
+- Distradores bem elaborados
+
+Para questões DISSERTATIVAS:
+- Comando claro e específico
+- Critérios de avaliação definidos
+- Pontuação por critério
+- Exemplo de resposta esperada
+
+Para questões MISTAS:
+- Combine ambos os tipos equilibradamente
+- Varie os níveis de dificuldade (básico, intermediário, avançado)
+- Inclua questões de aplicação prática
+
+**NÍVEIS COGNITIVOS:**
+- Conhecimento: ${Math.ceil(questionCount * 0.2)} questões
+- Compreensão: ${Math.ceil(questionCount * 0.3)} questões  
+- Aplicação: ${Math.ceil(questionCount * 0.3)} questões
+- Análise: ${Math.ceil(questionCount * 0.2)} questões
+
+**GABARITO COMENTADO:**
+Para cada questão, forneça:
+- Resposta correta
+- Justificativa pedagógica
+- Conceitos envolvidos
+- Dicas para resolução
+
+**CRITÉRIOS DE AVALIAÇÃO:**
+- Domínio conceitual (40%)
+- Aplicação prática (30%)  
+- Clareza na expressão (20%)
+- Criatividade/originalidade (10%)
+
+Desenvolva questões originais, desafiadoras e pedagogicamente fundamentadas, específicas para ${topic} em ${subject}.`;
 
     case 'avaliacao':
       const subjects = formData.assuntos || formData.subjects || [topic];
-      const evalQuestionCount = formData.numeroQuestoes || formData.quantidadeQuestoes || 5;
+      const evalQuestionCount = formData.numeroQuestoes || formData.quantidadeQuestoes || 10;
       const evalQuestionType = formData.tipoQuestoes || 'mistas';
       
       return `${baseContext}
 
-CONTEÚDOS A AVALIAR: ${subjects.join(', ')}
+Desenvolva uma avaliação formal com ${evalQuestionCount} questões do tipo "${evalQuestionType}" abrangendo: ${subjects.join(', ')}.
 
-INSTRUÇÕES ESPECÍFICAS:
-- Crie ${evalQuestionCount} questões do tipo: ${evalQuestionType}
-- Distribua as questões equilibradamente entre os conteúdos listados
-- Para questões objetivas: 4 alternativas com apenas uma correta
-- Para questões dissertativas: comando claro e critérios de correção
-- Inclua questões de diferentes níveis taxonômicos (conhecimento, compreensão, aplicação, análise)
-- Estabeleça pontuação para cada questão
-- Defina tempo sugerido para resolução
-- Inclua instruções claras para os estudantes
+**CABEÇALHO DA AVALIAÇÃO:**
+AVALIAÇÃO DE ${subject.toUpperCase()}
+Série: ${grade}
+Conteúdos: ${subjects.join(', ')}
+Valor: 10,0 pontos
+Duração: ${formData.duracao || '50 minutos'}
 
-A avaliação deve ser justa, abrangente e alinhada aos objetivos de aprendizagem estabelecidos.`;
+**INSTRUÇÕES AO ALUNO:**
+• Leia todas as questões antes de começar
+• Responda com caneta azul ou preta
+• Questões objetivas: marque apenas uma alternativa
+• Questões dissertativas: desenvolva respostas completas
+• Boa prova!
+
+**DISTRIBUIÇÃO DAS QUESTÕES:**
+${subjects.map((subject, index) => 
+  `Conteúdo ${index + 1} (${subject}): ${Math.ceil(evalQuestionCount / subjects.length)} questões`
+).join('\n')}
+
+**QUESTÕES DA AVALIAÇÃO:**
+
+Para cada questão, desenvolva:
+
+QUESTÕES OBJETIVAS (60% da nota):
+- Enunciado contextualizado e claro
+- Comando específico e direto  
+- 4 alternativas bem elaboradas
+- Apenas uma correta
+- Valor: [X] pontos
+
+QUESTÕES DISSERTATIVAS (40% da nota):
+- Situação-problema real
+- Comando claro do que é esperado
+- Critérios específicos de correção
+- Pontuação detalhada por item
+- Valor: [X] pontos
+
+**DISTRIBUIÇÃO DE PONTOS:**
+- Total: 10,0 pontos
+- Questões objetivas: 6,0 pontos
+- Questões dissertativas: 4,0 pontos
+
+**CRITÉRIOS DE CORREÇÃO:**
+Para questões dissertativas:
+- Conceituação correta (40%)
+- Exemplificação adequada (30%)
+- Clareza na expressão (20%)
+- Aplicação prática (10%)
+
+**GABARITO OFICIAL:**
+[Para cada questão, apresente resposta e justificativa]
+
+**ANÁLISE DE DESEMPENHO ESPERADO:**
+- Conceitos básicos: 70% de acertos
+- Aplicação: 60% de acertos  
+- Análise crítica: 50% de acertos
+
+Crie uma avaliação rigorosa, justa e pedagogicamente fundamentada, que permita verificar diferentes níveis de aprendizagem em ${subject}.`;
 
     default:
-      return `${baseContext} Crie um material educativo de qualidade, seguindo as melhores práticas pedagógicas.`;
+      return `${baseContext} Desenvolva um material educativo de excelente qualidade, seguindo as melhores práticas pedagógicas e adequado à realidade educacional brasileira.`;
   }
 }
 
@@ -118,7 +267,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🤖 Starting AI content generation...');
+    console.log('🤖 Starting enhanced AI content generation...');
     
     const { type, formData }: MaterialRequest = await req.json();
     console.log('📋 Request data:', { type, formData });
@@ -128,9 +277,9 @@ serve(async (req) => {
     }
 
     const prompt = buildPromptForMaterial(type, formData);
-    console.log('📝 Generated prompt for type:', type);
+    console.log('📝 Generated enhanced prompt for type:', type);
 
-    console.log('🔄 Calling OpenAI API...');
+    console.log('🔄 Calling OpenAI API with optimized settings...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -138,16 +287,19 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           { 
             role: 'system', 
-            content: 'Você é um especialista em educação brasileira, pedagogo experiente e conhecedor da BNCC. Responda sempre em português do Brasil com linguagem técnica mas acessível.' 
+            content: 'Você é um pedagogo experiente, especialista em educação brasileira e BNCC. Crie conteúdo educacional de alta qualidade, original e pedagogicamente fundamentado. Responda sempre em português brasileiro com linguagem técnica e profissional. NUNCA mencione que você é uma IA ou que o conteúdo foi gerado por inteligência artificial.' 
           },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.7,
-        max_tokens: 3000,
+        temperature: 0.9,
+        max_tokens: 4000,
+        top_p: 0.95,
+        frequency_penalty: 0.3,
+        presence_penalty: 0.2,
       }),
     });
 
@@ -158,25 +310,27 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('✅ OpenAI response received');
+    console.log('✅ Enhanced OpenAI response received');
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       throw new Error('Invalid response format from OpenAI');
     }
 
     const generatedContent = data.choices[0].message.content;
-    console.log('📝 Content generated successfully, length:', generatedContent.length);
+    console.log('📝 High-quality content generated successfully, length:', generatedContent.length);
 
     return new Response(JSON.stringify({ 
       success: true,
       content: generatedContent,
-      usage: data.usage 
+      usage: data.usage,
+      model: 'gpt-4o-mini',
+      settings: { temperature: 0.9, max_tokens: 4000 }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('❌ Error in generate-material-content function:', error);
+    console.error('❌ Error in enhanced generate-material-content function:', error);
     return new Response(JSON.stringify({ 
       success: false,
       error: error.message 
