@@ -450,9 +450,9 @@ class TemplateService {
                 </tr>
                 <tr>
                   <th>Duração:</th>
-                  <td>{{duracao}}</td>
+                  <td>{{duracao.aula}}</td>
                   <th>BNCC:</th>
-                  <td>{{bncc}}</td>
+                  <td>{{codigo.da.bncc}}</td>
                 </tr>
               </table>
 
@@ -501,7 +501,7 @@ class TemplateService {
         </body>
         </html>
       `,
-      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao', 'bncc', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
+      variables: ['tema', 'professor', 'disciplina', 'serie', 'data', 'duracao.aula', 'codigo.da.bncc', 'objetivos', 'desenvolvimento', 'recursos', 'avaliacao'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },

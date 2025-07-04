@@ -72,7 +72,6 @@ const Index = () => {
     showFeedbackModal,
     closeFeedbackModal,
     dontShowAgain,
-    checkDailyModal,
     incrementMaterialsCreated
   } = useFeedback(currentPlan?.plano_ativo || 'gratuito', isFirstAccess);
 
@@ -95,7 +94,6 @@ const Index = () => {
     window.addEventListener('navigateToProfile', handleNavigateToProfile);
     window.addEventListener('navigateToSubscription', handleNavigateToSubscription);
     window.addEventListener('openFeedbackModal', handleOpenFeedbackModal);
-    checkDailyModal();
     // Se veio do magic link com plano, já associa ao plano
     const params = new URLSearchParams(window.location.search);
     const plan = params.get('plan');
@@ -107,7 +105,7 @@ const Index = () => {
       window.removeEventListener('navigateToSubscription', handleNavigateToSubscription);
       window.removeEventListener('openFeedbackModal', handleOpenFeedbackModal);
     };
-  }, [checkDailyModal, user, isFirstAccess, navigate]);
+  }, [user, isFirstAccess, navigate]);
 
   // Resetar scroll do container principal ao trocar de rota
   useEffect(() => {

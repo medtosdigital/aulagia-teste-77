@@ -248,7 +248,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
               )}
             </Button>
 
-            <div className="flex flex-row sm:flex-col gap-2 mt-4">
+            <div className="flex flex-row gap-2 mt-4">
               <Button variant="outline" className="flex-1" onClick={handleClose}>Fechar</Button>
               {showDontShowOption && (
                 <Button variant="outline" className="flex-1" onClick={handleDontShow}>Não mostrar novamente</Button>

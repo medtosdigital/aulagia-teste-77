@@ -207,7 +207,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
               
               {/* Content Preview - Scaled down to fit without scrolling */}
               <div className="flex-1 p-4 overflow-hidden">
-                <div className="h-full border rounded-2xl bg-gray-50 overflow-hidden shadow-inner">
+                <div className="h-full border rounded-2xl bg-gray-50 overflow-auto shadow-inner">
                   <div 
                     className="origin-top-left transform scale-[0.3] w-[333%] h-[333%] overflow-hidden"
                     style={{ transformOrigin: '0 0' }}
@@ -334,7 +334,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
     <>
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex rounded-2xl">
-          <div className="flex-1 overflow-hidden rounded-l-2xl">
+          <div className="flex-1 overflow-auto rounded-l-2xl">
             <MaterialPreview material={material} />
           </div>
           

@@ -59,18 +59,6 @@ export const useFeedback = (planoAtivo: string, isFirstAccess: boolean) => {
     }
   };
 
-  // Timer aleatório para mostrar modal após login (1 a 5 min)
-  const checkDailyModal = () => {
-    if (!isFeedbackEligiblePlan(planoAtivo)) return;
-    if (isFirstAccess) return; // Não mostrar junto com modal de primeiro acesso
-    if (!shouldShowTodayModal()) return;
-    if (timerRef.current) clearTimeout(timerRef.current);
-    const randomDelay = Math.floor(Math.random() * (5 - 1 + 1) + 1) * 60 * 1000; // 1 a 5 min
-    timerRef.current = setTimeout(() => {
-      saveFeedbackState({ showFeedbackModal: true });
-    }, randomDelay);
-  };
-
   // Abrir modal manualmente (botão ?)
   const openFeedbackModal = () => {
     saveFeedbackState({ showFeedbackModal: true });
@@ -129,7 +117,6 @@ export const useFeedback = (planoAtivo: string, isFirstAccess: boolean) => {
   return {
     ...feedbackState,
     incrementMaterialsCreated,
-    checkDailyModal,
     openFeedbackModal,
     closeFeedbackModal,
     dontShowAgain,
