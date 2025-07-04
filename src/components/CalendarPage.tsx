@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar, CalendarIcon, Plus, ChevronLeft, ChevronRight, Lock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,6 +30,7 @@ const CalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [materialModalOpen, setMaterialModalOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
+  const [showFullWeek, setShowFullWeek] = useState(false);
   const [showWeekends, setShowWeekends] = useState(false);
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
 
@@ -154,9 +154,15 @@ const CalendarPage: React.FC = () => {
       case 'day':
         return format(currentDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
       case 'week':
-        const weekStart = startOfWeek(currentDate, { locale: ptBR });
-        const weekEnd = endOfWeek(currentDate, { locale: ptBR });
-        return `${format(weekStart, "dd/MM", { locale: ptBR })} - ${format(weekEnd, "dd/MM/yyyy", { locale: ptBR })}`;
+        if (showFullWeek) {
+          const weekStart = startOfWeek(currentDate, { locale: ptBR });
+          const weekEnd = endOfWeek(currentDate, { locale: ptBR });
+          return `${format(weekStart, "dd/MM", { locale: ptBR })} - ${format(weekEnd, "dd/MM/yyyy", { locale: ptBR })}`;
+        } else {
+          const today = new Date();
+          const weekEnd = endOfWeek(today, { locale: ptBR });
+          return `A partir de hoje - ${format(weekEnd, "dd/MM/yyyy", { locale: ptBR })}`;
+        }
       case 'month':
         return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
       case 'year':
@@ -251,12 +257,14 @@ const CalendarPage: React.FC = () => {
             <WeekView
               currentDate={currentDate}
               events={user && hasCalendarFeatures ? events : []}
+              showFullWeek={showFullWeek}
               showWeekends={showWeekends}
               onDateClick={handleDateClick}
               onEventClick={handleEventClick}
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
               onViewMaterial={handleViewLesson}
+              onToggleFullWeek={() => setShowFullWeek(!showFullWeek)}
               onToggleWeekends={() => setShowWeekends(!showWeekends)}
               getEventsForDate={getEventsForDate}
               hasCalendarAccess={hasCalendarFeatures}
