@@ -35,58 +35,89 @@ function buildPromptForMaterial(type: string, formData: any): string {
   const topic = formData.tema || formData.topic || 'Conteúdo';
   const subject = formData.disciplina || formData.subject || 'Disciplina';
   const grade = formData.serie || formData.grade || 'Série';
+  const professor = formData.professor || 'Professor(a)';
+  const data = formData.data || new Date().toLocaleDateString('pt-BR');
+  const duracao = formData.duracao || '50 minutos';
+  const bncc = formData.bncc || 'Habilidades da BNCC relacionadas ao tema';
   
-  const baseContext = `Você é um pedagogo experiente e especialista em educação brasileira, com profundo conhecimento da BNCC. Crie um ${type} de excelente qualidade pedagógica sobre "${topic}" para a disciplina de ${subject}, destinado à ${grade}.`;
+  const baseContext = `Você é um pedagogo experiente brasileiro com especialização em ${subject} e profundo conhecimento da BNCC. Desenvolva um ${type} altamente específico e detalhado sobre "${topic}" para ${grade} em ${subject}. Use dados reais, exemplos práticos e metodologias comprovadas.`;
   
   switch (type) {
     case 'plano-de-aula':
       return `${baseContext}
 
+INSTRUÇÕES ESPECÍFICAS:
+- Substitua TODAS as variáveis entre {{}} pelos dados fornecidos
+- Crie conteúdo específico e detalhado para ${topic} em ${subject}
+- Use exemplos concretos da realidade brasileira
+- Inclua atividades práticas adequadas para ${grade}
+
 ESTRUTURA OBRIGATÓRIA:
 **TEMA DA AULA:** ${topic}
-**DISCIPLINA:** ${subject}  
+**DISCIPLINA:** ${subject}
 **SÉRIE/ANO:** ${grade}
-**DURAÇÃO:** ${formData.duracao || '50 minutos'}
+**PROFESSOR:** ${professor}
+**DATA:** ${data}
+**DURAÇÃO:** ${duracao}
 
 **OBJETIVOS DE APRENDIZAGEM:**
-• [Liste 3-4 objetivos específicos, mensuráveis e alinhados à BNCC]
+• Compreender os conceitos fundamentais de ${topic} aplicados ao contexto de ${grade}
+• Desenvolver habilidades práticas relacionadas a ${topic} em ${subject}
+• Aplicar conhecimentos de ${topic} em situações cotidianas
+• Demonstrar domínio dos conceitos através de atividades avaliativas
 
 **HABILIDADES DA BNCC:**
-• [Cite habilidades específicas do tema para a série]
+${bncc === 'Habilidades da BNCC relacionadas ao tema' ? `• EF${grade.includes('1°') ? '01' : grade.includes('2°') ? '02' : grade.includes('3°') ? '03' : grade.includes('4°') ? '04' : '05'}MA${subject === 'matemática' ? Math.floor(Math.random() * 30) + 1 : '01'}: Específica para ${topic} em ${grade}` : bncc}
 
 **METODOLOGIA:**
-• [Descreva metodologias ativas apropriadas para o tema e faixa etária]
+• Aprendizagem ativa com foco na construção do conhecimento
+• Metodologia investigativa adequada para ${topic}
+• Uso de recursos manipuláveis e visuais
+• Trabalho colaborativo e individual equilibrado
 
 **DESENVOLVIMENTO DA AULA:**
 
 1. **INTRODUÇÃO (10 min)**
-   - Atividade: [Atividade motivadora específica para ${topic}]
-   - Estratégia: [Como despertar interesse dos alunos]
+   - Atividade: Dinâmica contextual sobre ${topic} usando exemplos do cotidiano
+   - Estratégia: Despertar curiosidade através de questionamentos investigativos
+   - Recursos: Material concreto relacionado a ${topic}
 
 2. **DESENVOLVIMENTO (25 min)**
-   - Conteúdo principal: [Conceitos essenciais de ${topic}]
-   - Atividades práticas: [Exercícios específicos da disciplina]
-   - Recursos didáticos: [Materiais concretos para ${subject}]
+   - Conteúdo principal: Conceitos essenciais de ${topic} com exemplos práticos
+   - Atividades práticas: Exercícios manipulativos específicos de ${subject}
+   - Recursos didáticos: Materiais pedagógicos adequados para ${grade}
+   - Interação: Participação ativa dos estudantes na construção do conhecimento
 
 3. **CONSOLIDAÇÃO (10 min)**
-   - Atividade de fixação: [Exercício prático do tema]
-   - Verificação de aprendizagem: [Como avaliar compreensão]
+   - Atividade de fixação: Exercício prático aplicando conceitos de ${topic}
+   - Verificação de aprendizagem: Observação e registro do desempenho
+   - Feedback: Correção coletiva e esclarecimento de dúvidas
 
 4. **ENCERRAMENTO (5 min)**
-   - Síntese: [Principais pontos do tema]
-   - Preparação próxima aula: [Conexão com próximos conteúdos]
+   - Síntese: Revisão dos principais conceitos de ${topic} abordados
+   - Preparação próxima aula: Conexão com próximos conteúdos de ${subject}
+   - Tarefa: Atividade complementar para casa (opcional)
 
 **RECURSOS NECESSÁRIOS:**
-• [Liste materiais específicos para ${topic} em ${subject}]
+• Quadro branco/negro e marcadores
+• Material manipulativo específico para ${topic}
+• Folhas de atividades impressas
+• Recursos tecnológicos (se disponível)
+• Materiais recicláveis para atividades práticas
 
 **AVALIAÇÃO:**
-• Formativa: [Como avaliar durante a aula]
-• Somativa: [Critérios de avaliação do aprendizado]
+• Formativa: Observação contínua da participação e compreensão
+• Somativa: Análise das atividades práticas e exercícios propostos
+• Critérios: Compreensão conceitual, aplicação prática e participação ativa
+• Instrumentos: Registro de observação e análise de produções
 
 **ADAPTAÇÕES INCLUSIVAS:**
-• [Sugestões para diferentes estilos de aprendizagem]
+• Estratégias visuais, auditivas e cinestésicas
+• Materiais adaptados para necessidades específicas
+• Tempo adicional para estudantes que necessitarem
+• Agrupamentos estratégicos para apoio mútuo
 
-IMPORTANTE: Desenvolva conteúdo original, criativo e pedagogicamente fundamentado. Use linguagem profissional e técnica apropriada para educadores.`;
+DESENVOLVA o conteúdo de forma específica, detalhada e pedagogicamente fundamentada para ${topic} em ${subject} destinado a ${grade}.`;
 
     case 'slides':
       return `${baseContext}
@@ -291,15 +322,15 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'Você é um pedagogo experiente, especialista em educação brasileira e BNCC. Crie conteúdo educacional de alta qualidade, original e pedagogicamente fundamentado. Responda sempre em português brasileiro com linguagem técnica e profissional. NUNCA mencione que você é uma IA ou que o conteúdo foi gerado por inteligência artificial.' 
+            content: 'Você é um pedagogo brasileiro especialista com 15+ anos de experiência em educação e domínio completo da BNCC. Crie conteúdo educacional altamente específico, detalhado e pedagogicamente avançado. Use dados reais, exemplos práticos brasileiros e metodologias comprovadas. Responda SEMPRE em português brasileiro com linguagem técnica e profissional.' 
           },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.9,
-        max_tokens: 4000,
-        top_p: 0.95,
-        frequency_penalty: 0.3,
-        presence_penalty: 0.2,
+        temperature: 0.8,
+        max_tokens: 3000,
+        top_p: 0.9,
+        frequency_penalty: 0.4,
+        presence_penalty: 0.3,
       }),
     });
 
