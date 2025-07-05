@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CalendarIcon, Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,12 +13,14 @@ interface WeekViewProps {
   currentDate: Date;
   events: CalendarEvent[];
   showWeekends: boolean;
+  showFullWeek?: boolean;
   onDateClick: (date: Date) => void;
   onEventClick: (event: CalendarEvent) => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
   onViewMaterial: (event: CalendarEvent) => void;
   onToggleWeekends: () => void;
+  onToggleFullWeek?: () => void;
   getEventsForDate: (date: Date) => CalendarEvent[];
   hasCalendarAccess?: boolean;
   onUpgrade?: () => void;
@@ -27,12 +30,14 @@ const WeekView: React.FC<WeekViewProps> = ({
   currentDate,
   events,
   showWeekends = false,
+  showFullWeek = false,
   onDateClick,
   onEventClick,
   onEditEvent,
   onDeleteEvent,
   onViewMaterial,
   onToggleWeekends,
+  onToggleFullWeek,
   getEventsForDate,
   hasCalendarAccess = true,
   onUpgrade = () => {}
@@ -41,20 +46,23 @@ const WeekView: React.FC<WeekViewProps> = ({
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
   // Estado para semana completa ou a partir de hoje
-  const [showFullWeek, setShowFullWeek] = useState(!isMobile);
+  const [internalShowFullWeek, setInternalShowFullWeek] = useState(!isMobile);
+  const effectiveShowFullWeek = showFullWeek !== undefined ? showFullWeek : internalShowFullWeek;
 
   // Atualiza showFullWeek se o tamanho da tela mudar
   useEffect(() => {
     const handleResize = () => {
-      setShowFullWeek(window.innerWidth >= 640);
+      if (showFullWeek === undefined) {
+        setInternalShowFullWeek(window.innerWidth >= 640);
+      }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [showFullWeek]);
 
   let weekDays: Date[];
   
-  if (showFullWeek) {
+  if (effectiveShowFullWeek) {
     const weekStart = startOfWeek(currentDate, { locale: ptBR });
     weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   } else {
@@ -78,6 +86,14 @@ const WeekView: React.FC<WeekViewProps> = ({
     ? weekDays.slice(mobileIndex * daysPerPage, mobileIndex * daysPerPage + daysPerPage)
     : weekDays;
 
+  const handleToggleFullWeek = () => {
+    if (onToggleFullWeek) {
+      onToggleFullWeek();
+    } else {
+      setInternalShowFullWeek(prev => !prev);
+    }
+  };
+
   // Se não tem acesso ao calendário, mostrar versão bloqueada
   if (!hasCalendarAccess) {
     return (
@@ -87,7 +103,7 @@ const WeekView: React.FC<WeekViewProps> = ({
             <div>
               <h2 className="text-xl font-bold text-gray-500 mb-2">Visão Semanal</h2>
               <p className="text-gray-400">
-                {showFullWeek 
+                {effectiveShowFullWeek 
                   ? `${format(weekDays[0], "dd/MM", { locale: ptBR })} - ${format(weekDays[weekDays.length - 1], "dd/MM/yyyy", { locale: ptBR })}`
                   : `A partir de hoje - ${format(weekDays[weekDays.length - 1], "dd/MM/yyyy", { locale: ptBR })}`
                 }
@@ -101,7 +117,7 @@ const WeekView: React.FC<WeekViewProps> = ({
                 className="flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 <CalendarIcon className="w-4 h-4" />
-                <span className="text-xs sm:text-sm">{showFullWeek ? 'A partir de hoje' : 'Semana completa'}</span>
+                <span className="text-xs sm:text-sm">{effectiveShowFullWeek ? 'A partir de hoje' : 'Semana completa'}</span>
               </Button>
               <Button
                 variant="outline"
@@ -177,7 +193,7 @@ const WeekView: React.FC<WeekViewProps> = ({
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Visão Semanal</h2>
             <p className="text-gray-600">
-              {showFullWeek 
+              {effectiveShowFullWeek 
                 ? `${format(weekDays[0], "dd/MM", { locale: ptBR })} - ${format(weekDays[weekDays.length - 1], "dd/MM/yyyy", { locale: ptBR })}`
                 : `A partir de hoje - ${format(weekDays[weekDays.length - 1], "dd/MM/yyyy", { locale: ptBR })}`
               }
@@ -187,11 +203,11 @@ const WeekView: React.FC<WeekViewProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowFullWeek((prev) => !prev)}
+              onClick={handleToggleFullWeek}
               className="flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <CalendarIcon className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">{showFullWeek ? 'A partir de hoje' : 'Semana completa'}</span>
+              <span className="text-xs sm:text-sm">{effectiveShowFullWeek ? 'A partir de hoje' : 'Semana completa'}</span>
             </Button>
             <Button
               variant="outline"
