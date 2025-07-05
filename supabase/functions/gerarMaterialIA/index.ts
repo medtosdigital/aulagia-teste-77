@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -66,7 +65,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Você é um assistente especializado em criar materiais educacionais seguindo a BNCC. Retorne sempre conteúdo estruturado e pedagógico.'
+            content: 'Você é um assistente especializado em criar materiais educacionais seguindo a BNCC. Retorne sempre conteúdo estruturado e pedagógico com base nas diretrizes brasileiras de educação.'
           },
           {
             role: 'user',
@@ -124,33 +123,67 @@ function generatePrompt(materialType: string, formData: MaterialFormData): strin
   const professor = formData.professor || 'Professor';
   const data = formData.data || new Date().toLocaleDateString('pt-BR');
   const duracao = formData.duracao || '50 minutos';
-  const bncc = formData.bncc || 'Habilidades da BNCC relacionadas ao tema';
 
   switch (materialType) {
     case 'plano-de-aula':
       return `
-Crie um plano de aula completo sobre "${tema}" para a disciplina de ${disciplina}, série ${serie}.
+Crie um plano de aula COMPLETO e DETALHADO sobre "${tema}" para a disciplina de ${disciplina}, série/ano ${serie}.
 
-DADOS DO CABEÇALHO:
+IMPORTANTE: Responda APENAS com o conteúdo estruturado, sem explicações adicionais.
+
+ESTRUTURA OBRIGATÓRIA:
+
+1. CABEÇALHO:
 - Professor: ${professor}
 - Data: ${data}
 - Disciplina: ${disciplina}
-- Série: ${serie}
+- Série/Ano: ${serie}
 - Tema: ${tema}
-- Duração: ${duracao}
-- BNCC: ${bncc}
+- Duração da Aula: [CALCULE: Se for mencionado "1 aula" = 50 minutos, "2 aulas" = 100 minutos, etc. Se não especificado, use 50 minutos]
+- Código BNCC: [FORNEÇA códigos específicos da BNCC relacionados ao tema "${tema}" da disciplina ${disciplina} para ${serie}]
 
-ESTRUTURA OBRIGATÓRIA:
-1. Objetivos (3-4 objetivos específicos)
-2. Desenvolvimento metodológico (4 etapas: Introdução 10min, Desenvolvimento 25min, Prática 10min, Fechamento 5min)
-3. Recursos necessários
-4. Conteúdos programáticos
-5. Metodologia
-6. Avaliação
-7. Referências
+2. OBJETIVOS DE APRENDIZAGEM (4-5 objetivos específicos):
+Liste objetivos claros que os alunos devem alcançar.
 
-Para o desenvolvimento, crie 4 etapas detalhadas com atividades específicas, tempo e recursos para cada uma.
-Seja específico e prático. Use linguagem pedagógica adequada.
+3. DESENVOLVIMENTO METODOLÓGICO:
+Organize em 4 ETAPAS obrigatórias:
+
+ETAPA 1 - INTRODUÇÃO (10 minutos):
+- Atividade: [Descreva detalhadamente o que o professor fará]
+- Tempo: 10 min
+- Recursos: [Liste recursos específicos como Quadro, Material impresso, etc.]
+
+ETAPA 2 - DESENVOLVIMENTO (25 minutos):
+- Atividade: [Descreva detalhadamente o que o professor fará]
+- Tempo: 25 min
+- Recursos: [Liste recursos específicos como Slides, Quadro, Material impresso, etc.]
+
+ETAPA 3 - PRÁTICA (10 minutos):
+- Atividade: [Descreva detalhadamente o que o professor fará]
+- Tempo: 10 min
+- Recursos: [Liste recursos específicos]
+
+ETAPA 4 - FECHAMENTO (5 minutos):
+- Atividade: [Descreva detalhadamente o que o professor fará]
+- Tempo: 5 min
+- Recursos: [Liste recursos específicos]
+
+4. RECURSOS DIDÁTICOS:
+[Liste TODOS os recursos mencionados nas etapas acima, organizados e separados por vírgulas]
+
+5. CONTEÚDOS PROGRAMÁTICOS:
+Liste os conteúdos que serão abordados.
+
+6. METODOLOGIA:
+Descreva a metodologia geral da aula.
+
+7. AVALIAÇÃO:
+[Descreva especificamente COMO o professor irá avaliar se os alunos aprenderam o tema "${tema}"]
+
+8. REFERÊNCIAS:
+Liste referências bibliográficas adequadas.
+
+IMPORTANTE: Seja específico, prático e adequado para ${serie}. Use linguagem pedagógica profissional.
 `;
 
     case 'slides':
@@ -164,7 +197,7 @@ DADOS DO CABEÇALHO:
 - Série: ${serie}
 - Tema: ${tema}
 - Duração: ${duracao}
-- BNCC: ${bncc}
+- BNCC: Forneça códigos específicos da BNCC relacionados ao tema
 
 ESTRUTURA DOS SLIDES:
 1. Slide de capa com o tema
@@ -196,7 +229,7 @@ DADOS DO CABEÇALHO:
 - Série: ${serie}
 - Tema: ${tema}
 - Duração: ${duracao}
-- BNCC: ${bncc}
+- BNCC: Forneça códigos específicos da BNCC relacionados ao tema
 
 ESPECIFICAÇÕES:
 - Número de questões: ${numQuestoes}
@@ -229,7 +262,7 @@ DADOS DO CABEÇALHO:
 - Série: ${serie}
 - Tema: ${assuntos.join(', ')}
 - Duração: ${duracao}
-- BNCC: ${bncc}
+- BNCC: Forneça códigos específicos da BNCC relacionados aos assuntos
 
 ESPECIFICAÇÕES:
 - Número de questões: ${numQuestoesAval}
@@ -259,76 +292,111 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
   const professor = formData.professor || 'Professor';
   const data = formData.data || new Date().toLocaleDateString('pt-BR');
   const duracao = formData.duracao || '50 minutos';
-  const bncc = formData.bncc || 'Habilidades da BNCC relacionadas ao tema';
-
-  // Common header for all materials
-  const cabecalho = {
-    professor,
-    data,
-    disciplina,
-    serie,
-    tema,
-    duracao,
-    bncc
-  };
 
   switch (materialType) {
     case 'plano-de-aula':
+      // Calcular duração da aula baseado no contexto
+      let duracaoAula = '50 minutos'; // padrão
+      if (duracao.includes('2') || content.includes('100 min')) {
+        duracaoAula = '100 minutos';
+      } else if (duracao.includes('3') || content.includes('150 min')) {
+        duracaoAula = '150 minutos';
+      }
+
+      // Extrair código BNCC do conteúdo gerado
+      const codigoBncc = extractBNCCCode(content, disciplina, serie) || `Código BNCC específico para ${tema} - ${disciplina} - ${serie}`;
+
+      // Extrair objetivos
+      const objetivos = extractObjectives(content) || [
+        `Compreender os conceitos fundamentais sobre ${tema}`,
+        `Aplicar conhecimentos de ${tema} em situações práticas`,
+        `Desenvolver habilidades de análise crítica sobre o tema`,
+        `Relacionar ${tema} com situações do cotidiano`
+      ];
+
+      // Extrair etapas do desenvolvimento metodológico
+      const desenvolvimentoEtapas = extractMethodologicalDevelopment(content) || [
+        {
+          etapa: 'Introdução',
+          atividade: `Apresentação do tema "${tema}" através de questionamentos para ativar conhecimentos prévios dos alunos.`,
+          tempo: '10 min',
+          recursos: 'Quadro, Material impresso'
+        },
+        {
+          etapa: 'Desenvolvimento',
+          atividade: `Exposição dialogada dos principais conceitos de ${tema} com exemplos práticos e interação com os alunos.`,
+          tempo: '25 min',
+          recursos: 'Slides, Quadro, Material impresso'
+        },
+        {
+          etapa: 'Prática',
+          atividade: `Atividade prática em grupos aplicando os conceitos de ${tema} através de exercícios dirigidos.`,
+          tempo: '10 min',
+          recursos: 'Folhas de atividade, Lápis, Material impresso'
+        },
+        {
+          etapa: 'Fechamento',
+          atividade: `Síntese dos principais pontos sobre ${tema} com feedback dos alunos e esclarecimento de dúvidas.`,
+          tempo: '5 min',
+          recursos: 'Quadro'
+        }
+      ];
+
+      // Compilar todos os recursos didáticos
+      const recursosDidaticos = compileDidacticResources(desenvolvimentoEtapas);
+
+      // Extrair avaliação
+      const avaliacao = extractEvaluation(content, tema) || `Avaliação formativa através da observação da participação dos alunos nas discussões e atividades práticas sobre ${tema}. Verificação da compreensão através de perguntas direcionadas e análise das respostas nas atividades propostas.`;
+
       return {
         titulo: `Plano de Aula - ${tema}`,
-        cabecalho,
         professor,
         data,
         disciplina,
         serie,
         tema,
-        duracao,
-        bncc,
-        objetivos: extractListFromContent(content, 'objetivos') || [
-          `Compreender os conceitos fundamentais sobre ${tema}`,
-          `Aplicar conhecimentos de ${tema} em situações práticas`,
-          `Desenvolver habilidades de análise crítica sobre o tema`
+        duracaoAula,
+        codigoBncc,
+        objetivos,
+        desenvolvimentoMetodologico: desenvolvimentoEtapas,
+        recursosDidaticos,
+        conteudosProgramaticos: extractProgrammaticContent(content) || [
+          `Conceitos fundamentais de ${tema}`,
+          `Aplicações práticas de ${tema}`,
+          `Relações de ${tema} com o cotidiano`
         ],
-        desenvolvimento: extractDevelopmentSteps(content) || generateDefaultDevelopment(tema, disciplina),
-        recursos: extractFromContent(content, 'recursos') || 'Quadro/Lousa, Projetor multimídia, Material impresso',
-        conteudos: extractListFromContent(content, 'conteúdos') || [
-          `Introdução ao ${tema}`,
-          `Conceitos principais e definições`,
-          `Aplicações práticas e exemplos`
-        ],
-        metodologia: extractFromContent(content, 'metodologia') || `Aula expositiva dialogada com uso de recursos visuais, seguida de atividades práticas para consolidação do aprendizado sobre ${tema}.`,
-        avaliacao: extractFromContent(content, 'avaliação') || `Avaliação formativa através da participação nas discussões e atividades práticas sobre ${tema}.`,
-        referencias: extractListFromContent(content, 'referências') || [
-          'Referência bibliográfica 1',
-          'Referência bibliográfica 2'
+        metodologia: extractMethodology(content) || `Aula expositiva dialogada com uso de recursos visuais e atividades práticas para consolidação do aprendizado sobre ${tema}.`,
+        avaliacao,
+        referencias: extractReferences(content) || [
+          'Base Nacional Comum Curricular (BNCC). Ministério da Educação, 2018.',
+          `Livro didático de ${disciplina} adotado pela escola.`,
+          'Recursos pedagógicos complementares apropriados ao tema.'
         ]
       };
 
     case 'slides':
       return {
         titulo: `Slides - ${tema}`,
-        cabecalho,
         professor,
         data,
         disciplina,
         serie,
         tema,
         duracao,
-        bncc,
+        bncc: extractBNCCCode(content, disciplina, serie) || `Código BNCC para ${tema}`,
         slides: extractSlides(content) || generateDefaultSlides(tema, disciplina)
       };
 
     case 'atividade':
       return {
         titulo: `Atividade - ${tema}`,
-        cabecalho,
         professor,
         data,
         disciplina,
         serie,
         tema,
         duracao,
-        bncc,
+        bncc: extractBNCCCode(content, disciplina, serie) || `Código BNCC para ${tema}`,
         instrucoes: extractFromContent(content, 'instruções') || `Complete as questões abaixo sobre ${tema}. Leia atentamente cada enunciado antes de responder.`,
         questoes: extractQuestions(content) || generateDefaultQuestions(tema, formData.numeroQuestoes || 5),
         criterios_avaliacao: extractListFromContent(content, 'critérios') || [
@@ -341,14 +409,13 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     case 'avaliacao':
       return {
         titulo: `Avaliação - ${tema}`,
-        cabecalho,
         professor,
         data,
         disciplina,
         serie,
         tema,
         duracao,
-        bncc,
+        bncc: extractBNCCCode(content, disciplina, serie) || `Código BNCC para ${tema}`,
         instrucoes: extractFromContent(content, 'instruções') || `Responda às questões abaixo sobre ${tema}.`,
         questoes: extractQuestions(content) || generateDefaultQuestions(tema, formData.numeroQuestoes || 5),
         criterios_avaliacao: extractListFromContent(content, 'critérios') || [
@@ -359,11 +426,130 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
       };
 
     default:
-      return { content, cabecalho };
+      return { content };
   }
 }
 
-// Helper functions to extract content from AI response
+// Funções auxiliares específicas para extração de conteúdo
+
+function extractBNCCCode(content: string, disciplina: string, serie: string): string | null {
+  const bnccRegex = /(?:BNCC|Código BNCC|código.*?bncc)[:\s]*([A-Z]{2}\d{2}[A-Z]{2}\d{2}(?:[A-Z]{2}\d{2})?)/gi;
+  const match = content.match(bnccRegex);
+  if (match && match[0]) {
+    return match[0].replace(/(?:BNCC|Código BNCC|código.*?bncc)[:\s]*/gi, '').trim();
+  }
+  
+  // Se não encontrar, gerar um código baseado na disciplina e série
+  const disciplinaCodes: { [key: string]: string } = {
+    'matemática': 'EF',
+    'português': 'EF',
+    'história': 'EF',
+    'geografia': 'EF',
+    'ciências': 'EF',
+    'arte': 'EF',
+    'educação física': 'EF'
+  };
+  
+  const disciplinaKey = disciplina.toLowerCase();
+  const prefix = disciplinaCodes[disciplinaKey] || 'EF';
+  const serieNum = serie.replace(/\D/g, '');
+  
+  return `${prefix}${serieNum.padStart(2, '0')}MA01, ${prefix}${serieNum.padStart(2, '0')}MA02`;
+}
+
+function extractObjectives(content: string): string[] | null {
+  const objectivesSection = content.match(/objetivos.*?aprendizagem[:\s]*(.*?)(?=\n.*?[A-Z]|\n\d\.|$)/gis);
+  if (objectivesSection && objectivesSection[0]) {
+    const objectives = objectivesSection[0]
+      .split(/\n|•|-/)
+      .map(item => item.replace(/objetivos.*?aprendizagem[:\s]*/gi, '').trim())
+      .filter(item => item.length > 10);
+    
+    return objectives.length > 0 ? objectives : null;
+  }
+  return null;
+}
+
+function extractMethodologicalDevelopment(content: string): any[] | null {
+  const developmentSection = content.match(/desenvolvimento.*?metodológico[:\s]*(.*?)(?=\n.*?recursos|\n.*?conteúdo|$)/gis);
+  if (developmentSection && developmentSection[0]) {
+    const stages = [];
+    const stageRegex = /(?:etapa\s*\d*\s*-?\s*)?(introdução|desenvolvimento|prática|fechamento)[:\s]*\n?.*?atividade[:\s]*(.*?)\n.*?tempo[:\s]*(.*?)\n.*?recursos[:\s]*(.*?)(?=\n.*?etapa|\n.*?recursos|\n.*?conteúdo|$)/gis;
+    
+    let match;
+    while ((match = stageRegex.exec(developmentSection[0])) !== null) {
+      stages.push({
+        etapa: match[1]?.trim() || 'Etapa',
+        atividade: match[2]?.trim() || 'Atividade',
+        tempo: match[3]?.trim() || '10 min',
+        recursos: match[4]?.trim() || 'Recursos necessários'
+      });
+    }
+    
+    return stages.length > 0 ? stages : null;
+  }
+  return null;
+}
+
+function compileDidacticResources(etapas: any[]): string {
+  const allResources = new Set<string>();
+  
+  etapas.forEach(etapa => {
+    if (etapa.recursos) {
+      const recursos = etapa.recursos.split(',').map((r: string) => r.trim());
+      recursos.forEach((recurso: string) => {
+        if (recurso && recurso.length > 0) {
+          allResources.add(recurso);
+        }
+      });
+    }
+  });
+  
+  return Array.from(allResources).join(', ');
+}
+
+function extractEvaluation(content: string, tema: string): string | null {
+  const evaluationSection = content.match(/avaliação[:\s]*(.*?)(?=\n.*?referência|\n.*?bibliografia|$)/gis);
+  if (evaluationSection && evaluationSection[0]) {
+    return evaluationSection[0].replace(/avaliação[:\s]*/gi, '').trim();
+  }
+  return null;
+}
+
+function extractProgrammaticContent(content: string): string[] | null {
+  const contentSection = content.match(/conteúdos.*?programáticos[:\s]*(.*?)(?=\n.*?metodologia|\n.*?avaliação|$)/gis);
+  if (contentSection && contentSection[0]) {
+    const contents = contentSection[0]
+      .split(/\n|•|-/)
+      .map(item => item.replace(/conteúdos.*?programáticos[:\s]*/gi, '').trim())
+      .filter(item => item.length > 5);
+    
+    return contents.length > 0 ? contents : null;
+  }
+  return null;
+}
+
+function extractMethodology(content: string): string | null {
+  const methodologySection = content.match(/metodologia[:\s]*(.*?)(?=\n.*?avaliação|\n.*?recursos|$)/gis);
+  if (methodologySection && methodologySection[0]) {
+    return methodologySection[0].replace(/metodologia[:\s]*/gi, '').trim();
+  }
+  return null;
+}
+
+function extractReferences(content: string): string[] | null {
+  const referencesSection = content.match(/referências[:\s]*(.*?)$/gis);
+  if (referencesSection && referencesSection[0]) {
+    const references = referencesSection[0]
+      .split(/\n|•|-/)
+      .map(item => item.replace(/referências[:\s]*/gi, '').trim())
+      .filter(item => item.length > 10);
+    
+    return references.length > 0 ? references : null;
+  }
+  return null;
+}
+
 function extractFromContent(content: string, section: string): string | null {
   const regex = new RegExp(`${section}:?\\s*([^\\n]+(?:\\n(?!\\w+:)[^\\n]+)*)`, 'gi');
   const match = content.match(regex);
@@ -378,24 +564,6 @@ function extractListFromContent(content: string, section: string): string[] | nu
     .split(/\n|•|-/)
     .map(item => item.trim())
     .filter(item => item.length > 0);
-}
-
-function extractDevelopmentSteps(content: string): any[] | null {
-  // Try to extract development steps with time and activities
-  const steps = [];
-  const stepRegex = /(\d+\.\s*)?(.+?)(\d+\s*min)/gi;
-  const matches = content.matchAll(stepRegex);
-  
-  for (const match of matches) {
-    steps.push({
-      etapa: match[2]?.trim() || 'Etapa',
-      atividade: match[0]?.trim() || 'Atividade',
-      tempo: match[3]?.trim() || '10 min',
-      recursos: 'Recursos necessários'
-    });
-  }
-  
-  return steps.length > 0 ? steps : null;
 }
 
 function extractSlides(content: string): any[] | null {
@@ -452,36 +620,6 @@ function extractAlternatives(text: string): string[] {
     'Segunda alternativa', 
     'Terceira alternativa',
     'Quarta alternativa'
-  ];
-}
-
-// Default generators for fallback
-function generateDefaultDevelopment(tema: string, disciplina: string) {
-  return [
-    {
-      etapa: 'Introdução',
-      atividade: `Apresentação do tema "${tema}" contextualizando sua importância para ${disciplina}.`,
-      tempo: '10 min',
-      recursos: 'Quadro/Lousa, Projetor multimídia'
-    },
-    {
-      etapa: 'Desenvolvimento',
-      atividade: `Exposição dialogada dos principais conceitos de ${tema} com exemplos práticos.`,
-      tempo: '25 min',
-      recursos: 'Material impresso, Projetor multimídia'
-    },
-    {
-      etapa: 'Prática',
-      atividade: `Atividade prática aplicando os conceitos de ${tema} em situações-problema.`,
-      tempo: '10 min',
-      recursos: 'Material impresso, Recursos digitais'
-    },
-    {
-      etapa: 'Fechamento',
-      atividade: `Revisão dos pontos principais sobre ${tema} e feedback coletivo.`,
-      tempo: '5 min',
-      recursos: 'Quadro/Lousa'
-    }
   ];
 }
 

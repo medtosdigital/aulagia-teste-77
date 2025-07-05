@@ -39,18 +39,20 @@ export interface LessonPlan {
   serie: string;
   tema: string;
   data: string;
-  duracao: string;
-  bncc: string;
+  duracaoAula: string; // Atualizado para usar duracaoAula
+  codigoBncc: string; // Atualizado para usar codigoBncc
   objetivos: string[];
-  habilidades: string[];
-  desenvolvimento: Array<{
+  desenvolvimentoMetodologico: Array<{ // Atualizado para usar desenvolvimentoMetodologico
     etapa: string;
     atividade: string;
     tempo: string;
     recursos: string;
   }>;
-  recursos: string[];
+  recursosDidaticos: string; // Atualizado para usar recursosDidaticos como string
+  conteudosProgramaticos: string[]; // Atualizado
+  metodologia: string;
   avaliacao: string;
+  referencias: string[]; // Atualizado
 }
 
 export interface Activity {
