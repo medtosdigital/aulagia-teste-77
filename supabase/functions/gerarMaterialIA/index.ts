@@ -334,12 +334,12 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         disciplina,
         serie,
         tema,
-        duracao, // Valor real, não variável
-        bncc: codigoBncc, // Valor real, não variável
+        'duracao.aula': duracao, // Template expects duracao.aula
+        'codigo.da.bncc': codigoBncc, // Template expects codigo.da.bncc
         objetivos,
         habilidades,
         desenvolvimento: desenvolvimentoEtapas,
-        recursos: recursosArray,
+        recursos: recursosArray.join(', '), // Join resources with commas and spaces
         conteudosProgramaticos,
         metodologia,
         avaliacao,
