@@ -145,7 +145,10 @@ ESTRUTURA OBRIGATÓRIA:
 2. OBJETIVOS DE APRENDIZAGEM (4-5 objetivos específicos):
 Liste objetivos claros que os alunos devem alcançar.
 
-3. DESENVOLVIMENTO METODOLÓGICO:
+3. HABILIDADES BNCC (3-4 habilidades específicas):
+Liste habilidades específicas da BNCC relacionadas ao tema.
+
+4. DESENVOLVIMENTO METODOLÓGICO:
 Organize em 4 ETAPAS obrigatórias:
 
 ETAPA 1 - INTRODUÇÃO (10 minutos):
@@ -168,19 +171,19 @@ ETAPA 4 - FECHAMENTO (5 minutos):
 - Tempo: 5 min
 - Recursos: [Liste recursos específicos]
 
-4. RECURSOS DIDÁTICOS:
+5. RECURSOS DIDÁTICOS:
 [Liste TODOS os recursos mencionados nas etapas acima, organizados e separados por vírgulas]
 
-5. CONTEÚDOS PROGRAMÁTICOS:
+6. CONTEÚDOS PROGRAMÁTICOS:
 Liste os conteúdos que serão abordados.
 
-6. METODOLOGIA:
+7. METODOLOGIA:
 Descreva a metodologia geral da aula.
 
-7. AVALIAÇÃO:
+8. AVALIAÇÃO:
 [Descreva especificamente COMO o professor irá avaliar se os alunos aprenderam o tema "${tema}"]
 
-8. REFERÊNCIAS:
+9. REFERÊNCIAS:
 Liste referências bibliográficas adequadas.
 
 IMPORTANTE: Seja específico, prático e adequado para ${serie}. Use linguagem pedagógica profissional.
@@ -314,6 +317,13 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         `Relacionar ${tema} com situações do cotidiano`
       ];
 
+      // Extrair habilidades
+      const habilidades = extractSkills(content) || [
+        `Habilidade relacionada a ${tema} - ${disciplina}`,
+        `Competência específica para ${serie} em ${tema}`,
+        `Desenvolvimento de raciocínio sobre ${tema}`
+      ];
+
       // Extrair etapas do desenvolvimento metodológico
       const desenvolvimentoEtapas = extractMethodologicalDevelopment(content) || [
         {
@@ -343,7 +353,7 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
       ];
 
       // Compilar todos os recursos didáticos
-      const recursosDidaticos = compileDidacticResources(desenvolvimentoEtapas);
+      const recursosArray = compileDidacticResourcesArray(desenvolvimentoEtapas);
 
       // Extrair avaliação
       const avaliacao = extractEvaluation(content, tema) || `Avaliação formativa através da observação da participação dos alunos nas discussões e atividades práticas sobre ${tema}. Verificação da compreensão através de perguntas direcionadas e análise das respostas nas atividades propostas.`;
@@ -355,11 +365,12 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         disciplina,
         serie,
         tema,
-        duracaoAula,
-        codigoBncc,
+        duracao: duracaoAula, // Changed to match interface
+        bncc: codigoBncc, // Changed to match interface
         objetivos,
-        desenvolvimentoMetodologico: desenvolvimentoEtapas,
-        recursosDidaticos,
+        habilidades, // Added to match interface
+        desenvolvimento: desenvolvimentoEtapas, // Changed to match interface
+        recursos: recursosArray, // Changed to match interface and made it an array
         conteudosProgramaticos: extractProgrammaticContent(content) || [
           `Conceitos fundamentais de ${tema}`,
           `Aplicações práticas de ${tema}`,
@@ -430,8 +441,6 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
   }
 }
 
-// Funções auxiliares específicas para extração de conteúdo
-
 function extractBNCCCode(content: string, disciplina: string, serie: string): string | null {
   const bnccRegex = /(?:BNCC|Código BNCC|código.*?bncc)[:\s]*([A-Z]{2}\d{2}[A-Z]{2}\d{2}(?:[A-Z]{2}\d{2})?)/gi;
   const match = content.match(bnccRegex);
@@ -470,6 +479,19 @@ function extractObjectives(content: string): string[] | null {
   return null;
 }
 
+function extractSkills(content: string): string[] | null {
+  const skillsSection = content.match(/habilidades.*?bncc[:\s]*(.*?)(?=\n.*?desenvolvimento|\n.*?[A-Z]|\n\d\.|$)/gis);
+  if (skillsSection && skillsSection[0]) {
+    const skills = skillsSection[0]
+      .split(/\n|•|-/)
+      .map(item => item.replace(/habilidades.*?bncc[:\s]*/gi, '').trim())
+      .filter(item => item.length > 10);
+    
+    return skills.length > 0 ? skills : null;
+  }
+  return null;
+}
+
 function extractMethodologicalDevelopment(content: string): any[] | null {
   const developmentSection = content.match(/desenvolvimento.*?metodológico[:\s]*(.*?)(?=\n.*?recursos|\n.*?conteúdo|$)/gis);
   if (developmentSection && developmentSection[0]) {
@@ -491,7 +513,7 @@ function extractMethodologicalDevelopment(content: string): any[] | null {
   return null;
 }
 
-function compileDidacticResources(etapas: any[]): string {
+function compileDidacticResourcesArray(etapas: any[]): string[] {
   const allResources = new Set<string>();
   
   etapas.forEach(etapa => {
@@ -505,7 +527,7 @@ function compileDidacticResources(etapas: any[]): string {
     }
   });
   
-  return Array.from(allResources).join(', ');
+  return Array.from(allResources);
 }
 
 function extractEvaluation(content: string, tema: string): string | null {

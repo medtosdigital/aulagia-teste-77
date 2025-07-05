@@ -1,3 +1,4 @@
+
 import { userMaterialsService, UserMaterial } from './userMaterialsService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -31,7 +32,7 @@ export interface MaterialFormData {
   bncc?: string;
 }
 
-// Type exports for backward compatibility
+// Updated LessonPlan interface to match what components expect
 export interface LessonPlan {
   titulo?: string;
   professor: string;
@@ -39,20 +40,21 @@ export interface LessonPlan {
   serie: string;
   tema: string;
   data: string;
-  duracaoAula: string; // Atualizado para usar duracaoAula
-  codigoBncc: string; // Atualizado para usar codigoBncc
+  duracao: string; // Changed from duracaoAula
+  bncc: string; // Changed from codigoBncc
   objetivos: string[];
-  desenvolvimentoMetodologico: Array<{ // Atualizado para usar desenvolvimentoMetodologico
+  habilidades: string[]; // Added missing property
+  desenvolvimento: Array<{ // Changed from desenvolvimentoMetodologico
     etapa: string;
     atividade: string;
     tempo: string;
     recursos: string;
   }>;
-  recursosDidaticos: string; // Atualizado para usar recursosDidaticos como string
-  conteudosProgramaticos: string[]; // Atualizado
+  recursos: string[]; // Changed from recursosDidaticos and made it an array
+  conteudosProgramaticos: string[];
   metodologia: string;
   avaliacao: string;
-  referencias: string[]; // Atualizado
+  referencias: string[];
 }
 
 export interface Activity {
