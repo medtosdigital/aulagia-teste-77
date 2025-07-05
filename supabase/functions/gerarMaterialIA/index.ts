@@ -129,62 +129,65 @@ function generatePrompt(materialType: string, formData: MaterialFormData): strin
       return `
 Crie um plano de aula COMPLETO e DETALHADO sobre "${tema}" para a disciplina de ${disciplina}, série/ano ${serie}.
 
-IMPORTANTE: Responda APENAS com o conteúdo estruturado, sem explicações adicionais.
-
-ESTRUTURA OBRIGATÓRIA:
-
-1. CABEÇALHO:
+DADOS FIXOS:
 - Professor: ${professor}
 - Data: ${data}
 - Disciplina: ${disciplina}
 - Série/Ano: ${serie}
 - Tema: ${tema}
-- Duração da Aula: [CALCULE: Se for mencionado "1 aula" = 50 minutos, "2 aulas" = 100 minutos, etc. Se não especificado, use 50 minutos]
-- Código BNCC: [FORNEÇA códigos específicos da BNCC relacionados ao tema "${tema}" da disciplina ${disciplina} para ${serie}]
+- Duração da Aula: ${duracao}
 
-2. OBJETIVOS DE APRENDIZAGEM (4-5 objetivos específicos):
-Liste objetivos claros que os alunos devem alcançar.
+IMPORTANTE: Responda APENAS com o conteúdo estruturado, sem explicações adicionais.
 
-3. HABILIDADES BNCC (3-4 habilidades específicas):
-Liste habilidades específicas da BNCC relacionadas ao tema.
+ESTRUTURA OBRIGATÓRIA:
 
-4. DESENVOLVIMENTO METODOLÓGICO:
-Organize em 4 ETAPAS obrigatórias:
+1. OBJETIVOS DE APRENDIZAGEM (MÍNIMO 3, MÁXIMO 5 objetivos específicos):
+- Liste entre 3 a 5 objetivos claros que os alunos devem alcançar sobre ${tema}
+
+2. HABILIDADES BNCC (3-4 habilidades específicas):
+- Liste códigos específicos da BNCC relacionados ao tema "${tema}" da disciplina ${disciplina} para ${serie}
+- Formato: EF[ANO][ÁREA][NÚMERO] - Descrição da habilidade
+
+3. DESENVOLVIMENTO METODOLÓGICO:
+Organize em 4 ETAPAS obrigatórias com recursos ESPECÍFICOS para cada etapa:
 
 ETAPA 1 - INTRODUÇÃO (10 minutos):
-- Atividade: [Descreva detalhadamente o que o professor fará]
+- Atividade: [Descreva detalhadamente como introduzir o tema "${tema}"]
 - Tempo: 10 min
-- Recursos: [Liste recursos específicos como Quadro, Material impresso, etc.]
+- Recursos: [APENAS recursos para introdução, ex: Quadro, Giz]
 
 ETAPA 2 - DESENVOLVIMENTO (25 minutos):
-- Atividade: [Descreva detalhadamente o que o professor fará]
+- Atividade: [Descreva detalhadamente o desenvolvimento do tema "${tema}"]
 - Tempo: 25 min
-- Recursos: [Liste recursos específicos como Slides, Quadro, Material impresso, etc.]
+- Recursos: [APENAS recursos para desenvolvimento, ex: Quadro, Material impresso, Slides]
 
 ETAPA 3 - PRÁTICA (10 minutos):
-- Atividade: [Descreva detalhadamente o que o professor fará]
+- Atividade: [Descreva detalhadamente a prática sobre "${tema}"]
 - Tempo: 10 min
-- Recursos: [Liste recursos específicos]
+- Recursos: [APENAS recursos para prática, ex: Folhas de atividade, Lápis, Material manipulativo]
 
 ETAPA 4 - FECHAMENTO (5 minutos):
-- Atividade: [Descreva detalhadamente o que o professor fará]
+- Atividade: [Descreva detalhadamente o fechamento do tema "${tema}"]
 - Tempo: 5 min
-- Recursos: [Liste recursos específicos]
+- Recursos: [APENAS recursos para fechamento, ex: Quadro]
 
-5. RECURSOS DIDÁTICOS:
-[Liste TODOS os recursos mencionados nas etapas acima, organizados e separados por vírgulas]
+4. RECURSOS DIDÁTICOS:
+[Liste TODOS os recursos mencionados nas 4 etapas acima, organizados e separados por vírgula]
 
-6. CONTEÚDOS PROGRAMÁTICOS:
-Liste os conteúdos que serão abordados.
+5. CONTEÚDOS PROGRAMÁTICOS:
+Liste os conteúdos específicos que serão abordados sobre ${tema}.
 
-7. METODOLOGIA:
-Descreva a metodologia geral da aula.
+6. METODOLOGIA:
+Descreva a metodologia geral da aula sobre ${tema}.
 
-8. AVALIAÇÃO:
-[Descreva especificamente COMO o professor irá avaliar se os alunos aprenderam o tema "${tema}"]
+7. AVALIAÇÃO:
+Descreva especificamente COMO avaliar se os alunos aprenderam ${tema}.
 
-9. REFERÊNCIAS:
-Liste referências bibliográficas adequadas.
+8. REFERÊNCIAS:
+Liste referências bibliográficas adequadas para ${tema} em ${disciplina}.
+
+9. CÓDIGO BNCC:
+Forneça códigos específicos da BNCC para ${tema} em ${disciplina} - ${serie}
 
 IMPORTANTE: Seja específico, prático e adequado para ${serie}. Use linguagem pedagógica profissional.
 `;
@@ -298,65 +301,31 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
 
   switch (materialType) {
     case 'plano-de-aula':
-      // Calcular duração da aula baseado no contexto
-      let duracaoAula = '50 minutos'; // padrão
-      if (duracao.includes('2') || content.includes('100 min')) {
-        duracaoAula = '100 minutos';
-      } else if (duracao.includes('3') || content.includes('150 min')) {
-        duracaoAula = '150 minutos';
+      // Extrair código BNCC do conteúdo gerado
+      const codigoBncc = extractBNCCCode(content, disciplina, serie) || generateBNCCCode(disciplina, serie);
+
+      // Extrair objetivos (garantindo 3-5 objetivos)
+      let objetivos = extractObjectives(content);
+      if (!objetivos || objetivos.length < 3) {
+        objetivos = generateDefaultObjectives(tema, disciplina, 4);
+      } else if (objetivos.length > 5) {
+        objetivos = objetivos.slice(0, 5);
       }
 
-      // Extrair código BNCC do conteúdo gerado
-      const codigoBncc = extractBNCCCode(content, disciplina, serie) || `Código BNCC específico para ${tema} - ${disciplina} - ${serie}`;
-
-      // Extrair objetivos
-      const objetivos = extractObjectives(content) || [
-        `Compreender os conceitos fundamentais sobre ${tema}`,
-        `Aplicar conhecimentos de ${tema} em situações práticas`,
-        `Desenvolver habilidades de análise crítica sobre o tema`,
-        `Relacionar ${tema} com situações do cotidiano`
-      ];
-
       // Extrair habilidades
-      const habilidades = extractSkills(content) || [
-        `Habilidade relacionada a ${tema} - ${disciplina}`,
-        `Competência específica para ${serie} em ${tema}`,
-        `Desenvolvimento de raciocínio sobre ${tema}`
-      ];
+      const habilidades = extractSkills(content) || generateDefaultSkills(tema, disciplina, serie);
 
-      // Extrair etapas do desenvolvimento metodológico
-      const desenvolvimentoEtapas = extractMethodologicalDevelopment(content) || [
-        {
-          etapa: 'Introdução',
-          atividade: `Apresentação do tema "${tema}" através de questionamentos para ativar conhecimentos prévios dos alunos.`,
-          tempo: '10 min',
-          recursos: 'Quadro, Material impresso'
-        },
-        {
-          etapa: 'Desenvolvimento',
-          atividade: `Exposição dialogada dos principais conceitos de ${tema} com exemplos práticos e interação com os alunos.`,
-          tempo: '25 min',
-          recursos: 'Slides, Quadro, Material impresso'
-        },
-        {
-          etapa: 'Prática',
-          atividade: `Atividade prática em grupos aplicando os conceitos de ${tema} através de exercícios dirigidos.`,
-          tempo: '10 min',
-          recursos: 'Folhas de atividade, Lápis, Material impresso'
-        },
-        {
-          etapa: 'Fechamento',
-          atividade: `Síntese dos principais pontos sobre ${tema} com feedback dos alunos e esclarecimento de dúvidas.`,
-          tempo: '5 min',
-          recursos: 'Quadro'
-        }
-      ];
+      // Extrair etapas do desenvolvimento metodológico com recursos específicos
+      const desenvolvimentoEtapas = extractMethodologicalDevelopmentWithSpecificResources(content) || generateDefaultMethodologicalDevelopment(tema);
 
-      // Compilar todos os recursos didáticos
-      const recursosArray = compileDidacticResourcesArray(desenvolvimentoEtapas);
+      // Compilar todos os recursos didáticos únicos
+      const recursosArray = compileAllDidacticResources(desenvolvimentoEtapas);
 
-      // Extrair avaliação
-      const avaliacao = extractEvaluation(content, tema) || `Avaliação formativa através da observação da participação dos alunos nas discussões e atividades práticas sobre ${tema}. Verificação da compreensão através de perguntas direcionadas e análise das respostas nas atividades propostas.`;
+      // Extrair outras seções
+      const conteudosProgramaticos = extractProgrammaticContent(content) || generateDefaultProgrammaticContent(tema);
+      const metodologia = extractMethodology(content) || generateDefaultMethodology(tema);
+      const avaliacao = extractEvaluation(content, tema) || generateDefaultEvaluation(tema);
+      const referencias = extractReferences(content) || generateDefaultReferences(disciplina, tema);
 
       return {
         titulo: `Plano de Aula - ${tema}`,
@@ -365,24 +334,16 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         disciplina,
         serie,
         tema,
-        duracao: duracaoAula, // Changed to match interface
-        bncc: codigoBncc, // Changed to match interface
+        duracao, // Valor real, não variável
+        bncc: codigoBncc, // Valor real, não variável
         objetivos,
-        habilidades, // Added to match interface
-        desenvolvimento: desenvolvimentoEtapas, // Changed to match interface
-        recursos: recursosArray, // Changed to match interface and made it an array
-        conteudosProgramaticos: extractProgrammaticContent(content) || [
-          `Conceitos fundamentais de ${tema}`,
-          `Aplicações práticas de ${tema}`,
-          `Relações de ${tema} com o cotidiano`
-        ],
-        metodologia: extractMethodology(content) || `Aula expositiva dialogada com uso de recursos visuais e atividades práticas para consolidação do aprendizado sobre ${tema}.`,
+        habilidades,
+        desenvolvimento: desenvolvimentoEtapas,
+        recursos: recursosArray,
+        conteudosProgramaticos,
+        metodologia,
         avaliacao,
-        referencias: extractReferences(content) || [
-          'Base Nacional Comum Curricular (BNCC). Ministério da Educação, 2018.',
-          `Livro didático de ${disciplina} adotado pela escola.`,
-          'Recursos pedagógicos complementares apropriados ao tema.'
-        ]
+        referencias
       };
 
     case 'slides':
@@ -394,7 +355,7 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         serie,
         tema,
         duracao,
-        bncc: extractBNCCCode(content, disciplina, serie) || `Código BNCC para ${tema}`,
+        bncc: extractBNCCCode(content, disciplina, serie) || generateBNCCCode(disciplina, serie),
         slides: extractSlides(content) || generateDefaultSlides(tema, disciplina)
       };
 
@@ -407,7 +368,7 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         serie,
         tema,
         duracao,
-        bncc: extractBNCCCode(content, disciplina, serie) || `Código BNCC para ${tema}`,
+        bncc: extractBNCCCode(content, disciplina, serie) || generateBNCCCode(disciplina, serie),
         instrucoes: extractFromContent(content, 'instruções') || `Complete as questões abaixo sobre ${tema}. Leia atentamente cada enunciado antes de responder.`,
         questoes: extractQuestions(content) || generateDefaultQuestions(tema, formData.numeroQuestoes || 5),
         criterios_avaliacao: extractListFromContent(content, 'critérios') || [
@@ -426,7 +387,7 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         serie,
         tema,
         duracao,
-        bncc: extractBNCCCode(content, disciplina, serie) || `Código BNCC para ${tema}`,
+        bncc: extractBNCCCode(content, disciplina, serie) || generateBNCCCode(disciplina, serie),
         instrucoes: extractFromContent(content, 'instruções') || `Responda às questões abaixo sobre ${tema}.`,
         questoes: extractQuestions(content) || generateDefaultQuestions(tema, formData.numeroQuestoes || 5),
         criterios_avaliacao: extractListFromContent(content, 'critérios') || [
@@ -441,29 +402,146 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
   }
 }
 
+function generateBNCCCode(disciplina: string, serie: string): string {
+  const disciplinaCodes: { [key: string]: string } = {
+    'matemática': 'MA',
+    'português': 'LP',
+    'língua portuguesa': 'LP',
+    'história': 'HI',
+    'geografia': 'GE',
+    'ciências': 'CI',
+    'arte': 'AR',
+    'educação física': 'EF'
+  };
+  
+  const disciplinaKey = disciplina.toLowerCase();
+  const codigo = disciplinaCodes[disciplinaKey] || 'GE';
+  const serieNum = serie.replace(/\D/g, '').padStart(2, '0');
+  
+  return `EF${serieNum}${codigo}01, EF${serieNum}${codigo}02`;
+}
+
+function generateDefaultObjectives(tema: string, disciplina: string, count: number): string[] {
+  const objectives = [
+    `Compreender os conceitos fundamentais sobre ${tema}`,
+    `Aplicar conhecimentos de ${tema} em situações práticas do cotidiano`,
+    `Desenvolver habilidades de análise crítica relacionadas ao tema ${tema}`,
+    `Relacionar ${tema} com outras áreas do conhecimento em ${disciplina}`,
+    `Demonstrar domínio dos principais aspectos teóricos e práticos de ${tema}`
+  ];
+  
+  return objectives.slice(0, count);
+}
+
+function generateDefaultSkills(tema: string, disciplina: string, serie: string): string[] {
+  return [
+    `Habilidade específica para ${tema} em ${disciplina} - ${serie}`,
+    `Competência de análise e interpretação relacionada a ${tema}`,
+    `Desenvolvimento de raciocínio crítico sobre ${tema}`
+  ];
+}
+
+function generateDefaultMethodologicalDevelopment(tema: string): any[] {
+  return [
+    {
+      etapa: 'Introdução',
+      atividade: `Apresentação do tema "${tema}" através de questionamentos para ativar conhecimentos prévios dos alunos.`,
+      tempo: '10 min',
+      recursos: 'Quadro'
+    },
+    {
+      etapa: 'Desenvolvimento',
+      atividade: `Exposição dialogada dos principais conceitos de ${tema} com exemplos práticos e interação com os alunos.`,
+      tempo: '25 min',
+      recursos: 'Quadro, Material impresso, Slides'
+    },
+    {
+      etapa: 'Prática',
+      atividade: `Atividade prática em grupos aplicando os conceitos de ${tema} através de exercícios dirigidos.`,
+      tempo: '10 min',
+      recursos: 'Folhas de atividade, Lápis'
+    },
+    {
+      etapa: 'Fechamento',
+      atividade: `Síntese dos principais pontos sobre ${tema} com feedback dos alunos e esclarecimento de dúvidas.`,
+      tempo: '5 min',
+      recursos: 'Quadro'
+    }
+  ];
+}
+
+function extractMethodologicalDevelopmentWithSpecificResources(content: string): any[] | null {
+  const developmentSection = content.match(/desenvolvimento.*?metodológico[:\s]*(.*?)(?=\n.*?recursos|\n.*?conteúdo|$)/gis);
+  if (developmentSection && developmentSection[0]) {
+    const stages = [];
+    const stageRegex = /(?:etapa\s*\d*\s*-?\s*)?(introdução|desenvolvimento|prática|fechamento)[:\s]*\n?.*?atividade[:\s]*(.*?)\n.*?tempo[:\s]*(.*?)\n.*?recursos[:\s]*(.*?)(?=\n.*?etapa|\n.*?recursos|\n.*?conteúdo|$)/gis;
+    
+    let match;
+    while ((match = stageRegex.exec(developmentSection[0])) !== null) {
+      // Limpar e filtrar recursos para serem específicos da etapa
+      const recursos = match[4]?.trim().split(',').map(r => r.trim()).filter(r => r.length > 0).join(', ') || 'Recursos necessários';
+      
+      stages.push({
+        etapa: match[1]?.trim() || 'Etapa',
+        atividade: match[2]?.trim() || 'Atividade',
+        tempo: match[3]?.trim() || '10 min',
+        recursos: recursos
+      });
+    }
+    
+    return stages.length > 0 ? stages : null;
+  }
+  return null;
+}
+
+function compileAllDidacticResources(etapas: any[]): string[] {
+  const allResources = new Set<string>();
+  
+  etapas.forEach(etapa => {
+    if (etapa.recursos) {
+      const recursos = etapa.recursos.split(',').map((r: string) => r.trim());
+      recursos.forEach((recurso: string) => {
+        if (recurso && recurso.length > 0 && recurso !== 'Recursos necessários') {
+          allResources.add(recurso);
+        }
+      });
+    }
+  });
+  
+  return Array.from(allResources).sort();
+}
+
+function generateDefaultProgrammaticContent(tema: string): string[] {
+  return [
+    `Conceitos fundamentais de ${tema}`,
+    `Aplicações práticas de ${tema}`,
+    `Relações de ${tema} com o cotidiano`
+  ];
+}
+
+function generateDefaultMethodology(tema: string): string {
+  return `Aula expositiva dialogada com uso de recursos visuais e atividades práticas para consolidação do aprendizado sobre ${tema}.`;
+}
+
+function generateDefaultEvaluation(tema: string): string {
+  return `Avaliação formativa através da observação da participação dos alunos nas discussões e atividades práticas sobre ${tema}. Verificação da compreensão através de perguntas direcionadas e análise das respostas nas atividades propostas.`;
+}
+
+function generateDefaultReferences(disciplina: string, tema: string): string[] {
+  return [
+    'Base Nacional Comum Curricular (BNCC). Ministério da Educação, 2018.',
+    `Livro didático de ${disciplina} adotado pela escola.`,
+    `Recursos pedagógicos complementares sobre ${tema}.`
+  ];
+}
+
 function extractBNCCCode(content: string, disciplina: string, serie: string): string | null {
   const bnccRegex = /(?:BNCC|Código BNCC|código.*?bncc)[:\s]*([A-Z]{2}\d{2}[A-Z]{2}\d{2}(?:[A-Z]{2}\d{2})?)/gi;
   const match = content.match(bnccRegex);
   if (match && match[0]) {
     return match[0].replace(/(?:BNCC|Código BNCC|código.*?bncc)[:\s]*/gi, '').trim();
   }
-  
-  // Se não encontrar, gerar um código baseado na disciplina e série
-  const disciplinaCodes: { [key: string]: string } = {
-    'matemática': 'EF',
-    'português': 'EF',
-    'história': 'EF',
-    'geografia': 'EF',
-    'ciências': 'EF',
-    'arte': 'EF',
-    'educação física': 'EF'
-  };
-  
-  const disciplinaKey = disciplina.toLowerCase();
-  const prefix = disciplinaCodes[disciplinaKey] || 'EF';
-  const serieNum = serie.replace(/\D/g, '');
-  
-  return `${prefix}${serieNum.padStart(2, '0')}MA01, ${prefix}${serieNum.padStart(2, '0')}MA02`;
+  return null;
 }
 
 function extractObjectives(content: string): string[] | null {
@@ -492,52 +570,6 @@ function extractSkills(content: string): string[] | null {
   return null;
 }
 
-function extractMethodologicalDevelopment(content: string): any[] | null {
-  const developmentSection = content.match(/desenvolvimento.*?metodológico[:\s]*(.*?)(?=\n.*?recursos|\n.*?conteúdo|$)/gis);
-  if (developmentSection && developmentSection[0]) {
-    const stages = [];
-    const stageRegex = /(?:etapa\s*\d*\s*-?\s*)?(introdução|desenvolvimento|prática|fechamento)[:\s]*\n?.*?atividade[:\s]*(.*?)\n.*?tempo[:\s]*(.*?)\n.*?recursos[:\s]*(.*?)(?=\n.*?etapa|\n.*?recursos|\n.*?conteúdo|$)/gis;
-    
-    let match;
-    while ((match = stageRegex.exec(developmentSection[0])) !== null) {
-      stages.push({
-        etapa: match[1]?.trim() || 'Etapa',
-        atividade: match[2]?.trim() || 'Atividade',
-        tempo: match[3]?.trim() || '10 min',
-        recursos: match[4]?.trim() || 'Recursos necessários'
-      });
-    }
-    
-    return stages.length > 0 ? stages : null;
-  }
-  return null;
-}
-
-function compileDidacticResourcesArray(etapas: any[]): string[] {
-  const allResources = new Set<string>();
-  
-  etapas.forEach(etapa => {
-    if (etapa.recursos) {
-      const recursos = etapa.recursos.split(',').map((r: string) => r.trim());
-      recursos.forEach((recurso: string) => {
-        if (recurso && recurso.length > 0) {
-          allResources.add(recurso);
-        }
-      });
-    }
-  });
-  
-  return Array.from(allResources);
-}
-
-function extractEvaluation(content: string, tema: string): string | null {
-  const evaluationSection = content.match(/avaliação[:\s]*(.*?)(?=\n.*?referência|\n.*?bibliografia|$)/gis);
-  if (evaluationSection && evaluationSection[0]) {
-    return evaluationSection[0].replace(/avaliação[:\s]*/gi, '').trim();
-  }
-  return null;
-}
-
 function extractProgrammaticContent(content: string): string[] | null {
   const contentSection = content.match(/conteúdos.*?programáticos[:\s]*(.*?)(?=\n.*?metodologia|\n.*?avaliação|$)/gis);
   if (contentSection && contentSection[0]) {
@@ -555,6 +587,14 @@ function extractMethodology(content: string): string | null {
   const methodologySection = content.match(/metodologia[:\s]*(.*?)(?=\n.*?avaliação|\n.*?recursos|$)/gis);
   if (methodologySection && methodologySection[0]) {
     return methodologySection[0].replace(/metodologia[:\s]*/gi, '').trim();
+  }
+  return null;
+}
+
+function extractEvaluation(content: string, tema: string): string | null {
+  const evaluationSection = content.match(/avaliação[:\s]*(.*?)(?=\n.*?referência|\n.*?bibliografia|$)/gis);
+  if (evaluationSection && evaluationSection[0]) {
+    return evaluationSection[0].replace(/avaliação[:\s]*/gi, '').trim();
   }
   return null;
 }
