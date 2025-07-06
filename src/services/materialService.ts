@@ -1,3 +1,4 @@
+
 import { userMaterialsService, UserMaterial } from './userMaterialsService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -273,21 +274,6 @@ class MaterialService {
   }
 
   private convertToGeneratedMaterial(userMaterial: UserMaterial, content: any, formData: MaterialFormData): GeneratedMaterial {
-    // Adiciona propriedades computadas para o template
-    const contentWithComputed = {
-      ...content,
-      professor: content.professor || formData.professor || 'Professor',
-      disciplina: content.disciplina || formData.disciplina || formData.subject || 'Disciplina',
-      serie: content.serie || formData.serie || formData.grade || 'Série',
-      tema: content.tema || formData.tema || formData.topic || 'Tema',
-      data: content.data || formData.data || new Date().toLocaleDateString('pt-BR'),
-      'duracao.aula': content.duracao || content['duracao.aula'] || formData.duracao || '1 aula de 50 minutos',
-      'codigo.da.bncc': content.bncc || content['codigo.da.bncc'] || formData.bncc || 'EF03MA01, EF03MA02',
-      objetivos: Array.isArray(content.objetivos) ? content.objetivos : (typeof content.objetivos === 'string' ? content.objetivos.split(/\n|\r|\.|;/).map(o => o.trim()).filter(Boolean) : []),
-      desenvolvimento: Array.isArray(content.desenvolvimento) ? content.desenvolvimento : [],
-      recursos: Array.isArray(content.recursos) ? content.recursos.join(', ') : (content.recursos || ''),
-      avaliacao: content.avaliacao || 'Avaliação formativa e/ou somativa baseada na participação, atividades práticas e produção escrita, conforme os objetivos propostos.'
-    };
     return {
       id: userMaterial.id,
       title: userMaterial.title,
@@ -295,7 +281,7 @@ class MaterialService {
       subject: userMaterial.subject,
       grade: userMaterial.grade,
       createdAt: userMaterial.createdAt,
-      content: contentWithComputed,
+      content,
       formData
     };
   }
