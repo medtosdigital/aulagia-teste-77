@@ -27,6 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     name: 'Professor(a)',
     photo: ''
   });
+  const [refreshCount, setRefreshCount] = useState(0);
 
   const loadUserProfile = async () => {
     if (!user?.id) return;
@@ -104,6 +105,17 @@ const Sidebar: React.FC<SidebarProps> = ({
     checkOwner();
   }, [user]);
 
+  // Forçar re-render ao receber evento global de mudança de plano
+  useEffect(() => {
+    const handlePlanChanged = () => {
+      setRefreshCount((prev) => prev + 1);
+    };
+    window.addEventListener('planChanged', handlePlanChanged);
+    return () => {
+      window.removeEventListener('planChanged', handlePlanChanged);
+    };
+  }, []);
+
   // Simplificados - apenas verificar se usuário está logado
   const mobileMenuItems = [{
     id: 'dashboard',
@@ -157,8 +169,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     label: 'Calendário',
     icon: Calendar
   }] : []),
-  // Escola - apenas para o proprietário do grupo escolar E plano grupo_escolar
-  ...(isOwner && currentPlan?.plano_ativo === 'grupo_escolar' ? [{
+  // Escola - apenas para usuários autenticados com plano grupo escolar
+  ...(canAccessSchool() ? [{
     id: 'school',
     label: 'Escola',
     icon: School

@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Dialog as UIDialog, DialogContent as UIDialogContent, DialogHeader as UIDialogHeader, DialogTitle as UIDialogTitle, DialogFooter as UIDialogFooter } from '@/components/ui/dialog';
+import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 
 interface Teacher {
   id: string;
@@ -29,7 +30,6 @@ interface Teacher {
 
 const SchoolPage: React.FC = () => {
   const { user } = useAuth();
-  const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,29 +48,17 @@ const SchoolPage: React.FC = () => {
   const navigate = useNavigate();
   const [editUserLimit, setEditUserLimit] = useState<{ teacher: Teacher, value: number } | null>(null);
   const [planoInfo, setPlanoInfo] = useState<{ nome: string, status: string, dataExpiracao: string } | null>(null);
+  const { canAccessSchool, loading: planLoading, currentPlan } = useSupabasePlanPermissions();
 
   useEffect(() => {
-    const checkOwner = async () => {
-      if (!user?.id) {
-        setIsOwner(false);
-        return;
-      }
-      // Buscar grupo escolar onde o usuário é owner_id
-      const { data: grupo } = await supabase
-        .from('grupos_escolares')
-        .select('id')
-        .eq('owner_id', user.id)
-        .single();
-      setIsOwner(!!grupo);
-    };
-    checkOwner();
-  }, [user]);
+    console.log('currentPlan:', currentPlan);
+  }, [currentPlan]);
 
   useEffect(() => {
-    if (isOwner === false) {
+    if (!planLoading && currentPlan && currentPlan.plano_ativo !== 'grupo_escolar') {
       navigate('/dashboard', { replace: true });
     }
-  }, [isOwner, navigate]);
+  }, [planLoading, currentPlan, navigate]);
 
   useEffect(() => {
     loadTeachers();
@@ -159,6 +147,7 @@ const SchoolPage: React.FC = () => {
     } catch (error) {
       console.error('Error loading teachers:', error);
       setTeachers([]);
+      toast({ title: 'Erro ao carregar professores', description: 'Não foi possível carregar os dados dos professores. Tente novamente mais tarde.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -310,14 +299,7 @@ const SchoolPage: React.FC = () => {
     toast({ title: 'Limites redistribuídos', description: 'Os limites foram divididos igualmente.', variant: 'default' });
   };
 
-  if (isOwner === false) {
-    return null;
-  }
-  if (isOwner === null) {
-    return null; // ou um loading spinner
-  }
-
-  if (loading) {
+  if (planLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
@@ -400,6 +382,11 @@ const SchoolPage: React.FC = () => {
         <div className="mb-10">
           <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2"><Users className="w-6 h-6 text-blue-600" /> Professores Adicionados</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTeachers.length === 0 && pendingInvites.length === 0 && (
+              <div className="col-span-full text-center text-gray-500 py-12">
+                Nenhum professor adicionado ainda. Use o botão "Preencher Vaga" para convidar um professor ao grupo escolar.
+              </div>
+            )}
             {filteredTeachers.map(teacher => (
               <Card key={teacher.id} className="flex flex-row items-center gap-4 p-4 bg-white shadow-lg border-0 hover:shadow-2xl transition-all">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg overflow-hidden">
@@ -454,6 +441,11 @@ const SchoolPage: React.FC = () => {
         <div className="max-w-5xl mx-auto px-4">
           <h3 className="text-2xl font-bold text-gray-800 mb-8 text-center">Benefícios do Plano Escola</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {teachers.length === 0 && (
+              <div className="text-center text-gray-400 py-8">
+                Nenhum dado de professores encontrado. Verifique se há membros no grupo escolar ou tente recarregar a página.
+              </div>
+            )}
             <Card className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-md hover:shadow-xl transition">
               <div className="bg-blue-100 p-4 rounded-full mb-4">
                 <Users className="w-8 h-8 text-blue-600" />

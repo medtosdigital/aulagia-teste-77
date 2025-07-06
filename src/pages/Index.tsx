@@ -227,7 +227,7 @@ const Index = () => {
             <Route path="/materiais" element={requireAuth(<MaterialsList />)} />
             <Route path="/criar" element={requireAuth(<CreateLesson />)} />
             <Route path="/agenda" element={requireAuth(<CalendarPage />)} />
-            <Route path="/escola" element={requireSchool(<SchoolPage />)} />
+            <Route path="/escola" element={requireAuth(<SchoolPage />)} />
             <Route path="/perfil" element={requireAuth(<ProfilePage />)} />
             <Route path="/assinatura" element={<SubscriptionPage />} />
             <Route path="/configuracoes" element={requireAdmin(<div className="p-4"><h2>Configurações - Em desenvolvimento</h2></div>)} />
