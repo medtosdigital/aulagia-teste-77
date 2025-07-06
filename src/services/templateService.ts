@@ -536,480 +536,112 @@ class TemplateService {
               height: 720px;
               margin: auto;
               display: flex;
+              flex-direction: row;
               align-items: center;
               justify-content: space-between;
               padding: 40px;
               background-color: #ffffff;
               box-sizing: border-box;
-              position: relative;
-              overflow: hidden;
-            }
-
-            .slide-capa {
-              flex-direction: column;
-              text-align: center;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-            }
-
-            .slide-objetivos {
-              flex-direction: column;
-              background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-              color: white;
-            }
-
-            .slide-introducao {
-              flex-direction: row;
-              background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            }
-
-            .slide-desenvolvimento {
-              flex-direction: row;
-              background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            }
-
-            .slide-exemplo {
-              flex-direction: column;
-              background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            }
-
-            .slide-pratica {
-              flex-direction: row;
-              background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            }
-
-            .slide-formula {
-              flex-direction: column;
-              background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-              text-align: center;
-            }
-
-            .slide-tabela {
-              flex-direction: column;
-              background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-            }
-
-            .slide-imagem {
-              flex-direction: row;
-              background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-            }
-
-            .slide-atividade {
-              flex-direction: column;
-              background: linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%);
-            }
-
-            .slide-conclusao {
-              flex-direction: column;
-              background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-              text-align: center;
-            }
-
-            .slide-referencias {
-              flex-direction: column;
-              background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 100%);
-              text-align: center;
             }
 
             .text-content {
               width: 55%;
-              color: #1e293b;
-            }
-
-            .text-content-full {
-              width: 100%;
-              color: #1e293b;
             }
 
             .title {
               font-family: 'Patrick Hand', cursive;
               font-size: 2.8rem;
+              color: #0f172a;
               margin-bottom: 20px;
-              text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            }
-
-            .subtitle {
-              font-size: 1.8rem;
-              margin-bottom: 30px;
-              color: rgba(255,255,255,0.9);
             }
 
             .content {
               font-size: 1.4rem;
+              color: #1e293b;
               line-height: 1.6;
             }
 
-            .content-list {
-              font-size: 1.3rem;
-              line-height: 1.8;
-              padding-left: 20px;
-            }
-
-            .content-list li {
-              margin-bottom: 15px;
-              list-style: none;
-              position: relative;
-            }
-
-            .content-list li:before {
-              content: "★";
-              color: #fbbf24;
-              font-size: 1.2em;
-              position: absolute;
-              left: -20px;
-            }
-
-            .image-side {
-              width: 40%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-
             .image-side img {
-              max-width: 100%;
-              border-radius: 15px;
-              box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            }
-
-            .image-placeholder {
-              width: 300px;
-              height: 200px;
-              background: rgba(255,255,255,0.3);
-              border: 3px dashed rgba(255,255,255,0.6);
-              border-radius: 15px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: rgba(255,255,255,0.8);
-              font-size: 1.1rem;
-              text-align: center;
+              width: 280px;
             }
 
             .table {
               width: 100%;
               margin-top: 20px;
               border-collapse: collapse;
-              background: white;
-              border-radius: 15px;
-              overflow: hidden;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             }
 
             .table th, .table td {
-              padding: 15px;
+              border: 1px solid #ccc;
+              padding: 10px 14px;
               font-size: 1.1rem;
               text-align: center;
-              border-bottom: 1px solid #e5e7eb;
-            }
-
-            .table th {
-              background: #4f46e5;
-              color: white;
-              font-weight: 600;
             }
 
             .grid {
               display: grid;
               grid-template-columns: repeat(2, 1fr);
-              gap: 20px;
+              gap: 16px;
               margin-top: 20px;
             }
 
             .box {
-              background-color: rgba(255,255,255,0.9);
-              padding: 20px;
-              border-radius: 15px;
+              background-color: #fef9c3;
+              padding: 16px;
+              border-radius: 10px;
               font-size: 1.2rem;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-              text-align: center;
-            }
-
-            .formula-box {
-              background: rgba(255,255,255,0.95);
-              padding: 30px;
-              border-radius: 20px;
-              font-size: 2rem;
-              font-family: 'Times New Roman', serif;
-              text-align: center;
-              box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-              margin: 20px 0;
-            }
-
-            .example-box {
-              background: rgba(255,255,255,0.9);
-              padding: 25px;
-              border-radius: 15px;
-              margin: 20px 0;
-              border-left: 5px solid #fbbf24;
-            }
-
-            .exercise-container {
-              background: rgba(255,255,255,0.9);
-              padding: 25px;
-              border-radius: 15px;
-              margin: 20px 0;
-            }
-
-            .exercise-question {
-              font-size: 1.3rem;
-              margin-bottom: 15px;
-              font-weight: 600;
-            }
-
-            .exercise-options {
-              font-size: 1.1rem;
-              line-height: 1.8;
-            }
-
-            .date-info {
-              position: absolute;
-              top: 20px;
-              right: 30px;
-              font-size: 1rem;
-              color: rgba(255,255,255,0.8);
-            }
-
-            .teacher-info {
-              position: absolute;
-              bottom: 20px;
-              left: 30px;
-              font-size: 1rem;
-              color: rgba(255,255,255,0.8);
-            }
-
-            .slide-number {
-              position: absolute;
-              bottom: 20px;
-              right: 30px;
-              font-size: 1rem;
-              color: rgba(255,255,255,0.8);
+              box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             }
           </style>
         </head>
         <body>
-          <!-- Slide 1: Capa -->
-          <div class="slide slide-capa">
-            <div class="date-info">{{data}}</div>
-            <div class="title" style="font-size: 3.5rem; margin-bottom: 30px;">{{tema}}</div>
-            <div class="subtitle">{{disciplina}} - {{serie}}</div>
-            <div class="teacher-info">Professor(a): {{professor}}</div>
-            <div class="slide-number">1/12</div>
-          </div>
-
-          <div class="page-separator"></div>
-
-          <!-- Slide 2: Objetivos da Aula -->
-          <div class="slide slide-objetivos">
-            <div class="text-content-full">
-              <div class="title">Objetivos da Aula</div>
-              <div class="content-list">
-                <li>{{objetivo_1}}</li>
-                <li>{{objetivo_2}}</li>
-                <li>{{objetivo_3}}</li>
-                <li>{{objetivo_4}}</li>
-              </div>
-            </div>
-            <div class="slide-number">2/12</div>
-          </div>
-
-          <div class="page-separator"></div>
-
-          <!-- Slide 3: Introdução ao Tema -->
-          <div class="slide slide-introducao">
+          {{#each slides}}
+          <div class="slide">
             <div class="text-content">
-              <div class="title">Introdução</div>
-              <div class="content">{{introducao_texto}}</div>
-            </div>
-            <div class="image-side">
-              <div class="image-placeholder">{{introducao_imagem}}</div>
-            </div>
-            <div class="slide-number">3/12</div>
-          </div>
-
-          <div class="page-separator"></div>
-
-          <!-- Slide 4: Conceitos Fundamentais -->
-          <div class="slide slide-desenvolvimento">
-            <div class="text-content">
-              <div class="title">Conceitos Fundamentais</div>
-              <div class="content">{{conceitos_texto}}</div>
-              <div class="grid" style="grid-template-columns: 1fr;">
-                <div class="box">{{conceito_principal}}</div>
-              </div>
-            </div>
-            <div class="image-side">
-              <div class="image-placeholder">{{conceitos_imagem}}</div>
-            </div>
-            <div class="slide-number">4/12</div>
-          </div>
-
-          <div class="page-separator"></div>
-
-          <!-- Slide 5: Exemplo Prático -->
-          <div class="slide slide-exemplo">
-            <div class="text-content-full">
-              <div class="title">Exemplo Prático</div>
-              <div class="example-box">
-                <div style="font-size: 1.3rem; margin-bottom: 15px;">{{exemplo_titulo}}</div>
-                <div style="font-size: 1.1rem;">{{exemplo_conteudo}}</div>
-              </div>
-              <div class="image-placeholder" style="margin: 20px auto; width: 400px;">{{exemplo_imagem}}</div>
-            </div>
-            <div class="slide-number">5/12</div>
-          </div>
-
-          <div class="page-separator"></div>
-
-          <!-- Slide 6: Desenvolvimento Detalhado -->
-          <div class="slide slide-pratica">
-            <div class="text-content">
-              <div class="title">Desenvolvimento</div>
-              <div class="content">{{desenvolvimento_texto}}</div>
-              <div class="grid">
-                <div class="box">{{ponto_1}}</div>
-                <div class="box">{{ponto_2}}</div>
-              </div>
-            </div>
-            <div class="image-side">
-              <div class="image-placeholder">{{desenvolvimento_imagem}}</div>
-            </div>
-            <div class="slide-number">6/12</div>
-          </div>
-
-          <div class="page-separator"></div>
-
-          <!-- Slide 7: Fórmulas/Regras -->
-          <div class="slide slide-formula">
-            <div class="text-content-full">
-              <div class="title">{{formula_titulo}}</div>
-              <div class="formula-box">{{formula_principal}}</div>
-              <div class="content" style="text-align: center; margin-top: 20px;">{{formula_explicacao}}</div>
-            </div>
-            <div class="slide-number">7/12</div>
-          </div>
-
-          <div class="page-separator"></div>
-
-          <!-- Slide 8: Tabela/Comparação -->
-          <div class="slide slide-tabela">
-            <div class="text-content-full">
-              <div class="title">{{tabela_titulo}}</div>
+              <div class="title">{{titulo}}</div>
+              {{#if conteudo}}
+              <div class="content">{{conteudo}}</div>
+              {{/if}}
+              {{#if tabela}}
               <table class="table">
-                <thead>
-                  <tr>
-                    <th>{{coluna_1}}</th>
-                    <th>{{coluna_2}}</th>
-                    <th>{{coluna_3}}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>{{linha_1_col_1}}</td>
-                    <td>{{linha_1_col_2}}</td>
-                    <td>{{linha_1_col_3}}</td>
-                  </tr>
-                  <tr>
-                    <td>{{linha_2_col_1}}</td>
-                    <td>{{linha_2_col_2}}</td>
-                    <td>{{linha_2_col_3}}</td>
-                  </tr>
-                  <tr>
-                    <td>{{linha_3_col_1}}</td>
-                    <td>{{linha_3_col_2}}</td>
-                    <td>{{linha_3_col_3}}</td>
-                  </tr>
-                </tbody>
+                {{#if tabela.cabecalho}}
+                <tr>
+                  {{#each tabela.cabecalho}}
+                  <th>{{this}}</th>
+                  {{/each}}
+                </tr>
+                {{/if}}
+                {{#each tabela.linhas}}
+                <tr>
+                  {{#each this}}
+                  <td>{{this}}</td>
+                  {{/each}}
+                </tr>
+                {{/each}}
               </table>
-            </div>
-            <div class="slide-number">8/12</div>
-          </div>
-
-          <div class="page-separator"></div>
-
-          <!-- Slide 9: Imagem Central -->
-          <div class="slide slide-imagem">
-            <div class="text-content">
-              <div class="title">{{imagem_titulo}}</div>
-              <div class="content">{{imagem_descricao}}</div>
-            </div>
-            <div class="image-side" style="width: 50%;">
-              <div class="image-placeholder" style="width: 100%; height: 300px;">{{imagem_principal}}</div>
-            </div>
-            <div class="slide-number">9/12</div>
-          </div>
-
-          <div class="page-separator"></div>
-
-          <!-- Slide 10: Atividade Interativa -->
-          <div class="slide slide-atividade">
-            <div class="text-content-full">
-              <div class="title">Vamos Praticar!</div>
-              <div class="exercise-container">
-                <div class="exercise-question">{{atividade_pergunta}}</div>
-                <div class="exercise-options">
-                  <div style="margin: 10px 0;">a) {{opcao_a}}</div>
-                  <div style="margin: 10px 0;">b) {{opcao_b}}</div>
-                  <div style="margin: 10px 0;">c) {{opcao_c}}</div>
-                  <div style="margin: 10px 0;">d) {{opcao_d}}</div>
-                </div>
+              {{/if}}
+              {{#if grade}}
+              <div class="grid">
+                {{#each grade}}
+                <div class="box">{{this}}</div>
+                {{/each}}
               </div>
+              {{/if}}
             </div>
-            <div class="slide-number">10/12</div>
+            {{#if imagem}}
+            <div class="image-side">
+              <img src="{{imagem}}" alt="{{altImagem}}">
+            </div>
+            {{/if}}
           </div>
-
+          {{#unless @last}}
           <div class="page-separator"></div>
-
-          <!-- Slide 11: Conclusão -->
-          <div class="slide slide-conclusao">
-            <div class="text-content-full">
-              <div class="title">Conclusão</div>
-              <div class="content" style="font-size: 1.5rem; line-height: 1.8;">{{conclusao_texto}}</div>
-              <div class="grid" style="margin-top: 30px;">
-                <div class="box">{{ponto_chave_1}}</div>
-                <div class="box">{{ponto_chave_2}}</div>
-              </div>
-            </div>
-            <div class="slide-number">11/12</div>
-          </div>
-
-          <div class="page-separator"></div>
-
-          <!-- Slide 12: Próximos Passos -->
-          <div class="slide slide-referencias">
-            <div class="text-content-full">
-              <div class="title">Próximos Passos</div>
-              <div class="content-list" style="font-size: 1.4rem;">
-                <li>{{proximo_passo_1}}</li>
-                <li>{{proximo_passo_2}}</li>
-                <li>{{proximo_passo_3}}</li>
-              </div>
-              <div style="margin-top: 40px; font-size: 1.2rem; color: rgba(30, 41, 59, 0.8);">
-                Obrigado pela atenção!
-              </div>
-            </div>
-            <div class="slide-number">12/12</div>
-          </div>
+          {{/unless}}
+          {{/each}}
         </body>
         </html>
       `,
-      variables: [
-        'titulo', 'serie', 'tema', 'disciplina', 'professor', 'data',
-        'objetivo_1', 'objetivo_2', 'objetivo_3', 'objetivo_4',
-        'introducao_texto', 'introducao_imagem',
-        'conceitos_texto', 'conceito_principal', 'conceitos_imagem',
-        'exemplo_titulo', 'exemplo_conteudo', 'exemplo_imagem',
-        'desenvolvimento_texto', 'ponto_1', 'ponto_2', 'desenvolvimento_imagem',
-        'formula_titulo', 'formula_principal', 'formula_explicacao',
-        'tabela_titulo', 'coluna_1', 'coluna_2', 'coluna_3',
-        'linha_1_col_1', 'linha_1_col_2', 'linha_1_col_3',
-        'linha_2_col_1', 'linha_2_col_2', 'linha_2_col_3',
-        'linha_3_col_1', 'linha_3_col_2', 'linha_3_col_3',
-        'imagem_titulo', 'imagem_descricao', 'imagem_principal',
-        'atividade_pergunta', 'opcao_a', 'opcao_b', 'opcao_c', 'opcao_d',
-        'conclusao_texto', 'ponto_chave_1', 'ponto_chave_2',
-        'proximo_passo_1', 'proximo_passo_2', 'proximo_passo_3'
-      ],
+      variables: ['titulo', 'serie', 'slides'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
