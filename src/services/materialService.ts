@@ -40,17 +40,17 @@ export interface LessonPlan {
   serie: string;
   tema: string;
   data: string;
-  duracao: string; // Changed from duracaoAula
-  bncc: string; // Changed from codigoBncc
+  duracao: string;
+  bncc: string;
   objetivos: string[];
-  habilidades: string[]; // Added missing property
-  desenvolvimento: Array<{ // Changed from desenvolvimentoMetodologico
+  habilidades: string[];
+  desenvolvimento: Array<{
     etapa: string;
     atividade: string;
     tempo: string;
     recursos: string;
   }>;
-  recursos: string[]; // Changed from recursosDidaticos and made it an array
+  recursos: string[];
   conteudosProgramaticos: string[];
   metodologia: string;
   avaliacao: string;
