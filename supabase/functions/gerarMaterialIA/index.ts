@@ -127,69 +127,64 @@ function generatePrompt(materialType: string, formData: MaterialFormData): strin
   switch (materialType) {
     case 'plano-de-aula':
       return `
-Crie um plano de aula COMPLETO e DETALHADO sobre "${tema}" para a disciplina de ${disciplina}, série/ano ${serie}.
+Você é um professor especialista em planejamento pedagógico de acordo com a BNCC (Base Nacional Comum Curricular).
 
-DADOS FIXOS:
+Crie um plano de aula diário completo com base nas seguintes informações preenchidas no formulário pelo usuário:
+
+TEMA DA AULA: ${tema}
+DISCIPLINA: ${disciplina}
+TURMA: ${serie}
+
+Com essas informações, desenvolva o plano de aula com os seguintes tópicos, preenchidos com clareza, objetividade e estrutura pedagógica:
+
+1. **Duração da Aula**:
+   Informe quantas aulas de 50 minutos são necessárias para abordar o tema de forma completa.
+
+2. **Códigos da BNCC**:
+   Liste os códigos da BNCC aplicáveis ao tema da aula, considerando a disciplina e a turma (ano escolar). Coloque o código e um breve resumo da habilidade descrita.
+
+3. **Objetivos de Aprendizagem**:
+   Crie de 3 a 5 objetivos claros e alinhados à BNCC e ao tema da aula.
+
+4. **Desenvolvimento Metodológico por Etapas da Aula**:
+   Detalhe as etapas da aula com tempo estimado (em minutos), atividade a ser desenvolvida e os recursos a serem usados. Use o seguinte modelo:
+
+   - **Introdução**
+     Tempo:
+     Atividade:
+     Recursos:
+
+   - **Desenvolvimento**
+     Tempo:
+     Atividade:
+     Recursos:
+
+   - **Prática**
+     Tempo:
+     Atividade:
+     Recursos:
+
+   - **Fechamento**
+     Tempo:
+     Atividade:
+     Recursos:
+
+5. **Recursos Didáticos**:
+   Liste todos os recursos usados em todas as etapas, separados por vírgula (ex: quadro branco, slides, folha de atividade, livro didático, projetor...).
+
+6. **Avaliação**:
+   Elabore uma proposta de avaliação coerente com o tema da aula. Ela deve avaliar os objetivos propostos e pode incluir atividades práticas, participação, produção escrita, entre outras formas de avaliação diagnóstica, formativa ou somativa.
+
+Certifique-se de que o conteúdo seja adaptado à faixa etária e nível da turma especificada. Use linguagem clara e pedagógica.
+
+IMPORTANTE: Responda APENAS com o conteúdo estruturado, sem explicações adicionais.
+
+DADOS FIXOS PARA O CABEÇALHO:
 - Professor: ${professor}
 - Data: ${data}
 - Disciplina: ${disciplina}
 - Série/Ano: ${serie}
 - Tema: ${tema}
-- Duração da Aula: ${duracao}
-
-IMPORTANTE: Responda APENAS com o conteúdo estruturado, sem explicações adicionais.
-
-ESTRUTURA OBRIGATÓRIA:
-
-1. OBJETIVOS DE APRENDIZAGEM (MÍNIMO 3, MÁXIMO 5 objetivos específicos):
-- Liste entre 3 a 5 objetivos claros que os alunos devem alcançar sobre ${tema}
-
-2. HABILIDADES BNCC (3-4 habilidades específicas):
-- Liste códigos específicos da BNCC relacionados ao tema "${tema}" da disciplina ${disciplina} para ${serie}
-- Formato: EF[ANO][ÁREA][NÚMERO] - Descrição da habilidade
-
-3. DESENVOLVIMENTO METODOLÓGICO:
-Organize em 4 ETAPAS obrigatórias com recursos ESPECÍFICOS para cada etapa:
-
-ETAPA 1 - INTRODUÇÃO (10 minutos):
-- Atividade: [Descreva detalhadamente como introduzir o tema "${tema}"]
-- Tempo: 10 min
-- Recursos: [APENAS recursos para introdução, ex: Quadro, Giz]
-
-ETAPA 2 - DESENVOLVIMENTO (25 minutos):
-- Atividade: [Descreva detalhadamente o desenvolvimento do tema "${tema}"]
-- Tempo: 25 min
-- Recursos: [APENAS recursos para desenvolvimento, ex: Quadro, Material impresso, Slides]
-
-ETAPA 3 - PRÁTICA (10 minutos):
-- Atividade: [Descreva detalhadamente a prática sobre "${tema}"]
-- Tempo: 10 min
-- Recursos: [APENAS recursos para prática, ex: Folhas de atividade, Lápis, Material manipulativo]
-
-ETAPA 4 - FECHAMENTO (5 minutos):
-- Atividade: [Descreva detalhadamente o fechamento do tema "${tema}"]
-- Tempo: 5 min
-- Recursos: [APENAS recursos para fechamento, ex: Quadro]
-
-4. RECURSOS DIDÁTICOS:
-[Liste TODOS os recursos mencionados nas 4 etapas acima, organizados e separados por vírgula]
-
-5. CONTEÚDOS PROGRAMÁTICOS:
-Liste os conteúdos específicos que serão abordados sobre ${tema}.
-
-6. METODOLOGIA:
-Descreva a metodologia geral da aula sobre ${tema}.
-
-7. AVALIAÇÃO:
-Descreva especificamente COMO avaliar se os alunos aprenderam ${tema}.
-
-8. REFERÊNCIAS:
-Liste referências bibliográficas adequadas para ${tema} em ${disciplina}.
-
-9. CÓDIGO BNCC:
-Forneça códigos específicos da BNCC para ${tema} em ${disciplina} - ${serie}
-
-IMPORTANTE: Seja específico, prático e adequado para ${serie}. Use linguagem pedagógica profissional.
 `;
 
     case 'slides':
@@ -297,12 +292,14 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
   const serie = formData.serie || formData.grade || 'Série';
   const professor = formData.professor || 'Professor';
   const data = formData.data || new Date().toLocaleDateString('pt-BR');
-  const duracao = formData.duracao || '50 minutos';
 
   switch (materialType) {
     case 'plano-de-aula':
-      // Extrair código BNCC do conteúdo gerado
-      const codigoBncc = extractBNCCCode(content, disciplina, serie) || generateBNCCCode(disciplina, serie);
+      // Extrair duração da aula do conteúdo gerado
+      const duracaoAula = extractDurationFromContent(content) || '50 minutos';
+
+      // Extrair código BNCC do conteúdo gerado de forma mais específica
+      const codigoBncc = extractBNCCFromContent(content, disciplina, serie) || generateBNCCCode(disciplina, serie);
 
       // Extrair objetivos (garantindo 3-5 objetivos)
       let objetivos = extractObjectives(content);
@@ -316,9 +313,9 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
       const habilidades = extractSkills(content) || generateDefaultSkills(tema, disciplina, serie);
 
       // Extrair etapas do desenvolvimento metodológico com recursos específicos
-      const desenvolvimentoEtapas = extractMethodologicalDevelopmentWithSpecificResources(content) || generateDefaultMethodologicalDevelopment(tema);
+      const desenvolvimentoEtapas = extractMethodologicalDevelopmentStructured(content) || generateDefaultMethodologicalDevelopment(tema);
 
-      // Compilar todos os recursos didáticos únicos
+      // Compilar todos os recursos didáticos únicos das etapas
       const recursosArray = compileAllDidacticResources(desenvolvimentoEtapas);
 
       // Extrair outras seções
@@ -334,12 +331,12 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         disciplina,
         serie,
         tema,
-        'duracao.aula': duracao, // Template expects duracao.aula
-        'codigo.da.bncc': codigoBncc, // Template expects codigo.da.bncc
+        'duracao.aula': duracaoAula,
+        'codigo.da.bncc': codigoBncc,
         objetivos,
         habilidades,
         desenvolvimento: desenvolvimentoEtapas,
-        recursos: recursosArray.join(', '), // Join resources with commas and spaces
+        recursos: recursosArray.join(', '),
         conteudosProgramaticos,
         metodologia,
         avaliacao,
@@ -354,8 +351,8 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         disciplina,
         serie,
         tema,
-        duracao,
-        bncc: extractBNCCCode(content, disciplina, serie) || generateBNCCCode(disciplina, serie),
+        duracao: formData.duracao || '50 minutos',
+        bncc: extractBNCCFromContent(content, disciplina, serie) || generateBNCCCode(disciplina, serie),
         slides: extractSlides(content) || generateDefaultSlides(tema, disciplina)
       };
 
@@ -367,8 +364,8 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         disciplina,
         serie,
         tema,
-        duracao,
-        bncc: extractBNCCCode(content, disciplina, serie) || generateBNCCCode(disciplina, serie),
+        duracao: formData.duracao || '50 minutos',
+        bncc: extractBNCCFromContent(content, disciplina, serie) || generateBNCCCode(disciplina, serie),
         instrucoes: extractFromContent(content, 'instruções') || `Complete as questões abaixo sobre ${tema}. Leia atentamente cada enunciado antes de responder.`,
         questoes: extractQuestions(content) || generateDefaultQuestions(tema, formData.numeroQuestoes || 5),
         criterios_avaliacao: extractListFromContent(content, 'critérios') || [
@@ -386,8 +383,8 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         disciplina,
         serie,
         tema,
-        duracao,
-        bncc: extractBNCCCode(content, disciplina, serie) || generateBNCCCode(disciplina, serie),
+        duracao: formData.duracao || '50 minutos',
+        bncc: extractBNCCFromContent(content, disciplina, serie) || generateBNCCCode(disciplina, serie),
         instrucoes: extractFromContent(content, 'instruções') || `Responda às questões abaixo sobre ${tema}.`,
         questoes: extractQuestions(content) || generateDefaultQuestions(tema, formData.numeroQuestoes || 5),
         criterios_avaliacao: extractListFromContent(content, 'critérios') || [
@@ -400,6 +397,78 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     default:
       return { content };
   }
+}
+
+function extractDurationFromContent(content: string): string | null {
+  // Procurar por padrões de duração da aula
+  const durationPatterns = [
+    /duração.*?aula[:\s]*([^.\n]+)/gi,
+    /quantas.*?aulas[:\s]*([^.\n]+)/gi,
+    /tempo.*?necessário[:\s]*([^.\n]+)/gi
+  ];
+  
+  for (const pattern of durationPatterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      const duration = match[1].trim();
+      // Se contém números, manter; senão, usar padrão
+      if (/\d/.test(duration)) {
+        return duration;
+      }
+    }
+  }
+  
+  return null;
+}
+
+function extractBNCCFromContent(content: string, disciplina: string, serie: string): string | null {
+  // Procurar por códigos BNCC no conteúdo de forma mais específica
+  const bnccPatterns = [
+    /códigos.*?bncc[:\s]*([^.\n]+)/gi,
+    /bncc[:\s]*([A-Z]{2}\d{2}[A-Z]{2}\d{2}[^.\n]*)/gi,
+    /habilidades.*?bncc[:\s]*([^.\n]+)/gi
+  ];
+  
+  for (const pattern of bnccPatterns) {
+    const matches = content.matchAll(pattern);
+    for (const match of matches) {
+      if (match[1]) {
+        const bnccText = match[1].trim();
+        // Verificar se contém códigos BNCC válidos
+        if (/[A-Z]{2}\d{2}[A-Z]{2}\d{2}/.test(bnccText)) {
+          return bnccText;
+        }
+      }
+    }
+  }
+  
+  return null;
+}
+
+function extractMethodologicalDevelopmentStructured(content: string): any[] | null {
+  const etapas = [];
+  
+  // Procurar por cada etapa específica
+  const etapaPatterns = [
+    { nome: 'Introdução', regex: /introdução[:\s]*\n.*?tempo[:\s]*([^.\n]+).*?atividade[:\s]*([^.\n]+(?:\n(?!.*?tempo:)[^.\n]+)*).*?recursos[:\s]*([^.\n]+)/gis },
+    { nome: 'Desenvolvimento', regex: /desenvolvimento[:\s]*\n.*?tempo[:\s]*([^.\n]+).*?atividade[:\s]*([^.\n]+(?:\n(?!.*?tempo:)[^.\n]+)*).*?recursos[:\s]*([^.\n]+)/gis },
+    { nome: 'Prática', regex: /prática[:\s]*\n.*?tempo[:\s]*([^.\n]+).*?atividade[:\s]*([^.\n]+(?:\n(?!.*?tempo:)[^.\n]+)*).*?recursos[:\s]*([^.\n]+)/gis },
+    { nome: 'Fechamento', regex: /fechamento[:\s]*\n.*?tempo[:\s]*([^.\n]+).*?atividade[:\s]*([^.\n]+(?:\n(?!.*?tempo:)[^.\n]+)*).*?recursos[:\s]*([^.\n]+)/gis }
+  ];
+  
+  for (const etapaPattern of etapaPatterns) {
+    const match = content.match(etapaPattern.regex);
+    if (match) {
+      etapas.push({
+        etapa: etapaPattern.nome,
+        tempo: match[1]?.trim() || '10 min',
+        atividade: match[2]?.trim() || `Atividade de ${etapaPattern.nome.toLowerCase()}`,
+        recursos: match[3]?.trim() || 'Quadro, Material básico'
+      });
+    }
+  }
+  
+  return etapas.length > 0 ? etapas : null;
 }
 
 function generateBNCCCode(disciplina: string, serie: string): string {
@@ -416,7 +485,9 @@ function generateBNCCCode(disciplina: string, serie: string): string {
   
   const disciplinaKey = disciplina.toLowerCase();
   const codigo = disciplinaCodes[disciplinaKey] || 'GE';
-  const serieNum = serie.replace(/\D/g, '').padStart(2, '0');
+  
+  // Extrair número da série
+  const serieNum = serie.replace(/\D/g, '').padStart(2, '0') || '03';
   
   return `EF${serieNum}${codigo}01, EF${serieNum}${codigo}02`;
 }
@@ -445,53 +516,29 @@ function generateDefaultMethodologicalDevelopment(tema: string): any[] {
   return [
     {
       etapa: 'Introdução',
-      atividade: `Apresentação do tema "${tema}" através de questionamentos para ativar conhecimentos prévios dos alunos.`,
       tempo: '10 min',
+      atividade: `Apresentação do tema "${tema}" através de questionamentos para ativar conhecimentos prévios dos alunos.`,
       recursos: 'Quadro'
     },
     {
       etapa: 'Desenvolvimento',
-      atividade: `Exposição dialogada dos principais conceitos de ${tema} com exemplos práticos e interação com os alunos.`,
       tempo: '25 min',
+      atividade: `Exposição dialogada dos principais conceitos de ${tema} com exemplos práticos e interação com os alunos.`,
       recursos: 'Quadro, Material impresso, Slides'
     },
     {
       etapa: 'Prática',
-      atividade: `Atividade prática em grupos aplicando os conceitos de ${tema} através de exercícios dirigidos.`,
       tempo: '10 min',
+      atividade: `Atividade prática em grupos aplicando os conceitos de ${tema} através de exercícios dirigidos.`,
       recursos: 'Folhas de atividade, Lápis'
     },
     {
       etapa: 'Fechamento',
-      atividade: `Síntese dos principais pontos sobre ${tema} com feedback dos alunos e esclarecimento de dúvidas.`,
       tempo: '5 min',
+      atividade: `Síntese dos principais pontos sobre ${tema} com feedback dos alunos e esclarecimento de dúvidas.`,
       recursos: 'Quadro'
     }
   ];
-}
-
-function extractMethodologicalDevelopmentWithSpecificResources(content: string): any[] | null {
-  const developmentSection = content.match(/desenvolvimento.*?metodológico[:\s]*(.*?)(?=\n.*?recursos|\n.*?conteúdo|$)/gis);
-  if (developmentSection && developmentSection[0]) {
-    const stages = [];
-    const stageRegex = /(?:etapa\s*\d*\s*-?\s*)?(introdução|desenvolvimento|prática|fechamento)[:\s]*\n?.*?atividade[:\s]*(.*?)\n.*?tempo[:\s]*(.*?)\n.*?recursos[:\s]*(.*?)(?=\n.*?etapa|\n.*?recursos|\n.*?conteúdo|$)/gis;
-    
-    let match;
-    while ((match = stageRegex.exec(developmentSection[0])) !== null) {
-      // Limpar e filtrar recursos para serem específicos da etapa
-      const recursos = match[4]?.trim().split(',').map(r => r.trim()).filter(r => r.length > 0).join(', ') || 'Recursos necessários';
-      
-      stages.push({
-        etapa: match[1]?.trim() || 'Etapa',
-        atividade: match[2]?.trim() || 'Atividade',
-        tempo: match[3]?.trim() || '10 min',
-        recursos: recursos
-      });
-    }
-    
-    return stages.length > 0 ? stages : null;
-  }
-  return null;
 }
 
 function compileAllDidacticResources(etapas: any[]): string[] {
@@ -533,41 +580,6 @@ function generateDefaultReferences(disciplina: string, tema: string): string[] {
     `Livro didático de ${disciplina} adotado pela escola.`,
     `Recursos pedagógicos complementares sobre ${tema}.`
   ];
-}
-
-function extractBNCCCode(content: string, disciplina: string, serie: string): string | null {
-  const bnccRegex = /(?:BNCC|Código BNCC|código.*?bncc)[:\s]*([A-Z]{2}\d{2}[A-Z]{2}\d{2}(?:[A-Z]{2}\d{2})?)/gi;
-  const match = content.match(bnccRegex);
-  if (match && match[0]) {
-    return match[0].replace(/(?:BNCC|Código BNCC|código.*?bncc)[:\s]*/gi, '').trim();
-  }
-  return null;
-}
-
-function extractObjectives(content: string): string[] | null {
-  const objectivesSection = content.match(/objetivos.*?aprendizagem[:\s]*(.*?)(?=\n.*?[A-Z]|\n\d\.|$)/gis);
-  if (objectivesSection && objectivesSection[0]) {
-    const objectives = objectivesSection[0]
-      .split(/\n|•|-/)
-      .map(item => item.replace(/objetivos.*?aprendizagem[:\s]*/gi, '').trim())
-      .filter(item => item.length > 10);
-    
-    return objectives.length > 0 ? objectives : null;
-  }
-  return null;
-}
-
-function extractSkills(content: string): string[] | null {
-  const skillsSection = content.match(/habilidades.*?bncc[:\s]*(.*?)(?=\n.*?desenvolvimento|\n.*?[A-Z]|\n\d\.|$)/gis);
-  if (skillsSection && skillsSection[0]) {
-    const skills = skillsSection[0]
-      .split(/\n|•|-/)
-      .map(item => item.replace(/habilidades.*?bncc[:\s]*/gi, '').trim())
-      .filter(item => item.length > 10);
-    
-    return skills.length > 0 ? skills : null;
-  }
-  return null;
 }
 
 function extractProgrammaticContent(content: string): string[] | null {
