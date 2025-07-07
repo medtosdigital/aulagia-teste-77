@@ -420,8 +420,8 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
               disciplina: disciplina,
               serie: serie,
               tema: tema,
-              duracao: duracao,
-              bncc: parsedJson.bncc || generateBNCCCodeForSubject(disciplina, serie, tema),
+              duracao: duracao, // Use formData duracao directly
+              bncc: parsedJson.bncc || generateBNCCCodeForSubject(disciplina, serie, tema), // Use generated BNCC
               objetivos: parsedJson.objetivos && parsedJson.objetivos.length > 0 ? parsedJson.objetivos : generateDefaultObjectives(tema),
               habilidades: parsedJson.habilidades && parsedJson.habilidades.length > 0 ? parsedJson.habilidades : generateDefaultSkills(tema),
               desenvolvimento: parsedJson.desenvolvimento && parsedJson.desenvolvimento.length > 0 ? parsedJson.desenvolvimento : generateDefaultDevelopment(tema, duracao),
@@ -448,8 +448,8 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
           disciplina,
           serie,
           tema,
-          duracao,
-          bncc: extractBNCCCodesFromContent(content) || generateBNCCCodeForSubject(disciplina, serie, tema),
+          duracao: duracao, // Use formData duracao directly
+          bncc: extractBNCCCodesFromContent(content) || generateBNCCCodeForSubject(disciplina, serie, tema), // Use generated BNCC
           objetivos: extractObjectivesFromContent(content) || generateDefaultObjectives(tema),
           habilidades: extractSkills(content) || generateDefaultSkills(tema),
           desenvolvimento: extractDevelopmentStepsFromContent(content, duracao) || generateDefaultDevelopment(tema, duracao),
@@ -473,8 +473,8 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
           disciplina,
           serie,
           tema,
-          duracao,
-          bncc: extractBNCCCodesFromContent(content) || generateBNCCCodeForSubject(disciplina, serie, tema),
+          duracao: duracao, // Use formData duracao directly
+          bncc: extractBNCCCodesFromContent(content) || generateBNCCCodeForSubject(disciplina, serie, tema), // Use generated BNCC
           ...slideContent
         };
 
@@ -486,8 +486,8 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
           disciplina,
           serie,
           tema,
-          duracao,
-          bncc: extractBNCCCodesFromContent(content) || generateBNCCCodeForSubject(disciplina, serie, tema),
+          duracao: duracao, // Use formData duracao directly
+          bncc: extractBNCCCodesFromContent(content) || generateBNCCCodeForSubject(disciplina, serie, tema), // Use generated BNCC
           instrucoes: `Complete as questões abaixo sobre ${tema}. Leia atentamente cada enunciado antes de responder.`,
           questoes: extractQuestions(content, formData.numeroQuestoes || 5) || generateDefaultQuestions(tema, formData.numeroQuestoes || 5),
           criterios_avaliacao: [
@@ -507,7 +507,7 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
           serie,
           tema: assuntos.join(', '),
           duracao,
-          bncc: extractBNCCCodesFromContent(content) || generateBNCCCodeForSubject(disciplina, serie, tema),
+          bncc: extractBNCCCodesFromContent(content) || generateBNCCCodeForSubject(disciplina, serie, tema), // Use generated BNCC
           instrucoes: `Responda às questões abaixo sobre ${assuntos.join(', ')}.`,
           questoes: extractQuestions(content, formData.numeroQuestoes || 5) || generateDefaultQuestions(assuntos.join(', '), formData.numeroQuestoes || 5),
           criterios_avaliacao: [
@@ -529,7 +529,7 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
       disciplina,
       serie,
       tema,
-      duracao,
+      duracao: duracao, // Use formData duracao directly
       content: content
     };
   }
