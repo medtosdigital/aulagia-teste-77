@@ -130,67 +130,88 @@ function generatePrompt(materialType: string, formData: MaterialFormData): strin
 Você é um professor especialista em planejamento pedagógico de acordo com a BNCC (Base Nacional Comum Curricular).
 
 Crie um plano de aula completo com base nas seguintes informações:
+- TEMA DA AULA: ${tema}
+- DISCIPLINA: ${disciplina}
+- SÉRIE/ANO: ${serie}
+- PROFESSOR: ${professor}
+- DATA: ${data}
+- DURAÇÃO: ${duracao}
 
-TEMA DA AULA: ${tema}
-DISCIPLINA: ${disciplina}
-SÉRIE/ANO: ${serie}
-DURAÇÃO: ${duracao}
+Desenvolva o plano de aula seguindo EXATAMENTE esta estrutura JSON:
 
-IMPORTANTE: Use EXATAMENTE essas informações fornecidas.
+{
+  "titulo": "Plano de Aula - ${tema}",
+  "professor": "${professor}",  
+  "data": "${data}",
+  "disciplina": "${disciplina}",
+  "serie": "${serie}",
+  "tema": "${tema}",
+  "duracao": "${duracao}",
+  "bncc": "Liste 2-3 códigos BNCC específicos para ${disciplina} da ${serie}, separados por vírgula",
+  "objetivos": [
+    "Identificar e compreender os conceitos fundamentais relacionados a ${tema}",
+    "Aplicar os conhecimentos sobre ${tema} em situações práticas do cotidiano", 
+    "Desenvolver habilidades de análise e interpretação sobre ${tema}",
+    "Estabelecer relações entre ${tema} e outras áreas do conhecimento"
+  ],
+  "habilidades": [
+    "Reconhecer elementos e características específicas de ${tema}",
+    "Analisar e interpretar informações relacionadas a ${tema}",
+    "Aplicar conceitos de ${tema} na resolução de problemas"
+  ],
+  "desenvolvimento": [
+    {
+      "etapa": "Introdução",
+      "tempo": "10-15 min",
+      "atividade": "Apresentação do tema ${tema} através de questionamentos sobre conhecimentos prévios dos alunos",
+      "recursos": "Quadro branco, marcadores, slides introdutórios"
+    },
+    {
+      "etapa": "Desenvolvimento", 
+      "tempo": "20-25 min",
+      "atividade": "Exposição dialogada sobre ${tema} com apresentação de conceitos e exemplos práticos",
+      "recursos": "Projetor, slides, material impresso, exemplos visuais"
+    },
+    {
+      "etapa": "Prática",
+      "tempo": "10-15 min", 
+      "atividade": "Atividade prática em grupos sobre ${tema} com aplicação dos conceitos apresentados",
+      "recursos": "Folhas de atividade, materiais manipuláveis"
+    },
+    {
+      "etapa": "Fechamento",
+      "tempo": "5-10 min",
+      "atividade": "Síntese dos principais pontos abordados sobre ${tema} e esclarecimento de dúvidas", 
+      "recursos": "Quadro branco, resumo dos conceitos principais"
+    }
+  ],
+  "recursos": [
+    "Quadro branco",
+    "Marcadores coloridos", 
+    "Projetor multimídia",
+    "Material impresso",
+    "Livro didático"
+  ],
+  "conteudosProgramaticos": [
+    "Conceitos fundamentais de ${tema}",
+    "Características e propriedades de ${tema}",
+    "Aplicações práticas de ${tema}",
+    "Relações de ${tema} com o cotidiano"
+  ],
+  "metodologia": "Metodologia ativa com exposição dialogada e atividades práticas sobre ${tema}",
+  "avaliacao": "Avaliação formativa através da participação ativa dos alunos durante as atividades sobre ${tema}",
+  "referencias": [
+    "Base Nacional Comum Curricular (BNCC). Ministério da Educação, 2018.",
+    "Livro didático de ${disciplina} adotado pela escola.",
+    "Recursos digitais e materiais didáticos complementares."
+  ]
+}
 
-Desenvolva o plano de aula seguindo EXATAMENTE esta estrutura:
-
-**DURAÇÃO DA AULA:**
-${duracao}
-
-**CÓDIGOS DA BNCC:**
-Liste 2-3 códigos BNCC específicos para ${disciplina} da ${serie} relacionados ao tema "${tema}". 
-Para cada código, forneça: [CÓDIGO] - [Descrição da habilidade]
-
-Exemplos de códigos por disciplina:
-- Matemática: EF03MA01, EF04MA15, EF05MA08
-- Português/Língua Portuguesa: EF03LP01, EF04LP15, EF05LP08  
-- História: EF03HI01, EF04HI05, EF05HI03
-- Geografia: EF03GE01, EF04GE02, EF05GE01
-- Ciências: EF03CI01, EF04CI02, EF05CI03
-- Arte: EF15AR01, EF15AR02, EF15AR03
-- Educação Física: EF12EF01, EF35EF01, EF35EF03
-
-**OBJETIVOS DE APRENDIZAGEM:**
-Liste 4-5 objetivos específicos no formato:
-• [Objetivo 1]
-• [Objetivo 2] 
-• [Objetivo 3]
-• [Objetivo 4]
-• [Objetivo 5]
-
-Use verbos de ação como: Identificar, Compreender, Aplicar, Analisar, Reconhecer, Relacionar.
-
-**DESENVOLVIMENTO METODOLÓGICO:**
-
-**Introdução (10-15 min)**
-Atividade: [Descreva atividade específica de introdução]
-Recursos: [Liste recursos necessários]
-
-**Desenvolvimento (20-25 min)**  
-Atividade: [Descreva atividade principal]
-Recursos: [Liste recursos necessários]
-
-**Prática (10-15 min)**
-Atividade: [Descreva atividade prática]
-Recursos: [Liste recursos necessários]
-
-**Fechamento (5-10 min)**
-Atividade: [Descreva atividade de fechamento]
-Recursos: [Liste recursos necessários]
-
-**RECURSOS DIDÁTICOS:**
-Liste todos os recursos: quadro branco, projetor, material impresso, etc.
-
-**AVALIAÇÃO:**
-Descreva como será avaliada a aprendizagem dos alunos (2-3 linhas).
-
-Certifique-se de que todo o conteúdo seja apropriado para a ${serie} e foque especificamente no tema "${tema}".
+IMPORTANTE: 
+- Para ${disciplina}, use códigos BNCC específicos como EF03MA01, EF04LP15, etc.
+- Adapte todo o conteúdo à faixa etária da ${serie}
+- Seja específico e pedagógico
+- Retorne APENAS o JSON estruturado, sem texto adicional
 `;
 
     case 'slides':
@@ -386,18 +407,40 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
   try {
     switch (materialType) {
       case 'plano-de-aula':
-        // Extract duration with better pattern matching
-        const extractedDuration = extractDurationFromContent(content) || duracao;
-        
-        // Extract BNCC codes with improved parsing
-        const bnccCodes = extractBNCCCodesFromContent(content) || generateBNCCCodeForSubject(disciplina, serie, tema);
-        
-        // Extract objectives and format as list
-        const objectives = extractObjectivesFromContent(content) || generateDefaultObjectives(tema);
-        
-        // Extract development steps with better structure
-        const developmentSteps = extractDevelopmentStepsFromContent(content, extractedDuration) || generateDefaultDevelopment(tema, extractedDuration);
-        
+        // Try to parse JSON first
+        try {
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsedJson = JSON.parse(jsonMatch[0]);
+            // Ensure all required fields are present with actual values
+            return {
+              ...parsedJson,
+              professor: professor,
+              data: data,
+              disciplina: disciplina,
+              serie: serie,
+              tema: tema,
+              duracao: duracao,
+              bncc: parsedJson.bncc || generateBNCCCodeForSubject(disciplina, serie, tema),
+              objetivos: parsedJson.objetivos && parsedJson.objetivos.length > 0 ? parsedJson.objetivos : generateDefaultObjectives(tema),
+              habilidades: parsedJson.habilidades && parsedJson.habilidades.length > 0 ? parsedJson.habilidades : generateDefaultSkills(tema),
+              desenvolvimento: parsedJson.desenvolvimento && parsedJson.desenvolvimento.length > 0 ? parsedJson.desenvolvimento : generateDefaultDevelopment(tema, duracao),
+              recursos: parsedJson.recursos && parsedJson.recursos.length > 0 ? parsedJson.recursos : generateDefaultResources(),
+              conteudosProgramaticos: parsedJson.conteudosProgramaticos && parsedJson.conteudosProgramaticos.length > 0 ? parsedJson.conteudosProgramaticos : generateDefaultContent(tema),
+              metodologia: parsedJson.metodologia || `Metodologia ativa com exposição dialogada e atividades práticas sobre ${tema}`,
+              avaliacao: parsedJson.avaliacao || `Avaliação formativa através da participação ativa dos alunos durante as atividades sobre ${tema}`,
+              referencias: parsedJson.referencias && parsedJson.referencias.length > 0 ? parsedJson.referencias : [
+                'Base Nacional Comum Curricular (BNCC). Ministério da Educação, 2018.',
+                `Livro didático de ${disciplina} adotado pela escola.`,
+                'Recursos digitais e materiais didáticos complementares.'
+              ]
+            };
+          }
+        } catch (error) {
+          console.log('Failed to parse JSON, falling back to text parsing');
+        }
+
+        // Fallback to text parsing if JSON parsing fails
         return {
           titulo: `Plano de Aula - ${tema}`,
           professor,
@@ -405,15 +448,15 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
           disciplina,
           serie,
           tema,
-          duracao: extractedDuration,
-          bncc: bnccCodes,
-          objetivos: objectives,
+          duracao,
+          bncc: extractBNCCCodesFromContent(content) || generateBNCCCodeForSubject(disciplina, serie, tema),
+          objetivos: extractObjectivesFromContent(content) || generateDefaultObjectives(tema),
           habilidades: extractSkills(content) || generateDefaultSkills(tema),
-          desenvolvimento: developmentSteps,
+          desenvolvimento: extractDevelopmentStepsFromContent(content, duracao) || generateDefaultDevelopment(tema, duracao),
           recursos: extractResourcesFromContent(content) || generateDefaultResources(),
           conteudosProgramaticos: extractProgrammaticContent(content) || generateDefaultContent(tema),
           metodologia: extractMethodology(content) || `Metodologia ativa com exposição dialogada e atividades práticas sobre ${tema}`,
-          avaliacao: extractEvaluation(content) || `Avaliação formativa através da participação ativa dos alunos durante as atividades sobre ${tema}, observação do desempenho nas tarefas práticas e verificação da compreensão através de questionamentos diretos`,
+          avaliacao: extractEvaluation(content) || `Avaliação formativa através da participação ativa dos alunos durante as atividades sobre ${tema}`,
           referencias: extractReferences(content) || [
             'Base Nacional Comum Curricular (BNCC). Ministério da Educação, 2018.',
             `Livro didático de ${disciplina} adotado pela escola.`,
@@ -490,23 +533,6 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
       content: content
     };
   }
-}
-
-function extractDurationFromContent(content: string): string {
-  // Look for duration in the content
-  const durationPatterns = [
-    /\*\*DURAÇÃO DA AULA:\*\*\s*([^\n]+)/i,
-    /Duração:\s*([^\n]+)/i,
-    /(\d+\s*(?:minutos?|aulas?))/i
-  ];
-  
-  for (const pattern of durationPatterns) {
-    const match = content.match(pattern);
-    if (match && match[1].trim()) {
-      return match[1].trim();
-    }
-  }
-  return '';
 }
 
 function generateBNCCCodeForSubject(disciplina: string, serie: string, tema: string): string {
