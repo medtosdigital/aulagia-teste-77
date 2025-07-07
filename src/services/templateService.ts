@@ -1,3 +1,5 @@
+import { formatarRecursosPT } from '../lib/utils';
+
 export interface Template {
   id: string;
   name: string;
@@ -2076,6 +2078,21 @@ class TemplateService {
     }
 
     let html = template.htmlContent;
+
+    // Formatar recursos didáticos gerais, se for array
+    if (Array.isArray(data.recursos)) {
+      data.recursos = formatarRecursosPT(data.recursos);
+    }
+
+    // Formatar recursos de cada etapa do desenvolvimento, se houver
+    if (Array.isArray(data.desenvolvimento)) {
+      data.desenvolvimento = data.desenvolvimento.map(etapa => ({
+        ...etapa,
+        recursos: etapa.recursos && Array.isArray(etapa.recursos)
+          ? formatarRecursosPT(etapa.recursos)
+          : (typeof etapa.recursos === 'string' ? formatarRecursosPT(etapa.recursos.split(/,| e /).map(r => r.trim()).filter(Boolean)) : '')
+      }));
+    }
 
     // Handle questoesContent for atividade and avaliacao templates
     if ((template.type === 'atividade' || template.type === 'avaliacao') && data.questoes) {
