@@ -211,7 +211,7 @@ Desenvolva o plano de aula seguindo EXATAMENTE esta estrutura JSON:
 }
 
 IMPORTANTE: 
-- Para ${disciplina}, use códigos BNCC específicos como EF03MA01, EF04LP15, etc.
+- Para ${disciplina}, liste de 1 a 3 códigos BNCC específicos para o tema "${tema}" e disciplina "${disciplina}" da ${serie}, separados por vírgula. Use códigos como EF03MA01, EF04LP15, etc.
 - Adapte todo o conteúdo à faixa etária da ${serie}
 - Seja específico e pedagógico
 - Retorne APENAS o JSON estruturado, sem texto adicional
