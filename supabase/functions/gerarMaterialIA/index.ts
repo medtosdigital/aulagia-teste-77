@@ -123,6 +123,9 @@ function generatePrompt(materialType: string, formData: MaterialFormData): strin
   const professor = formData.professor || 'Professor';
   const data = formData.data || new Date().toLocaleDateString('pt-BR');
   const duracao = formData.duracao || '50 minutos';
+  
+  // Generate BNCC code for the prompt
+  const bnccCode = generateBNCCCodeForSubject(disciplina, serie, tema);
 
   switch (materialType) {
     case 'plano-de-aula':
@@ -147,7 +150,7 @@ Desenvolva o plano de aula seguindo EXATAMENTE esta estrutura JSON:
   "serie": "${serie}",
   "tema": "${tema}",
   "duracao": "${duracao}",
-  "bncc": "Liste 2-3 códigos BNCC específicos para ${disciplina} da ${serie}, separados por vírgula",
+  "bncc": "${bnccCode}",
   "objetivos": [
     "Identificar e compreender os conceitos fundamentais relacionados a ${tema}",
     "Aplicar os conhecimentos sobre ${tema} em situações práticas do cotidiano", 
