@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -66,7 +65,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Você é um assistente especializado em criar materiais educacionais seguindo a BNCC. Retorne sempre conteúdo estruturado e pedagógico com base nas diretrizes brasileiras de educação. Seja específico e detalhado em todas as seções, evitando campos vazios ou incompletos. GERE TODO O CONTEÚDO baseado no tema, disciplina e série informados - não use templates genéricos.'
+            content: 'Você é um assistente especializado em criar materiais educacionais seguindo a BNCC. Retorne sempre conteúdo estruturado e pedagógico com base nas diretrizes brasileiras de educação. Seja específico e detalhado em todas as seções, evitando campos vazios ou incompletos. GERE TODO O CONTEÚDO baseado no tema, disciplina e série informados - não use templates genéricos. Use português brasileiro correto, sem erros de gramática ou ortografia.'
           },
           {
             role: 'user',
@@ -137,6 +136,8 @@ Crie um plano de aula COMPLETO e DETALHADO com base nas seguintes informações:
 
 IMPORTANTE: GERE TODO O CONTEÚDO baseado especificamente no tema "${tema}" para a disciplina de ${disciplina} na série ${serie}. NÃO use conteúdo genérico.
 
+ATENÇÃO ESPECIAL PARA RECURSOS: Cada etapa do desenvolvimento deve ter seus próprios recursos específicos para aquela etapa. NÃO repita recursos entre etapas. NÃO misture recursos. Cada etapa tem recursos únicos e apropriados para sua atividade específica.
+
 Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPECÍFICO sobre "${tema}":
 
 {
@@ -163,25 +164,25 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
       "etapa": "Introdução", 
       "tempo": "[tempo específico em minutos, ex: 10 minutos]", 
       "atividade": "[ATIVIDADE ESPECÍFICA de introdução ao tema ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[RECURSOS ESPECÍFICOS para esta etapa de introdução, ex: quadro, slides, materiais concretos]" 
+      "recursos": "[RECURSOS ESPECÍFICOS APENAS para esta etapa de introdução, ex: quadro, slides específicos da introdução]" 
     },
     { 
       "etapa": "Desenvolvimento", 
       "tempo": "[tempo específico em minutos, ex: 25 minutos]", 
       "atividade": "[ATIVIDADE ESPECÍFICA de desenvolvimento do tema ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[RECURSOS ESPECÍFICOS para esta etapa de desenvolvimento, ex: apostila, experimentos, jogos educativos]" 
+      "recursos": "[RECURSOS ESPECÍFICOS APENAS para esta etapa de desenvolvimento, ex: materiais manipuláveis, experimentos]" 
     },
     { 
       "etapa": "Prática", 
       "tempo": "[tempo específico em minutos, ex: 10 minutos]", 
       "atividade": "[ATIVIDADE PRÁTICA ESPECÍFICA sobre ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[RECURSOS ESPECÍFICOS para esta etapa prática, ex: exercícios impressos, materiais manipuláveis]" 
+      "recursos": "[RECURSOS ESPECÍFICOS APENAS para esta etapa prática, ex: exercícios impressos, jogos educativos]" 
     },
     { 
       "etapa": "Fechamento", 
       "tempo": "[tempo específico em minutos, ex: 5 minutos]", 
       "atividade": "[ATIVIDADE ESPECÍFICA de fechamento sobre ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[RECURSOS ESPECÍFICOS para esta etapa de fechamento, ex: fichas de avaliação, cartazes]" 
+      "recursos": "[RECURSOS ESPECÍFICOS APENAS para esta etapa de fechamento, ex: fichas de avaliação, cartazes de síntese]" 
     }
   ],
   "recursos": [
@@ -204,12 +205,14 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
   ]
 }
 
-INSTRUÇÕES IMPORTANTES:
+INSTRUÇÕES CRÍTICAS:
 1. GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". NÃO deixe placeholders ou campos genéricos.
-2. Cada etapa do desenvolvimento deve ter recursos ESPECÍFICOS para aquela etapa.
-3. A seção "recursos" deve conter TODOS os recursos que serão utilizados durante toda a aula.
-4. Use ortografia correta em português brasileiro.
-5. Os tempos devem somar aproximadamente a duração total da aula.
+2. Cada etapa do desenvolvimento deve ter recursos ESPECÍFICOS E ÚNICOS para aquela etapa apenas.
+3. NÃO repita recursos entre etapas diferentes.
+4. A seção "recursos" deve conter TODOS os recursos únicos utilizados em todas as etapas.
+5. Use português brasileiro correto, sem erros de gramática ou ortografia.
+6. Os tempos devem somar aproximadamente a duração total da aula.
+7. Cada recurso deve ser um item completo e correto gramaticalmente.
 `;
 
     case 'slides':
@@ -281,7 +284,7 @@ Retorne APENAS o JSON estruturado com 12 slides específicos sobre "${tema}":
   "proximo_passo_3": "[PASSO 3 para continuar estudando ${tema}]"
 }
 
-GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". Adapte à faixa etária de ${serie}.
+GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". Adapte à faixa etária de ${serie}. Use português brasileiro correto.
 `;
 
     case 'atividade':
@@ -326,7 +329,7 @@ Retorne APENAS o JSON estruturado:
   ]
 }
 
-GERE questões REAIS e ESPECÍFICAS sobre "${tema}". Adeque à ${serie}.
+GERE questões REAIS e ESPECÍFICAS sobre "${tema}". Adeque à ${serie}. Use português brasileiro correto.
 `;
 
     case 'avaliacao':
@@ -372,11 +375,11 @@ Retorne APENAS o JSON estruturado:
   ]
 }
 
-GERE questões REAIS e ESPECÍFICAS. Use nível apropriado para avaliação formal na ${serie}.
+GERE questões REAIS e ESPECÍFICAS. Use nível apropriado para avaliação formal na ${serie}. Use português brasileiro correto.
 `;
 
     default:
-      return `Crie um material educacional ESPECÍFICO sobre "${tema}" para ${disciplina}, série ${serie}. GERE conteúdo REAL baseado no tema informado.`;
+      return `Crie um material educacional ESPECÍFICO sobre "${tema}" para ${disciplina}, série ${serie}. GERE conteúdo REAL baseado no tema informado. Use português brasileiro correto.`;
   }
 }
 
@@ -401,34 +404,67 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         parsedContent.serie = serie;
         parsedContent.tema = tema;
 
-        // Para planos de aula, garantir estrutura correta dos recursos
+        // Para planos de aula, corrigir estrutura dos recursos APENAS se necessário
         if (materialType === 'plano-de-aula' && parsedContent.desenvolvimento) {
-          // Coletar todos os recursos únicos das etapas para a seção "recursos"
-          const todosRecursos = new Set();
-          
-          parsedContent.desenvolvimento.forEach(etapa => {
-            if (etapa.recursos) {
-              // Limpar e separar recursos da etapa
-              const recursos = typeof etapa.recursos === 'string' 
-                ? etapa.recursos.split(/,|e/).map(r => r.trim()).filter(r => r.length > 0)
-                : Array.isArray(etapa.recursos) ? etapa.recursos : [];
-              
-              recursos.forEach(recurso => todosRecursos.add(recurso));
-            }
-          });
-          
-          // Se não há recursos específicos na seção "recursos", usar os coletados das etapas
-          if (!parsedContent.recursos || parsedContent.recursos.length === 0) {
-            parsedContent.recursos = Array.from(todosRecursos);
-          } else {
-            // Combinar recursos existentes com os das etapas
-            const recursosExistentes = Array.isArray(parsedContent.recursos) 
-              ? parsedContent.recursos 
-              : (typeof parsedContent.recursos === 'string' 
-                ? parsedContent.recursos.split(/,|e/).map(r => r.trim()).filter(r => r.length > 0)
-                : []);
+          // Verificar se já está corretamente estruturado
+          const temRecursosCorretos = parsedContent.desenvolvimento.every(etapa => 
+            etapa.recursos && typeof etapa.recursos === 'string'
+          );
+
+          // Se não está correto, aplicar lógica de limpeza
+          if (!temRecursosCorretos) {
+            // Coletar todos os recursos únicos das etapas para a seção "recursos"
+            const todosRecursos = new Set<string>();
             
-            recursosExistentes.forEach(recurso => todosRecursos.add(recurso));
+            parsedContent.desenvolvimento.forEach((etapa: any) => {
+              if (etapa.recursos) {
+                // Se recursos é uma string, manter como está (correto)
+                if (typeof etapa.recursos === 'string') {
+                  const recursos = etapa.recursos.split(/[,;]/).map((r: string) => r.trim()).filter((r: string) => r.length > 0);
+                  recursos.forEach((recurso: string) => todosRecursos.add(recurso));
+                } else if (Array.isArray(etapa.recursos)) {
+                  // Se é array, converter para string
+                  etapa.recursos.forEach((recurso: string) => {
+                    if (recurso && recurso.trim()) {
+                      todosRecursos.add(recurso.trim());
+                    }
+                  });
+                  etapa.recursos = etapa.recursos.join(', ');
+                }
+              }
+            });
+            
+            // Atualizar seção recursos se necessário
+            if (!parsedContent.recursos || parsedContent.recursos.length === 0) {
+              parsedContent.recursos = Array.from(todosRecursos);
+            } else {
+              // Garantir que recursos seja um array limpo
+              if (typeof parsedContent.recursos === 'string') {
+                parsedContent.recursos = parsedContent.recursos.split(/[,;]/).map((r: string) => r.trim()).filter((r: string) => r.length > 0);
+              }
+              
+              const recursosExistentes = Array.isArray(parsedContent.recursos) 
+                ? parsedContent.recursos 
+                : [];
+              
+              recursosExistentes.forEach((recurso: string) => todosRecursos.add(recurso));
+              parsedContent.recursos = Array.from(todosRecursos);
+            }
+          } else {
+            // Se está correto, apenas garantir que a seção recursos geral seja um array
+            const todosRecursos = new Set<string>();
+            
+            parsedContent.desenvolvimento.forEach((etapa: any) => {
+              if (etapa.recursos && typeof etapa.recursos === 'string') {
+                const recursos = etapa.recursos.split(/[,;]/).map((r: string) => r.trim()).filter((r: string) => r.length > 0);
+                recursos.forEach((recurso: string) => todosRecursos.add(recurso));
+              }
+            });
+            
+            if (Array.isArray(parsedContent.recursos)) {
+              parsedContent.recursos.forEach((recurso: string) => todosRecursos.add(recurso));
+            }
+            
             parsedContent.recursos = Array.from(todosRecursos);
           }
         }

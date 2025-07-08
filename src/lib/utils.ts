@@ -40,3 +40,17 @@ export function normalizarRecursos(recursos: string | string[]): string[] {
   
   return [];
 }
+
+/**
+ * Limpa e normaliza recursos específicos de uma etapa de plano de aula
+ */
+export function limparRecursosEtapa(recursos: string): string {
+  if (!recursos || typeof recursos !== 'string') return '';
+  
+  // Remove caracteres fragmentados e normaliza
+  return recursos
+    .replace(/,\s*,/g, ',') // Remove vírgulas duplas
+    .replace(/\s+/g, ' ') // Normaliza espaços
+    .replace(/([a-z]),\s*([A-Z])/g, '$1, $2') // Garante espaço após vírgula
+    .trim();
+}
