@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -65,7 +66,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Você é um assistente especializado em criar materiais educacionais seguindo a BNCC. Retorne sempre conteúdo estruturado e pedagógico com base nas diretrizes brasileiras de educação. Seja específico e detalhado em todas as seções, evitando campos vazios ou incompletos.'
+            content: 'Você é um assistente especializado em criar materiais educacionais seguindo a BNCC. Retorne sempre conteúdo estruturado e pedagógico com base nas diretrizes brasileiras de educação. Seja específico e detalhado em todas as seções, evitando campos vazios ou incompletos. GERE TODO O CONTEÚDO baseado no tema, disciplina e série informados - não use templates genéricos.'
           },
           {
             role: 'user',
@@ -123,193 +124,204 @@ function generatePrompt(materialType: string, formData: MaterialFormData): strin
   const professor = formData.professor || '';
   const data = formData.data || '';
   const duracao = formData.duracao || '';
-  
-  // Generate BNCC code for the prompt
-  const bnccCode = generateBNCCCodeForSubject(disciplina, serie, tema);
 
   switch (materialType) {
     case 'plano-de-aula':
       return `
 Você é um professor especialista em planejamento pedagógico de acordo com a BNCC (Base Nacional Comum Curricular).
 
-Crie um plano de aula completo com base nas seguintes informações:
+Crie um plano de aula COMPLETO e DETALHADO com base nas seguintes informações:
 - TEMA DA AULA: ${tema}
 - DISCIPLINA: ${disciplina}
 - SÉRIE/ANO: ${serie}
 
-**Desenvolvimento Metodológico por Etapas da Aula**:
-Detalhe as etapas da aula com tempo estimado (em minutos), atividade a ser desenvolvida e os recursos a serem usados. Use o seguinte modelo:
+IMPORTANTE: GERE TODO O CONTEÚDO baseado especificamente no tema "${tema}" para a disciplina de ${disciplina} na série ${serie}. NÃO use conteúdo genérico.
 
-- Introdução
-  Tempo: ...
-  Atividade: ...
-  Recursos: ...
-- Desenvolvimento
-  Tempo: ...
-  Atividade: ...
-  Recursos: ...
-- Prática
-  Tempo: ...
-  Atividade: ...
-  Recursos: ...
-- Fechamento
-  Tempo: ...
-  Atividade: ...
-  Recursos: ...
-
-IMPORTANTE:
-- NÃO repita os mesmos recursos em todas as etapas, a não ser que seja realmente necessário. Cada etapa deve ter recursos específicos e diferentes, adequados à atividade daquela etapa.
-- Considere que cada aula tem 50 minutos. Se o tema exigir mais de uma aula, escreva: "2 aulas de 50 minutos", "3 aulas de 50 minutos", etc.
-- **BUSQUE e RETORNE apenas códigos BNCC reais e relevantes para o TEMA (principal), DISCIPLINA e SÉRIE informados. NÃO invente códigos. Se não encontrar, deixe o campo BNCC vazio.**
-- Exemplo: Introdução pode usar slides e quadro branco; Desenvolvimento pode usar projetor e material impresso; Prática pode usar materiais manipuláveis; Fechamento pode usar apenas quadro e resumo.
-
-Depois, retorne o plano de aula completo no seguinte JSON estruturado:
+Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPECÍFICO sobre "${tema}":
 
 {
   "titulo": "Plano de Aula - ${tema}",
-  "professor": "(preenchido pelo sistema)",
-  "data": "(preenchido pelo sistema)",
+  "professor": "${professor}",
+  "data": "${data}",
   "disciplina": "${disciplina}",
   "serie": "${serie}",
   "tema": "${tema}",
-  "duracao": "...",
-  "bncc": "...",
-  "objetivos": [ ... ],
-  "habilidades": [ ... ],
-  "desenvolvimento": [
-    { "etapa": "Introdução", "tempo": "...", "atividade": "...", "recursos": "..." },
-    { "etapa": "Desenvolvimento", "tempo": "...", "atividade": "...", "recursos": "..." },
-    { "etapa": "Prática", "tempo": "...", "atividade": "...", "recursos": "..." },
-    { "etapa": "Fechamento", "tempo": "...", "atividade": "...", "recursos": "..." }
+  "duracao": "[GERE uma duração adequada para o tema, ex: 50 minutos, 100 minutos (2 aulas), etc]",
+  "bncc": "[BUSQUE e RETORNE códigos BNCC REAIS relevantes para ${tema} em ${disciplina} na ${serie}. Se não souber códigos específicos, deixe vazio]",
+  "objetivos": [
+    "[OBJETIVO 1 específico sobre ${tema}]",
+    "[OBJETIVO 2 específico sobre ${tema}]",
+    "[OBJETIVO 3 específico sobre ${tema}]",
+    "[OBJETIVO 4 específico sobre ${tema}]"
   ],
-  "recursos": [ ... ],
-  "conteudosProgramaticos": [ ... ],
-  "metodologia": "...",
-  "avaliacao": "...",
-  "referencias": [ ... ]
+  "habilidades": [
+    "[HABILIDADE 1 que será desenvolvida com ${tema}]",
+    "[HABILIDADE 2 que será desenvolvida com ${tema}]",
+    "[HABILIDADE 3 que será desenvolvida com ${tema}]"
+  ],
+  "desenvolvimento": [
+    { 
+      "etapa": "Introdução", 
+      "tempo": "[tempo em minutos para introdução]", 
+      "atividade": "[ATIVIDADE ESPECÍFICA de introdução ao tema ${tema}]", 
+      "recursos": "[RECURSOS específicos para introduzir ${tema}]" 
+    },
+    { 
+      "etapa": "Desenvolvimento", 
+      "tempo": "[tempo em minutos para desenvolvimento]", 
+      "atividade": "[ATIVIDADE ESPECÍFICA de desenvolvimento do tema ${tema}]", 
+      "recursos": "[RECURSOS específicos para desenvolver ${tema}]" 
+    },
+    { 
+      "etapa": "Prática", 
+      "tempo": "[tempo em minutos para prática]", 
+      "atividade": "[ATIVIDADE PRÁTICA específica sobre ${tema}]", 
+      "recursos": "[RECURSOS específicos para praticar ${tema}]" 
+    },
+    { 
+      "etapa": "Fechamento", 
+      "tempo": "[tempo em minutos para fechamento]", 
+      "atividade": "[ATIVIDADE ESPECÍFICA de fechamento sobre ${tema}]", 
+      "recursos": "[RECURSOS específicos para fechar o tema ${tema}]" 
+    }
+  ],
+  "recursos": [
+    "[RECURSO 1 específico para ensinar ${tema}]",
+    "[RECURSO 2 específico para ensinar ${tema}]",
+    "[RECURSO 3 específico para ensinar ${tema}]"
+  ],
+  "conteudosProgramaticos": [
+    "[CONTEÚDO 1 específico sobre ${tema}]",
+    "[CONTEÚDO 2 específico sobre ${tema}]",
+    "[CONTEÚDO 3 específico sobre ${tema}]"
+  ],
+  "metodologia": "[METODOLOGIA ESPECÍFICA para ensinar ${tema} em ${disciplina} para ${serie}]",
+  "avaliacao": "[MÉTODO DE AVALIAÇÃO específico para verificar aprendizado sobre ${tema}]",
+  "referencias": [
+    "[REFERÊNCIA 1 sobre ${tema} em ${disciplina}]",
+    "[REFERÊNCIA 2 sobre ${tema} em ${disciplina}]",
+    "[REFERÊNCIA 3 sobre ${tema} em ${disciplina}]"
+  ]
 }
 
-Retorne primeiro o bloco textual das etapas, depois o JSON estruturado. Não adicione explicações extras.
+GERE conteúdo REAL e ESPECÍFICO. NÃO deixe placeholders ou campos genéricos.
 `;
 
     case 'slides':
       return `
 Você é um professor especialista em criação de slides educativos seguindo a BNCC.
 
-Crie slides educativos com base nas seguintes informações:
-TEMA DA AULA: ${tema}
-DISCIPLINA: ${disciplina}
-SÉRIE: ${serie}
+Crie slides educativos ESPECÍFICOS sobre "${tema}" para ${disciplina} na ${serie}.
 
-Desenvolva um conjunto completo de slides com 12 páginas seguindo exatamente esta estrutura:
+IMPORTANTE: TODO O CONTEÚDO deve ser baseado especificamente no tema "${tema}". NÃO use conteúdo genérico.
 
-**SLIDE 1 - CAPA:**
-- Título principal: ${tema}
-- Informações básicas já definidas
+Retorne APENAS o JSON estruturado com 12 slides específicos sobre "${tema}":
 
-**SLIDE 2 - OBJETIVOS:**
-Crie 4 objetivos específicos para a aula:
-- objetivo_1: [objetivo claro e específico]
-- objetivo_2: [objetivo claro e específico]
-- objetivo_3: [objetivo claro e específico]  
-- objetivo_4: [objetivo claro e específico]
+{
+  "titulo": "${tema} - ${disciplina}",
+  "professor": "${professor}",
+  "data": "${data}",
+  "disciplina": "${disciplina}",
+  "serie": "${serie}",
+  "tema": "${tema}",
+  "duracao": "[duração adequada para apresentar slides sobre ${tema}]",
+  "bncc": "[códigos BNCC relevantes para ${tema} em ${disciplina}]",
+  "slide_1_titulo": "${tema}",
+  "slide_1_subtitulo": "Aula de ${disciplina} - ${serie}",
+  "objetivo_1": "[OBJETIVO 1 específico sobre ${tema}]",
+  "objetivo_2": "[OBJETIVO 2 específico sobre ${tema}]",
+  "objetivo_3": "[OBJETIVO 3 específico sobre ${tema}]",
+  "objetivo_4": "[OBJETIVO 4 específico sobre ${tema}]",
+  "introducao_texto": "[INTRODUÇÃO específica sobre ${tema}]",
+  "introducao_imagem": "[descrição de imagem relevante para ${tema}]",
+  "conceitos_texto": "[CONCEITOS fundamentais específicos sobre ${tema}]",
+  "conceito_principal": "[CONCEITO principal de ${tema}]",
+  "conceitos_imagem": "[descrição de imagem que ilustra conceitos de ${tema}]",
+  "exemplo_titulo": "[TÍTULO de exemplo prático sobre ${tema}]",
+  "exemplo_conteudo": "[EXEMPLO PRÁTICO específico sobre ${tema}]",
+  "exemplo_imagem": "[descrição de imagem do exemplo de ${tema}]",
+  "desenvolvimento_texto": "[DESENVOLVIMENTO específico sobre ${tema}]",
+  "ponto_1": "[PONTO 1 importante sobre ${tema}]",
+  "ponto_2": "[PONTO 2 importante sobre ${tema}]",
+  "desenvolvimento_imagem": "[descrição de imagem de apoio para ${tema}]",
+  "formula_titulo": "[TÍTULO de fórmula/regra específica de ${tema}]",
+  "formula_principal": "[FÓRMULA/REGRA principal de ${tema}]",
+  "formula_explicacao": "[EXPLICAÇÃO da fórmula/regra de ${tema}]",
+  "tabela_titulo": "[TÍTULO de tabela específica sobre ${tema}]",
+  "coluna_1": "[cabeçalho coluna 1 sobre ${tema}]",
+  "coluna_2": "[cabeçalho coluna 2 sobre ${tema}]",
+  "coluna_3": "[cabeçalho coluna 3 sobre ${tema}]",
+  "linha_1_col_1": "[dado específico de ${tema}]",
+  "linha_1_col_2": "[dado específico de ${tema}]",
+  "linha_1_col_3": "[dado específico de ${tema}]",
+  "linha_2_col_1": "[dado específico de ${tema}]",
+  "linha_2_col_2": "[dado específico de ${tema}]",
+  "linha_2_col_3": "[dado específico de ${tema}]",
+  "linha_3_col_1": "[dado específico de ${tema}]",
+  "linha_3_col_2": "[dado específico de ${tema}]",
+  "linha_3_col_3": "[dado específico de ${tema}]",
+  "imagem_titulo": "[TÍTULO descritivo sobre ${tema}]",
+  "imagem_descricao": "[DESCRIÇÃO do que a imagem mostra sobre ${tema}]",
+  "imagem_principal": "[DESCRIÇÃO detalhada da imagem principal sobre ${tema}]",
+  "atividade_pergunta": "[PERGUNTA específica sobre ${tema}]",
+  "opcao_a": "[alternativa A sobre ${tema}]",
+  "opcao_b": "[alternativa B sobre ${tema}]",
+  "opcao_c": "[alternativa C sobre ${tema}]",
+  "opcao_d": "[alternativa D sobre ${tema}]",
+  "conclusao_texto": "[SÍNTESE dos pontos principais sobre ${tema}]",
+  "ponto_chave_1": "[PONTO-CHAVE 1 para memorizar sobre ${tema}]",
+  "ponto_chave_2": "[PONTO-CHAVE 2 para memorizar sobre ${tema}]",
+  "proximo_passo_1": "[PASSO 1 para continuar estudando ${tema}]",
+  "proximo_passo_2": "[PASSO 2 para continuar estudando ${tema}]",
+  "proximo_passo_3": "[PASSO 3 para continuar estudando ${tema}]"
+}
 
-**SLIDE 3 - INTRODUÇÃO:**
-- introducao_texto: [texto introdutório sobre o tema em 2-3 linhas]
-- introducao_imagem: [descrição da imagem que ilustra a introdução]
-
-**SLIDE 4 - CONCEITOS FUNDAMENTAIS:**
-- conceitos_texto: [explicação dos conceitos principais em 2-3 linhas]
-- conceito_principal: [conceito central do tema]
-- conceitos_imagem: [descrição da imagem que ilustra os conceitos]
-
-**SLIDE 5 - EXEMPLO PRÁTICO:**
-- exemplo_titulo: [título do exemplo]
-- exemplo_conteudo: [exemplo prático relacionado ao tema]
-- exemplo_imagem: [descrição da imagem do exemplo]
-
-**SLIDE 6 - DESENVOLVIMENTO:**
-- desenvolvimento_texto: [texto de desenvolvimento em 2-3 linhas]
-- ponto_1: [primeiro ponto importante]
-- ponto_2: [segundo ponto importante]
-- desenvolvimento_imagem: [descrição da imagem de apoio]
-
-**SLIDE 7 - FÓRMULAS/REGRAS:**
-- formula_titulo: [título da fórmula ou regra principal]
-- formula_principal: [fórmula, regra ou conceito matemático/científico]
-- formula_explicacao: [explicação da fórmula em 1-2 linhas]
-
-**SLIDE 8 - TABELA/COMPARAÇÃO:**
-- tabela_titulo: [título da tabela]
-- coluna_1: [cabeçalho coluna 1]
-- coluna_2: [cabeçalho coluna 2] 
-- coluna_3: [cabeçalho coluna 3]
-- linha_1_col_1, linha_1_col_2, linha_1_col_3: [dados linha 1]
-- linha_2_col_1, linha_2_col_2, linha_2_col_3: [dados linha 2]
-- linha_3_col_1, linha_3_col_2, linha_3_col_3: [dados linha 3]
-
-**SLIDE 9 - IMAGEM CENTRAL:**
-- imagem_titulo: [título descritivo]
-- imagem_descricao: [descrição do que a imagem mostra]
-- imagem_principal: [descrição detalhada da imagem principal]
-
-**SLIDE 10 - ATIVIDADE INTERATIVA:**
-- atividade_pergunta: [pergunta relacionada ao tema]
-- opcao_a: [primeira alternativa]
-- opcao_b: [segunda alternativa]
-- opcao_c: [terceira alternativa]
-- opcao_d: [quarta alternativa]
-
-**SLIDE 11 - CONCLUSÃO:**
-- conclusao_texto: [síntese dos principais pontos da aula]
-- ponto_chave_1: [primeiro ponto-chave para memorizar]
-- ponto_chave_2: [segundo ponto-chave para memorizar]
-
-**SLIDE 12 - PRÓXIMOS PASSOS:**
-- proximo_passo_1: [primeiro passo para continuar estudando]
-- proximo_passo_2: [segundo passo para continuar estudando]
-- proximo_passo_3: [terceiro passo para continuar estudando]
-
-IMPORTANTE:
-- Adapte todo o conteúdo à faixa etária da ${serie}
-- Use linguagem adequada para ${disciplina}
-- Seja específico e didático
-- As descrições de imagens devem ser detalhadas e contextual ao tema
-- Crie conteúdo original e educativo
+GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". Adapte à faixa etária de ${serie}.
 `;
 
     case 'atividade':
       const numQuestoes = formData.numeroQuestoes || formData.quantidadeQuestoes || 5;
       const tipoQuestoes = formData.tipoQuestoes || 'mistas';
       return `
-Crie uma atividade educacional sobre "${tema}" para a disciplina de ${disciplina}, série ${serie}.
+Crie uma atividade educacional ESPECÍFICA sobre "${tema}" para ${disciplina} na ${serie}.
 
-ESPECIFICAÇÕES:
-- Número de questões: ${numQuestoes}
-- Tipo de questões: ${tipoQuestoes}
+IMPORTANTE: As questões devem ser ESPECÍFICAS sobre "${tema}". NÃO use questões genéricas.
 
-**INSTRUÇÕES:**
-Complete as questões abaixo sobre ${tema}. Leia atentamente cada enunciado antes de responder.
+Retorne APENAS o JSON estruturado:
 
-**QUESTÕES:**
+{
+  "titulo": "Atividade - ${tema}",
+  "professor": "${professor}",
+  "data": "${data}",
+  "disciplina": "${disciplina}",
+  "serie": "${serie}",
+  "tema": "${tema}",
+  "duracao": "[duração adequada para resolver atividade sobre ${tema}]",
+  "bncc": "[códigos BNCC relevantes para ${tema}]",
+  "instrucoes": "Complete as questões abaixo sobre ${tema}. Leia atentamente cada enunciado antes de responder.",
+  "questoes": [
+    ${Array.from({length: numQuestoes}, (_, i) => `{
+      "numero": ${i + 1},
+      "tipo": "${tipoQuestoes === 'fechadas' ? 'multipla_escolha' : tipoQuestoes === 'abertas' ? 'aberta' : (i % 2 === 0 ? 'multipla_escolha' : 'aberta')}",
+      "pergunta": "[PERGUNTA ${i + 1} específica sobre ${tema}]",
+      ${tipoQuestoes === 'fechadas' || (tipoQuestoes === 'mistas' && i % 2 === 0) ? `
+      "alternativas": [
+        "[alternativa A específica sobre ${tema}]",
+        "[alternativa B específica sobre ${tema}]",
+        "[alternativa C específica sobre ${tema}]",
+        "[alternativa D específica sobre ${tema}]"
+      ],
+      "resposta_correta": 0` : ''}
+    }`).join(',\n    ')}
+  ],
+  "criterios_avaliacao": [
+    "Compreensão dos conceitos sobre ${tema}",
+    "Clareza na expressão das ideias sobre ${tema}",
+    "Aplicação correta do conhecimento sobre ${tema}"
+  ]
+}
 
-${Array.from({length: numQuestoes}, (_, i) => `
-**QUESTÃO ${i + 1}:**
-[Pergunta sobre ${tema}]
-${tipoQuestoes === 'fechadas' || tipoQuestoes === 'mistas' ? `
-a) Alternativa A
-b) Alternativa B  
-c) Alternativa C
-d) Alternativa D
-` : ''}
-`).join('')}
-
-**CRITÉRIOS DE AVALIAÇÃO:**
-- Compreensão dos conceitos
-- Clareza na expressão das ideias
-- Aplicação correta do conhecimento
-
-Adeque o nível de dificuldade à série informada.
+GERE questões REAIS e ESPECÍFICAS sobre "${tema}". Adeque à ${serie}.
 `;
 
     case 'avaliacao':
@@ -317,38 +329,49 @@ Adeque o nível de dificuldade à série informada.
       const tipoQuestoesAval = formData.tipoQuestoes || 'mistas';
       const assuntos = formData.assuntos || formData.subjects || [tema];
       return `
-Crie uma avaliação educacional sobre os seguintes assuntos: ${assuntos.join(', ')} para a disciplina de ${disciplina}, série ${serie}.
+Crie uma avaliação educacional ESPECÍFICA sobre "${tema}" e assuntos relacionados: ${assuntos.join(', ')} para ${disciplina} na ${serie}.
 
-ESPECIFICAÇÕES:
-- Número de questões: ${numQuestoesAval}
-- Tipo de questões: ${tipoQuestoesAval}
+IMPORTANTE: As questões devem ser ESPECÍFICAS sobre "${tema}" e os assuntos informados. NÃO use questões genéricas.
 
-**INSTRUÇÕES:**
-Responda às questões abaixo sobre ${assuntos.join(', ')}.
+Retorne APENAS o JSON estruturado:
 
-**QUESTÕES:**
+{
+  "titulo": "Avaliação - ${tema}",
+  "professor": "${professor}",
+  "data": "${data}",
+  "disciplina": "${disciplina}",
+  "serie": "${serie}",
+  "tema": "${assuntos.join(', ')}",
+  "duracao": "[duração adequada para avaliação sobre ${tema}]",
+  "bncc": "[códigos BNCC relevantes para ${tema}]",
+  "instrucoes": "Responda às questões abaixo sobre ${assuntos.join(', ')}. Esta é uma avaliação formal.",
+  "questoes": [
+    ${Array.from({length: numQuestoesAval}, (_, i) => `{
+      "numero": ${i + 1},
+      "tipo": "${tipoQuestoesAval === 'fechadas' ? 'multipla_escolha' : tipoQuestoesAval === 'abertas' ? 'aberta' : (i % 2 === 0 ? 'multipla_escolha' : 'aberta')}",
+      "pergunta": "[PERGUNTA ${i + 1} específica sobre ${assuntos[i % assuntos.length]}]",
+      ${tipoQuestoesAval === 'fechadas' || (tipoQuestoesAval === 'mistas' && i % 2 === 0) ? `
+      "alternativas": [
+        "[alternativa A específica sobre ${assuntos[i % assuntos.length]}]",
+        "[alternativa B específica sobre ${assuntos[i % assuntos.length]}]",
+        "[alternativa C específica sobre ${assuntos[i % assuntos.length]}]",
+        "[alternativa D específica sobre ${assuntos[i % assuntos.length]}]"
+      ],
+      "resposta_correta": 0` : ''}
+    }`).join(',\n    ')}
+  ],
+  "criterios_avaliacao": [
+    "Compreensão dos conceitos sobre ${tema} (25%)",
+    "Clareza na expressão das ideias (25%)",
+    "Aplicação correta do conhecimento sobre ${tema} (50%)"
+  ]
+}
 
-${Array.from({length: numQuestoesAval}, (_, i) => `
-**QUESTÃO ${i + 1}:**
-[Pergunta sobre um dos assuntos: ${assuntos[i % assuntos.length]}]
-${tipoQuestoesAval === 'fechadas' || tipoQuestoesAval === 'mistas' ? `
-a) Alternativa A
-b) Alternativa B
-c) Alternativa C  
-d) Alternativa D
-` : ''}
-`).join('')}
-
-**CRITÉRIOS DE AVALIAÇÃO:**
-- Compreensão dos conceitos (25%)
-- Clareza na expressão das ideias (25%)
-- Aplicação correta do conhecimento (50%)
-
-Use nível apropriado para avaliação formal.
+GERE questões REAIS e ESPECÍFICAS. Use nível apropriado para avaliação formal na ${serie}.
 `;
 
     default:
-      return `Crie um material educacional sobre "${tema}" para ${disciplina}, série ${serie}.`;
+      return `Crie um material educacional ESPECÍFICO sobre "${tema}" para ${disciplina}, série ${serie}. GERE conteúdo REAL baseado no tema informado.`;
   }
 }
 
@@ -358,347 +381,75 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
   const serie = formData.serie || formData.grade || '';
   const professor = formData.professor || '';
   const data = formData.data || '';
-  const duracao = formData.duracao || '';
 
   try {
-    switch (materialType) {
-      case 'plano-de-aula':
-        // Try to parse JSON first
-        try {
-          const jsonMatch = content.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const parsedJson = JSON.parse(jsonMatch[0]);
-            // União de todos os recursos das etapas, sem repetições
-            let recursosEtapas = [];
-            if (Array.isArray(parsedJson.desenvolvimento)) {
-              recursosEtapas = parsedJson.desenvolvimento
-                .map(etapa => (typeof etapa.recursos === 'string' ? etapa.recursos.split(/,| e /).map(r => r.trim()) : (Array.isArray(etapa.recursos) ? etapa.recursos : [])))
-                .flat();
+    // Tentar parsear JSON diretamente do conteúdo gerado
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const parsedContent = JSON.parse(jsonMatch[0]);
+        
+        // Garantir que os campos do formulário sejam preservados
+        parsedContent.professor = professor;
+        parsedContent.data = data;
+        parsedContent.disciplina = disciplina;
+        parsedContent.serie = serie;
+        parsedContent.tema = tema;
+
+        // Para planos de aula, garantir que recursos não sejam duplicados
+        if (materialType === 'plano-de-aula' && parsedContent.desenvolvimento) {
+          const recursosEtapas = [];
+          parsedContent.desenvolvimento.forEach(etapa => {
+            if (etapa.recursos) {
+              const recursos = typeof etapa.recursos === 'string' 
+                ? etapa.recursos.split(/,|e/).map(r => r.trim()) 
+                : etapa.recursos;
+              recursosEtapas.push(...recursos);
             }
-            let recursosGerais = Array.isArray(parsedJson.recursos) ? parsedJson.recursos : (typeof parsedJson.recursos === 'string' ? parsedJson.recursos.split(/,| e /).map(r => r.trim()) : []);
-            const recursosUnicos = Array.from(new Set([...recursosEtapas, ...recursosGerais])).filter(Boolean);
-            return {
-              ...parsedJson,
-              professor: professor,
-              data: data,
-              disciplina: disciplina,
-              serie: serie,
-              tema: tema,
-              duracao: parsedJson.duracao || '',
-              bncc: parsedJson.bncc || '',
-              objetivos: parsedJson.objetivos || [],
-              habilidades: parsedJson.habilidades || [],
-              desenvolvimento: parsedJson.desenvolvimento || [],
-              recursos: recursosUnicos,
-              conteudosProgramaticos: parsedJson.conteudosProgramaticos || [],
-              metodologia: parsedJson.metodologia || '',
-              avaliacao: parsedJson.avaliacao || '',
-              referencias: parsedJson.referencias || []
-            };
-          }
-        } catch (error) {
-          // Se não conseguir parsear JSON, retorna tudo vazio
-          return {
-            titulo: '',
-            professor,
-            data,
-            disciplina,
-            serie,
-            tema,
-            duracao: '',
-            bncc: '',
-            objetivos: [],
-            habilidades: [],
-            desenvolvimento: [],
-            recursos: [],
-            conteudosProgramaticos: [],
-            metodologia: '',
-            avaliacao: '',
-            referencias: []
-          };
+          });
+          
+          const recursosGerais = Array.isArray(parsedContent.recursos) 
+            ? parsedContent.recursos 
+            : (typeof parsedContent.recursos === 'string' 
+              ? parsedContent.recursos.split(/,|e/).map(r => r.trim()) 
+              : []);
+          
+          parsedContent.recursos = Array.from(new Set([...recursosEtapas, ...recursosGerais])).filter(Boolean);
         }
 
-        // Fallback: parse bloco textual das etapas
-        const etapas = ['Introdução', 'Desenvolvimento', 'Prática', 'Fechamento'];
-        const desenvolvimento = [];
-        for (const etapa of etapas) {
-          const regex = new RegExp(`-?\s*\*?\*?${etapa}\*?\*?\s*[\r\n]+\s*Tempo:\s*([^\r\n]+)[\r\n]+\s*Atividade:\s*([^\r\n]+)[\r\n]+\s*Recursos:\s*([^\r\n]+)`, 'i');
-          const match = content.match(regex);
-          if (match) {
-            desenvolvimento.push({
-              etapa,
-              tempo: match[1].trim(),
-              atividade: match[2].trim(),
-              recursos: match[3].trim()
-            });
-          }
-        }
-        // União de todos os recursos das etapas, sem repetições
-        const recursosUnicos = Array.from(new Set(desenvolvimento.map(e => e.recursos).join(',').split(/,| e /).map(r => r.trim()).filter(Boolean)));
-        return {
-          titulo: `Plano de Aula - ${tema}`,
-          professor,
-          data,
-          disciplina,
-          serie,
-          tema,
-          duracao: extractFieldFromContent(content, 'Tempo') || '',
-          bncc: extractBNCCCodesFromContent(content) || '',
-          objetivos: extractObjectivesFromContent(content) || [],
-          habilidades: extractSkills(content) || [],
-          desenvolvimento,
-          recursos: recursosUnicos,
-          conteudosProgramaticos: extractProgrammaticContent(content) || [],
-          metodologia: extractMethodology(content) || '',
-          avaliacao: extractEvaluation(content) || '',
-          referencias: extractReferences(content) || []
-        };
-
-      case 'slides':
-        const slideContent = extractSlidesContent(content);
-        return {
-          titulo: '',
-          professor,
-          data,
-          disciplina,
-          serie,
-          tema,
-          duracao: slideContent.duracao || '',
-          bncc: slideContent.bncc || '',
-          ...slideContent
-        };
-
-      case 'atividade':
-        return {
-          titulo: '',
-          professor,
-          data,
-          disciplina,
-          serie,
-          tema,
-          duracao: '',
-          bncc: '',
-          instrucoes: '',
-          questoes: extractQuestions(content, formData.numeroQuestoes || 5) || [],
-          criterios_avaliacao: extractFieldFromContent(content, 'Critérios') ? [extractFieldFromContent(content, 'Critérios')] : []
-        };
-
-      case 'avaliacao':
-        const assuntos = formData.assuntos || formData.subjects || [tema];
-        return {
-          titulo: '',
-          professor,
-          data,
-          disciplina,
-          serie,
-          tema: '',
-          duracao: '',
-          bncc: '',
-          instrucoes: '',
-          questoes: extractQuestions(content, formData.numeroQuestoes || 5) || [],
-          criterios_avaliacao: extractFieldFromContent(content, 'Critérios') ? [extractFieldFromContent(content, 'Critérios')] : []
-        };
-
-      default:
-        return { content };
+        console.log('✅ Conteúdo parseado com sucesso:', materialType);
+        return parsedContent;
+      } catch (parseError) {
+        console.error('❌ Erro ao parsear JSON:', parseError);
+      }
     }
-  } catch (error) {
+
+    // Fallback: estrutura básica se não conseguir parsear
+    console.log('⚠️ Usando fallback para estrutura básica');
     return {
-      titulo: '',
+      titulo: `${materialType} - ${tema}`,
       professor,
       data,
       disciplina,
       serie,
       tema,
       duracao: '',
-      content: ''
+      bncc: '',
+      content: content
+    };
+
+  } catch (error) {
+    console.error('❌ Erro no parseGeneratedContent:', error);
+    return {
+      titulo: `${materialType} - ${tema}`,
+      professor,
+      data,
+      disciplina,
+      serie,
+      tema,
+      duracao: '',
+      bncc: '',
+      content: content
     };
   }
-}
-
-function extractBNCCCodesFromContent(content: string): string {
-  const bnccPattern = /\*\*CÓDIGOS DA BNCC:\*\*([\s\S]*?)(?=\*\*|$)/i;
-  const match = content.match(bnccPattern);
-  
-  if (match) {
-    const bnccSection = match[1];
-    const codeRegex = /EF\d{2}[A-Z]{2}\d{2}/g;
-    const codes = bnccSection.match(codeRegex);
-    if (codes) {
-      return codes.slice(0, 3).join(', ');
-    }
-  }
-  
-  return '';
-}
-
-function extractObjectivesFromContent(content: string): string[] {
-  const objectivesPattern = /\*\*OBJETIVOS DE APRENDIZAGEM:\*\*([\s\S]*?)(?=\*\*|$)/i;
-  const match = content.match(objectivesPattern);
-  
-  if (match) {
-    const objectivesSection = match[1];
-    const objectives = objectivesSection
-      .split(/[•\-\n]/)
-      .map(obj => obj.trim())
-      .filter(obj => obj.length > 10 && !obj.includes('Objetivo'))
-      .slice(0, 5);
-    
-    if (objectives.length > 0) {
-      return objectives;
-    }
-  }
-  
-  return [];
-}
-
-function extractDevelopmentStepsFromContent(content: string, duration: string): any[] {
-  const steps = [];
-  const stepNames = ['Introdução', 'Desenvolvimento', 'Prática', 'Fechamento'];
-  
-  for (const stepName of stepNames) {
-    const regex = new RegExp(`\\*\\*${stepName}[^\\*]*\\*\\*([\\s\\S]*?)(?=\\*\\*[A-Z]|$)`, 'i');
-    const match = content.match(regex);
-    
-    if (match) {
-      const stepContent = match[1];
-      const timeMatch = stepContent.match(/\(([^)]+)\)/);
-      const activityMatch = stepContent.match(/Atividade:\s*([^\n]+)/i);
-      const resourceMatch = stepContent.match(/Recursos:\s*([^\n]+)/i);
-      
-      steps.push({
-        etapa: stepName,
-        tempo: timeMatch ? timeMatch[1] : '10-15 min',
-        atividade: activityMatch ? activityMatch[1].trim() : `Atividade de ${stepName.toLowerCase()}`,
-        recursos: resourceMatch ? resourceMatch[1].trim() : 'Material básico'
-      });
-    }
-  }
-  
-  return steps.length > 0 ? steps : [];
-}
-
-function extractResourcesFromContent(content: string): string[] {
-  const resourcesPattern = /\*\*RECURSOS DIDÁTICOS:\*\*([\s\S]*?)(?=\*\*|$)/i;
-  const match = content.match(resourcesPattern);
-  
-  if (match) {
-    const resourceSection = match[1];
-    const resources = resourceSection
-      .split(/[,\n]/)
-      .map(r => r.trim())
-      .filter(r => r.length > 0 && r !== ':');
-    
-    if (resources.length > 0) {
-      return resources;
-    }
-  }
-  
-  return [];
-}
-
-function extractSkills(content: string): string[] {
-  const sections = content.split(/\*\*.*HABILIDADES.*\*\*/i);
-  if (sections.length > 1) {
-    const skillSection = sections[1].split('**')[0];
-    const skills = skillSection.split(/[-•]\s*/).filter(skill => skill.trim().length > 10);
-    if (skills.length > 0) {
-      return skills.map(skill => skill.trim()).slice(0, 5);
-    }
-  }
-  return [];
-}
-
-function extractProgrammaticContent(content: string): string[] {
-  const sections = content.split(/\*\*.*CONTEÚDOS PROGRAMÁTICOS.*\*\*/i);
-  if (sections.length > 1) {
-    const contentSection = sections[1].split('**')[0];
-    const contents = contentSection.split(/[-•]\s*/).filter(c => c.trim().length > 5);
-    if (contents.length > 0) {
-      return contents.map(c => c.trim());
-    }
-  }
-  return [];
-}
-
-function extractMethodology(content: string): string {
-  const sections = content.split(/\*\*.*METODOLOGIA.*\*\*/i);
-  if (sections.length > 1) {
-    const methodSection = sections[1].split('**')[0].trim();
-    if (methodSection.length > 10) {
-      return methodSection;
-    }
-  }
-  return '';
-}
-
-function extractEvaluation(content: string): string {
-  const sections = content.split(/\*\*.*AVALIAÇÃO.*\*\*/i);
-  if (sections.length > 1) {
-    const evalSection = sections[1].split('**')[0].trim();
-    if (evalSection.length > 10) {
-      return evalSection;
-    }
-  }
-  return '';
-}
-
-function extractReferences(content: string): string[] {
-  const sections = content.split(/\*\*.*REFERÊNCIAS.*\*\*/i);
-  if (sections.length > 1) {
-    const refSection = sections[1].trim();
-    const refs = refSection.split(/[-•]\s*/).filter(r => r.trim().length > 10);
-    if (refs.length > 0) {
-      return refs.map(r => r.trim());
-    }
-  }
-  return [];
-}
-
-function extractSlidesContent(content: string): any {
-  // Implementação mínima: tenta parsear JSON, senão retorna campos vazios
-  try {
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch {}
-  return {};
-}
-
-function extractQuestions(content: string, numQuestions: number): any[] {
-  const questions = [];
-  const questionRegex = /\*\*QUESTÃO\s+(\d+):\*\*([^*]*?)(?=\*\*QUESTÃO|\*\*$|$)/gi;
-  let match;
-  
-  while ((match = questionRegex.exec(content)) !== null) {
-    const questionText = match[2].trim();
-    const hasAlternatives = questionText.includes('a)');
-    
-    const question: any = {
-      numero: parseInt(match[1]),
-      tipo: hasAlternatives ? 'multipla_escolha' : 'aberta',
-      pergunta: questionText.split('\n')[0].trim()
-    };
-    
-    if (hasAlternatives) {
-      const alternatives = [];
-      const altMatches = questionText.matchAll(/[a-d]\)\s*([^\n]+)/g);
-      for (const altMatch of altMatches) {
-        alternatives.push(altMatch[1].trim());
-      }
-      question.alternativas = alternatives;
-      question.resposta_correta = 0;
-    }
-    
-    questions.push(question);
-  }
-  
-  return questions.length > 0 ? questions : [];
-}
-
-function extractFieldFromContent(content: string, fieldName: string): string {
-  const regex = new RegExp(`${fieldName}:\\s*\\[([^\\]]+)\\]`, 'i');
-  const match = content.match(regex);
-  return match ? match[1].trim() : '';
 }
