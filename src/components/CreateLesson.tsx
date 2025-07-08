@@ -72,6 +72,34 @@ const getGrades = () => {
   return gradesCache.data;
 };
 
+// Error Boundary interno para o formulário
+class FormErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('Erro no formulário de criação de material:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <main className="min-h-screen flex items-center justify-center">
+          <div className="bg-white p-8 rounded-xl shadow-xl text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-2">Erro ao carregar formulário</h2>
+            <p className="text-gray-700 mb-4">Ocorreu um erro inesperado ao exibir o formulário. Por favor, recarregue a página ou tente novamente mais tarde.</p>
+            <Button onClick={() => window.location.reload()}>Recarregar Página</Button>
+          </div>
+        </main>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const CreateLesson: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -505,304 +533,318 @@ const CreateLesson: React.FC = () => {
   if (step === 'form') {
     const typeInfo = getCurrentTypeInfo();
     const Icon = typeInfo?.icon || BookOpen;
+
+    if (!typeInfo) {
+      return (
+        <main className="min-h-screen flex items-center justify-center">
+          <div className="bg-white p-8 rounded-xl shadow-xl text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-2">Erro ao carregar formulário</h2>
+            <p className="text-gray-700 mb-4">Não foi possível carregar o tipo de material selecionado. Por favor, volte e tente novamente.</p>
+            <Button onClick={handleBackToSelection}>Voltar</Button>
+          </div>
+        </main>
+      );
+    }
     
     return (
-      <>
-        <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 lg:p-8 mb-4">
-              <div className="flex items-center mb-6">
-                <div className={`w-12 h-12 sm:w-16 sm:h-16 ${typeInfo?.iconBg} rounded-xl sm:rounded-2xl flex items-center justify-center mr-4 sm:mr-6 shadow-lg`}>
-                  <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    Criar {typeInfo?.title}
-                  </h1>
-                  <p className="text-sm sm:text-base lg:text-lg text-gray-600 mt-1">
-                    Preencha os detalhes para criar seu {typeInfo?.title.toLowerCase()}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                {/* Campo de Tema da Aula (apenas para tipos que não são avaliação) */}
-                {selectedType !== 'avaliacao' && (
-                  <div>
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                        T
-                      </div>
-                      <Label className="text-base sm:text-lg font-semibold text-gray-800">Tema da Aula</Label>
-                    </div>
-                    <div className="relative">
-                      <Input 
-                        placeholder="Ex: Introdução à Álgebra Linear" 
-                        value={formData.topic} 
-                        onChange={e => setFormData({
-                          ...formData,
-                          topic: e.target.value
-                        })} 
-                        className="pr-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
-                      />
-                      <button className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-2 hover:bg-blue-50 rounded-lg transition-colors">
-                        <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-                      </button>
-                    </div>
+      <FormErrorBoundary>
+        <>
+          <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
+            <div className="max-w-3xl mx-auto">
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 lg:p-8 mb-4">
+                <div className="flex items-center mb-6">
+                  <div className={`w-12 h-12 sm:w-16 sm:h-16 ${typeInfo?.iconBg} rounded-xl sm:rounded-2xl flex items-center justify-center mr-4 sm:mr-6 shadow-lg`}>
+                    <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
-                )}
-
-                {/* Campo para múltiplos assuntos/conteúdos (apenas para avaliações) */}
-                {selectedType === 'avaliacao' && (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                        C
-                      </div>
-                      <Label className="text-base sm:text-lg font-semibold text-gray-800">Conteúdos da Avaliação</Label>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Adicione os assuntos ou conteúdos específicos que serão abordados na avaliação.
-                      As questões serão baseadas nesses temas.
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      Criar {typeInfo?.title}
+                    </h1>
+                    <p className="text-sm sm:text-base lg:text-lg text-gray-600 mt-1">
+                      Preencha os detalhes para criar seu {typeInfo?.title.toLowerCase()}
                     </p>
-                    
-                    <div className="space-y-3">
-                      {formData.subjects.map((subject, index) => (
-                        <div key={index} className="flex items-center space-x-3">
-                          <div className="flex-1">
-                            <Input 
-                              placeholder={`Ex: ${index === 0 ? 'Equações do 1º grau' : index === 1 ? 'Sistemas lineares' : 'Funções quadráticas'}`}
-                              value={subject} 
-                              onChange={e => updateSubject(index, e.target.value)} 
-                              className="h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
-                            />
-                          </div>
-                          {formData.subjects.length > 1 && (
-                            <Button 
-                              type="button" 
-                              onClick={() => removeSubject(index)} 
-                              variant="outline" 
-                              size="sm" 
-                              className="flex items-center justify-center w-12 h-12 hover:bg-red-50 border-red-200 text-red-500"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Botão Adicionar movido para baixo dos campos */}
-                    <div className="flex justify-center pt-2">
-                      <Button 
-                        type="button" 
-                        onClick={addSubject} 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex items-center space-x-2 hover:bg-blue-50 border-blue-200"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Adicionar Conteúdo</span>
-                      </Button>
-                    </div>
                   </div>
-                )}
+                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                        D
-                      </div>
-                      <Label className="text-base sm:text-lg font-semibold text-gray-800">Disciplina</Label>
-                    </div>
-                    <Select value={formData.subject} onValueChange={value => setFormData({
-                      ...formData,
-                      subject: value
-                    })}>
-                      <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white">
-                        <SelectValue placeholder="Selecione uma disciplina" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <div className="grid grid-cols-2 gap-1 p-2">
-                          {subjects.map(subject => (
-                            <SelectItem key={subject} value={subject.toLowerCase()}>
-                              {subject}
-                            </SelectItem>
-                          ))}
+                <div className="space-y-6">
+                  {/* Campo de Tema da Aula (apenas para tipos que não são avaliação) */}
+                  {selectedType !== 'avaliacao' && (
+                    <div>
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                          T
                         </div>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                        A
+                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Tema da Aula</Label>
                       </div>
-                      <Label className="text-base sm:text-lg font-semibold text-gray-800">Turma (Série/Ano)</Label>
+                      <div className="relative">
+                        <Input 
+                          placeholder="Ex: Introdução à Álgebra Linear" 
+                          value={formData.topic} 
+                          onChange={e => setFormData({
+                            ...formData,
+                            topic: e.target.value
+                          })} 
+                          className="pr-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
+                        />
+                        <button className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-2 hover:bg-blue-50 rounded-lg transition-colors">
+                          <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                        </button>
+                      </div>
                     </div>
-                    <Select value={formData.grade} onValueChange={value => setFormData({
-                      ...formData,
-                      grade: value
-                    })}>
-                      <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white">
-                        <SelectValue placeholder="Selecione a turma" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {grades.map(category => (
-                          <div key={category.category}>
-                            <div className="px-3 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg mx-2 mt-2">
-                              {category.category}
+                  )}
+
+                  {/* Campo para múltiplos assuntos/conteúdos (apenas para avaliações) */}
+                  {selectedType === 'avaliacao' && (
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                          C
+                        </div>
+                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Conteúdos da Avaliação</Label>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Adicione os assuntos ou conteúdos específicos que serão abordados na avaliação.
+                        As questões serão baseadas nesses temas.
+                      </p>
+                      
+                      <div className="space-y-3">
+                        {formData.subjects.map((subject, index) => (
+                          <div key={index} className="flex items-center space-x-3">
+                            <div className="flex-1">
+                              <Input 
+                                placeholder={`Ex: ${index === 0 ? 'Equações do 1º grau' : index === 1 ? 'Sistemas lineares' : 'Funções quadráticas'}`}
+                                value={subject} 
+                                onChange={e => updateSubject(index, e.target.value)} 
+                                className="h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
+                              />
                             </div>
-                            {category.options.map(option => (
-                              <SelectItem key={`${category.category}-${option}`} value={`${category.category}-${option}`}>
-                                {option}
+                            {formData.subjects.length > 1 && (
+                              <Button 
+                                type="button" 
+                                onClick={() => removeSubject(index)} 
+                                variant="outline" 
+                                size="sm" 
+                                className="flex items-center justify-center w-12 h-12 hover:bg-red-50 border-red-200 text-red-500"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Botão Adicionar movido para baixo dos campos */}
+                      <div className="flex justify-center pt-2">
+                        <Button 
+                          type="button" 
+                          onClick={addSubject} 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex items-center space-x-2 hover:bg-blue-50 border-blue-200"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>Adicionar Conteúdo</span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                          D
+                        </div>
+                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Disciplina</Label>
+                      </div>
+                      <Select value={formData.subject} onValueChange={value => setFormData({
+                        ...formData,
+                        subject: value
+                      })}>
+                        <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white">
+                          <SelectValue placeholder="Selecione uma disciplina" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <div className="grid grid-cols-2 gap-1 p-2">
+                            {subjects.map(subject => (
+                              <SelectItem key={subject} value={subject}>
+                                {subject}
                               </SelectItem>
                             ))}
                           </div>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Campos específicos para atividades e avaliações */}
-                {(selectedType === 'atividade' || selectedType === 'avaliacao') && (
-                  <div className="space-y-6 border-t border-gray-200 pt-6">
-                    <div className="text-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Configurações de Questões</h3>
-                      <p className="text-sm text-gray-600">Personalize o tipo e quantidade de questões</p>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div>
                       <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                          ?
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                          A
                         </div>
-                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Tipo de Questões</Label>
+                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Turma (Série/Ano)</Label>
                       </div>
-                      <RadioGroup value={formData.questionType} onValueChange={value => setFormData({
+                      <Select value={formData.grade} onValueChange={value => setFormData({
                         ...formData,
-                        questionType: value
-                      })} className="grid grid-cols-3 gap-2 sm:gap-4">
-                        <div className="flex items-center space-x-1 sm:space-x-2 p-2 sm:p-3 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-300 transition-colors">
-                          <RadioGroupItem value="abertas" id="abertas" />
-                          <Label htmlFor="abertas" className="cursor-pointer font-medium text-xs sm:text-base">Abertas</Label>
-                        </div>
-                        <div className="flex items-center space-x-1 sm:space-x-2 p-2 sm:p-3 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-300 transition-colors">
-                          <RadioGroupItem value="fechadas" id="fechadas" />
-                          <Label htmlFor="fechadas" className="cursor-pointer font-medium text-xs sm:text-base">Fechadas</Label>
-                        </div>
-                        <div className="flex items-center space-x-1 sm:space-x-2 p-2 sm:p-3 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-300 transition-colors">
-                          <RadioGroupItem value="mistas" id="mistas" />
-                          <Label htmlFor="mistas" className="cursor-pointer font-medium text-xs sm:text-base">Mistas</Label>
-                        </div>
-                      </RadioGroup>
+                        grade: value
+                      })}>
+                        <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white">
+                          <SelectValue placeholder="Selecione a turma" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {grades.map(category => (
+                            <div key={category.category}>
+                              <div className="px-3 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg mx-2 mt-2">
+                                {category.category}
+                              </div>
+                              {category.options.map(option => (
+                                <SelectItem key={`${category.category}-${option}`} value={`${category.category}-${option}`}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </div>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
+                  </div>
 
-                    <div>
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
-                          <Hash className="w-4 h-4" />
-                        </div>
-                        <Label className="text-base sm:text-lg font-semibold text-gray-800">Quantidade de Questões</Label>
+                  {/* Campos específicos para atividades e avaliações */}
+                  {(selectedType === 'atividade' || selectedType === 'avaliacao') && (
+                    <div className="space-y-6 border-t border-gray-200 pt-6">
+                      <div className="text-center mb-4">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">Configurações de Questões</h3>
+                        <p className="text-sm text-gray-600">Personalize o tipo e quantidade de questões</p>
                       </div>
-                      <div className="space-y-4">
-                        <div className="px-4 py-3 bg-gray-50 rounded-xl border-2 border-gray-200">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">Questões: {formData.questionCount[0]}</span>
-                            <div className="flex items-center space-x-2 text-xs text-gray-500">
-                              <Sliders className="w-3 h-3" />
-                              <span>Deslize para ajustar</span>
+
+                      <div>
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                            ?
+                          </div>
+                          <Label className="text-base sm:text-lg font-semibold text-gray-800">Tipo de Questões</Label>
+                        </div>
+                        <RadioGroup value={formData.questionType} onValueChange={value => setFormData({
+                          ...formData,
+                          questionType: value
+                        })} className="grid grid-cols-3 gap-2 sm:gap-4">
+                          <div className="flex items-center space-x-1 sm:space-x-2 p-2 sm:p-3 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-300 transition-colors">
+                            <RadioGroupItem value="abertas" id="abertas" />
+                            <Label htmlFor="abertas" className="cursor-pointer font-medium text-xs sm:text-base">Abertas</Label>
+                          </div>
+                          <div className="flex items-center space-x-1 sm:space-x-2 p-2 sm:p-3 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-300 transition-colors">
+                            <RadioGroupItem value="fechadas" id="fechadas" />
+                            <Label htmlFor="fechadas" className="cursor-pointer font-medium text-xs sm:text-base">Fechadas</Label>
+                          </div>
+                          <div className="flex items-center space-x-1 sm:space-x-2 p-2 sm:p-3 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-300 transition-colors">
+                            <RadioGroupItem value="mistas" id="mistas" />
+                            <Label htmlFor="mistas" className="cursor-pointer font-medium text-xs sm:text-base">Mistas</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg text-white text-sm flex items-center justify-center font-bold shadow-md">
+                            <Hash className="w-4 h-4" />
+                          </div>
+                          <Label className="text-base sm:text-lg font-semibold text-gray-800">Quantidade de Questões</Label>
+                        </div>
+                        <div className="space-y-4">
+                          <div className="px-4 py-3 bg-gray-50 rounded-xl border-2 border-gray-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-gray-700">Questões: {formData.questionCount[0]}</span>
+                              <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                <Sliders className="w-3 h-3" />
+                                <span>Deslize para ajustar</span>
+                              </div>
+                            </div>
+                            <Slider 
+                              value={formData.questionCount} 
+                              onValueChange={value => setFormData({
+                                ...formData,
+                                questionCount: value
+                              })} 
+                              max={20} 
+                              min={1} 
+                              step={1} 
+                              className="w-full" 
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                              <span>1</span>
+                              <span>10</span>
+                              <span>20</span>
                             </div>
                           </div>
-                          <Slider 
-                            value={formData.questionCount} 
-                            onValueChange={value => setFormData({
-                              ...formData,
-                              questionCount: value
-                            })} 
-                            max={20} 
-                            min={1} 
-                            step={1} 
-                            className="w-full" 
-                          />
-                          <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>1</span>
-                            <span>10</span>
-                            <span>20</span>
-                          </div>
                         </div>
                       </div>
                     </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row justify-between items-center pt-6 gap-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={handleBackToSelection} 
+                      className="w-full sm:w-auto flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-6 border-2 hover:bg-gray-50 rounded-xl"
+                    >
+                      <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="font-semibold">Voltar</span>
+                    </Button>
+
+                    <Button 
+                      onClick={handleFormSubmit} 
+                      disabled={!formData.subject || !formData.grade || (selectedType !== 'avaliacao' && !formData.topic) || (selectedType === 'avaliacao' && formData.subjects.filter(s => s.trim() !== '').length === 0)} 
+                      className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="font-semibold">Criar {typeInfo?.title}</span>
+                    </Button>
                   </div>
-                )}
+                </div>
+              </div>
 
-                <div className="flex flex-col sm:flex-row justify-between items-center pt-6 gap-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={handleBackToSelection} 
-                    className="w-full sm:w-auto flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-6 border-2 hover:bg-gray-50 rounded-xl"
-                  >
-                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="font-semibold">Voltar</span>
-                  </Button>
-
-                  <Button 
-                    onClick={handleFormSubmit} 
-                    disabled={!formData.subject || !formData.grade || (selectedType !== 'avaliacao' && !formData.topic) || (selectedType === 'avaliacao' && formData.subjects.filter(s => s.trim() !== '').length === 0)} 
-                    className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="font-semibold">Criar {typeInfo?.title}</span>
-                  </Button>
+              <div className="text-center">
+                <div className="inline-flex items-center space-x-2 bg-white px-4 py-2 sm:px-6 sm:py-3 rounded-full shadow-md">
+                  <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
+                  <span className="text-sm sm:text-base text-gray-600 font-medium">Conteúdo alinhado à BNCC</span>
                 </div>
               </div>
             </div>
+          </main>
 
-            <div className="text-center">
-              <div className="inline-flex items-center space-x-2 bg-white px-4 py-2 sm:px-6 sm:py-3 rounded-full shadow-md">
-                <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
-                <span className="text-sm sm:text-base text-gray-600 font-medium">Conteúdo alinhado à BNCC</span>
-              </div>
-            </div>
-          </div>
-        </main>
+          {/* Modal de validação BNCC */}
+          <BNCCValidationModal 
+            open={showBNCCValidation} 
+            onClose={() => setShowBNCCValidation(false)} 
+            tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
+            disciplina={formData.subject || ''} 
+            serie={formData.grade} 
+            onAccept={handleBNCCValidationAccept} 
+          />
 
-        {/* Modal de validação BNCC */}
-        <BNCCValidationModal 
-          open={showBNCCValidation} 
-          onClose={() => setShowBNCCValidation(false)} 
-          tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
-          disciplina={disciplina} 
-          serie={formData.grade} 
-          onAccept={handleBNCCValidationAccept} 
-        />
-
-        {/* Modal de visualização do material - aparece primeiro */}
-        <MaterialModal 
-          material={generatedMaterial} 
-          open={showMaterialModal || showNextStepsModal} 
-          onClose={handleMaterialModalClose} 
-        />
-        
-        {/* Modal de próximos passos - aparece por cima */}
-        <NextStepsModal
-          open={showNextStepsModal}
-          onClose={handleNextStepsClose}
-          onContinue={handleNextStepsContinue}
-          materialType={selectedType || ''}
-        />
-        
-        {/* Modal de upgrade que aparece quando o limite é atingido */}
-        <UpgradeModal
-          isOpen={isUpgradeModalOpen}
-          onClose={closeUpgradeModal}
-          currentPlan={currentPlan}
-          onPlanSelect={handlePlanSelection}
-        />
-      </>
+          {/* Modal de visualização do material - aparece primeiro */}
+          <MaterialModal 
+            material={generatedMaterial} 
+            open={showMaterialModal || showNextStepsModal} 
+            onClose={handleMaterialModalClose} 
+          />
+          
+          {/* Modal de próximos passos - aparece por cima */}
+          <NextStepsModal
+            open={showNextStepsModal}
+            onClose={handleNextStepsClose}
+            onContinue={handleNextStepsContinue}
+            materialType={selectedType || ''}
+          />
+          
+          {/* Modal de upgrade que aparece quando o limite é atingido */}
+          <UpgradeModal
+            isOpen={isUpgradeModalOpen}
+            onClose={closeUpgradeModal}
+            currentPlan={currentPlan}
+            onPlanSelect={handlePlanSelection}
+          />
+        </>
+      </FormErrorBoundary>
     );
   }
 
