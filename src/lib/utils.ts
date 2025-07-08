@@ -59,7 +59,7 @@ export function limparRecursosEtapa(recursos: string): string {
 /**
  * Divide recursos de uma string em array, limitando a quantidade por etapa
  */
-export function dividirRecursosPorEtapa(recursos: string, maxRecursos: number = 5): string[] {
+export function dividirRecursosPorEtapa(recursos: string, maxRecursos: number = 3): string[] {
   if (!recursos || typeof recursos !== 'string') return [];
   
   return recursos
@@ -67,4 +67,30 @@ export function dividirRecursosPorEtapa(recursos: string, maxRecursos: number = 
     .map(recurso => recurso.trim())
     .filter(recurso => recurso.length > 0)
     .slice(0, maxRecursos); // Limita a quantidade máxima de recursos
+}
+
+/**
+ * Filtra recursos únicos por etapa, garantindo que não haja repetição
+ */
+export function filtrarRecursosUnicos(etapas: any[]): any[] {
+  const recursosUsados = new Set<string>();
+  
+  return etapas.map(etapa => {
+    if (etapa.recursos && typeof etapa.recursos === 'string') {
+      const recursosEtapa = etapa.recursos
+        .split(',')
+        .map((r: string) => r.trim())
+        .filter((r: string) => r.length > 0 && !recursosUsados.has(r.toLowerCase()))
+        .slice(0, 3); // Máximo 3 por etapa
+      
+      // Adiciona os recursos usados ao Set
+      recursosEtapa.forEach((r: string) => recursosUsados.add(r.toLowerCase()));
+      
+      return {
+        ...etapa,
+        recursos: recursosEtapa.join(', ')
+      };
+    }
+    return etapa;
+  });
 }

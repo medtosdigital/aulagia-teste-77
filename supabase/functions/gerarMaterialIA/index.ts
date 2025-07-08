@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -137,11 +138,17 @@ Crie um plano de aula COMPLETO e DETALHADO com base nas seguintes informações:
 IMPORTANTE: GERE TODO O CONTEÚDO baseado especificamente no tema "${tema}" para a disciplina de ${disciplina} na série ${serie}. NÃO use conteúdo genérico.
 
 REGRAS CRÍTICAS PARA RECURSOS POR ETAPA:
-1. Cada etapa deve ter de 1 a 5 recursos específicos e únicos
-2. NÃO repita recursos entre diferentes etapas
+1. Cada etapa deve ter APENAS de 1 a 3 recursos específicos e únicos
+2. NÃO repita recursos entre diferentes etapas - cada recurso deve ser usado apenas uma vez
 3. Cada recurso deve ser específico para a atividade daquela etapa
 4. Use vírgulas para separar recursos dentro de cada etapa
-5. Cada recurso deve ser gramaticalmente correto
+5. Cada recurso deve ser gramaticalmente correto e específico
+
+EXEMPLO DE RECURSOS CORRETOS:
+- Introdução: "Quadro branco, marcadores coloridos"
+- Desenvolvimento: "Material manipulativo, experimentos práticos"
+- Prática: "Exercícios impressos, jogos educativos"
+- Fechamento: "Fichas de avaliação"
 
 Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPECÍFICO sobre "${tema}":
 
@@ -169,33 +176,31 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
       "etapa": "Introdução", 
       "tempo": "[tempo específico em minutos, ex: 10 minutos]", 
       "atividade": "[ATIVIDADE ESPECÍFICA de introdução ao tema ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[1-3 RECURSOS ÚNICOS e específicos APENAS para esta etapa de introdução, separados por vírgula. Ex: Quadro branco, marcadores coloridos, cartazes introdutórios]" 
+      "recursos": "[1-3 RECURSOS ÚNICOS específicos APENAS para introdução, separados por vírgula. Ex: Quadro branco, marcadores coloridos]" 
     },
     { 
       "etapa": "Desenvolvimento", 
       "tempo": "[tempo específico em minutos, ex: 25 minutos]", 
       "atividade": "[ATIVIDADE ESPECÍFICA de desenvolvimento do tema ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[2-4 RECURSOS ÚNICOS e específicos APENAS para esta etapa de desenvolvimento, separados por vírgula. Ex: Material manipulativo, experimentos práticos, fichas de trabalho]" 
+      "recursos": "[1-3 RECURSOS ÚNICOS específicos APENAS para desenvolvimento, separados por vírgula. Ex: Material manipulativo, experimentos práticos]" 
     },
     { 
       "etapa": "Prática", 
       "tempo": "[tempo específico em minutos, ex: 10 minutos]", 
       "atividade": "[ATIVIDADE PRÁTICA ESPECÍFICA sobre ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[1-3 RECURSOS ÚNICOS e específicos APENAS para esta etapa prática, separados por vírgula. Ex: Exercícios impressos, jogos educativos, materiais de apoio]" 
+      "recursos": "[1-3 RECURSOS ÚNICOS específicos APENAS para prática, separados por vírgula. Ex: Exercícios impressos, jogos educativos]" 
     },
     { 
       "etapa": "Fechamento", 
       "tempo": "[tempo específico em minutos, ex: 5 minutos]", 
       "atividade": "[ATIVIDADE ESPECÍFICA de fechamento sobre ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[1-2 RECURSOS ÚNICOS e específicos APENAS para esta etapa de fechamento, separados por vírgula. Ex: Fichas de avaliação, cartazes de síntese]" 
+      "recursos": "[1-2 RECURSOS ÚNICOS específicos APENAS para fechamento, separados por vírgula. Ex: Fichas de avaliação]" 
     }
   ],
   "recursos": [
     "[RECURSO 1 específico para ensinar ${tema}]",
     "[RECURSO 2 específico para ensinar ${tema}]",
-    "[RECURSO 3 específico para ensinar ${tema}]",
-    "[RECURSO 4 específico para ensinar ${tema}]",
-    "[RECURSO 5 específico para ensinar ${tema}]"
+    "[RECURSO 3 específico para ensinar ${tema}]"
   ],
   "conteudosProgramaticos": [
     "[CONTEÚDO ESPECÍFICO 1 sobre ${tema}]",
@@ -213,9 +218,10 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
 INSTRUÇÕES FINAIS CRÍTICAS:
 1. Cada etapa no "desenvolvimento" deve ter recursos ÚNICOS que não se repetem em outras etapas
 2. Use vírgulas para separar recursos dentro da string de cada etapa
-3. Mantenha de 1 a 5 recursos por etapa
+3. Mantenha de 1 a 3 recursos por etapa (máximo 3)
 4. Os recursos devem ser específicos e apropriados para a atividade daquela etapa
 5. Use português brasileiro correto sem erros gramaticais
+6. NÃO REPITA recursos entre etapas diferentes
 `;
 
     case 'slides':
@@ -386,6 +392,16 @@ GERE questões REAIS e ESPECÍFICAS. Use nível apropriado para avaliação form
   }
 }
 
+function cleanResourcesForStage(recursos: string): string[] {
+  if (!recursos || typeof recursos !== 'string') return [];
+  
+  return recursos
+    .split(',')
+    .map(recurso => recurso.trim())
+    .filter(recurso => recurso.length > 0)
+    .slice(0, 3); // Limita a 3 recursos por etapa
+}
+
 function parseGeneratedContent(materialType: string, content: string, formData: MaterialFormData): any {
   const tema = formData.tema || formData.topic || '';
   const disciplina = formData.disciplina || formData.subject || '';
@@ -409,20 +425,23 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
 
         // Special handling for lesson plans - ensure resources are properly structured per stage
         if (materialType === 'plano-de-aula' && parsedContent.desenvolvimento) {
-          // Clean up resources for each stage
-          parsedContent.desenvolvimento = parsedContent.desenvolvimento.map((etapa: any) => {
+          console.log('🔧 Processing lesson plan resources by stage');
+          
+          // Process each stage to ensure unique and limited resources
+          const processedEtapas = parsedContent.desenvolvimento.map((etapa: any, index: number) => {
             if (etapa.recursos && typeof etapa.recursos === 'string') {
-              // Clean the resources string - remove repeated commas and normalize
-              etapa.recursos = etapa.recursos
-                .replace(/,\s*,+/g, ',') // Remove multiple consecutive commas
-                .replace(/^\s*,|,\s*$/g, '') // Remove leading/trailing commas
-                .replace(/\s+/g, ' ') // Normalize spaces
-                .trim();
+              // Clean and limit resources for this specific stage
+              const cleanedResources = cleanResourcesForStage(etapa.recursos);
+              etapa.recursos = cleanedResources.join(', ');
+              
+              console.log(`✅ Stage ${etapa.etapa}: ${cleanedResources.length} resources - ${etapa.recursos}`);
             }
             return etapa;
           });
+          
+          parsedContent.desenvolvimento = processedEtapas;
 
-          // Create comprehensive resources list from all stages
+          // Create comprehensive resources list from all stages without duplicates
           const allResources = new Set<string>();
           
           parsedContent.desenvolvimento.forEach((etapa: any) => {
@@ -434,6 +453,8 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
           
           // Update main resources list
           parsedContent.recursos = Array.from(allResources);
+          
+          console.log(`📋 Total unique resources: ${parsedContent.recursos.length}`);
         }
 
         console.log('✅ Content parsed successfully:', materialType);
