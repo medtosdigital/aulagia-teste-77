@@ -146,65 +146,70 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
   "disciplina": "${disciplina}",
   "serie": "${serie}",
   "tema": "${tema}",
-  "duracao": "[GERE uma duração adequada para o tema, ex: 50 minutos, 100 minutos (2 aulas), etc]",
-  "bncc": "[BUSQUE e RETORNE códigos BNCC REAIS relevantes para ${tema} em ${disciplina} na ${serie}. Se não souber códigos específicos, deixe vazio]",
+  "duracao": "[GERE uma duração adequada baseada no tema, por exemplo: 50 minutos, 100 minutos (2 aulas), etc]",
+  "bncc": "[BUSQUE e RETORNE códigos BNCC REAIS e específicos para ${tema} em ${disciplina} na ${serie}. Exemplo: EF05MA08, EF67LP03. Se não souber códigos específicos, deixe vazio]",
   "objetivos": [
-    "[OBJETIVO 1 específico sobre ${tema}]",
-    "[OBJETIVO 2 específico sobre ${tema}]",
-    "[OBJETIVO 3 específico sobre ${tema}]",
-    "[OBJETIVO 4 específico sobre ${tema}]"
+    "[OBJETIVO ESPECÍFICO 1 sobre ${tema}]",
+    "[OBJETIVO ESPECÍFICO 2 sobre ${tema}]",
+    "[OBJETIVO ESPECÍFICO 3 sobre ${tema}]"
   ],
   "habilidades": [
-    "[HABILIDADE 1 que será desenvolvida com ${tema}]",
-    "[HABILIDADE 2 que será desenvolvida com ${tema}]",
-    "[HABILIDADE 3 que será desenvolvida com ${tema}]"
+    "[HABILIDADE ESPECÍFICA 1 que será desenvolvida com ${tema}]",
+    "[HABILIDADE ESPECÍFICA 2 que será desenvolvida com ${tema}]",
+    "[HABILIDADE ESPECÍFICA 3 que será desenvolvida com ${tema}]"
   ],
   "desenvolvimento": [
     { 
       "etapa": "Introdução", 
-      "tempo": "[tempo em minutos para introdução]", 
-      "atividade": "[ATIVIDADE ESPECÍFICA de introdução ao tema ${tema}]", 
-      "recursos": "[RECURSOS específicos para introduzir ${tema}]" 
+      "tempo": "[tempo específico em minutos, ex: 10 minutos]", 
+      "atividade": "[ATIVIDADE ESPECÍFICA de introdução ao tema ${tema} - descreva detalhadamente o que será feito]", 
+      "recursos": "[RECURSOS ESPECÍFICOS para esta etapa de introdução, ex: quadro, slides, materiais concretos]" 
     },
     { 
       "etapa": "Desenvolvimento", 
-      "tempo": "[tempo em minutos para desenvolvimento]", 
-      "atividade": "[ATIVIDADE ESPECÍFICA de desenvolvimento do tema ${tema}]", 
-      "recursos": "[RECURSOS específicos para desenvolver ${tema}]" 
+      "tempo": "[tempo específico em minutos, ex: 25 minutos]", 
+      "atividade": "[ATIVIDADE ESPECÍFICA de desenvolvimento do tema ${tema} - descreva detalhadamente o que será feito]", 
+      "recursos": "[RECURSOS ESPECÍFICOS para esta etapa de desenvolvimento, ex: apostila, experimentos, jogos educativos]" 
     },
     { 
       "etapa": "Prática", 
-      "tempo": "[tempo em minutos para prática]", 
-      "atividade": "[ATIVIDADE PRÁTICA específica sobre ${tema}]", 
-      "recursos": "[RECURSOS específicos para praticar ${tema}]" 
+      "tempo": "[tempo específico em minutos, ex: 10 minutos]", 
+      "atividade": "[ATIVIDADE PRÁTICA ESPECÍFICA sobre ${tema} - descreva detalhadamente o que será feito]", 
+      "recursos": "[RECURSOS ESPECÍFICOS para esta etapa prática, ex: exercícios impressos, materiais manipuláveis]" 
     },
     { 
       "etapa": "Fechamento", 
-      "tempo": "[tempo em minutos para fechamento]", 
-      "atividade": "[ATIVIDADE ESPECÍFICA de fechamento sobre ${tema}]", 
-      "recursos": "[RECURSOS específicos para fechar o tema ${tema}]" 
+      "tempo": "[tempo específico em minutos, ex: 5 minutos]", 
+      "atividade": "[ATIVIDADE ESPECÍFICA de fechamento sobre ${tema} - descreva detalhadamente o que será feito]", 
+      "recursos": "[RECURSOS ESPECÍFICOS para esta etapa de fechamento, ex: fichas de avaliação, cartazes]" 
     }
   ],
   "recursos": [
     "[RECURSO 1 específico para ensinar ${tema}]",
     "[RECURSO 2 específico para ensinar ${tema}]",
-    "[RECURSO 3 específico para ensinar ${tema}]"
+    "[RECURSO 3 específico para ensinar ${tema}]",
+    "[RECURSO 4 específico para ensinar ${tema}]",
+    "[RECURSO 5 específico para ensinar ${tema}]"
   ],
   "conteudosProgramaticos": [
-    "[CONTEÚDO 1 específico sobre ${tema}]",
-    "[CONTEÚDO 2 específico sobre ${tema}]",
-    "[CONTEÚDO 3 específico sobre ${tema}]"
+    "[CONTEÚDO ESPECÍFICO 1 sobre ${tema}]",
+    "[CONTEÚDO ESPECÍFICO 2 sobre ${tema}]",
+    "[CONTEÚDO ESPECÍFICO 3 sobre ${tema}]"
   ],
-  "metodologia": "[METODOLOGIA ESPECÍFICA para ensinar ${tema} em ${disciplina} para ${serie}]",
-  "avaliacao": "[MÉTODO DE AVALIAÇÃO específico para verificar aprendizado sobre ${tema}]",
+  "metodologia": "[METODOLOGIA ESPECÍFICA e detalhada para ensinar ${tema} em ${disciplina} para ${serie} - descreva como será conduzida a aula]",
+  "avaliacao": "[MÉTODO DE AVALIAÇÃO específico para verificar aprendizado sobre ${tema} - descreva como será avaliado]",
   "referencias": [
-    "[REFERÊNCIA 1 sobre ${tema} em ${disciplina}]",
-    "[REFERÊNCIA 2 sobre ${tema} em ${disciplina}]",
-    "[REFERÊNCIA 3 sobre ${tema} em ${disciplina}]"
+    "[REFERÊNCIA BIBLIOGRÁFICA 1 sobre ${tema} em ${disciplina}]",
+    "[REFERÊNCIA BIBLIOGRÁFICA 2 sobre ${tema} em ${disciplina}]"
   ]
 }
 
-GERE conteúdo REAL e ESPECÍFICO. NÃO deixe placeholders ou campos genéricos.
+INSTRUÇÕES IMPORTANTES:
+1. GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". NÃO deixe placeholders ou campos genéricos.
+2. Cada etapa do desenvolvimento deve ter recursos ESPECÍFICOS para aquela etapa.
+3. A seção "recursos" deve conter TODOS os recursos que serão utilizados durante toda a aula.
+4. Use ortografia correta em português brasileiro.
+5. Os tempos devem somar aproximadamente a duração total da aula.
 `;
 
     case 'slides':
@@ -396,25 +401,36 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         parsedContent.serie = serie;
         parsedContent.tema = tema;
 
-        // Para planos de aula, garantir que recursos não sejam duplicados
+        // Para planos de aula, garantir estrutura correta dos recursos
         if (materialType === 'plano-de-aula' && parsedContent.desenvolvimento) {
-          const recursosEtapas = [];
+          // Coletar todos os recursos únicos das etapas para a seção "recursos"
+          const todosRecursos = new Set();
+          
           parsedContent.desenvolvimento.forEach(etapa => {
             if (etapa.recursos) {
+              // Limpar e separar recursos da etapa
               const recursos = typeof etapa.recursos === 'string' 
-                ? etapa.recursos.split(/,|e/).map(r => r.trim()) 
-                : etapa.recursos;
-              recursosEtapas.push(...recursos);
+                ? etapa.recursos.split(/,|e/).map(r => r.trim()).filter(r => r.length > 0)
+                : Array.isArray(etapa.recursos) ? etapa.recursos : [];
+              
+              recursos.forEach(recurso => todosRecursos.add(recurso));
             }
           });
           
-          const recursosGerais = Array.isArray(parsedContent.recursos) 
-            ? parsedContent.recursos 
-            : (typeof parsedContent.recursos === 'string' 
-              ? parsedContent.recursos.split(/,|e/).map(r => r.trim()) 
-              : []);
-          
-          parsedContent.recursos = Array.from(new Set([...recursosEtapas, ...recursosGerais])).filter(Boolean);
+          // Se não há recursos específicos na seção "recursos", usar os coletados das etapas
+          if (!parsedContent.recursos || parsedContent.recursos.length === 0) {
+            parsedContent.recursos = Array.from(todosRecursos);
+          } else {
+            // Combinar recursos existentes com os das etapas
+            const recursosExistentes = Array.isArray(parsedContent.recursos) 
+              ? parsedContent.recursos 
+              : (typeof parsedContent.recursos === 'string' 
+                ? parsedContent.recursos.split(/,|e/).map(r => r.trim()).filter(r => r.length > 0)
+                : []);
+            
+            recursosExistentes.forEach(recurso => todosRecursos.add(recurso));
+            parsedContent.recursos = Array.from(todosRecursos);
+          }
         }
 
         console.log('✅ Conteúdo parseado com sucesso:', materialType);

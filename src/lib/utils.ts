@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -14,4 +15,28 @@ export function formatarRecursosPT(recursos: string[]): string {
   if (recursos.length === 1) return recursos[0];
   if (recursos.length === 2) return recursos.join(' e ');
   return recursos.slice(0, -1).join(', ') + ' e ' + recursos[recursos.length - 1];
+}
+
+/**
+ * Normaliza e limpa uma string de recursos, removendo caracteres especiais e espaços extras
+ */
+export function normalizarRecursos(recursos: string | string[]): string[] {
+  if (!recursos) return [];
+  
+  if (typeof recursos === 'string') {
+    return recursos
+      .split(/[,;]|e(?=\s)/)
+      .map(item => item.trim())
+      .filter(item => item.length > 0)
+      .map(item => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase());
+  }
+  
+  if (Array.isArray(recursos)) {
+    return recursos
+      .map(item => item.trim())
+      .filter(item => item.length > 0)
+      .map(item => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase());
+  }
+  
+  return [];
 }
