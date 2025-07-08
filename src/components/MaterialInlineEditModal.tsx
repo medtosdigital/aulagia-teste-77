@@ -97,7 +97,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
         console.log('Saving material with updated HTML content');
       }
 
-      const success = materialService.updateMaterial(materialToSave.id, materialToSave);
+      const success = await materialService.updateMaterial(materialToSave.id, materialToSave);
       if (success) {
         toast.success('Material atualizado com sucesso!');
         activityService.addActivity({

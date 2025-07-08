@@ -310,11 +310,13 @@ class UserMaterialsService {
       }
 
       const updateData: any = {};
-      
       if (updates.title) updateData.titulo = updates.title;
-      if (updates.content) updateData.conteudo = updates.content;
+      if (updates.content) updateData.conteudo = typeof updates.content === 'string' ? updates.content : JSON.stringify(updates.content);
       if (updates.subject) updateData.disciplina = updates.subject;
       if (updates.grade) updateData.serie = updates.grade;
+      if (updates.type) updateData.tipo_material = updates.type;
+
+      console.log('Update data to send:', updateData);
 
       // Try to update in each table - RLS will ensure only user's own materials can be updated
       for (const [type, tableName] of Object.entries(TABLE_MAPPING)) {
@@ -333,6 +335,8 @@ class UserMaterialsService {
           if (!error) {
             console.log(`Material updated successfully in ${tableName}`);
             return true;
+          } else {
+            console.error(`Erro ao atualizar material na tabela ${tableName}:`, error.message);
           }
         }
       }

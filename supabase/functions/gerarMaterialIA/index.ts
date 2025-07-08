@@ -117,12 +117,12 @@ serve(async (req) => {
 });
 
 function generatePrompt(materialType: string, formData: MaterialFormData): string {
-  const tema = formData.tema || formData.topic || 'Conteúdo educacional';
-  const disciplina = formData.disciplina || formData.subject || 'Disciplina';
-  const serie = formData.serie || formData.grade || 'Série';
-  const professor = formData.professor || 'Professor';
-  const data = formData.data || new Date().toLocaleDateString('pt-BR');
-  const duracao = formData.duracao || '50 minutos';
+  const tema = formData.tema || formData.topic || '';
+  const disciplina = formData.disciplina || formData.subject || '';
+  const serie = formData.serie || formData.grade || '';
+  const professor = formData.professor || '';
+  const data = formData.data || '';
+  const duracao = formData.duracao || '';
   
   // Generate BNCC code for the prompt
   const bnccCode = generateBNCCCodeForSubject(disciplina, serie, tema);
@@ -353,12 +353,12 @@ Use nível apropriado para avaliação formal.
 }
 
 function parseGeneratedContent(materialType: string, content: string, formData: MaterialFormData): any {
-  const tema = formData.tema || formData.topic || 'Conteúdo';
-  const disciplina = formData.disciplina || formData.subject || 'Disciplina';
-  const serie = formData.serie || formData.grade || 'Série';
-  const professor = formData.professor || 'Professor';
-  const data = formData.data || new Date().toLocaleDateString('pt-BR');
-  const duracao = formData.duracao || '50 minutos';
+  const tema = formData.tema || formData.topic || '';
+  const disciplina = formData.disciplina || formData.subject || '';
+  const serie = formData.serie || formData.grade || '';
+  const professor = formData.professor || '';
+  const data = formData.data || '';
+  const duracao = formData.duracao || '';
 
   try {
     switch (materialType) {
@@ -386,22 +386,36 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
               tema: tema,
               duracao: parsedJson.duracao || '',
               bncc: parsedJson.bncc || '',
-              objetivos: parsedJson.objetivos && parsedJson.objetivos.length > 0 ? parsedJson.objetivos : generateDefaultObjectives(tema),
-              habilidades: parsedJson.habilidades && parsedJson.habilidades.length > 0 ? parsedJson.habilidades : generateDefaultSkills(tema),
-              desenvolvimento: parsedJson.desenvolvimento && parsedJson.desenvolvimento.length > 0 ? parsedJson.desenvolvimento : generateDefaultDevelopment(tema, duracao),
+              objetivos: parsedJson.objetivos || [],
+              habilidades: parsedJson.habilidades || [],
+              desenvolvimento: parsedJson.desenvolvimento || [],
               recursos: recursosUnicos,
-              conteudosProgramaticos: parsedJson.conteudosProgramaticos && parsedJson.conteudosProgramaticos.length > 0 ? parsedJson.conteudosProgramaticos : generateDefaultContent(tema),
-              metodologia: parsedJson.metodologia || `Metodologia ativa com exposição dialogada e atividades práticas sobre ${tema}`,
-              avaliacao: parsedJson.avaliacao || `Avaliação formativa através da participação ativa dos alunos durante as atividades sobre ${tema}`,
-              referencias: parsedJson.referencias && parsedJson.referencias.length > 0 ? parsedJson.referencias : [
-                'Base Nacional Comum Curricular (BNCC). Ministério da Educação, 2018.',
-                `Livro didático de ${disciplina} adotado pela escola.`,
-                'Recursos digitais e materiais didáticos complementares.'
-              ]
+              conteudosProgramaticos: parsedJson.conteudosProgramaticos || [],
+              metodologia: parsedJson.metodologia || '',
+              avaliacao: parsedJson.avaliacao || '',
+              referencias: parsedJson.referencias || []
             };
           }
         } catch (error) {
-          console.log('Failed to parse JSON, falling back to text parsing');
+          // Se não conseguir parsear JSON, retorna tudo vazio
+          return {
+            titulo: '',
+            professor,
+            data,
+            disciplina,
+            serie,
+            tema,
+            duracao: '',
+            bncc: '',
+            objetivos: [],
+            habilidades: [],
+            desenvolvimento: [],
+            recursos: [],
+            conteudosProgramaticos: [],
+            metodologia: '',
+            avaliacao: '',
+            referencias: []
+          };
         }
 
         // Fallback: parse bloco textual das etapas
@@ -430,24 +444,20 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
           tema,
           duracao: extractFieldFromContent(content, 'Tempo') || '',
           bncc: extractBNCCCodesFromContent(content) || '',
-          objetivos: extractObjectivesFromContent(content) || generateDefaultObjectives(tema),
-          habilidades: extractSkills(content) || generateDefaultSkills(tema),
+          objetivos: extractObjectivesFromContent(content) || [],
+          habilidades: extractSkills(content) || [],
           desenvolvimento,
           recursos: recursosUnicos,
-          conteudosProgramaticos: extractProgrammaticContent(content) || generateDefaultContent(tema),
-          metodologia: extractMethodology(content) || `Metodologia ativa com exposição dialogada e atividades práticas sobre ${tema}`,
-          avaliacao: extractEvaluation(content) || `Avaliação formativa através da participação ativa dos alunos durante as atividades sobre ${tema}`,
-          referencias: extractReferences(content) || [
-            'Base Nacional Comum Curricular (BNCC). Ministério da Educação, 2018.',
-            `Livro didático de ${disciplina} adotado pela escola.`,
-            'Recursos digitais e materiais didáticos complementares.'
-          ]
+          conteudosProgramaticos: extractProgrammaticContent(content) || [],
+          metodologia: extractMethodology(content) || '',
+          avaliacao: extractEvaluation(content) || '',
+          referencias: extractReferences(content) || []
         };
 
       case 'slides':
-        const slideContent = extractSlidesContent(content, tema, professor, data, disciplina, serie);
+        const slideContent = extractSlidesContent(content);
         return {
-          titulo: `Slides - ${tema}`,
+          titulo: '',
           professor,
           data,
           disciplina,
@@ -460,15 +470,15 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
 
       case 'atividade':
         return {
-          titulo: `Atividade - ${tema}`,
+          titulo: '',
           professor,
           data,
           disciplina,
           serie,
           tema,
-          duracao: extractFieldFromContent(content, 'Duração') || '',
-          bncc: extractBNCCCodesFromContent(content) || '',
-          instrucoes: extractFieldFromContent(content, 'Instruções') || '',
+          duracao: '',
+          bncc: '',
+          instrucoes: '',
           questoes: extractQuestions(content, formData.numeroQuestoes || 5) || [],
           criterios_avaliacao: extractFieldFromContent(content, 'Critérios') ? [extractFieldFromContent(content, 'Critérios')] : []
         };
@@ -476,15 +486,15 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
       case 'avaliacao':
         const assuntos = formData.assuntos || formData.subjects || [tema];
         return {
-          titulo: `Avaliação - ${assuntos.join(', ')}`,
+          titulo: '',
           professor,
           data,
           disciplina,
           serie,
-          tema: assuntos.join(', '),
-          duracao: extractFieldFromContent(content, 'Duração') || '',
-          bncc: extractBNCCCodesFromContent(content) || '',
-          instrucoes: extractFieldFromContent(content, 'Instruções') || '',
+          tema: '',
+          duracao: '',
+          bncc: '',
+          instrucoes: '',
           questoes: extractQuestions(content, formData.numeroQuestoes || 5) || [],
           criterios_avaliacao: extractFieldFromContent(content, 'Critérios') ? [extractFieldFromContent(content, 'Critérios')] : []
         };
@@ -493,21 +503,18 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         return { content };
     }
   } catch (error) {
-    console.error('Error parsing content:', error);
     return {
-      titulo: `${materialType} - ${tema}`,
+      titulo: '',
       professor,
       data,
       disciplina,
       serie,
       tema,
-      duracao: extractFieldFromContent(content, 'Tempo') || '',
-      content: content
+      duracao: '',
+      content: ''
     };
   }
 }
-
-function generateBNCCCodeForSubject(disciplina: string, serie: string, tema: string): string { return ''; }
 
 function extractBNCCCodesFromContent(content: string): string {
   const bnccPattern = /\*\*CÓDIGOS DA BNCC:\*\*([\s\S]*?)(?=\*\*|$)/i;
@@ -590,12 +597,6 @@ function extractResourcesFromContent(content: string): string[] {
   return [];
 }
 
-function generateDefaultObjectives(tema: string): string[] { return []; }
-function generateDefaultSkills(tema: string): string[] { return []; }
-function generateDefaultDevelopment(tema: string, duracao: string): any[] { return []; }
-function generateDefaultResources(): string[] { return []; }
-function generateDefaultContent(tema: string): string[] { return []; }
-
 function extractSkills(content: string): string[] {
   const sections = content.split(/\*\*.*HABILIDADES.*\*\*/i);
   if (sections.length > 1) {
@@ -654,61 +655,15 @@ function extractReferences(content: string): string[] {
   return [];
 }
 
-function extractSlidesContent(content: string, tema: string, professor: string, data: string, disciplina: string, serie: string): any {
-  const extractVariable = (varName: string) => {
-    const regex = new RegExp(`${varName}:\\s*\\[([^\\]]+)\\]`, 'i');
-    const match = content.match(regex);
-    return match ? match[1].trim() : `Conteúdo sobre ${tema}`;
-  };
-
-  return {
-    objetivo_1: extractVariable('objetivo_1'),
-    objetivo_2: extractVariable('objetivo_2'),
-    objetivo_3: extractVariable('objetivo_3'),
-    objetivo_4: extractVariable('objetivo_4'),
-    introducao_texto: extractVariable('introducao_texto'),
-    introducao_imagem: extractVariable('introducao_imagem'),
-    conceitos_texto: extractVariable('conceitos_texto'),
-    conceito_principal: extractVariable('conceito_principal'),
-    conceitos_imagem: extractVariable('conceitos_imagem'),
-    exemplo_titulo: extractVariable('exemplo_titulo'),
-    exemplo_conteudo: extractVariable('exemplo_conteudo'),
-    exemplo_imagem: extractVariable('exemplo_imagem'),
-    desenvolvimento_texto: extractVariable('desenvolvimento_texto'),
-    ponto_1: extractVariable('ponto_1'),
-    ponto_2: extractVariable('ponto_2'),
-    desenvolvimento_imagem: extractVariable('desenvolvimento_imagem'),
-    formula_titulo: extractVariable('formula_titulo'),
-    formula_principal: extractVariable('formula_principal'),
-    formula_explicacao: extractVariable('formula_explicacao'),
-    tabela_titulo: extractVariable('tabela_titulo'),
-    coluna_1: extractVariable('coluna_1'),
-    coluna_2: extractVariable('coluna_2'),
-    coluna_3: extractVariable('coluna_3'),
-    linha_1_col_1: extractVariable('linha_1_col_1'),
-    linha_1_col_2: extractVariable('linha_1_col_2'),
-    linha_1_col_3: extractVariable('linha_1_col_3'),
-    linha_2_col_1: extractVariable('linha_2_col_1'),
-    linha_2_col_2: extractVariable('linha_2_col_2'),
-    linha_2_col_3: extractVariable('linha_2_col_3'),
-    linha_3_col_1: extractVariable('linha_3_col_1'),
-    linha_3_col_2: extractVariable('linha_3_col_2'),
-    linha_3_col_3: extractVariable('linha_3_col_3'),
-    imagem_titulo: extractVariable('imagem_titulo'),
-    imagem_descricao: extractVariable('imagem_descricao'),
-    imagem_principal: extractVariable('imagem_principal'),
-    atividade_pergunta: extractVariable('atividade_pergunta'),
-    opcao_a: extractVariable('opcao_a'),
-    opcao_b: extractVariable('opcao_b'),
-    opcao_c: extractVariable('opcao_c'),
-    opcao_d: extractVariable('opcao_d'),
-    conclusao_texto: extractVariable('conclusao_texto'),
-    ponto_chave_1: extractVariable('ponto_chave_1'),
-    ponto_chave_2: extractVariable('ponto_chave_2'),
-    proximo_passo_1: extractVariable('proximo_passo_1'),
-    proximo_passo_2: extractVariable('proximo_passo_2'),
-    proximo_passo_3: extractVariable('proximo_passo_3')
-  };
+function extractSlidesContent(content: string): any {
+  // Implementação mínima: tenta parsear JSON, senão retorna campos vazios
+  try {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+  } catch {}
+  return {};
 }
 
 function extractQuestions(content: string, numQuestions: number): any[] {
@@ -740,31 +695,6 @@ function extractQuestions(content: string, numQuestions: number): any[] {
   }
   
   return questions.length > 0 ? questions : [];
-}
-
-function generateDefaultQuestions(tema: string, count: number): any[] {
-  const questions = [];
-  for (let i = 1; i <= count; i++) {
-    const isMultiple = i % 2 === 0;
-    const question: any = {
-      numero: i,
-      tipo: isMultiple ? 'multipla_escolha' : 'aberta',
-      pergunta: `Questão ${i} sobre ${tema}. ${isMultiple ? 'Assinale a alternativa correta:' : 'Desenvolva sua resposta de forma clara e objetiva:'}`
-    };
-    
-    if (isMultiple) {
-      question.alternativas = [
-        `Primeira alternativa relacionada a ${tema}`,
-        `Segunda alternativa sobre ${tema}`,
-        `Terceira alternativa referente a ${tema}`,
-        `Quarta alternativa acerca de ${tema}`
-      ];
-      question.resposta_correta = 0;
-    }
-    
-    questions.push(question);
-  }
-  return questions;
 }
 
 function extractFieldFromContent(content: string, fieldName: string): string {

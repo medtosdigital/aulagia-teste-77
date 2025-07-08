@@ -42,38 +42,27 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     setLoading(true);
     try {
       console.log('Saving material:', editedMaterial);
-      
-      const materials = JSON.parse(localStorage.getItem('generated_materials') || '[]');
-      const materialIndex = materials.findIndex((m: any) => m.id === editedMaterial.id);
-      
-      if (materialIndex !== -1) {
-        const updatedMaterial = {
-          ...editedMaterial,
-          updatedAt: new Date().toISOString()
-        };
-        
-        materials[materialIndex] = updatedMaterial;
-        localStorage.setItem('generated_materials', JSON.stringify(materials));
-        
-        console.log('Material saved successfully');
+      // Serializar o campo content como string antes de enviar
+      const materialToSave = {
+        ...editedMaterial,
+        content: typeof editedMaterial.content === 'string' ? editedMaterial.content : JSON.stringify(editedMaterial.content)
+      };
+      const success = await materialService.updateMaterial(materialToSave.id, materialToSave);
+      if (success) {
         toast.success('Material atualizado com sucesso!');
         onSave();
         onClose();
-
-        if (editedMaterial) {
-          activityService.addActivity({
-            type: 'updated',
-            title: `${editedMaterial.title}`,
-            description: `Material editado: ${editedMaterial.title} (${editedMaterial.type})`,
-            materialType: editedMaterial.type,
-            materialId: editedMaterial.id,
-            subject: editedMaterial.subject,
-            grade: editedMaterial.grade
-          });
-        }
+        activityService.addActivity({
+          type: 'updated',
+          title: `${editedMaterial.title}`,
+          description: `Material editado: ${editedMaterial.title} (${editedMaterial.type})`,
+          materialType: editedMaterial.type,
+          materialId: editedMaterial.id,
+          subject: editedMaterial.subject,
+          grade: editedMaterial.grade
+        });
       } else {
-        console.error('Material not found');
-        toast.error('Erro: Material não encontrado');
+        toast.error('Erro ao atualizar material');
       }
     } catch (error) {
       console.error('Save error:', error);

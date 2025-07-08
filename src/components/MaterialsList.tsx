@@ -198,11 +198,14 @@ const MaterialsList: React.FC = () => {
   const handleSaveEdit = () => {
     if (user) materialsCache.delete(`materials_${user.id}`);
     loadMaterials();
+    setEditModalOpen(false);
+    setSelectedMaterial(null);
   };
 
   const handleInlineEditSave = () => {
     if (user) materialsCache.delete(`materials_${user.id}`);
     loadMaterials();
+    setInlineEditModalOpen(false);
     setMaterialToEdit(null);
   };
 
