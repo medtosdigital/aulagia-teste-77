@@ -49,8 +49,22 @@ export function limparRecursosEtapa(recursos: string): string {
   
   // Remove caracteres fragmentados e normaliza
   return recursos
-    .replace(/,\s*,/g, ',') // Remove vírgulas duplas
+    .replace(/,\s*,+/g, ',') // Remove vírgulas duplas ou múltiplas
+    .replace(/^\s*,|,\s*$/g, '') // Remove vírgulas no início ou fim
     .replace(/\s+/g, ' ') // Normaliza espaços
     .replace(/([a-z]),\s*([A-Z])/g, '$1, $2') // Garante espaço após vírgula
     .trim();
+}
+
+/**
+ * Divide recursos de uma string em array, limitando a quantidade por etapa
+ */
+export function dividirRecursosPorEtapa(recursos: string, maxRecursos: number = 5): string[] {
+  if (!recursos || typeof recursos !== 'string') return [];
+  
+  return recursos
+    .split(',')
+    .map(recurso => recurso.trim())
+    .filter(recurso => recurso.length > 0)
+    .slice(0, maxRecursos); // Limita a quantidade máxima de recursos
 }
