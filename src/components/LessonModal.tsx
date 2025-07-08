@@ -192,4 +192,4 @@ const LessonModal: React.FC<LessonModalProps> = ({ open, onClose, event, onEdit,
   );
 };
 
-export default LessonModal; 
+export default LessonModal;
