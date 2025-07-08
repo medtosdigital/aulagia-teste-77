@@ -2086,12 +2086,20 @@ class TemplateService {
 
     // Formatar recursos de cada etapa do desenvolvimento, se houver
     if (Array.isArray(data.desenvolvimento)) {
-      data.desenvolvimento = data.desenvolvimento.map(etapa => ({
-        ...etapa,
-        recursos: etapa.recursos && Array.isArray(etapa.recursos)
-          ? formatarRecursosPT(etapa.recursos)
-          : (typeof etapa.recursos === 'string' ? formatarRecursosPT(etapa.recursos.split(/,| e /).map(r => r.trim()).filter(Boolean)) : '')
-      }));
+      data.desenvolvimento = data.desenvolvimento.map(etapa => {
+        // Garante que cada etapa mantenha apenas seus próprios recursos
+        let recursosEtapa = '';
+        if (Array.isArray(etapa.recursos)) {
+          recursosEtapa = formatarRecursosPT(etapa.recursos);
+        } else if (typeof etapa.recursos === 'string') {
+          // Divide e formata apenas os recursos desta etapa
+          recursosEtapa = formatarRecursosPT(etapa.recursos.split(/,| e /).map(r => r.trim()).filter(Boolean));
+        }
+        return {
+          ...etapa,
+          recursos: recursosEtapa
+        };
+      });
     }
 
     // Handle questoesContent for atividade and avaliacao templates
