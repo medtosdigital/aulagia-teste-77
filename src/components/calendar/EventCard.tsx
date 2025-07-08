@@ -148,7 +148,9 @@ const EventCard: React.FC<EventCardProps> = ({
           <span className={`text-white font-semibold ${isCompact ? 'text-xs' : 'text-sm sm:text-base'}`}>{typeConfig.label}</span>
         </div>
         {disciplina && (
-          <span className={`ml-1 ${typeConfig.badge} px-1 py-0.5 rounded-full text-[10px] font-medium truncate max-w-[60px]`}>{disciplina}</span>
+          <span className={`ml-1 ${typeConfig.badge} px-1 py-0.5 rounded-full text-[10px] font-medium truncate max-w-[60px]`}>
+            {disciplina ? disciplina.charAt(0).toUpperCase() + disciplina.slice(1) : ''}
+          </span>
         )}
       </div>
       {/* Informações em linhas, bem organizadas */}

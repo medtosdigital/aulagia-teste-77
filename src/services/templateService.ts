@@ -2096,7 +2096,7 @@ class TemplateService {
           recursosEtapa = formatarRecursosPT(etapa.recursos.split(/,| e /).map(r => r.trim()).filter(Boolean));
         }
         return {
-          ...etapa,
+        ...etapa,
           recursos: recursosEtapa
         };
       });
@@ -2135,27 +2135,27 @@ class TemplateService {
         blockHtml = array.map((item, index) => {
           let itemHtml = block.content;
           // Handle {{this}} para arrays simples
-          itemHtml = itemHtml.replace(/{{this}}/g, typeof item === 'string' ? item : '');
+        itemHtml = itemHtml.replace(/{{this}}/g, typeof item === 'string' ? item : '');
           // Handle propriedades do objeto
-          if (typeof item === 'object') {
-            Object.keys(item).forEach(prop => {
-              const propRegex = new RegExp(`{{${prop}}}`, 'g');
-              itemHtml = itemHtml.replace(propRegex, item[prop] || '');
-            });
-          }
+        if (typeof item === 'object') {
+          Object.keys(item).forEach(prop => {
+            const propRegex = new RegExp(`{{${prop}}}`, 'g');
+            itemHtml = itemHtml.replace(propRegex, item[prop] || '');
+          });
+        }
           // Handle @letter para opções (A, B, C, D)
-          itemHtml = itemHtml.replace(/{{@letter}}/g, String.fromCharCode(65 + index) + ')');
+        itemHtml = itemHtml.replace(/{{@letter}}/g, String.fromCharCode(65 + index) + ')');
           // Handle @last para renderização condicional
-          itemHtml = itemHtml.replace(/{{#unless @last}}([\s\S]*?){{\/unless}}/g, (match, content) => {
-            return index < array.length - 1 ? content : '';
-          });
+        itemHtml = itemHtml.replace(/{{#unless @last}}([\s\S]*?){{\/unless}}/g, (match, content) => {
+          return index < array.length - 1 ? content : '';
+        });
           // Handle blocos condicionais
-          const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
-          itemHtml = itemHtml.replace(ifRegex, (match, condition, content) => {
-            return item[condition] ? content : '';
-          });
-          return itemHtml;
-        }).join('');
+        const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
+        itemHtml = itemHtml.replace(ifRegex, (match, condition, content) => {
+          return item[condition] ? content : '';
+        });
+        return itemHtml;
+      }).join('');
       }
       htmlCopy = htmlCopy.replace(block.placeholder, blockHtml);
     });

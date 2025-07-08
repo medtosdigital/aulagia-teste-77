@@ -121,7 +121,7 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
                   <div className="flex flex-col">
                     <span className="font-medium text-gray-600">Disciplina:</span>
                     <span className="font-semibold text-gray-900">
-                      {disciplina}
+                      {disciplina ? disciplina.charAt(0).toUpperCase() + disciplina.slice(1) : ''}
                     </span>
                   </div>
                   <div className="flex flex-col">

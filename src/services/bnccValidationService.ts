@@ -5,6 +5,8 @@ interface BNCCValidation {
   feedback: string;
 }
 
+const SUPABASE_EDGE_URL = "https://xmxpteviwcnrljtxvaoo.supabase.co/functions/v1/validarTemaBNCC";
+
 export class BNCCValidationService {
   private static disciplineMapping: Record<string, string[]> = {
     'matemática': ['números', 'álgebra', 'geometria', 'estatística', 'probabilidade', 'grandezas', 'medidas'],
@@ -25,50 +27,27 @@ export class BNCCValidationService {
   };
 
   static async validateTopic(tema: string, disciplina: string, serie: string): Promise<BNCCValidation> {
-    // Simula chamada para API de validação
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    const normalizedDisciplina = disciplina.toLowerCase();
-    const normalizedTema = tema.toLowerCase();
-    
-    // Extrair categoria da série
-    const gradeCategory = serie.split('-')[0];
-    
-    // Verificar compatibilidade com disciplina
-    const disciplineKeywords = this.disciplineMapping[normalizedDisciplina] || [];
-    const disciplineMatch = disciplineKeywords.some(keyword => 
-      normalizedTema.includes(keyword)
-    );
-
-    // Verificar compatibilidade com série
-    const gradeKeywords = this.gradeTopics[gradeCategory] || [];
-    const gradeMatch = gradeKeywords.some(keyword => 
-      normalizedTema.includes(keyword)
-    );
-
-    const confidence = (disciplineMatch ? 0.6 : 0) + (gradeMatch ? 0.4 : 0);
-    const isValid = confidence >= 0.5;
-
-    let suggestions: string[] = [];
-    let feedback = '';
-
-    if (!isValid) {
-      if (!disciplineMatch) {
-        suggestions.push(`Temas relacionados a ${disciplina}: ${disciplineKeywords.slice(0, 3).join(', ')}`);
-      }
-      if (!gradeMatch) {
-        suggestions.push(`Temas adequados para ${gradeCategory}: ${gradeKeywords.slice(0, 3).join(', ')}`);
-      }
-      feedback = `O tema "${tema}" pode não estar totalmente alinhado com a BNCC para ${disciplina} - ${serie}.`;
-    } else {
-      feedback = `O tema "${tema}" está bem alinhado com a BNCC para ${disciplina} - ${serie}.`;
+    try {
+      const response = await fetch(SUPABASE_EDGE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tema, disciplina, serie })
+      });
+      if (!response.ok) throw new Error('Erro ao validar tema na BNCC');
+      const data = await response.json();
+      return {
+        isValid: !!data.alinhado,
+        confidence: data.alinhado ? 1 : 0,
+        suggestions: data.sugestoes || [],
+        feedback: data.mensagem || ''
+      };
+    } catch (e) {
+      return {
+        isValid: false,
+        confidence: 0,
+        suggestions: [],
+        feedback: 'Erro ao validar tema na BNCC.'
+      };
     }
-
-    return {
-      isValid,
-      confidence,
-      suggestions,
-      feedback
-    };
   }
 }

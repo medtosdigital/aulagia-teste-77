@@ -152,7 +152,7 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
 
             <!-- Informações da Avaliação -->
             <div class="subtitle-info">
-              ${answerKey.disciplina} ${answerKey.serie}<br>
+              ${answerKey.disciplina ? answerKey.disciplina.charAt(0).toUpperCase() + answerKey.disciplina.slice(1) : ''} ${answerKey.serie}<br>
               ${material?.type === 'avaliacao' ? 'Avaliação' : 'Atividade'}: ${material?.title}<br>
               Total de questões: ${answerKey.totalQuestoes}
             </div>
@@ -577,7 +577,7 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
               <div className="bg-green-50 p-3 sm:p-4 rounded-xl border border-green-200">
                 <h3 className="font-semibold text-green-800 mb-1 sm:mb-2 text-sm sm:text-base">{answerKey.titulo}</h3>
                 <p className="text-xs sm:text-sm text-green-700">
-                  {answerKey.disciplina} - {answerKey.serie}
+                  {answerKey.disciplina ? answerKey.disciplina.charAt(0).toUpperCase() + answerKey.disciplina.slice(1) : ''} {answerKey.serie}<br />
                 </p>
                 <p className="text-xs sm:text-sm text-green-700">
                   Total: {answerKey.totalQuestoes} questões

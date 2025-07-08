@@ -111,7 +111,7 @@ const MaterialViewer = () => {
           <h4 className="font-semibold text-sm text-gray-600 mb-2">Informações Básicas</h4>
           <div className="space-y-2 text-sm">
             <p><span className="font-medium">Professor:</span> {content.professor}</p>
-            <p><span className="font-medium">Disciplina:</span> {content.disciplina}</p>
+            <p><span className="font-medium">Disciplina:</span> {content.disciplina ? content.disciplina.charAt(0).toUpperCase() + content.disciplina.slice(1) : ''}</p>
             <p><span className="font-medium">Tema:</span> {content.tema}</p>
             <p><span className="font-medium">Duração:</span> {content.duracao}</p>
           </div>

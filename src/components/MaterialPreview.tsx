@@ -126,7 +126,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
               </tr>
               <tr>
                 <th>Disciplina:</th>
-                <td>${material.subject || '[DISCIPLINA]'}</td>
+                <td>${material.subject ? material.subject.charAt(0).toUpperCase() + material.subject.slice(1) : '[DISCIPLINA]'}</td>
                 <th>Série/Ano:</th>
                 <td>${material.grade || '[SERIE_ANO]'}</td>
               </tr>

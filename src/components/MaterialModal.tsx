@@ -445,7 +445,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
               <div className="text-sm text-gray-600 space-y-2">
                 <h3 className="font-semibold">Detalhes</h3>
                 <div>
-                  <span className="font-medium">Disciplina:</span> {material.subject}
+                  <span className="font-medium">Disciplina:</span> {material.subject ? material.subject.charAt(0).toUpperCase() + material.subject.slice(1) : ''}
                 </div>
                 <div>
                   <span className="font-medium">Turma:</span> {material.grade}

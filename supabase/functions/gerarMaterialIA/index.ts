@@ -160,7 +160,7 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
   "serie": "${serie}",
   "tema": "${tema}",
   "duracao": "[GERE uma duração adequada baseada no tema, por exemplo: 50 minutos, 100 minutos (2 aulas), etc]",
-  "bncc": "[BUSQUE e RETORNE códigos BNCC REAIS e específicos para ${tema} em ${disciplina} na ${serie}. Exemplo: EF05MA08, EF67LP03. Se não souber códigos específicos, deixe vazio]",
+  "bncc": "[BUSQUE e RETORNE códigos BNCC REAIS, ESPECÍFICOS e OBRIGATORIAMENTE EXATOS para o tema '${tema}' em ${disciplina} na ${serie}. O código BNCC deve ser SEMPRE o mais aderente e diretamente relacionado ao tema da aula, nunca genérico. Exemplo: Se o tema for 'Geometria', retorne apenas códigos BNCC que tratam de Geometria, como EF03MA17. NÃO retorne códigos de outros temas. Se não souber códigos específicos, deixe vazio.]",
   "objetivos": [
     "[OBJETIVO ESPECÍFICO 1 sobre ${tema}]",
     "[OBJETIVO ESPECÍFICO 2 sobre ${tema}]",

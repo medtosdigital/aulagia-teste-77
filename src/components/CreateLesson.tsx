@@ -271,7 +271,7 @@ const CreateLesson: React.FC = () => {
       const dataAtual = new Date().toLocaleDateString('pt-BR');
       // Padronizar campos do cabeçalho
       const tema = selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic;
-      const disciplina = formData.subject;
+      const disciplina = formData.subject ? formData.subject.charAt(0).toUpperCase() + formData.subject.slice(1) : '';
       const serie = formData.grade;
       const materialFormData = {
         tema,
@@ -775,7 +775,7 @@ const CreateLesson: React.FC = () => {
           open={showBNCCValidation} 
           onClose={() => setShowBNCCValidation(false)} 
           tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
-          disciplina={formData.subject} 
+          disciplina={disciplina} 
           serie={formData.grade} 
           onAccept={handleBNCCValidationAccept} 
         />
