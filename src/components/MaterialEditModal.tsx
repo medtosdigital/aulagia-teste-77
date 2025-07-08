@@ -44,7 +44,11 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
       console.log('Saving material:', editedMaterial);
       // Serializar o campo content como string antes de enviar
       const materialToSave = {
-        ...editedMaterial,
+        id: editedMaterial.id,
+        title: editedMaterial.title,
+        subject: editedMaterial.subject,
+        grade: editedMaterial.grade,
+        type: editedMaterial.type, // garantir que o tipo seja enviado
         content: typeof editedMaterial.content === 'string' ? editedMaterial.content : JSON.stringify(editedMaterial.content)
       };
       const success = await materialService.updateMaterial(materialToSave.id, materialToSave);
