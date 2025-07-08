@@ -2108,57 +2108,63 @@ class TemplateService {
       html = html.replace('{{questoesContent}}', questoesHtml);
     }
 
-    // Handle simple variables
+    // Handle simple variables (fora dos blocos #each)
+    // Substitui apenas variáveis que NÃO estão dentro de blocos {{#each}}
+    const eachRegex = /{{#each (\w+)}}([\s\S]*?){{\/each}}/g;
+    let eachBlocks: { key: string, content: string, placeholder: string }[] = [];
+    let htmlCopy = html;
+    let match;
+    let blockIndex = 0;
+    // Extrai blocos #each e substitui por placeholders temporários
+    while ((match = eachRegex.exec(htmlCopy)) !== null) {
+      const placeholder = `__EACH_BLOCK_${blockIndex}__`;
+      eachBlocks.push({ key: match[1], content: match[2], placeholder });
+      htmlCopy = htmlCopy.replace(match[0], placeholder);
+      blockIndex++;
+    }
+    // Substitui variáveis simples fora dos blocos #each
     Object.keys(data).forEach(key => {
       const regex = new RegExp(`{{${key}}}`, 'g');
-      html = html.replace(regex, data[key] || '');
+      htmlCopy = htmlCopy.replace(regex, data[key] || '');
     });
-
-    // Handle arrays with #each
-    const eachRegex = /{{#each (\w+)}}([\s\S]*?){{\/each}}/g;
-    html = html.replace(eachRegex, (match, arrayName, template) => {
-      const array = data[arrayName];
-      if (!Array.isArray(array)) return '';
-      
-      return array.map((item, index) => {
-        let itemHtml = template;
-        
-        // Handle {{this}} for simple arrays
-        itemHtml = itemHtml.replace(/{{this}}/g, typeof item === 'string' ? item : '');
-        
-        // Handle object properties
-        if (typeof item === 'object') {
-          Object.keys(item).forEach(prop => {
-            const propRegex = new RegExp(`{{${prop}}}`, 'g');
-            itemHtml = itemHtml.replace(propRegex, item[prop] || '');
+    // Restaura e processa os blocos #each normalmente
+    eachBlocks.forEach(block => {
+      const array = data[block.key];
+      let blockHtml = '';
+      if (Array.isArray(array)) {
+        blockHtml = array.map((item, index) => {
+          let itemHtml = block.content;
+          // Handle {{this}} para arrays simples
+          itemHtml = itemHtml.replace(/{{this}}/g, typeof item === 'string' ? item : '');
+          // Handle propriedades do objeto
+          if (typeof item === 'object') {
+            Object.keys(item).forEach(prop => {
+              const propRegex = new RegExp(`{{${prop}}}`, 'g');
+              itemHtml = itemHtml.replace(propRegex, item[prop] || '');
+            });
+          }
+          // Handle @letter para opções (A, B, C, D)
+          itemHtml = itemHtml.replace(/{{@letter}}/g, String.fromCharCode(65 + index) + ')');
+          // Handle @last para renderização condicional
+          itemHtml = itemHtml.replace(/{{#unless @last}}([\s\S]*?){{\/unless}}/g, (match, content) => {
+            return index < array.length - 1 ? content : '';
           });
-        }
-        
-        // Handle @letter for options (A, B, C, D)
-        itemHtml = itemHtml.replace(/{{@letter}}/g, String.fromCharCode(65 + index) + ')');
-        
-        // Handle @last for conditional rendering
-        itemHtml = itemHtml.replace(/{{#unless @last}}([\s\S]*?){{\/unless}}/g, (match, content) => {
-          return index < array.length - 1 ? content : '';
-        });
-        
-        // Handle conditional blocks
-        const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
-        itemHtml = itemHtml.replace(ifRegex, (match, condition, content) => {
-          return item[condition] ? content : '';
-        });
-        
-        return itemHtml;
-      }).join('');
+          // Handle blocos condicionais
+          const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
+          itemHtml = itemHtml.replace(ifRegex, (match, condition, content) => {
+            return item[condition] ? content : '';
+          });
+          return itemHtml;
+        }).join('');
+      }
+      htmlCopy = htmlCopy.replace(block.placeholder, blockHtml);
     });
-
     // Handle top-level conditional blocks
     const ifRegex = /{{#if (\w+)}}([\s\S]*?){{\/if}}/g;
-    html = html.replace(ifRegex, (match, condition, content) => {
+    htmlCopy = htmlCopy.replace(ifRegex, (match, condition, content) => {
       return data[condition] ? content : '';
     });
-
-    return html;
+    return htmlCopy;
   }
 
   private generateQuestionsHTML(questoes: any[], type: 'atividade' | 'avaliacao'): string {
