@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X } from 'lucide-react';
@@ -890,42 +891,42 @@ const CreateLesson: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
-        </main>
+          </main>
 
-        {/* Modal de validação BNCC */}
-        <BNCCValidationModal 
-          open={showBNCCValidation} 
-          onClose={handleBNCCValidationClose} 
-          tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
-          disciplina={formData.subject || ''} 
-          serie={formData.grade} 
-          onAccept={handleBNCCValidationAccept} 
-        />
+          {/* Modal de validação BNCC */}
+          <BNCCValidationModal 
+            open={showBNCCValidation} 
+            onClose={handleBNCCValidationClose} 
+            tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
+            disciplina={formData.subject || ''} 
+            serie={formData.grade} 
+            onAccept={handleBNCCValidationAccept} 
+          />
 
-        {/* Modal de visualização do material - aparece primeiro */}
-        <MaterialModal 
-          material={generatedMaterial} 
-          open={showMaterialModal || showNextStepsModal} 
-          onClose={handleMaterialModalClose} 
-        />
-        
-        {/* Modal de próximos passos - aparece por cima */}
-        <NextStepsModal
-          open={showNextStepsModal}
-          onClose={handleNextStepsClose}
-          onContinue={handleNextStepsContinue}
-          materialType={selectedType || ''}
-        />
-        
-        {/* Modal de upgrade que aparece quando o limite é atingido */}
-        <UpgradeModal
-          isOpen={isUpgradeModalOpen}
-          onClose={closeUpgradeModal}
-          currentPlan={currentPlan}
-          onPlanSelect={handlePlanSelection}
-        />
-      </>
+          {/* Modal de visualização do material - aparece primeiro */}
+          <MaterialModal 
+            material={generatedMaterial} 
+            open={showMaterialModal || showNextStepsModal} 
+            onClose={handleMaterialModalClose} 
+          />
+          
+          {/* Modal de próximos passos - aparece por cima */}
+          <NextStepsModal
+            open={showNextStepsModal}
+            onClose={handleNextStepsClose}
+            onContinue={handleNextStepsContinue}
+            materialType={selectedType || ''}
+          />
+          
+          {/* Modal de upgrade que aparece quando o limite é atingido */}
+          <UpgradeModal
+            isOpen={isUpgradeModalOpen}
+            onClose={closeUpgradeModal}
+            currentPlan={currentPlan}
+            onPlanSelect={handlePlanSelection}
+          />
+        </>
+      </FormErrorBoundary>
     );
   }
 
