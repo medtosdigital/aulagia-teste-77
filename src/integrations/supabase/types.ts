@@ -294,11 +294,18 @@ export type Database = {
       }
       planos_de_aula: {
         Row: {
+          avaliacoes: number | null
           conteudo: string
           created_at: string
           data_criacao: string
+          dias_semana: string[] | null
           disciplina: string | null
           id: string
+          meses: Json | null
+          observacoes: string | null
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          semanas: Json | null
           serie: string | null
           template_usado: string | null
           tipo_material: string
@@ -307,11 +314,18 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avaliacoes?: number | null
           conteudo: string
           created_at?: string
           data_criacao?: string
+          dias_semana?: string[] | null
           disciplina?: string | null
           id?: string
+          meses?: Json | null
+          observacoes?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          semanas?: Json | null
           serie?: string | null
           template_usado?: string | null
           tipo_material?: string
@@ -320,11 +334,18 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avaliacoes?: number | null
           conteudo?: string
           created_at?: string
           data_criacao?: string
+          dias_semana?: string[] | null
           disciplina?: string | null
           id?: string
+          meses?: Json | null
+          observacoes?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          semanas?: Json | null
           serie?: string | null
           template_usado?: string | null
           tipo_material?: string
