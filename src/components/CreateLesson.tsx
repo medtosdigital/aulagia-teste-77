@@ -228,7 +228,9 @@ const CreateLesson: React.FC = () => {
     setSelectedType(null);
   };
 
-  const handleFormSubmit = () => {
+  const handleFormSubmit = async () => {
+    console.log('🚀 Iniciando processo de geração de material');
+    
     // Verificar se atingiu limite antes de validar
     if (isLimitReached()) {
       toast.error('Limite de materiais atingido! Faça upgrade para continuar.');
@@ -256,30 +258,100 @@ const CreateLesson: React.FC = () => {
         return;
       }
     }
-    setShowBNCCValidation(true);
+
+    // INICIAR O PROCESSO: Abrir modal de carregamento
+    console.log('✅ Validações básicas OK - iniciando modal de carregamento');
+    setStep('generating');
+    setIsGenerating(true);
+    setGenerationProgress(10);
+
+    // Aguardar um pouco para mostrar o modal de carregamento
+    setTimeout(async () => {
+      console.log('🔍 Iniciando validação BNCC');
+      setGenerationProgress(20);
+      
+      try {
+        // Fazer a validação BNCC
+        const tema = selectedType === 'avaliacao' 
+          ? formData.subjects.filter(s => s.trim() !== '').join(', ') 
+          : formData.topic;
+        
+        const { BNCCValidationService } = await import('@/services/bnccValidationService');
+        const validationResult = await BNCCValidationService.validateTopic(
+          tema, 
+          formData.subject, 
+          formData.grade
+        );
+
+        console.log('📊 Resultado da validação BNCC:', validationResult);
+
+        if (!validationResult.isValid) {
+          console.log('⚠️ Tema não alinhado - fechando modal de carregamento e abrindo validação');
+          // Fechar modal de carregamento
+          setIsGenerating(false);
+          setStep('form');
+          setGenerationProgress(0);
+          
+          // Aguardar um pouco para a transição e então abrir modal de validação
+          setTimeout(() => {
+            setShowBNCCValidation(true);
+          }, 300);
+          return;
+        }
+
+        console.log('✅ Tema alinhado - continuando com geração');
+        setGenerationProgress(40);
+        
+        // Se chegou aqui, tema está alinhado - continuar com geração
+        await handleGenerate();
+        
+      } catch (error) {
+        console.error('❌ Erro na validação BNCC:', error);
+        // Em caso de erro na validação, continuar com a geração
+        setGenerationProgress(40);
+        await handleGenerate();
+      }
+    }, 800);
   };
 
   const handleBNCCValidationAccept = () => {
-    handleGenerate();
+    console.log('👤 Usuário aceitou gerar mesmo com tema não alinhado');
+    setShowBNCCValidation(false);
+    
+    // Voltar para modal de carregamento e continuar geração
+    setStep('generating');
+    setIsGenerating(true);
+    setGenerationProgress(40);
+    
+    setTimeout(() => {
+      handleGenerate();
+    }, 500);
+  };
+
+  const handleBNCCValidationClose = () => {
+    console.log('👤 Usuário fechou modal de validação BNCC');
+    setShowBNCCValidation(false);
+    // Usuário volta para o formulário para corrigir
   };
 
   const handleGenerate = async () => {
+    console.log('🏭 Iniciando geração do material');
+    
     // Verificar limite antes de gerar o material
     const canCreate = createMaterial();
     if (!canCreate) {
       toast.error('Limite de materiais atingido! Faça upgrade para continuar.');
+      setIsGenerating(false);
+      setStep('form');
       return;
     }
-    setStep('generating');
-    setIsGenerating(true);
-    setGenerationProgress(0);
+
     const progressSteps = [
-      { progress: 20, message: 'Analisando dados do formulário...' },
-      { progress: 40, message: 'Gerando conteúdo pedagógico...' },
-      { progress: 60, message: 'Aplicando padrões da BNCC...' },
-      { progress: 80, message: 'Salvando material...' },
-      { progress: 95, message: 'Finalizando...' }
+      { progress: 60, message: 'Gerando conteúdo pedagógico...' },
+      { progress: 80, message: 'Aplicando padrões da BNCC...' },
+      { progress: 95, message: 'Salvando material...' }
     ];
+
     let stepIndex = 0;
     const progressInterval = setInterval(() => {
       if (stepIndex < progressSteps.length) {
@@ -288,6 +360,7 @@ const CreateLesson: React.FC = () => {
         stepIndex++;
       }
     }, 800);
+
     try {
       // Buscar nome do professor (perfil)
       let professor = '';
@@ -295,12 +368,15 @@ const CreateLesson: React.FC = () => {
         const { data: profile } = await supabase.from('perfis').select('nome_preferido').eq('user_id', user.id).single();
         professor = profile?.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Professor';
       }
+
       // Data atual formato brasileiro
       const dataAtual = new Date().toLocaleDateString('pt-BR');
+
       // Padronizar campos do cabeçalho
       const tema = selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic;
       const disciplina = formData.subject ? formData.subject.charAt(0).toUpperCase() + formData.subject.slice(1) : '';
       const serie = formData.grade;
+
       const materialFormData = {
         tema,
         disciplina,
@@ -321,17 +397,21 @@ const CreateLesson: React.FC = () => {
           quantidadeQuestoes: formData.questionCount[0]
         } : {})
       };
+
       console.log('📋 Material form data being sent:', materialFormData);
       const material = await materialService.generateMaterial(selectedType!, materialFormData);
       console.log('✅ Material generated and saved successfully:', material.id);
+
       clearInterval(progressInterval);
       setGenerationProgress(100);
+
       setTimeout(() => {
         setIsGenerating(false);
         setGeneratedMaterial(material);
         setShowNextStepsModal(true);
         setStep('selection');
         toast.success(`${getCurrentTypeInfo()?.title} criado e salvo com sucesso!`);
+
         if (material) {
           activityService.addActivity({
             type: 'created',
@@ -344,6 +424,7 @@ const CreateLesson: React.FC = () => {
           });
         }
       }, 1000);
+
     } catch (error) {
       console.error('❌ Generation error:', error);
       clearInterval(progressInterval);
@@ -809,42 +890,42 @@ const CreateLesson: React.FC = () => {
                 </div>
               </div>
             </div>
-          </main>
+          </div>
+        </main>
 
-          {/* Modal de validação BNCC */}
-          <BNCCValidationModal 
-            open={showBNCCValidation} 
-            onClose={() => setShowBNCCValidation(false)} 
-            tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
-            disciplina={formData.subject || ''} 
-            serie={formData.grade} 
-            onAccept={handleBNCCValidationAccept} 
-          />
+        {/* Modal de validação BNCC */}
+        <BNCCValidationModal 
+          open={showBNCCValidation} 
+          onClose={handleBNCCValidationClose} 
+          tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
+          disciplina={formData.subject || ''} 
+          serie={formData.grade} 
+          onAccept={handleBNCCValidationAccept} 
+        />
 
-          {/* Modal de visualização do material - aparece primeiro */}
-          <MaterialModal 
-            material={generatedMaterial} 
-            open={showMaterialModal || showNextStepsModal} 
-            onClose={handleMaterialModalClose} 
-          />
-          
-          {/* Modal de próximos passos - aparece por cima */}
-          <NextStepsModal
-            open={showNextStepsModal}
-            onClose={handleNextStepsClose}
-            onContinue={handleNextStepsContinue}
-            materialType={selectedType || ''}
-          />
-          
-          {/* Modal de upgrade que aparece quando o limite é atingido */}
-          <UpgradeModal
-            isOpen={isUpgradeModalOpen}
-            onClose={closeUpgradeModal}
-            currentPlan={currentPlan}
-            onPlanSelect={handlePlanSelection}
-          />
-        </>
-      </FormErrorBoundary>
+        {/* Modal de visualização do material - aparece primeiro */}
+        <MaterialModal 
+          material={generatedMaterial} 
+          open={showMaterialModal || showNextStepsModal} 
+          onClose={handleMaterialModalClose} 
+        />
+        
+        {/* Modal de próximos passos - aparece por cima */}
+        <NextStepsModal
+          open={showNextStepsModal}
+          onClose={handleNextStepsClose}
+          onContinue={handleNextStepsContinue}
+          materialType={selectedType || ''}
+        />
+        
+        {/* Modal de upgrade que aparece quando o limite é atingido */}
+        <UpgradeModal
+          isOpen={isUpgradeModalOpen}
+          onClose={closeUpgradeModal}
+          currentPlan={currentPlan}
+          onPlanSelect={handlePlanSelection}
+        />
+      </>
     );
   }
 

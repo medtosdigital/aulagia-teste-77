@@ -32,45 +32,34 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
 }) => {
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [shouldShow, setShouldShow] = useState(false);
   const isMobile = useIsMobile();
 
+  // Reset validation when modal closes
   useEffect(() => {
-    if (open && tema && disciplina && serie) {
-      validateTopic();
-    }
-  }, [open, tema, disciplina, serie]);
-
-  const validateTopic = async () => {
-    console.log('🚀 Iniciando validação do tema:', { tema, disciplina, serie });
-    setIsLoading(true);
-    setShouldShow(false);
-    
-    try {
-      const result = await BNCCValidationService.validateTopic(tema, disciplina, serie);
-      console.log('📊 Resultado da validação:', result);
-      
-      setValidation(result);
-      
-      // Só mostra o modal se o tema NÃO estiver alinhado com a BNCC
-      if (!result.isValid) {
-        console.log('⚠️ Tema não alinhado - mostrando modal');
-        setShouldShow(true);
-      } else {
-        console.log('✅ Tema alinhado - prosseguindo sem modal');
-        // Se está alinhado, continua direto sem mostrar o modal
-        onAccept();
-        onClose();
-      }
-    } catch (error) {
-      console.error('❌ Erro na validação BNCC:', error);
-      // Em caso de erro, permite continuar sem mostrar modal
-      onAccept();
-      onClose();
-    } finally {
+    if (!open) {
+      setValidation(null);
       setIsLoading(false);
     }
-  };
+  }, [open]);
+
+  // Este modal só deve aparecer quando explicitamente aberto
+  // A validação já foi feita antes no CreateLesson
+  useEffect(() => {
+    if (open && tema && disciplina && serie) {
+      console.log('🔍 BNCCValidationModal aberto para tema não alinhado:', { tema, disciplina, serie });
+      // Simular dados de validação não alinhada (já sabemos que não está alinhado)
+      setValidation({
+        isValid: false,
+        confidence: 0.3,
+        suggestions: [
+          'Considere revisar o tema para melhor alinhamento com a BNCC',
+          'Verifique se o conteúdo está adequado para a série selecionada',
+          'Consulte as habilidades específicas da BNCC para esta disciplina'
+        ],
+        feedback: 'O tema proposto não está totalmente alinhado com as diretrizes da BNCC para esta disciplina e série. Recomendamos revisar o conteúdo ou escolher um tema mais adequado às habilidades esperadas.'
+      });
+    }
+  }, [open, tema, disciplina, serie]);
 
   const getGradeDisplayName = (serie: string) => {
     const parts = serie.split('-');
@@ -80,7 +69,6 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
   const handleAcceptAnyway = () => {
     console.log('👤 Usuário escolheu gerar mesmo assim');
     onAccept();
-    onClose();
   };
 
   const handleCorrectTopic = () => {
@@ -88,13 +76,13 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
     onClose();
   };
 
-  // Se está carregando ou não deve mostrar, não renderiza o modal
-  if (isLoading || !shouldShow || !validation || validation.isValid) {
+  // Só renderizar se estiver aberto e tiver dados de validação
+  if (!open || !validation || validation.isValid) {
     return null;
   }
 
   return (
-    <Dialog open={open && shouldShow} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className={`${
         isMobile 
           ? 'w-[95vw] h-[90vh] max-w-none max-h-none m-2 rounded-2xl' 
@@ -180,7 +168,7 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
                     <h4 className={`font-semibold text-green-800 mb-3 ${
                       isMobile ? 'text-sm' : 'text-base'
                     }`}>
-                      Sugestões de Temas Alternativos:
+                      Sugestões de Melhoria:
                     </h4>
                     <div className={`space-y-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       {validation.suggestions.map((suggestion, index) => (
