@@ -20,23 +20,35 @@ async function validarTema(tema: string, disciplina: string, serie: string) {
 
   const prompt = `Você é um especialista em educação brasileira e conhece profundamente a BNCC (Base Nacional Comum Curricular). 
 
-Analise se o tema "${tema}" está alinhado com a BNCC para a disciplina "${disciplina}" na série "${serie}".
+IMPORTANTE: Seja MUITO RIGOROSO na análise. Analise se o tema "${tema}" está EXATAMENTE alinhado com a BNCC para a disciplina "${disciplina}" na série "${serie}".
 
-IMPORTANTE: Seja rigoroso na análise. O tema deve estar claramente relacionado aos objetivos de aprendizagem e habilidades específicas da BNCC para essa disciplina e série.
+CRITÉRIOS RIGOROSOS:
+1. O tema deve corresponder EXATAMENTE às competências e habilidades específicas da BNCC para essa série e disciplina
+2. Deve estar adequado ao nível de desenvolvimento cognitivo da faixa etária
+3. Deve seguir a progressão curricular definida pela BNCC
+4. O vocabulário e conceitos devem ser apropriados para a série
 
-Se o tema NÃO estiver alinhado:
-- Explique brevemente por que não está alinhado
-- Sugira de 2 a 3 temas alternativos que estejam perfeitamente alinhados com a BNCC para essa disciplina e série
+INSTRUÇÕES ESPECÍFICAS:
+- Se o tema for muito avançado para a série: NÃO está alinhado
+- Se o tema for muito básico para a série: NÃO está alinhado  
+- Se o tema não aparecer nas competências da BNCC para essa série: NÃO está alinhado
+- Se houver inadequação de terminologia ou conceitos: NÃO está alinhado
+
+EXEMPLO DE ANÁLISE RIGOROSA:
+- "Equação do 1º grau" para 3º Ano do Ensino Fundamental I: NÃO ALINHADO (muito avançado, esse conteúdo é do 7º ano)
+- "Multiplicação e Divisão" para 3º Ano do Ensino Fundamental I: ALINHADO (adequado para a série)
+
+Se NÃO estiver alinhado, forneça 3 sugestões de temas que sejam PERFEITAMENTE adequados para "${disciplina}" no "${serie}" segundo a BNCC.
 
 Responda SEMPRE em JSON no formato:
 {
   "alinhado": true/false,
-  "mensagem": "explicação detalhada do resultado da análise",
-  "sugestoes": ["sugestão 1", "sugestão 2", "sugestão 3"] (apenas se não alinhado)
+  "mensagem": "explicação detalhada e específica sobre por que está ou não alinhado, citando a BNCC",
+  "sugestoes": ["sugestão 1 específica", "sugestão 2 específica", "sugestão 3 específica"] (apenas se não alinhado)
 }`;
 
   try {
-    console.log('Chamando OpenAI para validar tema:', { tema, disciplina, serie });
+    console.log('🔍 Validando tema na BNCC:', { tema, disciplina, serie });
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -49,62 +61,62 @@ Responda SEMPRE em JSON no formato:
         messages: [
           { 
             role: 'system', 
-            content: 'Você é um especialista em educação brasileira e BNCC. Sempre responda em português do Brasil e seja preciso na análise da adequação dos temas à BNCC.' 
+            content: 'Você é um especialista em educação brasileira e BNCC. Seja MUITO RIGOROSO na análise. Sempre responda em português do Brasil e seja preciso na análise da adequação dos temas à BNCC.' 
           },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.2,
-        max_tokens: 500
+        temperature: 0.1,
+        max_tokens: 800
       })
     });
 
     if (!response.ok) {
-      console.error('Erro na requisição OpenAI:', response.status, response.statusText);
+      console.error('❌ Erro na requisição OpenAI:', response.status, response.statusText);
       return {
-        alinhado: false,
+        alinhado: true, // Em caso de erro, permitir prosseguir
         mensagem: `Não foi possível validar o tema via OpenAI: ${response.statusText}`,
         sugestoes: []
       };
     }
 
     const data = await response.json();
-    console.log('Resposta da OpenAI:', data);
+    console.log('📊 Resposta da OpenAI:', data);
 
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('Resposta inválida da OpenAI:', data);
+      console.error('❌ Resposta inválida da OpenAI:', data);
       return {
-        alinhado: false,
+        alinhado: true,
         mensagem: 'Erro ao interpretar resposta da OpenAI.',
         sugestoes: []
       };
     }
 
     const content = data.choices[0].message.content;
-    console.log('Conteúdo da resposta:', content);
+    console.log('📝 Conteúdo da resposta:', content);
 
     try {
       const result = JSON.parse(content);
-      console.log('Resultado parseado:', result);
+      console.log('✅ Resultado parseado:', result);
       
       // Garantir que a resposta tenha a estrutura esperada
       return {
         alinhado: Boolean(result.alinhado),
-        mensagem: result.mensagem || 'Análise concluída.',
+        mensagem: result.mensagem || 'Análise BNCC concluída.',
         sugestoes: Array.isArray(result.sugestoes) ? result.sugestoes : []
       };
     } catch (parseError) {
-      console.error('Erro ao fazer parse da resposta JSON:', parseError, 'Conteúdo:', content);
+      console.error('❌ Erro ao fazer parse da resposta JSON:', parseError, 'Conteúdo:', content);
       return {
-        alinhado: false,
-        mensagem: 'Erro ao interpretar resposta da OpenAI.',
+        alinhado: true, // Em caso de erro, permitir prosseguir
+        mensagem: 'Erro ao interpretar resposta da validação BNCC.',
         sugestoes: []
       };
     }
   } catch (error) {
-    console.error('Erro na validação do tema:', error);
+    console.error('❌ Erro na validação do tema:', error);
     return {
-      alinhado: false,
-      mensagem: 'Erro interno ao validar o tema.',
+      alinhado: true, // Em caso de erro, permitir prosseguir
+      mensagem: 'Erro interno ao validar o tema na BNCC.',
       sugestoes: []
     };
   }
@@ -126,14 +138,14 @@ serve(async (req) => {
   try {
     const { tema, disciplina, serie } = await req.json();
     
-    console.log('Requisição recebida:', { tema, disciplina, serie });
+    console.log('📨 Requisição recebida:', { tema, disciplina, serie });
     
     if (!tema || !disciplina || !serie) {
       return new Response(
         JSON.stringify({ 
           error: "Campos obrigatórios: tema, disciplina, serie",
-          alinhado: false,
-          mensagem: "Dados incompletos para validação.",
+          alinhado: true,
+          mensagem: "Dados incompletos para validação BNCC.",
           sugestoes: []
         }),
         { 
@@ -145,18 +157,18 @@ serve(async (req) => {
 
     const resultado = await validarTema(tema, disciplina, serie);
     
-    console.log('Resultado final:', resultado);
+    console.log('🎯 Resultado final da validação:', resultado);
     
     return new Response(JSON.stringify(resultado), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error('Erro ao processar requisição:', error);
+    console.error('❌ Erro ao processar requisição:', error);
     return new Response(
       JSON.stringify({ 
         error: "Erro ao processar requisição", 
         details: error.message,
-        alinhado: false,
+        alinhado: true,
         mensagem: "Erro interno do servidor.",
         sugestoes: []
       }),

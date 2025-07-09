@@ -2,64 +2,34 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, BookOpen, Lightbulb, CheckCircle } from 'lucide-react';
-import { BNCCValidationService } from '@/services/bnccValidationService';
+import { AlertTriangle, BookOpen, Lightbulb, CheckCircle, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BNCCValidationModalProps {
   open: boolean;
   onClose: () => void;
+  validationData: {
+    isValid: boolean;
+    confidence: number;
+    suggestions: string[];
+    feedback: string;
+  } | null;
   tema: string;
   disciplina: string;
   serie: string;
   onAccept: () => void;
 }
 
-interface ValidationResult {
-  isValid: boolean;
-  confidence: number;
-  suggestions: string[];
-  feedback: string;
-}
-
 const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
   open,
   onClose,
+  validationData,
   tema,
   disciplina,
   serie,
   onAccept
 }) => {
-  const [validation, setValidation] = useState<ValidationResult | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
-
-  // Reset validation when modal closes
-  useEffect(() => {
-    if (!open) {
-      setValidation(null);
-      setIsLoading(false);
-    }
-  }, [open]);
-
-  // Este modal só deve aparecer quando explicitamente aberto
-  // A validação já foi feita antes no CreateLesson
-  useEffect(() => {
-    if (open && tema && disciplina && serie) {
-      console.log('🔍 BNCCValidationModal aberto para tema não alinhado:', { tema, disciplina, serie });
-      // Simular dados de validação não alinhada (já sabemos que não está alinhado)
-      setValidation({
-        isValid: false,
-        confidence: 0.3,
-        suggestions: [
-          'Considere revisar o tema para melhor alinhamento com a BNCC',
-          'Verifique se o conteúdo está adequado para a série selecionada',
-          'Consulte as habilidades específicas da BNCC para esta disciplina'
-        ],
-        feedback: 'O tema proposto não está totalmente alinhado com as diretrizes da BNCC para esta disciplina e série. Recomendamos revisar o conteúdo ou escolher um tema mais adequado às habilidades esperadas.'
-      });
-    }
-  }, [open, tema, disciplina, serie]);
 
   const getGradeDisplayName = (serie: string) => {
     const parts = serie.split('-');
@@ -76,8 +46,13 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
     onClose();
   };
 
-  // Só renderizar se estiver aberto e tiver dados de validação
-  if (!open || !validation || validation.isValid) {
+  // Se não estiver aberto ou não tiver dados de validação, não renderizar
+  if (!open || !validationData) {
+    return null;
+  }
+
+  // Se o tema estiver válido, não mostrar o modal
+  if (validationData.isValid) {
     return null;
   }
 
@@ -153,14 +128,14 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
                   <p className={`text-red-700 leading-relaxed break-words ${
                     isMobile ? 'text-xs' : 'text-sm'
                   }`}>
-                    {validation.feedback}
+                    {validationData.feedback}
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Sugestões */}
-            {validation.suggestions.length > 0 && (
+            {validationData.suggestions && validationData.suggestions.length > 0 && (
               <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                 <div className="flex items-start space-x-3">
                   <Lightbulb className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
@@ -168,10 +143,10 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
                     <h4 className={`font-semibold text-green-800 mb-3 ${
                       isMobile ? 'text-sm' : 'text-base'
                     }`}>
-                      Sugestões de Melhoria:
+                      Sugestões de Temas Alternativos:
                     </h4>
                     <div className={`space-y-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                      {validation.suggestions.map((suggestion, index) => (
+                      {validationData.suggestions.map((suggestion, index) => (
                         <div key={index} className="flex items-start text-green-700">
                           <div className="w-2 h-2 bg-green-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                           <span className="break-words leading-relaxed">{suggestion}</span>

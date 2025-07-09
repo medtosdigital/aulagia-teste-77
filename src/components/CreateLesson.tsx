@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X } from 'lucide-react';
@@ -37,6 +36,13 @@ interface MaterialTypeOption {
   blocked?: boolean;
 }
 
+interface ValidationResult {
+  isValid: boolean;
+  confidence: number;
+  suggestions: string[];
+  feedback: string;
+}
+
 // Cache em memória para listas auxiliares
 const subjectsCache = { data: null as string[] | null, timestamp: 0 };
 const gradesCache = { data: null as { category: string; options: string[] }[] | null, timestamp: 0 };
@@ -56,6 +62,7 @@ const getSubjects = () => {
   subjectsCache.timestamp = now;
   return subjectsCache.data;
 };
+
 const getGrades = () => {
   const now = Date.now();
   if (gradesCache.data && (now - gradesCache.timestamp) < AUX_CACHE_DURATION) {
@@ -120,6 +127,7 @@ const CreateLesson: React.FC = () => {
   const [showMaterialModal, setShowMaterialModal] = useState(false);
   const [showNextStepsModal, setShowNextStepsModal] = useState(false);
   const [showBNCCValidation, setShowBNCCValidation] = useState(false);
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
 
   // Hooks para gerenciamento de planos e limites
   const { createMaterial, isLimitReached, getRemainingMaterials, currentPlan, canPerformAction, canEditMaterials, canCreateAssessments } = usePlanPermissions();
@@ -229,6 +237,47 @@ const CreateLesson: React.FC = () => {
     setSelectedType(null);
   };
 
+  // Função para validar tema na BNCC usando a Edge Function
+  const validateBNCCTopic = async (tema: string, disciplina: string, serie: string): Promise<ValidationResult> => {
+    console.log('🔍 Iniciando validação BNCC via Edge Function:', { tema, disciplina, serie });
+    
+    try {
+      const response = await supabase.functions.invoke('validarTemaBNCC', {
+        body: { tema, disciplina, serie }
+      });
+
+      console.log('📡 Resposta da Edge Function:', response);
+
+      if (response.error) {
+        console.error('❌ Erro na Edge Function:', response.error);
+        throw new Error(response.error.message || 'Erro na validação BNCC');
+      }
+
+      const data = response.data;
+      
+      const result: ValidationResult = {
+        isValid: Boolean(data.alinhado),
+        confidence: data.alinhado ? 1 : 0,
+        suggestions: Array.isArray(data.sugestoes) ? data.sugestoes : [],
+        feedback: data.mensagem || 'Validação BNCC concluída.'
+      };
+
+      console.log('✅ Resultado da validação BNCC processado:', result);
+      return result;
+
+    } catch (error) {
+      console.error('❌ Erro ao validar tema na BNCC:', error);
+      
+      // Retornar um resultado de fallback em caso de erro
+      return {
+        isValid: true, // Em caso de erro, permitir prosseguir
+        confidence: 0,
+        suggestions: [],
+        feedback: 'Não foi possível validar o tema no momento. Prosseguindo com a criação do material.'
+      };
+    }
+  };
+
   const handleFormSubmit = async () => {
     console.log('🚀 Iniciando processo de geração de material');
     
@@ -268,26 +317,22 @@ const CreateLesson: React.FC = () => {
 
     // Aguardar um pouco para mostrar o modal de carregamento
     setTimeout(async () => {
-      console.log('🔍 Iniciando validação BNCC');
-      setGenerationProgress(20);
+      console.log('🔍 Iniciando validação BNCC rigorosa');
+      setGenerationProgress(30);
       
       try {
-        // Fazer a validação BNCC
+        // Fazer a validação BNCC RIGOROSA
         const tema = selectedType === 'avaliacao' 
           ? formData.subjects.filter(s => s.trim() !== '').join(', ') 
           : formData.topic;
         
-        const { BNCCValidationService } = await import('@/services/bnccValidationService');
-        const validationResult = await BNCCValidationService.validateTopic(
-          tema, 
-          formData.subject, 
-          formData.grade
-        );
-
+        const validationResult = await validateBNCCTopic(tema, formData.subject, formData.grade);
+        
         console.log('📊 Resultado da validação BNCC:', validationResult);
+        setValidationResult(validationResult);
 
         if (!validationResult.isValid) {
-          console.log('⚠️ Tema não alinhado - fechando modal de carregamento e abrindo validação');
+          console.log('⚠️ Tema NÃO alinhado com BNCC - abrindo modal de validação');
           // Fechar modal de carregamento
           setIsGenerating(false);
           setStep('form');
@@ -300,8 +345,8 @@ const CreateLesson: React.FC = () => {
           return;
         }
 
-        console.log('✅ Tema alinhado - continuando com geração');
-        setGenerationProgress(40);
+        console.log('✅ Tema alinhado com BNCC - continuando com geração');
+        setGenerationProgress(50);
         
         // Se chegou aqui, tema está alinhado - continuar com geração
         await handleGenerate();
@@ -309,7 +354,7 @@ const CreateLesson: React.FC = () => {
       } catch (error) {
         console.error('❌ Erro na validação BNCC:', error);
         // Em caso de erro na validação, continuar com a geração
-        setGenerationProgress(40);
+        setGenerationProgress(50);
         await handleGenerate();
       }
     }, 800);
@@ -322,7 +367,7 @@ const CreateLesson: React.FC = () => {
     // Voltar para modal de carregamento e continuar geração
     setStep('generating');
     setIsGenerating(true);
-    setGenerationProgress(40);
+    setGenerationProgress(50);
     
     setTimeout(() => {
       handleGenerate();
@@ -332,6 +377,7 @@ const CreateLesson: React.FC = () => {
   const handleBNCCValidationClose = () => {
     console.log('👤 Usuário fechou modal de validação BNCC');
     setShowBNCCValidation(false);
+    setValidationResult(null);
     // Usuário volta para o formulário para corrigir
   };
 
@@ -348,8 +394,8 @@ const CreateLesson: React.FC = () => {
     }
 
     const progressSteps = [
-      { progress: 60, message: 'Gerando conteúdo pedagógico...' },
-      { progress: 80, message: 'Aplicando padrões da BNCC...' },
+      { progress: 70, message: 'Gerando conteúdo pedagógico...' },
+      { progress: 85, message: 'Aplicando padrões da BNCC...' },
       { progress: 95, message: 'Salvando material...' }
     ];
 
@@ -585,6 +631,17 @@ const CreateLesson: React.FC = () => {
             </div>
           </div>
         </main>
+        
+        {/* Modal de validação BNCC */}
+        <BNCCValidationModal 
+          open={showBNCCValidation} 
+          onClose={handleBNCCValidationClose} 
+          validationData={validationResult}
+          tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
+          disciplina={formData.subject || ''} 
+          serie={formData.grade} 
+          onAccept={handleBNCCValidationAccept} 
+        />
         
         {/* Modal de visualização do material - aparece primeiro */}
         <MaterialModal 
@@ -897,6 +954,7 @@ const CreateLesson: React.FC = () => {
           <BNCCValidationModal 
             open={showBNCCValidation} 
             onClose={handleBNCCValidationClose} 
+            validationData={validationResult}
             tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
             disciplina={formData.subject || ''} 
             serie={formData.grade} 
@@ -953,7 +1011,9 @@ const CreateLesson: React.FC = () => {
                     Criando seu material...
                   </h2>
                   <p className="text-sm sm:text-base text-gray-600">
-                    Gerando conteúdo e salvando no seu perfil
+                    {generationProgress < 30 ? 'Validando tema na BNCC...' : 
+                     generationProgress < 50 ? 'Validação concluída!' :
+                     'Gerando conteúdo e salvando no seu perfil'}
                   </p>
                 </div>
                 
