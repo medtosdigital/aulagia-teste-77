@@ -2072,6 +2072,14 @@ class TemplateService {
   }
 
   renderTemplate(templateId: string, data: any): string {
+    // Forçar o uso do template padrão de atividade se o tipo for 'atividade'
+    if (data && (data.type === 'atividade' || data.tipo === 'atividade')) {
+      templateId = '3';
+    }
+    // Forçar o uso do template padrão de avaliação se o tipo for 'avaliacao'
+    if (data && (data.type === 'avaliacao' || data.tipo === 'avaliacao')) {
+      templateId = '4';
+    }
     const template = this.getTemplateById(templateId);
     if (!template) {
       throw new Error('Template não encontrado');
@@ -2177,6 +2185,57 @@ class TemplateService {
               `<span class="points">(${questao.pontuacao} pontos)</span>` : ''
             }
           </div>`;
+
+      // Renderizar imagem da questão, se houver
+      if (questao.imagem) {
+        questionHTML += `<div style='text-align:center;margin-bottom:10px;'><img src='${questao.imagem}' alt='Imagem da questão' style='max-width:180px;max-height:120px;object-fit:contain;border-radius:6px;border:1px solid #e5e7eb;background:#fff;padding:4px;'/></div>`;
+      }
+
+      // Renderizar ícones, se houver
+      if (questao.icones && Array.isArray(questao.icones)) {
+        questionHTML += `<div style='text-align:center;margin-bottom:10px;'>`;
+        questionHTML += questao.icones.map((icon) => {
+          switch (icon) {
+            case 'estrela':
+              return `<svg width='32' height='32' viewBox='0 0 24 24' fill='#facc15' stroke='#f59e42' stroke-width='1.5'><polygon points='12,2 15,9 22,9.5 17,14.5 18.5,22 12,18 5.5,22 7,14.5 2,9.5 9,9'/></svg>`;
+            case 'coracao':
+              return `<svg width='32' height='32' viewBox='0 0 24 24' fill='#ef4444'><path d='M12 21s-8-6.6-8-11.3C4 5.1 6.2 3 8.8 3c1.7 0 3.2 1.1 3.2 2.7C12 4.1 13.5 3 15.2 3 17.8 3 20 5.1 20 9.7c0 4.7-8 11.3-8 11.3z'/></svg>`;
+            case 'check':
+              return `<svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#22c55e' stroke-width='2'><polyline points='20 6 9 17 4 12'/></svg>`;
+            case 'x':
+              return `<svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#ef4444' stroke-width='2'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>`;
+            default:
+              return `<span style='font-size:2rem;margin:0 6px;'>[${icon}]</span>`;
+          }
+        }).join('');
+        questionHTML += `</div>`;
+      }
+
+      // Renderizar gráfico (SVG simples ou placeholder)
+      if (questao.grafico) {
+        if (questao.grafico.tipo === 'bar') {
+          questionHTML += `<div style='text-align:center;margin-bottom:10px;'><svg width='120' height='60'><rect x='10' y='30' width='15' height='20' fill='#6366f1'/><rect x='35' y='20' width='15' height='30' fill='#a78bfa'/><rect x='60' y='10' width='15' height='40' fill='#f59e42'/></svg><br><span style='color:#6366f1;font-size:0.95rem;'>[Gráfico de barras]</span></div>`;
+        } else if (questao.grafico.tipo === 'pie') {
+          questionHTML += `<div style='text-align:center;margin-bottom:10px;'><svg width='60' height='60' viewBox='0 0 32 32'><circle r='16' cx='16' cy='16' fill='#f3f4f6'/><path d='M16 16 L16 0 A16 16 0 0 1 32 16 Z' fill='#6366f1'/><path d='M16 16 L32 16 A16 16 0 0 1 16 32 Z' fill='#a78bfa'/></svg><br><span style='color:#6366f1;font-size:0.95rem;'>[Gráfico de pizza]</span></div>`;
+        } else if (questao.grafico.tipo === 'line') {
+          questionHTML += `<div style='text-align:center;margin-bottom:10px;'><svg width='120' height='60'><polyline points='10,50 30,30 50,40 70,20 90,30' fill='none' stroke='#6366f1' stroke-width='3'/></svg><br><span style='color:#6366f1;font-size:0.95rem;'>[Gráfico de linha]</span></div>`;
+        } else {
+          questionHTML += `<div style='text-align:center;margin-bottom:10px;'><span style='color:#6366f1;font-size:0.95rem;'>[Gráfico: ${questao.grafico.tipo || 'tipo'}]</span></div>`;
+        }
+      }
+
+      // Renderizar figura geométrica (SVG simples ou placeholder)
+      if (questao.figuraGeometrica) {
+        if (questao.figuraGeometrica.tipo === 'circulo') {
+          questionHTML += `<div style='text-align:center;margin-bottom:10px;'><svg width='60' height='60'><circle cx='30' cy='30' r='25' fill='#a7f3d0' stroke='#059669' stroke-width='3'/></svg><br><span style='color:#059669;font-size:0.95rem;'>[Círculo]</span></div>`;
+        } else if (questao.figuraGeometrica.tipo === 'triangulo') {
+          questionHTML += `<div style='text-align:center;margin-bottom:10px;'><svg width='60' height='60'><polygon points='30,10 10,50 50,50' fill='#fef08a' stroke='#eab308' stroke-width='3'/></svg><br><span style='color:#059669;font-size:0.95rem;'>[Triângulo]</span></div>`;
+        } else if (questao.figuraGeometrica.tipo === 'quadrado') {
+          questionHTML += `<div style='text-align:center;margin-bottom:10px;'><svg width='60' height='60'><rect x='10' y='10' width='40' height='40' fill='#dbeafe' stroke='#2563eb' stroke-width='3'/></svg><br><span style='color:#059669;font-size:0.95rem;'>[Quadrado]</span></div>`;
+        } else {
+          questionHTML += `<div style='text-align:center;margin-bottom:10px;'><span style='color:#059669;font-size:0.95rem;'>[Figura: ${questao.figuraGeometrica.tipo || 'tipo'}]</span></div>`;
+        }
+      }
 
       // Adicionar texto de interpretação se existir
       if (questao.textoInterpretacao) {

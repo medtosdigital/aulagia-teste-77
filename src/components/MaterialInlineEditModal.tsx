@@ -227,7 +227,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
                 <th>Aluno(a):</th>
                 <td class="student-info-cell">____________________________________________</td>
                 <th>${editedMaterial.type === 'avaliacao' ? 'NOTA:' : 'BNCC:'}</th>
-                <td class="student-info-cell ${editedMaterial.type === 'avaliacao' ? 'nota-highlight-cell' : ''}">${editedMaterial.type === 'avaliacao' ? '' : '{{Código da BNCC}}'}</td>
+                <td class="student-info-cell ${editedMaterial.type === 'avaliacao' ? 'nota-highlight-cell' : ''}">${editedMaterial.type === 'avaliacao' ? '' : '{bncc}'}</td>
               </tr>
             </table>
           `;

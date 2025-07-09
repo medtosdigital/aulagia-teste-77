@@ -10,6 +10,9 @@ import { toast } from 'sonner';
 import { materialService, type GeneratedMaterial, type LessonPlan, type Activity, type Slide, type Assessment } from '@/services/materialService';
 import { exportService } from '@/services/exportService';
 import MaterialEditModal from './MaterialEditModal';
+import { Bar, Line, Pie } from 'react-chartjs-2';
+import * as Icons from 'react-icons/fa';
+import { GeometryBoard } from 'react-dynamic-geometry';
 
 const MaterialViewer = () => {
   const { id } = useParams<{ id: string }>();
@@ -252,8 +255,9 @@ const MaterialViewer = () => {
             </CardHeader>
             <CardContent>
               <p className="text-sm mb-4">{questao.pergunta}</p>
-              
-              {questao.opcoes && (
+
+              {/* Múltipla escolha e verdadeiro/falso */}
+              {questao.opcoes && Array.isArray(questao.opcoes) && questao.opcoes.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">Opções:</p>
                   <ul className="space-y-1">
@@ -272,11 +276,100 @@ const MaterialViewer = () => {
                 </div>
               )}
 
+              {/* Questão de ligar */}
+              {questao.tipo === 'ligar' && questao.colunaA && questao.colunaB && (
+                <div className="flex gap-8 mt-2">
+                  <div>
+                    <p className="font-semibold text-xs mb-1">Coluna A</p>
+                    {questao.colunaA.map((item, idx) => (
+                      <div key={idx} className="border rounded px-2 py-1 mb-1 bg-gray-50">{idx + 1}) {item}</div>
+                    ))}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-xs mb-1">Coluna B</p>
+                    {questao.colunaB.map((item, idx) => (
+                      <div key={idx} className="border rounded px-2 py-1 mb-1 bg-gray-50">{String.fromCharCode(65 + idx)}) {item}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Questão de completar */}
+              {questao.tipo === 'completar' && questao.textoComLacunas && (
+                <div className="mt-2 p-2 bg-yellow-50 border rounded">
+                  <span className="font-mono">{questao.textoComLacunas}</span>
+                </div>
+              )}
+
+              {/* Questão dissertativa */}
+              {questao.tipo === 'dissertativa' && (
+                <div className="mt-2">
+                  {[...Array(questao.linhasResposta || 5)].map((_, i) => (
+                    <div key={i} className="border-b border-gray-300 my-2" style={{height: 24}} />
+                  ))}
+                </div>
+              )}
+
+              {/* Questão de verdadeiro/falso */}
+              {questao.tipo === 'verdadeiro_falso' && (
+                <div className="mt-2 flex gap-4">
+                  <div className="flex items-center"><span className="font-bold mr-1">( )</span> Verdadeiro</div>
+                  <div className="flex items-center"><span className="font-bold mr-1">( )</span> Falso</div>
+                </div>
+              )}
+
+              {/* Imagem da questão */}
+              {questao.imagem && (
+                <div className="flex justify-center mb-2">
+                  <img src={questao.imagem} alt="Imagem da questão" style={{maxWidth: 180, maxHeight: 120, objectFit: 'contain', borderRadius: 6, border: '1px solid #e5e7eb', background: '#fff', padding: 4}} />
+                </div>
+              )}
+
+              {/* Ícones da questão (reais) */}
+              {questao.icones && Array.isArray(questao.icones) && (
+                <div className="flex justify-center gap-2 mb-2">
+                  {questao.icones.map((icon, idx) => {
+                    const IconComp = Icons[icon as keyof typeof Icons];
+                    return IconComp ? <IconComp key={idx} size={32} /> : <span key={idx} style={{fontSize: '2rem'}}>[{icon}]</span>;
+                  })}
+                </div>
+              )}
+
+              {/* Gráfico real */}
+              {questao.grafico && (
+                <div className="flex justify-center mb-2">
+                  {questao.grafico.tipo === 'bar' && <Bar data={questao.grafico.data} options={questao.grafico.options || {}} />}
+                  {questao.grafico.tipo === 'line' && <Line data={questao.grafico.data} options={questao.grafico.options || {}} />}
+                  {questao.grafico.tipo === 'pie' && <Pie data={questao.grafico.data} options={questao.grafico.options || {}} />}
+                  {/* Fallback */}
+                  {!['bar','line','pie'].includes(questao.grafico.tipo) && <span className="text-indigo-600 text-sm">[Gráfico: {questao.grafico.tipo || 'tipo'}]</span>}
+                </div>
+              )}
+
+              {/* Figura geométrica real */}
+              {questao.figuraGeometrica && (
+                <div className="flex justify-center mb-2">
+                  <GeometryBoard>
+                    {(build: any) => {
+                      // Exemplo: desenhar círculo, triângulo, etc. com base em figuraGeometrica.tipo
+                      if (questao.figuraGeometrica.tipo === 'circulo') {
+                        return build('Circle', { center: { x: 0, y: 0 }, radius: 3 });
+                      }
+                      if (questao.figuraGeometrica.tipo === 'triangulo') {
+                        const A = build('Point', { x: 0, y: 0 });
+                        const B = build('Point', { x: 3, y: 0 });
+                        const C = build('Point', { x: 1.5, y: 2.5 });
+                        return build('Polygon', { vertices: [A, B, C] });
+                      }
+                      // Adicione outros tipos conforme necessário
+                      return <span className="text-green-600 text-sm">[Figura: {questao.figuraGeometrica.tipo || 'tipo'}]</span>;
+                    }}
+                  </GeometryBoard>
+                </div>
+              )}
+
               <div className="mt-3 pt-3 border-t border-gray-100">
-                <Badge variant={questao.tipo === 'multipla_escolha' ? 'default' : 'secondary'}>
-                  {questao.tipo === 'multipla_escolha' ? 'Múltipla Escolha' : 
-                   questao.tipo === 'verdadeiro_falso' ? 'Verdadeiro/Falso' : 'Questão Aberta'}
-                </Badge>
+                <Badge variant="secondary">{questao.tipo.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</Badge>
               </div>
             </CardContent>
           </Card>
@@ -334,7 +427,8 @@ const MaterialViewer = () => {
               <CardContent>
                 <p className="text-sm mb-4">{questao.pergunta}</p>
                 
-                {questao.opcoes && (
+                {/* Múltipla escolha e verdadeiro/falso */}
+                {questao.opcoes && Array.isArray(questao.opcoes) && questao.opcoes.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">Opções:</p>
                     <ul className="space-y-1">
@@ -350,10 +444,50 @@ const MaterialViewer = () => {
                   </div>
                 )}
 
+                {/* Questão de ligar */}
+                {questao.tipo === 'ligar' && questao.colunaA && questao.colunaB && (
+                  <div className="flex gap-8 mt-2">
+                    <div>
+                      <p className="font-semibold text-xs mb-1">Coluna A</p>
+                      {questao.colunaA.map((item, idx) => (
+                        <div key={idx} className="border rounded px-2 py-1 mb-1 bg-gray-50">{idx + 1}) {item}</div>
+                      ))}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-xs mb-1">Coluna B</p>
+                      {questao.colunaB.map((item, idx) => (
+                        <div key={idx} className="border rounded px-2 py-1 mb-1 bg-gray-50">{String.fromCharCode(65 + idx)}) {item}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Questão de completar */}
+                {questao.tipo === 'completar' && questao.textoComLacunas && (
+                  <div className="mt-2 p-2 bg-yellow-50 border rounded">
+                    <span className="font-mono">{questao.textoComLacunas}</span>
+                  </div>
+                )}
+
+                {/* Questão dissertativa */}
+                {questao.tipo === 'dissertativa' && (
+                  <div className="mt-2">
+                    {[...Array(questao.linhasResposta || 5)].map((_, i) => (
+                      <div key={i} className="border-b border-gray-300 my-2" style={{height: 24}} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Questão de verdadeiro/falso */}
+                {questao.tipo === 'verdadeiro_falso' && (
+                  <div className="mt-2 flex gap-4">
+                    <div className="flex items-center"><span className="font-bold mr-1">( )</span> Verdadeiro</div>
+                    <div className="flex items-center"><span className="font-bold mr-1">( )</span> Falso</div>
+                  </div>
+                )}
+
                 <div className="mt-3 pt-3 border-t border-gray-100">
-                  <Badge variant={questao.tipo === 'multipla_escolha' ? 'default' : 'secondary'}>
-                    {questao.tipo === 'multipla_escolha' ? 'Múltipla Escolha' : 'Dissertativa'}
-                  </Badge>
+                  <Badge variant="secondary">{questao.tipo.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</Badge>
                 </div>
               </CardContent>
             </Card>

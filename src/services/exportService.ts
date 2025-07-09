@@ -101,7 +101,7 @@ class ExportService {
                 <th>Aluno(a):</th>
                 <td class="student-info-cell">____________________________________________</td>
                 <th>${material.type === 'avaliacao' ? 'NOTA:' : 'BNCC:'}</th>
-                <td class="student-info-cell ${material.type === 'avaliacao' ? 'nota-highlight-cell' : ''}">${material.type === 'avaliacao' ? '' : '{{Código da BNCC}}'}</td>
+                <td className="student-info-cell ${material.type === 'avaliacao' ? 'nota-highlight-cell' : ''}">${material.type === 'avaliacao' ? '' : '{bncc}'}</td>
               </tr>
             </table>
           `;

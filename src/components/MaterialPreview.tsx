@@ -134,7 +134,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
                 <th>Aluno(a):</th>
                 <td class="student-info-cell">____________________________________________</td>
                 <th>${material.type === 'avaliacao' ? 'NOTA:' : 'BNCC:'}</th>
-                <td class="student-info-cell ${material.type === 'avaliacao' ? 'nota-highlight-cell' : ''}">${material.type === 'avaliacao' ? '' : '{{Código da BNCC}}'}</td>
+                <td class="student-info-cell ${material.type === 'avaliacao' ? 'nota-highlight-cell' : ''}">${material.type === 'avaliacao' ? '' : '{bncc}'}</td>
               </tr>
             </table>
           `;
@@ -619,7 +619,11 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
   };
 
   const renderMaterial = () => {
-    const selectedTemplateId = templateId || getDefaultTemplateId(material.type);
+    // Forçar template padrão para atividades e avaliações
+    let selectedTemplateId = templateId;
+    if (material.type === 'atividade') selectedTemplateId = '3';
+    if (material.type === 'avaliacao') selectedTemplateId = '4';
+    if (!selectedTemplateId) selectedTemplateId = getDefaultTemplateId(material.type);
     
     try {
       const renderedHtml = templateService.renderTemplate(selectedTemplateId, material.content);

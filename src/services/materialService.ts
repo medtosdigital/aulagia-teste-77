@@ -66,6 +66,14 @@ export interface Activity {
     pergunta: string;
     opcoes?: string[];
     resposta?: string;
+    imagem?: string;
+    icones?: string[];
+    grafico?: any;
+    figuraGeometrica?: any;
+    colunaA?: string[];
+    colunaB?: string[];
+    textoComLacunas?: string;
+    linhasResposta?: number;
   }>;
 }
 
@@ -86,6 +94,14 @@ export interface Assessment {
     pergunta: string;
     opcoes?: string[];
     pontuacao?: number;
+    imagem?: string;
+    icones?: string[];
+    grafico?: any;
+    figuraGeometrica?: any;
+    colunaA?: string[];
+    colunaB?: string[];
+    textoComLacunas?: string;
+    linhasResposta?: number;
   }>;
   htmlContent?: string;
 }

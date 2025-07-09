@@ -300,9 +300,43 @@ GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". Adapte à faixa etária de ${
       const numQuestoes = formData.numeroQuestoes || formData.quantidadeQuestoes || 5;
       const tipoQuestoes = formData.tipoQuestoes || 'mistas';
       return `
-Crie uma atividade educacional ESPECÍFICA sobre "${tema}" para ${disciplina} na ${serie}.
+Crie uma atividade educacional ESPECÍFICA sobre "${tema}" para ${disciplina} na ${serie}".
 
 IMPORTANTE: As questões devem ser ESPECÍFICAS sobre "${tema}". NÃO use questões genéricas.
+
+ATENÇÃO: NUNCA retorne o campo "bncc" como {bncc}, {{bncc}}, vazio ou com texto genérico. Se não souber o código exato, deixe o campo vazio.
+
+REGRAS CRÍTICAS PARA QUESTÕES FECHADAS:
+- Para questões de múltipla escolha, SEMPRE gere o campo "opcoes" com 5 alternativas reais e específicas (A, B, C, D, E), relacionadas ao enunciado. NÃO gere questões sem alternativas.
+- Para questões de ligar, SEMPRE gere os campos "colunaA" e "colunaB" com pelo menos 3 pares de itens relacionados ao tema. NÃO gere questões de ligar sem pares.
+- Para questões de verdadeiro/falso, SEMPRE gere o campo "opcoes": ["Verdadeiro", "Falso"].
+- Se não conseguir gerar alternativas reais, NÃO gere a questão.
+
+Sempre que a questão (inclusive aberta/dissertativa) fizer referência ou exigir visualização de uma imagem, gráfico, tabela, figura geométrica ou ícone, GERE o campo correspondente de forma SEMÂNTICA e EXATA ao enunciado. Exemplo: se a questão pede para analisar uma célula, gere uma imagem realista de célula; se pede para analisar um gráfico, gere um gráfico relevante ao contexto da pergunta; se pede para observar uma figura geométrica, gere a figura correta.
+
+Campos visuais possíveis:
+- "imagem": URL de uma imagem ilustrativa EXATA para a questão (ex: célula, gráfico, figura geométrica, tabela, etc)
+- "icones": array de nomes de ícones relevantes
+- "grafico": objeto com tipo, labels e dados para um gráfico real
+- "figuraGeometrica": tipo e parâmetros de uma figura geométrica real
+
+Esses campos podem aparecer em qualquer tipo de questão, inclusive abertas/dissertativas, sempre que o enunciado exigir ou mencionar o elemento visual.
+
+Exemplo de questão aberta com imagem:
+{
+  "numero": 2,
+  "tipo": "dissertativa",
+  "pergunta": "Observe a imagem da célula abaixo e descreva suas principais organelas.",
+  "imagem": "https://link-para-imagem-celula-realista.png"
+}
+
+Gere questões dos seguintes tipos, alternando entre eles se o tipo for 'mistas':
+- "multipla_escolha": sempre use o campo "opcoes" (ex: ["A", "B", "C", "D", "E"]), e adicione imagens ou ícones quando possível
+- "ligar": use os campos "colunaA" e "colunaB" (ex: colunaA: ["item1", "item2"], colunaB: ["resp1", "resp2"]), podendo adicionar imagens ou ícones em cada item
+- "verdadeiro_falso": use o campo "opcoes" com ["Verdadeiro", "Falso"]
+- "completar": use o campo "textoComLacunas" (ex: "O Sol é ___ e a Lua é ___")
+- "dissertativa": gere perguntas abertas com espaço para resposta
+- "desenho": gere perguntas abertas que peçam para o aluno desenhar ou criar algo visual (ex: "Desenhe um triângulo e pinte seus lados.")
 
 Retorne APENAS o JSON estruturado:
 
@@ -314,21 +348,39 @@ Retorne APENAS o JSON estruturado:
   "serie": "${serie}",
   "tema": "${tema}",
   "duracao": "[duração adequada para resolver atividade sobre ${tema}]",
-  "bncc": "[códigos BNCC relevantes para ${tema}]",
+  "bncc": "[BUSQUE e RETORNE códigos BNCC REAIS, ESPECÍFICOS e OBRIGATORIAMENTE EXATOS para o tema '${tema}' em ${disciplina} na ${serie}. O código BNCC deve ser SEMPRE o mais aderente e diretamente relacionado ao tema da atividade, nunca genérico. Exemplo: Se o tema for 'Geometria', retorne apenas códigos BNCC que tratam de Geometria, como EF03MA17. NÃO retorne códigos de outros temas. Se não souber códigos específicos, deixe vazio.]",
   "instrucoes": "Complete as questões abaixo sobre ${tema}. Leia atentamente cada enunciado antes de responder.",
   "questoes": [
     ${Array.from({length: numQuestoes}, (_, i) => `{
       "numero": ${i + 1},
-      "tipo": "${tipoQuestoes === 'fechadas' ? 'multipla_escolha' : tipoQuestoes === 'abertas' ? 'aberta' : (i % 2 === 0 ? 'multipla_escolha' : 'aberta')}",
+      "tipo": "${tipoQuestoes === 'fechadas' ? 'multipla_escolha' : tipoQuestoes === 'abertas' ? 'dissertativa' : tipoQuestoes === 'ligar' ? 'ligar' : tipoQuestoes === 'verdadeiro_falso' ? 'verdadeiro_falso' : tipoQuestoes === 'completar' ? 'completar' : (i % 5 === 0 ? 'multipla_escolha' : i % 5 === 1 ? 'ligar' : i % 5 === 2 ? 'verdadeiro_falso' : i % 5 === 3 ? 'completar' : 'dissertativa')}",
       "pergunta": "[PERGUNTA ${i + 1} específica sobre ${tema}]",
-      ${tipoQuestoes === 'fechadas' || (tipoQuestoes === 'mistas' && i % 2 === 0) ? `
-      "alternativas": [
+      ${(tipoQuestoes === 'fechadas' || (tipoQuestoes === 'mistas' && i % 5 === 0)) ? `
+      "opcoes": [
         "[alternativa A específica sobre ${tema}]",
         "[alternativa B específica sobre ${tema}]",
         "[alternativa C específica sobre ${tema}]",
-        "[alternativa D específica sobre ${tema}]"
+        "[alternativa D específica sobre ${tema}]",
+        "[alternativa E específica sobre ${tema}]"
       ],
       "resposta_correta": 0` : ''}
+      ${(tipoQuestoes === 'ligar' || (tipoQuestoes === 'mistas' && i % 5 === 1)) ? `
+      "colunaA": [
+        "[item 1 de coluna A sobre ${tema}]",
+        "[item 2 de coluna A sobre ${tema}]",
+        "[item 3 de coluna A sobre ${tema}]"
+      ],
+      "colunaB": [
+        "[item 1 de coluna B correspondente sobre ${tema}]",
+        "[item 2 de coluna B correspondente sobre ${tema}]",
+        "[item 3 de coluna B correspondente sobre ${tema}]"
+      ]` : ''}
+      ${(tipoQuestoes === 'verdadeiro_falso' || (tipoQuestoes === 'mistas' && i % 5 === 2)) ? `
+      "opcoes": ["Verdadeiro", "Falso"],
+      "resposta_correta": 0` : ''}
+      ${(tipoQuestoes === 'completar' || (tipoQuestoes === 'mistas' && i % 5 === 3)) ? `
+      "textoComLacunas": "[Frase com lacunas sobre ${tema}]"` : ''}
+      // dissertativa não precisa de campo extra
     }`).join(',\n    ')}
   ],
   "criterios_avaliacao": [
@@ -415,7 +467,6 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     if (jsonMatch) {
       try {
         const parsedContent = JSON.parse(jsonMatch[0]);
-        
         // Preserve form fields
         parsedContent.professor = professor;
         parsedContent.data = data;
@@ -423,38 +474,99 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         parsedContent.serie = serie;
         parsedContent.tema = tema;
 
+        // Validação rigorosa do campo BNCC para atividades e planos de aula
+        if (parsedContent.bncc) {
+          const bncc = parsedContent.bncc.trim();
+          if (
+            bncc === '' ||
+            bncc === '{bncc}' ||
+            bncc === '{{bncc}}' ||
+            bncc.toLowerCase().includes('busque e retorne códigos bncc') ||
+            bncc.toLowerCase().includes('códigos bncc relevantes') ||
+            bncc.toLowerCase().includes('exemplo: se o tema for')
+          ) {
+            parsedContent.bncc = '';
+          }
+        }
+
         // Special handling for lesson plans - ensure resources are properly structured per stage
         if (materialType === 'plano-de-aula' && parsedContent.desenvolvimento) {
           console.log('🔧 Processing lesson plan resources by stage');
-          
           // Process each stage to ensure unique and limited resources
           const processedEtapas = parsedContent.desenvolvimento.map((etapa: any, index: number) => {
             if (etapa.recursos && typeof etapa.recursos === 'string') {
               // Clean and limit resources for this specific stage
               const cleanedResources = cleanResourcesForStage(etapa.recursos);
               etapa.recursos = cleanedResources.join(', ');
-              
               console.log(`✅ Stage ${etapa.etapa}: ${cleanedResources.length} resources - ${etapa.recursos}`);
             }
             return etapa;
           });
-          
           parsedContent.desenvolvimento = processedEtapas;
-
           // Create comprehensive resources list from all stages without duplicates
           const allResources = new Set<string>();
-          
           parsedContent.desenvolvimento.forEach((etapa: any) => {
             if (etapa.recursos && typeof etapa.recursos === 'string') {
               const recursos = etapa.recursos.split(',').map((r: string) => r.trim()).filter((r: string) => r.length > 0);
               recursos.forEach((recurso: string) => allResources.add(recurso));
             }
           });
-          
           // Update main resources list
           parsedContent.recursos = Array.from(allResources);
-          
           console.log(`📋 Total unique resources: ${parsedContent.recursos.length}`);
+        }
+
+        // Compatibilidade retroativa: converter 'alternativas' para 'opcoes' em cada questão e garantir campos corretos para todos os tipos
+        if (parsedContent.questoes && Array.isArray(parsedContent.questoes)) {
+          let tiposPermitidos = formData.tiposQuestoes || [];
+          if (!Array.isArray(tiposPermitidos) || tiposPermitidos.length === 0) {
+            tiposPermitidos = ['multipla_escolha', 'ligar', 'verdadeiro_falso', 'completar', 'dissertativa', 'desenho'];
+          }
+          parsedContent.questoes = parsedContent.questoes
+            .map((q: any) => {
+              // Compatibilidade: mapear 'aberta' para 'dissertativa'
+              if (q.tipo === 'aberta') q.tipo = 'dissertativa';
+              // Múltipla escolha e verdadeiro/falso
+              if (q.alternativas && !q.opcoes) {
+                q.opcoes = q.alternativas;
+                delete q.alternativas;
+              }
+              // Verdadeiro/Falso: garantir opcoes
+              if (q.tipo === 'verdadeiro_falso' && (!q.opcoes || q.opcoes.length === 0)) {
+                q.opcoes = ['Verdadeiro', 'Falso'];
+              }
+              // Ligar: garantir colunas
+              if (q.tipo === 'ligar') {
+                q.colunaA = q.colunaA || [];
+                q.colunaB = q.colunaB || [];
+              }
+              // Completar: garantir textoComLacunas
+              if (q.tipo === 'completar' && !q.textoComLacunas) {
+                q.textoComLacunas = '';
+              }
+              // Dissertativa: garantir linhasResposta
+              if (q.tipo === 'dissertativa' && !q.linhasResposta) {
+                q.linhasResposta = 5;
+              }
+              // Garantir que campos visuais sejam preservados em qualquer tipo
+              q.imagem = q.imagem || undefined;
+              q.grafico = q.grafico || undefined;
+              q.figuraGeometrica = q.figuraGeometrica || undefined;
+              q.icones = q.icones || undefined;
+              return q;
+            })
+            .filter((q: any) => {
+              // Filtrar apenas tipos permitidos
+              if (!tiposPermitidos.includes(q.tipo)) return false;
+              // Multipla escolha: precisa de opcoes
+              if (q.tipo === 'multipla_escolha' && (!q.opcoes || q.opcoes.length < 4)) return false;
+              // Ligar: precisa de colunas
+              if (q.tipo === 'ligar' && (!q.colunaA || q.colunaA.length < 2 || !q.colunaB || q.colunaB.length < 2)) return false;
+              // Verdadeiro/falso: precisa de opcoes
+              if (q.tipo === 'verdadeiro_falso' && (!q.opcoes || q.opcoes.length < 2)) return false;
+              // Desenho: não precisa de campo extra
+              return true;
+            });
         }
 
         console.log('✅ Content parsed successfully:', materialType);
@@ -493,3 +605,4 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     };
   }
 }
+

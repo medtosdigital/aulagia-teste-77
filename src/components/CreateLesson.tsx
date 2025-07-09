@@ -421,6 +421,16 @@ const CreateLesson: React.FC = () => {
       const disciplina = formData.subject ? formData.subject.charAt(0).toUpperCase() + formData.subject.slice(1) : '';
       const serie = formData.grade;
 
+      const tipoQuestoes = formData.questionType;
+      let tiposQuestoesArray: string[] = [];
+      if (tipoQuestoes === 'abertas') {
+        tiposQuestoesArray = ['dissertativa', 'completar', 'desenho'];
+      } else if (tipoQuestoes === 'fechadas') {
+        tiposQuestoesArray = ['multipla_escolha', 'ligar', 'verdadeiro_falso'];
+      } else {
+        tiposQuestoesArray = ['multipla_escolha', 'ligar', 'verdadeiro_falso', 'completar', 'dissertativa', 'desenho'];
+      }
+
       const materialFormData = {
         tema,
         disciplina,
@@ -429,14 +439,13 @@ const CreateLesson: React.FC = () => {
         data: dataAtual,
         duracao: '50 minutos',
         bncc: 'Habilidade(s) da BNCC relacionada(s) ao tema',
-        // campos extras para outros tipos
         ...(selectedType === 'avaliacao' ? {
           assuntos: formData.subjects.filter(s => s.trim() !== ''),
           subjects: formData.subjects.filter(s => s.trim() !== '')
         } : {}),
         ...(selectedType === 'atividade' || selectedType === 'avaliacao' ? {
-          tipoQuestoes: formData.questionType,
-          tiposQuestoes: [formData.questionType],
+          tipoQuestoes,
+          tiposQuestoes: tiposQuestoesArray,
           numeroQuestoes: formData.questionCount[0],
           quantidadeQuestoes: formData.questionCount[0]
         } : {})
