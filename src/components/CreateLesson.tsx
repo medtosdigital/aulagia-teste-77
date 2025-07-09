@@ -237,49 +237,8 @@ const CreateLesson: React.FC = () => {
     setSelectedType(null);
   };
 
-  // Função para validar tema na BNCC usando a Edge Function
-  const validateBNCCTopic = async (tema: string, disciplina: string, serie: string): Promise<ValidationResult> => {
-    console.log('🔍 Iniciando validação BNCC via Edge Function:', { tema, disciplina, serie });
-    
-    try {
-      const response = await supabase.functions.invoke('validarTemaBNCC', {
-        body: { tema, disciplina, serie }
-      });
-
-      console.log('📡 Resposta da Edge Function:', response);
-
-      if (response.error) {
-        console.error('❌ Erro na Edge Function:', response.error);
-        throw new Error(response.error.message || 'Erro na validação BNCC');
-      }
-
-      const data = response.data;
-      
-      const result: ValidationResult = {
-        isValid: Boolean(data.alinhado),
-        confidence: data.alinhado ? 1 : 0,
-        suggestions: Array.isArray(data.sugestoes) ? data.sugestoes : [],
-        feedback: data.mensagem || 'Validação BNCC concluída.'
-      };
-
-      console.log('✅ Resultado da validação BNCC processado:', result);
-      return result;
-
-    } catch (error) {
-      console.error('❌ Erro ao validar tema na BNCC:', error);
-      
-      // Retornar um resultado de fallback em caso de erro
-      return {
-        isValid: true, // Em caso de erro, permitir prosseguir
-        confidence: 0,
-        suggestions: [],
-        feedback: 'Não foi possível validar o tema no momento. Prosseguindo com a criação do material.'
-      };
-    }
-  };
-
   const handleFormSubmit = async () => {
-    console.log('🚀 Iniciando processo de geração de material');
+    console.log('🚀 Iniciando processo de criação de material');
     
     // Verificar se atingiu limite antes de validar
     if (isLimitReached()) {
@@ -309,68 +268,103 @@ const CreateLesson: React.FC = () => {
       }
     }
 
-    // INICIAR O PROCESSO: Abrir modal de carregamento
-    console.log('✅ Validações básicas OK - iniciando modal de carregamento');
+    // ETAPA 1: Abrir modal de carregamento
+    console.log('📊 Iniciando validação BNCC - abrindo modal de carregamento');
     setStep('generating');
     setIsGenerating(true);
-    setGenerationProgress(10);
+    setGenerationProgress(20);
 
-    // Aguardar um pouco para mostrar o modal de carregamento
-    setTimeout(async () => {
-      console.log('🔍 Iniciando validação BNCC rigorosa');
-      setGenerationProgress(30);
+    // Aguardar um pouco para mostrar o modal
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    try {
+      // ETAPA 2: Validar tema na BNCC
+      console.log('🔍 Chamando validação BNCC rigorosa');
+      setGenerationProgress(40);
       
-      try {
-        // Fazer a validação BNCC RIGOROSA
-        const tema = selectedType === 'avaliacao' 
-          ? formData.subjects.filter(s => s.trim() !== '').join(', ') 
-          : formData.topic;
-        
-        const validationResult = await validateBNCCTopic(tema, formData.subject, formData.grade);
-        
-        console.log('📊 Resultado da validação BNCC:', validationResult);
-        setValidationResult(validationResult);
-
-        if (!validationResult.isValid) {
-          console.log('⚠️ Tema NÃO alinhado com BNCC - abrindo modal de validação');
-          // Fechar modal de carregamento
-          setIsGenerating(false);
-          setStep('form');
-          setGenerationProgress(0);
-          
-          // Aguardar um pouco para a transição e então abrir modal de validação
-          setTimeout(() => {
-            setShowBNCCValidation(true);
-          }, 300);
-          return;
+      const tema = selectedType === 'avaliacao' 
+        ? formData.subjects.filter(s => s.trim() !== '').join(', ') 
+        : formData.topic;
+      
+      // Extrair série sem a categoria
+      const serieParaValidacao = formData.grade.includes('-') 
+        ? formData.grade.split('-')[1] 
+        : formData.grade;
+      
+      console.log('📋 Dados para validação:', { tema, disciplina: formData.subject, serie: serieParaValidacao });
+      
+      const validationResponse = await supabase.functions.invoke('validarTemaBNCC', {
+        body: { 
+          tema, 
+          disciplina: formData.subject, 
+          serie: serieParaValidacao 
         }
+      });
 
-        console.log('✅ Tema alinhado com BNCC - continuando com geração');
-        setGenerationProgress(50);
-        
-        // Se chegou aqui, tema está alinhado - continuar com geração
-        await handleGenerate();
-        
-      } catch (error) {
-        console.error('❌ Erro na validação BNCC:', error);
-        // Em caso de erro na validação, continuar com a geração
-        setGenerationProgress(50);
-        await handleGenerate();
+      if (validationResponse.error) {
+        console.error('❌ Erro na validação BNCC:', validationResponse.error);
+        throw new Error(validationResponse.error.message);
       }
-    }, 800);
+
+      const validationData = validationResponse.data;
+      console.log('📊 Resultado da validação BNCC:', validationData);
+
+      const validationResult: ValidationResult = {
+        isValid: Boolean(validationData.alinhado),
+        confidence: validationData.alinhado ? 1 : 0,
+        suggestions: Array.isArray(validationData.sugestoes) ? validationData.sugestoes : [],
+        feedback: validationData.mensagem || 'Validação BNCC concluída.'
+      };
+
+      setValidationResult(validationResult);
+
+      // ETAPA 3: Verificar resultado da validação
+      if (!validationResult.isValid) {
+        console.log('⚠️ Tema NÃO alinhado com BNCC - parando processo e abrindo modal de validação');
+        
+        // FECHAR modal de carregamento
+        setIsGenerating(false);
+        setStep('form');
+        setGenerationProgress(0);
+        
+        // Aguardar transição e abrir modal de validação
+        setTimeout(() => {
+          setShowBNCCValidation(true);
+        }, 300);
+        
+        return; // PARAR AQUI - não gerar material
+      }
+
+      // ETAPA 4: Se chegou aqui, tema está alinhado - continuar com geração
+      console.log('✅ Tema alinhado com BNCC - continuando com geração');
+      setGenerationProgress(60);
+      
+      await realizarGeracao();
+      
+    } catch (error) {
+      console.error('❌ Erro na validação BNCC:', error);
+      
+      // Em caso de erro na validação, PARAR o processo
+      setIsGenerating(false);
+      setStep('form');
+      setGenerationProgress(0);
+      
+      toast.error(`Erro na validação BNCC: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    }
   };
 
-  const handleBNCCValidationAccept = () => {
-    console.log('👤 Usuário aceitou gerar mesmo com tema não alinhado');
+  const handleBNCCValidationAccept = async () => {
+    console.log('👤 Usuário escolheu gerar material mesmo com tema não alinhado');
     setShowBNCCValidation(false);
     
-    // Voltar para modal de carregamento e continuar geração
+    // Voltar para modal de carregamento
     setStep('generating');
     setIsGenerating(true);
-    setGenerationProgress(50);
+    setGenerationProgress(60);
     
-    setTimeout(() => {
-      handleGenerate();
+    // Aguardar um pouco e continuar geração
+    setTimeout(async () => {
+      await realizarGeracao();
     }, 500);
   };
 
@@ -381,22 +375,24 @@ const CreateLesson: React.FC = () => {
     // Usuário volta para o formulário para corrigir
   };
 
-  const handleGenerate = async () => {
-    console.log('🏭 Iniciando geração do material');
+  const realizarGeracao = async () => {
+    console.log('🏭 Iniciando geração efetiva do material');
     
-    // Verificar limite antes de gerar o material
+    // Verificar limite novamente antes de gerar
     const canCreate = createMaterial();
     if (!canCreate) {
       toast.error('Limite de materiais atingido! Faça upgrade para continuar.');
       setIsGenerating(false);
       setStep('form');
+      setGenerationProgress(0);
+      openUpgradeModal();
       return;
     }
 
     const progressSteps = [
-      { progress: 70, message: 'Gerando conteúdo pedagógico...' },
-      { progress: 85, message: 'Aplicando padrões da BNCC...' },
-      { progress: 95, message: 'Salvando material...' }
+      { progress: 75, message: 'Gerando conteúdo pedagógico...' },
+      { progress: 90, message: 'Aplicando padrões da BNCC...' },
+      { progress: 98, message: 'Salvando material...' }
     ];
 
     let stepIndex = 0;
@@ -406,7 +402,7 @@ const CreateLesson: React.FC = () => {
         console.log('Progress:', progressSteps[stepIndex].message);
         stepIndex++;
       }
-    }, 800);
+    }, 1000);
 
     try {
       // Buscar nome do professor (perfil)
@@ -445,9 +441,9 @@ const CreateLesson: React.FC = () => {
         } : {})
       };
 
-      console.log('📋 Material form data being sent:', materialFormData);
+      console.log('📋 Dados do material sendo enviados:', materialFormData);
       const material = await materialService.generateMaterial(selectedType!, materialFormData);
-      console.log('✅ Material generated and saved successfully:', material.id);
+      console.log('✅ Material gerado e salvo com sucesso:', material.id);
 
       clearInterval(progressInterval);
       setGenerationProgress(100);
@@ -473,13 +469,13 @@ const CreateLesson: React.FC = () => {
       }, 1000);
 
     } catch (error) {
-      console.error('❌ Generation error:', error);
+      console.error('❌ Erro na geração:', error);
       clearInterval(progressInterval);
       setIsGenerating(false);
       setStep('form');
+      setGenerationProgress(0);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao gerar material';
       toast.error(`Erro ao criar material: ${errorMessage}`);
-      console.error('Detailed error:', error);
     }
   };
 
@@ -487,7 +483,6 @@ const CreateLesson: React.FC = () => {
     return materialTypes.find(type => type.id === selectedType);
   };
 
-  // Função para fechar o modal de próximos passos e abrir o de visualização
   const handleNextStepsClose = () => {
     setShowNextStepsModal(false);
     // Reset form
@@ -502,13 +497,11 @@ const CreateLesson: React.FC = () => {
     setSelectedType(null);
   };
 
-  // Função para continuar do modal de próximos passos para visualização
   const handleNextStepsContinue = () => {
     setShowNextStepsModal(false);
     setShowMaterialModal(true);
   };
 
-  // Função para fechar o modal de visualização do material
   const handleMaterialModalClose = () => {
     setShowMaterialModal(false);
     setGeneratedMaterial(null);
@@ -524,7 +517,6 @@ const CreateLesson: React.FC = () => {
     setSelectedType(null);
   };
 
-  // Helper function to get display name for selected grade
   const getGradeDisplayName = (value: string) => {
     for (const category of grades) {
       for (const option of category.options) {
@@ -948,43 +940,43 @@ const CreateLesson: React.FC = () => {
                 </div>
               </div>
             </div>
-          </main>
+          </div>
+        </main>
 
-          {/* Modal de validação BNCC */}
-          <BNCCValidationModal 
-            open={showBNCCValidation} 
-            onClose={handleBNCCValidationClose} 
-            validationData={validationResult}
-            tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
-            disciplina={formData.subject || ''} 
-            serie={formData.grade} 
-            onAccept={handleBNCCValidationAccept} 
-          />
+        {/* Modal de validação BNCC */}
+        <BNCCValidationModal 
+          open={showBNCCValidation} 
+          onClose={handleBNCCValidationClose} 
+          validationData={validationResult}
+          tema={selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic} 
+          disciplina={formData.subject || ''} 
+          serie={formData.grade} 
+          onAccept={handleBNCCValidationAccept} 
+        />
 
-          {/* Modal de visualização do material - aparece primeiro */}
-          <MaterialModal 
-            material={generatedMaterial} 
-            open={showMaterialModal || showNextStepsModal} 
-            onClose={handleMaterialModalClose} 
-          />
-          
-          {/* Modal de próximos passos - aparece por cima */}
-          <NextStepsModal
-            open={showNextStepsModal}
-            onClose={handleNextStepsClose}
-            onContinue={handleNextStepsContinue}
-            materialType={selectedType || ''}
-          />
-          
-          {/* Modal de upgrade que aparece quando o limite é atingido */}
-          <UpgradeModal
-            isOpen={isUpgradeModalOpen}
-            onClose={closeUpgradeModal}
-            currentPlan={currentPlan}
-            onPlanSelect={handlePlanSelection}
-          />
-        </>
-      </FormErrorBoundary>
+        {/* Modal de visualização do material - aparece primeiro */}
+        <MaterialModal 
+          material={generatedMaterial} 
+          open={showMaterialModal || showNextStepsModal} 
+          onClose={handleMaterialModalClose} 
+        />
+        
+        {/* Modal de próximos passos - aparece por cima */}
+        <NextStepsModal
+          open={showNextStepsModal}
+          onClose={handleNextStepsClose}
+          onContinue={handleNextStepsContinue}
+          materialType={selectedType || ''}
+        />
+        
+        {/* Modal de upgrade que aparece quando o limite é atingido */}
+        <UpgradeModal
+          isOpen={isUpgradeModalOpen}
+          onClose={closeUpgradeModal}
+          currentPlan={currentPlan}
+          onPlanSelect={handlePlanSelection}
+        />
+      </>
     );
   }
 

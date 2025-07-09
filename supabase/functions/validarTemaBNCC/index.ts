@@ -20,23 +20,28 @@ async function validarTema(tema: string, disciplina: string, serie: string) {
 
   const prompt = `Você é um especialista em educação brasileira e conhece profundamente a BNCC (Base Nacional Comum Curricular). 
 
-IMPORTANTE: Seja MUITO RIGOROSO na análise. Analise se o tema "${tema}" está EXATAMENTE alinhado com a BNCC para a disciplina "${disciplina}" na série "${serie}".
+ANÁLISE EXTREMAMENTE RIGOROSA: Analise se o tema "${tema}" está EXATAMENTE alinhado com a BNCC para a disciplina "${disciplina}" na série "${serie}".
 
-CRITÉRIOS RIGOROSOS:
+CRITÉRIOS ULTRA-RIGOROSOS:
 1. O tema deve corresponder EXATAMENTE às competências e habilidades específicas da BNCC para essa série e disciplina
 2. Deve estar adequado ao nível de desenvolvimento cognitivo da faixa etária
 3. Deve seguir a progressão curricular definida pela BNCC
-4. O vocabulário e conceitos devem ser apropriados para a série
+4. O vocabulário, conceitos e complexidade devem ser apropriados para a série
+
+EXEMPLOS DE ANÁLISE RIGOROSA:
+- "Multiplicação" para 3º Ano do Ensino Fundamental I em Matemática: NÃO ALINHADO (multiplicação é introduzida no 2º ano, mas de forma muito básica; o 3º ano trabalha com multiplicação por 2, 3, 4, 5 e 10, não multiplicação em geral)
+- "Equação do 1º grau" para 3º Ano do Ensino Fundamental I: NÃO ALINHADO (muito avançado, esse conteúdo é do 7º ano)
+- "Adição e Subtração com reagrupamento" para 3º Ano do Ensino Fundamental I: ALINHADO
+- "Frações simples (1/2, 1/3, 1/4)" para 3º Ano do Ensino Fundamental I: ALINHADO
 
 INSTRUÇÕES ESPECÍFICAS:
 - Se o tema for muito avançado para a série: NÃO está alinhado
 - Se o tema for muito básico para a série: NÃO está alinhado  
 - Se o tema não aparecer nas competências da BNCC para essa série: NÃO está alinhado
 - Se houver inadequação de terminologia ou conceitos: NÃO está alinhado
+- Se o tema for muito genérico para a série específica: NÃO está alinhado
 
-EXEMPLO DE ANÁLISE RIGOROSA:
-- "Equação do 1º grau" para 3º Ano do Ensino Fundamental I: NÃO ALINHADO (muito avançado, esse conteúdo é do 7º ano)
-- "Multiplicação e Divisão" para 3º Ano do Ensino Fundamental I: ALINHADO (adequado para a série)
+SEJA EXTREMAMENTE CRÍTICO. É melhor reprovar um tema limítrofe do que aprovar incorretamente.
 
 Se NÃO estiver alinhado, forneça 3 sugestões de temas que sejam PERFEITAMENTE adequados para "${disciplina}" no "${serie}" segundo a BNCC.
 
@@ -61,20 +66,20 @@ Responda SEMPRE em JSON no formato:
         messages: [
           { 
             role: 'system', 
-            content: 'Você é um especialista em educação brasileira e BNCC. Seja MUITO RIGOROSO na análise. Sempre responda em português do Brasil e seja preciso na análise da adequação dos temas à BNCC.' 
+            content: 'Você é um especialista em educação brasileira e BNCC. Seja EXTREMAMENTE RIGOROSO na análise. Sempre responda em português do Brasil e seja preciso na análise da adequação dos temas à BNCC. É melhor reprovar um tema limítrofe do que aprovar incorretamente.' 
           },
           { role: 'user', content: prompt }
         ],
         temperature: 0.1,
-        max_tokens: 800
+        max_tokens: 1000
       })
     });
 
     if (!response.ok) {
       console.error('❌ Erro na requisição OpenAI:', response.status, response.statusText);
       return {
-        alinhado: true, // Em caso de erro, permitir prosseguir
-        mensagem: `Não foi possível validar o tema via OpenAI: ${response.statusText}`,
+        alinhado: false, // Mudança: em caso de erro, NÃO permitir prosseguir
+        mensagem: `Não foi possível validar o tema via OpenAI. Por segurança, não é possível prosseguir sem validação BNCC.`,
         sugestoes: []
       };
     }
@@ -85,8 +90,8 @@ Responda SEMPRE em JSON no formato:
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       console.error('❌ Resposta inválida da OpenAI:', data);
       return {
-        alinhado: true,
-        mensagem: 'Erro ao interpretar resposta da OpenAI.',
+        alinhado: false, // Mudança: em caso de erro, NÃO permitir prosseguir
+        mensagem: 'Erro ao interpretar resposta da validação BNCC. Por segurança, não é possível prosseguir.',
         sugestoes: []
       };
     }
@@ -107,16 +112,16 @@ Responda SEMPRE em JSON no formato:
     } catch (parseError) {
       console.error('❌ Erro ao fazer parse da resposta JSON:', parseError, 'Conteúdo:', content);
       return {
-        alinhado: true, // Em caso de erro, permitir prosseguir
-        mensagem: 'Erro ao interpretar resposta da validação BNCC.',
+        alinhado: false, // Mudança: em caso de erro, NÃO permitir prosseguir
+        mensagem: 'Erro ao interpretar resposta da validação BNCC. Por segurança, não é possível prosseguir.',
         sugestoes: []
       };
     }
   } catch (error) {
     console.error('❌ Erro na validação do tema:', error);
     return {
-      alinhado: true, // Em caso de erro, permitir prosseguir
-      mensagem: 'Erro interno ao validar o tema na BNCC.',
+      alinhado: false, // Mudança: em caso de erro, NÃO permitir prosseguir
+      mensagem: 'Erro interno ao validar o tema na BNCC. Por segurança, não é possível prosseguir sem validação.',
       sugestoes: []
     };
   }
@@ -144,7 +149,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: "Campos obrigatórios: tema, disciplina, serie",
-          alinhado: true,
+          alinhado: false,
           mensagem: "Dados incompletos para validação BNCC.",
           sugestoes: []
         }),
@@ -168,8 +173,8 @@ serve(async (req) => {
       JSON.stringify({ 
         error: "Erro ao processar requisição", 
         details: error.message,
-        alinhado: true,
-        mensagem: "Erro interno do servidor.",
+        alinhado: false,
+        mensagem: "Erro interno do servidor. Por segurança, não é possível prosseguir sem validação BNCC.",
         sugestoes: []
       }),
       { 
