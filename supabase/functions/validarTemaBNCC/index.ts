@@ -28,12 +28,6 @@ CRITÉRIOS ULTRA-RIGOROSOS:
 3. Deve seguir a progressão curricular definida pela BNCC
 4. O vocabulário, conceitos e complexidade devem ser apropriados para a série
 
-EXEMPLOS DE ANÁLISE RIGOROSA:
-- "Multiplicação" para 3º Ano do Ensino Fundamental I em Matemática: NÃO ALINHADO (multiplicação é introduzida no 2º ano, mas de forma muito básica; o 3º ano trabalha com multiplicação por 2, 3, 4, 5 e 10, não multiplicação em geral)
-- "Equação do 1º grau" para 3º Ano do Ensino Fundamental I: NÃO ALINHADO (muito avançado, esse conteúdo é do 7º ano)
-- "Adição e Subtração com reagrupamento" para 3º Ano do Ensino Fundamental I: ALINHADO
-- "Frações simples (1/2, 1/3, 1/4)" para 3º Ano do Ensino Fundamental I: ALINHADO
-
 INSTRUÇÕES ESPECÍFICAS:
 - Se o tema for muito avançado para a série: NÃO está alinhado
 - Se o tema for muito básico para a série: NÃO está alinhado  
@@ -45,10 +39,12 @@ SEJA EXTREMAMENTE CRÍTICO. É melhor reprovar um tema limítrofe do que aprovar
 
 Se NÃO estiver alinhado, forneça 3 sugestões de temas que sejam PERFEITAMENTE adequados para "${disciplina}" no "${serie}" segundo a BNCC.
 
+IMPORTANTE: A mensagem explicativa deve ter NO MÁXIMO 3-4 LINHAS, sendo objetiva e direta.
+
 Responda SEMPRE em JSON no formato:
 {
   "alinhado": true/false,
-  "mensagem": "explicação detalhada e específica sobre por que está ou não alinhado, citando a BNCC",
+  "mensagem": "explicação CONCISA e OBJETIVA (máximo 3-4 linhas) sobre por que está ou não alinhado",
   "sugestoes": ["sugestão 1 específica", "sugestão 2 específica", "sugestão 3 específica"] (apenas se não alinhado)
 }`;
 
@@ -66,19 +62,19 @@ Responda SEMPRE em JSON no formato:
         messages: [
           { 
             role: 'system', 
-            content: 'Você é um especialista em educação brasileira e BNCC. Seja EXTREMAMENTE RIGOROSO na análise. Sempre responda em português do Brasil e seja preciso na análise da adequação dos temas à BNCC. É melhor reprovar um tema limítrofe do que aprovar incorretamente.' 
+            content: 'Você é um especialista em educação brasileira e BNCC. Seja EXTREMAMENTE RIGOROSO na análise. Sempre responda em português do Brasil e seja preciso e CONCISO na análise da adequação dos temas à BNCC. A mensagem explicativa deve ter NO MÁXIMO 3-4 linhas. É melhor reprovar um tema limítrofe do que aprovar incorretamente.' 
           },
           { role: 'user', content: prompt }
         ],
         temperature: 0.1,
-        max_tokens: 1000
+        max_tokens: 800
       })
     });
 
     if (!response.ok) {
       console.error('❌ Erro na requisição OpenAI:', response.status, response.statusText);
       return {
-        alinhado: false, // Mudança: em caso de erro, NÃO permitir prosseguir
+        alinhado: false,
         mensagem: `Não foi possível validar o tema via OpenAI. Por segurança, não é possível prosseguir sem validação BNCC.`,
         sugestoes: []
       };
@@ -90,7 +86,7 @@ Responda SEMPRE em JSON no formato:
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       console.error('❌ Resposta inválida da OpenAI:', data);
       return {
-        alinhado: false, // Mudança: em caso de erro, NÃO permitir prosseguir
+        alinhado: false,
         mensagem: 'Erro ao interpretar resposta da validação BNCC. Por segurança, não é possível prosseguir.',
         sugestoes: []
       };
@@ -112,7 +108,7 @@ Responda SEMPRE em JSON no formato:
     } catch (parseError) {
       console.error('❌ Erro ao fazer parse da resposta JSON:', parseError, 'Conteúdo:', content);
       return {
-        alinhado: false, // Mudança: em caso de erro, NÃO permitir prosseguir
+        alinhado: false,
         mensagem: 'Erro ao interpretar resposta da validação BNCC. Por segurança, não é possível prosseguir.',
         sugestoes: []
       };
@@ -120,7 +116,7 @@ Responda SEMPRE em JSON no formato:
   } catch (error) {
     console.error('❌ Erro na validação do tema:', error);
     return {
-      alinhado: false, // Mudança: em caso de erro, NÃO permitir prosseguir
+      alinhado: false,
       mensagem: 'Erro interno ao validar o tema na BNCC. Por segurança, não é possível prosseguir sem validação.',
       sugestoes: []
     };
