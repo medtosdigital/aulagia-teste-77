@@ -234,7 +234,7 @@ Crie slides educativos ESPECÍFICOS sobre "${tema}" para ${disciplina} na ${seri
 IMPORTANTE: TODO O CONTEÚDO deve ser baseado especificamente no tema "${tema}". NÃO use conteúdo genérico.
 
 ESTRUTURA OBRIGATÓRIA:
-- Slide 1: Capa com título e professor
+- Slide 1: Capa com título GRANDE e apenas professor (SEM data, disciplina ou série na capa)
 - Slide 2: Objetivos da aula (4 objetivos específicos)
 - Slide 3: Introdução ao tema
 - Slide 4: Conceito principal
@@ -259,7 +259,7 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "bncc": "[códigos BNCC relevantes para ${tema} em ${disciplina}]",
   "tema_imagem": "ilustração colorida, educativa, sem texto, representando o tema '${tema}' para ${disciplina} na ${serie}",
   "slide_1_titulo": "${tema}",
-  "slide_1_subtitulo": "Aula de ${disciplina} - ${serie}",
+  "slide_1_subtitulo": "",
   "objetivo_1": "[OBJETIVO 1 específico sobre ${tema}]",
   "objetivo_2": "[OBJETIVO 2 específico sobre ${tema}]",
   "objetivo_3": "[OBJETIVO 3 específico sobre ${tema}]",
@@ -490,8 +490,10 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         parsedContent.serie = serie;
         parsedContent.tema = tema;
 
-        // Para slides, não incluir data na capa
+        // Para slides, não incluir data, disciplina e série na capa
         if (materialType === 'slides') {
+          // Remove data, disciplina e série da capa - manter apenas para uso interno
+          parsedContent.slide_1_subtitulo = "";
           delete parsedContent.data;
         } else {
           parsedContent.data = data;
@@ -635,4 +637,3 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     };
   }
 }
-
