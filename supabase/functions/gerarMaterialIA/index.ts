@@ -1,4 +1,5 @@
 
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -233,7 +234,7 @@ Crie slides educativos ESPECÍFICOS sobre "${tema}" para ${disciplina} na ${seri
 IMPORTANTE: TODO O CONTEÚDO deve ser baseado especificamente no tema "${tema}". NÃO use conteúdo genérico.
 
 ESTRUTURA OBRIGATÓRIA:
-- Slide 1: Capa com título e informações básicas
+- Slide 1: Capa com título e professor
 - Slide 2: Objetivos da aula (4 objetivos específicos)
 - Slide 3: Introdução ao tema
 - Slide 4: Conceito principal
@@ -249,9 +250,8 @@ ESTRUTURA OBRIGATÓRIA:
 Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especificamente sobre "${tema}":
 
 {
-  "titulo": "${tema} - ${disciplina}",
+  "titulo": "${tema}",
   "professor": "${professor}",
-  "data": "${data}",
   "disciplina": "${disciplina}",
   "serie": "${serie}",
   "tema": "${tema}",
@@ -486,10 +486,16 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         const parsedContent = JSON.parse(jsonMatch[0]);
         // Preserve form fields
         parsedContent.professor = professor;
-        parsedContent.data = data;
         parsedContent.disciplina = disciplina;
         parsedContent.serie = serie;
         parsedContent.tema = tema;
+
+        // Para slides, não incluir data na capa
+        if (materialType === 'slides') {
+          delete parsedContent.data;
+        } else {
+          parsedContent.data = data;
+        }
 
         // Validação rigorosa do campo BNCC para atividades e planos de aula
         if (parsedContent.bncc) {
@@ -605,7 +611,7 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     return {
       titulo: `${materialType} - ${tema}`,
       professor,
-      data,
+      data: materialType === 'slides' ? undefined : data,
       disciplina,
       serie,
       tema,
@@ -619,7 +625,7 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     return {
       titulo: `${materialType} - ${tema}`,
       professor,
-      data,
+      data: materialType === 'slides' ? undefined : data,
       disciplina,
       serie,
       tema,
@@ -629,3 +635,4 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     };
   }
 }
+
