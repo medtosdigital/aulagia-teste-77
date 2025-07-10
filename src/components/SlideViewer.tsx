@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Printer, Download } from 'lucide-react';
 import { Button } from './ui/button';
-import { 
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from './ui/pagination';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './ui/pagination';
 import { exportService } from '@/services/exportService';
 import { GeneratedMaterial } from '@/services/materialService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
-
 interface SlideViewerProps {
   htmlContent: string;
   material?: GeneratedMaterial;
@@ -37,18 +29,27 @@ async function gerarImagemSePrompt(html: string): Promise<string | null> {
   if (!prompt) return null;
   // Chama a Edge Function gerarImagemIA
   try {
-    const { data, error } = await supabase.functions.invoke('gerarImagemIA', { body: { prompt } });
+    const {
+      data,
+      error
+    } = await supabase.functions.invoke('gerarImagemIA', {
+      body: {
+        prompt
+      }
+    });
     if (error || !data || !data.success || !data.imageUrl) return null;
     return data.imageUrl;
   } catch {
     return null;
   }
 }
-
-const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
+const SlideViewer: React.FC<SlideViewerProps> = ({
+  htmlContent,
+  material
+}) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
-  
+
   // Generate slides based on content
   const slides = React.useMemo(() => {
     const parser = new DOMParser();
@@ -59,7 +60,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       html: div.outerHTML
     }));
   }, [htmlContent]);
-
   const handlePrint = async () => {
     try {
       // Create print-friendly HTML
@@ -76,7 +76,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       console.error('Print error:', error);
     }
   };
-
   const handleExportPDF = async () => {
     try {
       if (material) {
@@ -93,7 +92,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       toast.error('Erro ao exportar PDF');
     }
   };
-
   const handleExportPPT = async () => {
     try {
       if (material) {
@@ -110,10 +108,8 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       toast.error('Erro ao exportar PowerPoint');
     }
   };
-
   const generatePrintHTML = () => {
     const today = new Date().toLocaleDateString('pt-BR');
-    
     return `
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -327,18 +323,15 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       </html>
     `;
   };
-
   const generateSlidesForPPT = () => {
     return slides.map((slide, index) => ({
       html: slide.html,
       slideNumber: index + 1
     }));
   };
-
   const renderSlideForPrint = (slide: any, index: number) => {
     const slideNumber = index + 1;
     const today = new Date().toLocaleDateString('pt-BR');
-    
     return `
       <div class="slide-page">
         <div class="shape-overlay top-left-wave"></div>
@@ -365,7 +358,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       </div>
     `;
   };
-
   const renderSlideContent = (slide: any, index: number) => {
     // Se slide não tem propriedades específicas, apenas retorna o HTML bruto
     if (!slide.title && !slide.type && !slide.objectives) {
@@ -373,13 +365,11 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
     }
     // (Se no futuro houver slides com propriedades, pode-se reabilitar o switch acima)
   };
-
   const renderSlide = (slide: any, index: number) => {
     // Fundo: azul para o primeiro slide e para os ímpares
     const isBlue = index === 0 || index % 2 !== 0;
-    const bgClass = isBlue
-      ? 'bg-blue-700' // fundo azul sólido
-      : 'bg-white';
+    const bgClass = isBlue ? 'bg-blue-700' // fundo azul sólido
+    : 'bg-white';
 
     // Detecta se o slide tem imagem central ou ícone destacado
     const hasImagemCentral = /class=['"]imagem-central['"]/.test(slide.html) || /<img /.test(slide.html);
@@ -394,46 +384,53 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
     htmlSemData = htmlSemData.replace(/\b\d{1,2}\s*\/\s*\d{1,2}\b/g, '');
 
     // Detectar se é slide de agradecimento OU se é o último slide
-    const isObrigado = /obrigado\(a\)|obrigado!/i.test(htmlSemData) || (index === slides.length - 1);
+    const isObrigado = /obrigado\(a\)|obrigado!/i.test(htmlSemData) || index === slides.length - 1;
 
     // Exemplo de próximos passos
-    const proximosPassos = [
-      'Acesse novos materiais em aulagia.com.br',
-      'Compartilhe este material com colegas',
-      'Explore mais aulas e recursos na plataforma',
-    ];
+    const proximosPassos = ['Acesse novos materiais em aulagia.com.br', 'Compartilhe este material com colegas', 'Explore mais aulas e recursos na plataforma'];
 
     // Logo no canto superior esquerdo
-    const logoEsquerda = (
-      <div className="absolute top-0 left-0 flex items-center gap-2 p-6 z-10">
+    const logoEsquerda = <div className="absolute top-0 left-0 flex items-center gap-2 p-6 z-10">
         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-md">
           <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-7 h-7">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
               </svg>
             </div>
         <span className={`text-2xl font-extrabold tracking-tight drop-shadow-sm ${isBlue ? 'text-blue-200' : 'text-blue-700'}`}>AulagIA</span>
-      </div>
-    );
+      </div>;
     // Disciplina no canto superior direito
-    const disciplina = (material?.subject || 'Disciplina');
+    const disciplina = material?.subject || 'Disciplina';
     const disciplinaFormatada = disciplina.charAt(0).toUpperCase() + disciplina.slice(1);
-    const disciplinaDireita = (
-      <div className="absolute top-0 right-0 flex items-center p-6 z-10">
+    const disciplinaDireita = <div className="absolute top-0 right-0 flex items-center p-6 z-10">
         <span className={`text-lg font-bold ${isBlue ? 'text-white' : 'text-slate-700'}`}>{disciplinaFormatada}</span>
-      </div>
-    );
-
+      </div>;
     if (isObrigado) {
-      return (
-        <div className="relative w-full h-full flex items-center justify-center bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200" style={{ aspectRatio: '4/3', maxWidth: '950px', height: '68vh', minHeight: '500px', margin: '0 auto', fontFamily: 'Poppins, Lato, sans-serif' }}>
+      return <div className="relative w-full h-full flex items-center justify-center bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200" style={{
+        aspectRatio: '4/3',
+        maxWidth: '950px',
+        height: '68vh',
+        minHeight: '500px',
+        margin: '0 auto',
+        fontFamily: 'Poppins, Lato, sans-serif'
+      }}>
           {logoEsquerda}
           {disciplinaDireita}
-          <div className="w-full h-full flex flex-col items-center justify-center text-center p-12" style={{ maxWidth: 700, margin: '0 auto' }}>
-            <div style={{ fontSize: '3.2rem', fontWeight: 900, color: '#1e293b', marginBottom: 18, letterSpacing: '-2px', textShadow: '0 2px 12px #0001', textAlign: 'center' }}>OBRIGADO(A)!</div>
+          <div className="w-full h-full flex flex-col items-center justify-center text-center p-12" style={{
+          maxWidth: 700,
+          margin: '0 auto'
+        }}>
+            <div style={{
+            fontSize: '3.2rem',
+            fontWeight: 900,
+            color: '#1e293b',
+            marginBottom: 18,
+            letterSpacing: '-2px',
+            textShadow: '0 2px 12px #0001',
+            textAlign: 'center'
+          }}>OBRIGADO(A)!</div>
           </div>
-        </div>
-      );
+        </div>;
     }
 
     // Destacar o primeiro <h2> ou <h3> como tópico principal, estilo extragrosso centralizado, sempre no topo
@@ -490,7 +487,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       // Texto 'Nossos objetivos para hoje:' destacado, centralizado, negrito
       htmlSemData = htmlSemData.replace(/Nossos objetivos para hoje:/i, "<div style='font-weight:800;font-size:1.35rem;color:#222;text-align:center;margin:1.2em 0 0.7em 0;'>Nossos objetivos para hoje:</div>");
       // Lista de marcadores com check verde, espaçamento, fonte adequada
-      htmlSemData = htmlSemData.replace(/<ul>([\s\S]*?)<\/ul>/gi, function(_, items) {
+      htmlSemData = htmlSemData.replace(/<ul>([\s\S]*?)<\/ul>/gi, function (_, items) {
         return `<ul style='list-style:none;padding:0;margin:1.2em 0;'>${items.replace(/<li>(.*?)<\/li>/g, "<li style='font-size:1.18rem;color:#222;font-weight:500;display:flex;align-items:center;margin-bottom:0.7em;'><span style='color:#059669;font-size:1.3em;margin-right:0.5em;'>✔️</span>$1</li>")}</ul>`;
       });
     }
@@ -514,13 +511,14 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         // Monta prompt
         const prompt = `Capa ilustrativa para o tema: ${tema}, disciplina: ${disciplina}, série: ${serie}. Ilustração colorida, estilo educativo, sem texto.`;
         // Se já gerou imagem, usa; senão, gera
-        imagemHtml = imagensGeradas[index]
-          ? `<img src="${imagensGeradas[index]}" alt="Imagem gerada IA" style="max-width:100%;max-height:100%;border-radius:16px;" />`
-          : '';
+        imagemHtml = imagensGeradas[index] ? `<img src="${imagensGeradas[index]}" alt="Imagem gerada IA" style="max-width:100%;max-height:100%;border-radius:16px;" />` : '';
         // Se ainda não gerou, dispara geração
         if (!imagensGeradas[index]) {
           gerarImagemSePrompt(prompt).then(url => {
-            if (url) setImagensGeradas(prev => ({ ...prev, [index]: url }));
+            if (url) setImagensGeradas(prev => ({
+              ...prev,
+              [index]: url
+            }));
           });
         }
       } else {
@@ -561,30 +559,50 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         `;
       }
     }
-
-    return (
-      <div className={`relative w-full h-full flex items-center justify-center ${bgClass} rounded-2xl shadow-2xl overflow-hidden border border-gray-200`} style={{ aspectRatio: '4/3', maxWidth: '950px', height: '68vh', minHeight: '500px', margin: '0 auto', fontFamily: 'Poppins, Lato, sans-serif' }}>
+    return <div className={`relative w-full h-full flex items-center justify-center ${bgClass} rounded-2xl shadow-2xl overflow-hidden border border-gray-200`} style={{
+      aspectRatio: '4/3',
+      maxWidth: '950px',
+      height: '68vh',
+      minHeight: '500px',
+      margin: '0 auto',
+      fontFamily: 'Poppins, Lato, sans-serif'
+    }}>
         {/* Logo no canto superior esquerdo */}
         <div className="absolute top-0 left-0 flex items-center gap-2 p-6 z-10">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-md">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-7 h-7">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
             </svg>
           </div>
           <span className={`text-2xl font-extrabold tracking-tight drop-shadow-sm ${isBlue ? 'text-blue-200' : 'text-blue-700'}`}>AulagIA</span>
         </div>
         {disciplinaDireita}
-        <div className="w-full h-full flex flex-col items-center justify-center p-12" style={{ maxWidth: 820, margin: '0 auto' }}>
+        <div className="w-full h-full flex flex-col items-center justify-center p-12" style={{
+        maxWidth: 820,
+        margin: '0 auto'
+      }}>
           {/* Se houver imagem central ou ícone, dividir em 2 colunas responsivas */}
-          {hasImagemCentral || hasIcone ? (
-            <div className="w-full h-full flex flex-col md:flex-row items-center justify-center text-center gap-8" style={{ minHeight: 320 }}>
+          {hasImagemCentral || hasIcone ? <div className="w-full h-full flex flex-col md:flex-row items-center justify-center text-center gap-8" style={{
+          minHeight: 320
+        }}>
               {/* Coluna texto/título */}
               <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <div style={{ fontSize: '2.8rem', fontWeight: 800, color: isBlue ? '#fff' : '#1e293b', marginBottom: 18, lineHeight: 1.1, letterSpacing: '-1px' }} className="slide-title-custom"></div>
-                <div className={`w-full slide-content-rich ${textColor}`} style={{ fontSize: '1.35rem', fontWeight: 500, lineHeight: 1.5 }}>
-                  <div
-                    dangerouslySetInnerHTML={{ __html: `
+                <div style={{
+              fontSize: '2.8rem',
+              fontWeight: 800,
+              color: isBlue ? '#fff' : '#1e293b',
+              marginBottom: 18,
+              lineHeight: 1.1,
+              letterSpacing: '-1px'
+            }} className="slide-title-custom"></div>
+                <div className={`w-full slide-content-rich ${textColor}`} style={{
+              fontSize: '1.35rem',
+              fontWeight: 500,
+              lineHeight: 1.5
+            }}>
+                  <div dangerouslySetInnerHTML={{
+                __html: `
                       <style>
                         .slide-content-rich ul { list-style: disc inside; color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 1.25rem; margin: 1.2em 0; font-weight: 700; }
                         .slide-content-rich li { margin-bottom: 0.7em; font-size: 1.18rem; }
@@ -599,32 +617,48 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
                         .slide-topic-green { color: #059669; }
                       </style>
                       ${htmlSemData.replace(/(<div class=['"]imagem-central['"][^>]*>.*?<\/div>)/gs, '')}
-                    ` }}
-                  />
+                    `
+              }} />
                 </div>
               </div>
               {/* Coluna imagem/ícone */}
               <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <div className="w-full slide-content-rich" style={{ fontSize: '1.35rem', color: isBlue ? '#fff' : '#334155', fontWeight: 500, lineHeight: 1.5 }}>
-                  <div
-                    dangerouslySetInnerHTML={{ __html: `
+                <div className="w-full slide-content-rich" style={{
+              fontSize: '1.35rem',
+              color: isBlue ? '#fff' : '#334155',
+              fontWeight: 500,
+              lineHeight: 1.5
+            }}>
+                  <div dangerouslySetInnerHTML={{
+                __html: `
                       <style>
                         .slide-content-rich .imagem-central { display: flex; justify-content: center; align-items: center; height: 100%; }
                         .slide-content-rich .imagem-central img { max-width: 340px; max-height: 260px; border-radius: 18px; box-shadow: 0 4px 24px #6366f133; border: 2px solid #e0e7ff; }
                         .slide-content-rich .icone { display: inline-block; margin: 0 0.3em; font-size: 3.5em; vertical-align: middle; color: #0ea5e9; }
                       </style>
                       ${(htmlSemData.match(/<div class=['"]imagem-central['"][^>]*>.*?<\/div>/gs) || []).join('')}
-                    ` }}
-                  />
+                    `
+              }} />
             </div>
             </div>
-            </div>
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-center" style={{ minHeight: 320 }}>
-              <div style={{ fontSize: '2.8rem', fontWeight: 800, color: isBlue ? '#fff' : '#1e293b', marginBottom: 18, lineHeight: 1.1, letterSpacing: '-1px' }} className="slide-title-custom"></div>
-              <div className={`w-full slide-content-rich ${textColor}`} style={{ fontSize: '1.35rem', fontWeight: 500, lineHeight: 1.5 }}>
-                <div
-                  dangerouslySetInnerHTML={{ __html: `
+            </div> : <div className="w-full h-full flex flex-col items-center justify-center text-center" style={{
+          minHeight: 320
+        }}>
+              <div style={{
+            fontSize: '2.8rem',
+            fontWeight: 800,
+            color: isBlue ? '#fff' : '#1e293b',
+            marginBottom: 18,
+            lineHeight: 1.1,
+            letterSpacing: '-1px'
+          }} className="slide-title-custom"></div>
+              <div className={`w-full slide-content-rich ${textColor}`} style={{
+            fontSize: '1.35rem',
+            fontWeight: 500,
+            lineHeight: 1.5
+          }}>
+                <div dangerouslySetInnerHTML={{
+              __html: `
                     <style>
                       .slide-content-rich ul { list-style: disc inside; color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 1.25rem; margin: 1.2em 0; font-weight: 700; }
                       .slide-content-rich li { margin-bottom: 0.7em; font-size: 1.18rem; }
@@ -637,22 +671,20 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
                       .slide-content-rich h2, .slide-content-rich h3 { color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 2.1rem; font-weight: 800; margin: 1.2em 0 0.7em 0; }
                     </style>
                     ${htmlSemData}
-                  ` }}
-                />
+                  `
+            }} />
             </div>
-            </div>
-          )}
+            </div>}
         </div>
-      </div>
-    );
+      </div>;
   };
-
-  const [imagensGeradas, setImagensGeradas] = useState<{[key:number]: string}>({});
-
+  const [imagensGeradas, setImagensGeradas] = useState<{
+    [key: number]: string;
+  }>({});
   useEffect(() => {
     // Para cada slide de duas colunas, tente gerar imagem se houver prompt
     const paginasDuasColunas = [0, 2, 3, 4, 5, 8];
-    paginasDuasColunas.forEach(async (idx) => {
+    paginasDuasColunas.forEach(async idx => {
       if (!slides[idx]) return;
       let html = slides[idx].html;
       // Página 1: gerar prompt automático
@@ -668,129 +700,96 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         if (serieMatch) serie = serieMatch[0];
         const prompt = `Capa ilustrativa para o tema: ${tema}, disciplina: ${disciplina}, série: ${serie}. Ilustração colorida, estilo educativo, sem texto.`;
         const url = await gerarImagemSePrompt(prompt);
-        if (url) setImagensGeradas(prev => ({ ...prev, [0]: url }));
+        if (url) setImagensGeradas(prev => ({
+          ...prev,
+          [0]: url
+        }));
       }
       // Demais páginas: só gera se ainda não tiver imagem gerada
       if (idx !== 0 && !imagensGeradas[idx]) {
         const url = await gerarImagemSePrompt(html);
-        if (url) setImagensGeradas(prev => ({ ...prev, [idx]: url }));
+        if (url) setImagensGeradas(prev => ({
+          ...prev,
+          [idx]: url
+        }));
       }
     });
   }, [slides]);
-
   if (slides.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-96 text-gray-500">
+    return <div className="flex items-center justify-center h-96 text-gray-500">
         Nenhum slide encontrado
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="w-full h-full flex flex-col">
+  return <div className="w-full h-full flex flex-col">
       {/* Slide Content com proporção 4:3 corrigida */}
       <div className="flex-1 flex justify-center items-center p-4">
-        {isMobile ? (
-          // Mobile: Container com altura muito maior para visualização adequada
-          <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" 
-               style={{ aspectRatio: '4/3', maxWidth: '100%', height: '75vh', minHeight: '500px' }}>
+        {isMobile ?
+      // Mobile: Container com altura muito maior para visualização adequada
+      <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" style={{
+        aspectRatio: '4/3',
+        maxWidth: '100%',
+        height: '75vh',
+        minHeight: '500px'
+      }}>
             <div className="w-full h-full">
               {renderSlide(slides[currentSlide], currentSlide)}
             </div>
-          </div>
-        ) : (
-          // Desktop: Container com largura e altura balanceadas para não cortar
-          <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" 
-               style={{ aspectRatio: '4/3', maxWidth: '800px', height: '60vh', minHeight: '450px' }}>
+          </div> :
+      // Desktop: Container com largura e altura balanceadas para não cortar
+      <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" style={{
+        aspectRatio: '4/3',
+        maxWidth: '800px',
+        height: '60vh',
+        minHeight: '450px'
+      }}>
             <div className="w-full h-full">
               {renderSlide(slides[currentSlide], currentSlide)}
             </div>
-          </div>
-        )}
+          </div>}
       </div>
 
       {/* Desktop Navigation */}
-      {!isMobile && (
-        <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
+      {!isMobile && <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
           <div className="flex justify-between items-center max-w-4xl mx-auto">
             {/* Previous Button */}
-            <Button
-              variant="outline"
-              onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-              disabled={currentSlide === 0}
-              className="flex items-center gap-2 h-12 px-6 text-base font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <Button variant="outline" onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))} disabled={currentSlide === 0} className="flex items-center gap-2 h-12 px-6 text-base font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
               <ChevronLeft className="h-5 w-5" />
               Anterior
             </Button>
 
             {/* Page Info and Numbers */}
             <div className="flex items-center gap-4">
-              <div className="text-lg font-bold text-gray-700 bg-gray-100 px-3 py-2 rounded-lg">
+              <div className="text-lg font-bold text-gray-700 bg-gray-100 px-[30px] py-0 rounded-lg">
                 Página {currentSlide + 1} de {slides.length}
               </div>
               
               {/* Page Numbers */}
               <div className="flex items-center gap-2">
-                {slides.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    className={`w-10 h-10 rounded-full text-sm font-bold transition-all duration-200 ${
-                      currentSlide === index 
-                        ? 'bg-blue-600 text-white shadow-lg scale-110' 
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105'
-                    }`}
-                  >
+                {slides.map((_, index) => <button key={index} onClick={() => setCurrentSlide(index)} className={`w-10 h-10 rounded-full text-sm font-bold transition-all duration-200 ${currentSlide === index ? 'bg-blue-600 text-white shadow-lg scale-110' : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105'}`}>
                     {index + 1}
-                  </button>
-                ))}
+                  </button>)}
               </div>
             </div>
 
             {/* Next Button */}
-            <Button
-              variant="outline"
-              onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-              disabled={currentSlide === slides.length - 1}
-              className="flex items-center gap-2 h-12 px-6 text-base font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <Button variant="outline" onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))} disabled={currentSlide === slides.length - 1} className="flex items-center gap-2 h-12 px-6 text-base font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
               Próximo
               <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Mobile Navigation */}
-      {isMobile && (
-        <div className="flex-shrink-0 bg-white border-t border-gray-200">
+      {isMobile && <div className="flex-shrink-0 bg-white border-t border-gray-200">
           <div className="px-4 py-4">
             {/* Principais botões de navegação - AUMENTADOS */}
             <div className="flex justify-between items-center mb-4">
-              <Button
-                onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-                disabled={currentSlide === 0}
-                variant="outline"
-                className={`flex items-center gap-3 h-16 px-8 text-lg font-bold rounded-2xl border-3 transition-all duration-200 shadow-lg ${
-                  currentSlide === 0 
-                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 active:scale-95'
-                }`}
-              >
+              <Button onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))} disabled={currentSlide === 0} variant="outline" className={`flex items-center gap-3 h-16 px-8 text-lg font-bold rounded-2xl border-3 transition-all duration-200 shadow-lg ${currentSlide === 0 ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 active:scale-95'}`}>
                 <ChevronLeft className="h-6 w-6" />
                 Anterior
               </Button>
 
-              <Button
-                onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
-                disabled={currentSlide === slides.length - 1}
-                className={`flex items-center gap-3 h-16 px-8 text-lg font-bold rounded-2xl transition-all duration-200 shadow-lg ${
-                  currentSlide === slides.length - 1 
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-3 border-gray-200' 
-                    : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
-                }`}
-              >
+              <Button onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))} disabled={currentSlide === slides.length - 1} className={`flex items-center gap-3 h-16 px-8 text-lg font-bold rounded-2xl transition-all duration-200 shadow-lg ${currentSlide === slides.length - 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-3 border-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'}`}>
                 Próximo
                 <ChevronRight className="h-6 w-6" />
               </Button>
@@ -803,25 +802,12 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
 
             {/* Números das páginas - AUMENTADOS */}
             <div className="flex justify-center items-center gap-3">
-              {slides.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`w-14 h-14 rounded-full text-lg font-bold transition-all duration-200 shadow-lg ${
-                    currentSlide === index 
-                      ? 'bg-blue-600 text-white shadow-xl scale-110' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95'
-                  }`}
-                >
+              {slides.map((_, index) => <button key={index} onClick={() => setCurrentSlide(index)} className={`w-14 h-14 rounded-full text-lg font-bold transition-all duration-200 shadow-lg ${currentSlide === index ? 'bg-blue-600 text-white shadow-xl scale-110' : 'bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95'}`}>
                   {index + 1}
-                </button>
-              ))}
+                </button>)}
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 };
-
 export default SlideViewer;
