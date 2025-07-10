@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, ArrowLeft, Wand2, Mic, Sparkles, GraduationCap, Brain, Hash, Sliders, Plus, X } from 'lucide-react';
@@ -456,15 +455,15 @@ const CreateLesson: React.FC = () => {
       console.log('✅ Material gerado e salvo com sucesso:', material.id);
 
       // INÍCIO DA LÓGICA DE GERAÇÃO E INJEÇÃO DAS IMAGENS IA NAS VARIÁVEIS DOS SLIDES
-      if (selectedType === 'slides' && material && material.data) {
+      if (selectedType === 'slides' && material && material.content) {
         // Mapeamento das variáveis de imagem por página (índices baseados no template)
         const variaveisImagem = [
-          { idx: 0, var: 'tema_imagem', prompt: () => material.data.tema_imagem },
-          { idx: 2, var: 'introducao_imagem', prompt: () => material.data.introducao_imagem },
-          { idx: 3, var: 'conceitos_imagem', prompt: () => material.data.conceitos_imagem },
-          { idx: 4, var: 'exemplo_imagem', prompt: () => material.data.exemplo_imagem },
-          { idx: 5, var: 'desenvolvimento_imagem', prompt: () => material.data.desenvolvimento_imagem },
-          { idx: 8, var: 'imagem_principal', prompt: () => material.data.imagem_principal },
+          { idx: 0, var: 'tema_imagem', prompt: () => material.content.tema_imagem },
+          { idx: 2, var: 'introducao_imagem', prompt: () => material.content.introducao_imagem },
+          { idx: 3, var: 'conceitos_imagem', prompt: () => material.content.conceitos_imagem },
+          { idx: 4, var: 'exemplo_imagem', prompt: () => material.content.exemplo_imagem },
+          { idx: 5, var: 'desenvolvimento_imagem', prompt: () => material.content.desenvolvimento_imagem },
+          { idx: 8, var: 'imagem_principal', prompt: () => material.content.imagem_principal },
         ];
         for (const item of variaveisImagem) {
           const prompt = item.prompt();
@@ -472,16 +471,16 @@ const CreateLesson: React.FC = () => {
             try {
               const { data: imgData, error } = await supabase.functions.invoke('gerarImagemIA', { body: { prompt } });
               if (imgData && imgData.success && imgData.imageUrl) {
-                material.data[item.var] = `<img src="${imgData.imageUrl}" alt="Imagem IA" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" />`;
+                material.content[item.var] = `<img src="${imgData.imageUrl}" alt="Imagem IA" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" />`;
               } else {
-                material.data[item.var] = '';
+                material.content[item.var] = '';
               }
             } catch (e) {
-              material.data[item.var] = '';
+              material.content[item.var] = '';
               console.warn('Erro ao gerar imagem IA para', item.var, e);
             }
           } else {
-            material.data[item.var] = '';
+            material.content[item.var] = '';
           }
         }
       }
