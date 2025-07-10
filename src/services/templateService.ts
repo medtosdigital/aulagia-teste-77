@@ -372,4 +372,231 @@ export const templateService = {
 
     return slideTemplate;
   },
+
+  renderTemplate: (templateId: string, content: any): string => {
+    // Template ID mapping:
+    // '1' = plano-de-aula
+    // '2' = slides  
+    // '3' = atividade
+    // '4' = avaliacao
+
+    switch (templateId) {
+      case '2': // slides
+        return templateService.generateSlideHTML(content);
+      
+      case '1': // plano-de-aula
+        return templateService.renderLessonPlan(content);
+      
+      case '3': // atividade
+        return templateService.renderActivity(content);
+      
+      case '4': // avaliacao
+        return templateService.renderAssessment(content);
+      
+      default:
+        console.warn(`Template ID ${templateId} not found, using default HTML rendering`);
+        return templateService.renderGeneric(content);
+    }
+  },
+
+  renderLessonPlan: (content: any): string => {
+    if (typeof content === 'string') {
+      return content;
+    }
+
+    // Handle lesson plan structure
+    let html = '';
+    
+    if (content.titulo || content.tema) {
+      html += `<div class="header-section">
+        <h1>${content.titulo || content.tema}</h1>
+      </div>`;
+    }
+
+    if (content.professor) {
+      html += `<div class="section">
+        <div class="section-title">Professor(a)</div>
+        <div class="section-content">${content.professor}</div>
+      </div>`;
+    }
+
+    if (content.disciplina) {
+      html += `<div class="section">
+        <div class="section-title">Disciplina</div>
+        <div class="section-content">${content.disciplina}</div>
+      </div>`;
+    }
+
+    if (content.objetivos && Array.isArray(content.objetivos)) {
+      html += `<div class="section">
+        <div class="section-title">Objetivos</div>
+        <div class="section-content">
+          <ul>
+            ${content.objetivos.map((obj: string) => `<li>${obj}</li>`).join('')}
+          </ul>
+        </div>
+      </div>`;
+    }
+
+    if (content.desenvolvimento && Array.isArray(content.desenvolvimento)) {
+      html += `<div class="section">
+        <div class="section-title">Desenvolvimento</div>
+        <div class="section-content">`;
+      
+      content.desenvolvimento.forEach((item: any, index: number) => {
+        if (typeof item === 'string') {
+          html += `<p>${item}</p>`;
+        } else if (item && typeof item === 'object') {
+          html += `<div class="development-step">
+            <h4>${item.etapa || `Etapa ${index + 1}`}</h4>
+            ${item.atividade ? `<p><strong>Atividade:</strong> ${item.atividade}</p>` : ''}
+            ${item.tempo ? `<p><strong>Tempo:</strong> ${item.tempo}</p>` : ''}
+          </div>`;
+        }
+      });
+      
+      html += `</div></div>`;
+    }
+
+    if (content.recursos && Array.isArray(content.recursos)) {
+      html += `<div class="section">
+        <div class="section-title">Recursos</div>
+        <div class="section-content">
+          <ul>
+            ${content.recursos.map((recurso: string) => `<li>${recurso}</li>`).join('')}
+          </ul>
+        </div>
+      </div>`;
+    }
+
+    if (content.avaliacao) {
+      html += `<div class="section">
+        <div class="section-title">Avaliação</div>
+        <div class="section-content">${content.avaliacao}</div>
+      </div>`;
+    }
+
+    return html;
+  },
+
+  renderActivity: (content: any): string => {
+    if (typeof content === 'string') {
+      return content;
+    }
+
+    let html = '';
+    
+    if (content.titulo) {
+      html += `<div class="header-section">
+        <h1>${content.titulo}</h1>
+      </div>`;
+    }
+
+    if (content.instrucoes) {
+      html += `<div class="instructions-section">
+        <div class="instructions">${content.instrucoes}</div>
+      </div>`;
+    }
+
+    if (content.questoes && Array.isArray(content.questoes)) {
+      content.questoes.forEach((questao: any, index: number) => {
+        html += `<div class="questao-container">
+          <div class="questao-numero">Questão ${questao.numero || index + 1}</div>
+          <div class="questao-enunciado">${questao.pergunta || questao.enunciado}</div>`;
+
+        if (questao.opcoes && Array.isArray(questao.opcoes)) {
+          html += `<div class="questao-opcoes">`;
+          questao.opcoes.forEach((opcao: string, optIndex: number) => {
+            const letra = String.fromCharCode(65 + optIndex);
+            html += `<div class="opcao">
+              <span class="opcao-letra">${letra})</span>
+              <span class="opcao-texto">${opcao}</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+
+        // Handle different question types
+        if (questao.tipo === 'dissertativa' || questao.tipo === 'aberta') {
+          const linhas = questao.linhas || 3;
+          for (let i = 0; i < linhas; i++) {
+            html += `<div class="answer-lines"></div>`;
+          }
+        }
+
+        if (questao.tipo === 'calculo' || questao.tipo === 'matematica') {
+          html += `<div class="math-space">Espaço para cálculos</div>`;
+        }
+
+        html += `</div>`;
+      });
+    }
+
+    return html;
+  },
+
+  renderAssessment: (content: any): string => {
+    if (typeof content === 'string') {
+      return content;
+    }
+
+    let html = '';
+    
+    if (content.titulo) {
+      html += `<div class="header-section">
+        <h1>${content.titulo}</h1>
+      </div>`;
+    }
+
+    if (content.instrucoes) {
+      html += `<div class="instructions-section">
+        <div class="instructions">${content.instrucoes}</div>
+      </div>`;
+    }
+
+    if (content.questoes && Array.isArray(content.questoes)) {
+      content.questoes.forEach((questao: any, index: number) => {
+        html += `<div class="questao-container">
+          <div class="questao-numero">Questão ${questao.numero || index + 1} ${questao.pontuacao ? `(${questao.pontuacao} pts)` : ''}</div>
+          <div class="questao-enunciado">${questao.pergunta || questao.enunciado}</div>`;
+
+        if (questao.opcoes && Array.isArray(questao.opcoes)) {
+          html += `<div class="questao-opcoes">`;
+          questao.opcoes.forEach((opcao: string, optIndex: number) => {
+            const letra = String.fromCharCode(65 + optIndex);
+            html += `<div class="opcao">
+              <span class="opcao-letra">${letra})</span>
+              <span class="opcao-texto">${opcao}</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+
+        // Handle different question types
+        if (questao.tipo === 'dissertativa' || questao.tipo === 'aberta') {
+          const linhas = questao.linhas || 5;
+          for (let i = 0; i < linhas; i++) {
+            html += `<div class="answer-lines"></div>`;
+          }
+        }
+
+        if (questao.tipo === 'calculo' || questao.tipo === 'matematica') {
+          html += `<div class="math-space">Espaço para cálculos</div>`;
+        }
+
+        html += `</div>`;
+      });
+    }
+
+    return html;
+  },
+
+  renderGeneric: (content: any): string => {
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // Fallback for unknown content types
+    return JSON.stringify(content, null, 2);
+  }
 };
