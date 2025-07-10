@@ -243,6 +243,7 @@ Retorne APENAS o JSON estruturado com 12 slides específicos sobre "${tema}":
   "tema": "${tema}",
   "duracao": "[duração adequada para apresentar slides sobre ${tema}]",
   "bncc": "[códigos BNCC relevantes para ${tema} em ${disciplina}]",
+  "tema_imagem": "ilustração colorida, educativa, sem texto, representando o tema '${tema}' para ${disciplina} na ${serie}",
   "slide_1_titulo": "${tema}",
   "slide_1_subtitulo": "Aula de ${disciplina} - ${serie}",
   "objetivo_1": "[OBJETIVO 1 específico sobre ${tema}]",
@@ -250,17 +251,17 @@ Retorne APENAS o JSON estruturado com 12 slides específicos sobre "${tema}":
   "objetivo_3": "[OBJETIVO 3 específico sobre ${tema}]",
   "objetivo_4": "[OBJETIVO 4 específico sobre ${tema}]",
   "introducao_texto": "[INTRODUÇÃO específica sobre ${tema}]",
-  "introducao_imagem": "[descrição de imagem relevante para ${tema}]",
+  "introducao_imagem": "descrição visual clara, educativa, sem texto, ilustrando a introdução do tema '${tema}'",
   "conceitos_texto": "[CONCEITOS fundamentais específicos sobre ${tema}]",
   "conceito_principal": "[CONCEITO principal de ${tema}]",
-  "conceitos_imagem": "[descrição de imagem que ilustra conceitos de ${tema}]",
+  "conceitos_imagem": "descrição visual clara, educativa, sem texto, ilustrando os conceitos de '${tema}'",
   "exemplo_titulo": "[TÍTULO de exemplo prático sobre ${tema}]",
   "exemplo_conteudo": "[EXEMPLO PRÁTICO específico sobre ${tema}]",
-  "exemplo_imagem": "[descrição de imagem do exemplo de ${tema}]",
+  "exemplo_imagem": "descrição visual clara, educativa, sem texto, ilustrando um exemplo de '${tema}'",
   "desenvolvimento_texto": "[DESENVOLVIMENTO específico sobre ${tema}]",
   "ponto_1": "[PONTO 1 importante sobre ${tema}]",
   "ponto_2": "[PONTO 2 importante sobre ${tema}]",
-  "desenvolvimento_imagem": "[descrição de imagem de apoio para ${tema}]",
+  "desenvolvimento_imagem": "descrição visual clara, educativa, sem texto, ilustrando o desenvolvimento do tema '${tema}'",
   "formula_titulo": "[TÍTULO de fórmula/regra específica de ${tema}]",
   "formula_principal": "[FÓRMULA/REGRA principal de ${tema}]",
   "formula_explicacao": "[EXPLICAÇÃO da fórmula/regra de ${tema}]",
@@ -279,7 +280,7 @@ Retorne APENAS o JSON estruturado com 12 slides específicos sobre "${tema}":
   "linha_3_col_3": "[dado específico de ${tema}]",
   "imagem_titulo": "[TÍTULO descritivo sobre ${tema}]",
   "imagem_descricao": "[DESCRIÇÃO do que a imagem mostra sobre ${tema}]",
-  "imagem_principal": "[DESCRIÇÃO detalhada da imagem principal sobre ${tema}]",
+  "imagem_principal": "descrição visual clara, educativa, sem texto, ilustrando o ponto central de '${tema}'",
   "atividade_pergunta": "[PERGUNTA específica sobre ${tema}]",
   "opcao_a": "[alternativa A sobre ${tema}]",
   "opcao_b": "[alternativa B sobre ${tema}]",
@@ -567,6 +568,13 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
               // Desenho: não precisa de campo extra
               return true;
             });
+        }
+
+        // Após o parse, garantir que tema_imagem sempre exista
+        if (materialType === 'slides') {
+          if (!parsedContent.tema_imagem || typeof parsedContent.tema_imagem !== 'string' || parsedContent.tema_imagem.trim() === '') {
+            parsedContent.tema_imagem = `ilustração colorida, educativa, sem texto, representando o tema '${tema}' para ${disciplina} na ${serie}`;
+          }
         }
 
         console.log('✅ Content parsed successfully:', materialType);

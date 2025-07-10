@@ -792,10 +792,16 @@ class TemplateService {
         <body>
           <!-- Slide 1: Capa -->
           <div class="slide slide-capa">
-            <div class="date-info">{{data}}</div>
-            <div class="title" style="font-size: 3.5rem; margin-bottom: 30px;">{{tema}}</div>
-            <div class="subtitle">{{disciplina}} - {{serie}}</div>
-            <div class="teacher-info">Professor(a): {{professor}}</div>
+            <div class="text-content">
+              <div class="title" style="font-size: 3.5rem; font-weight: 800; text-align: center; margin-bottom: 30px; color: #fff; letter-spacing: -2px;">{{tema}}</div>
+              <div class="subtitle" style="font-size: 1.5rem; text-align: center; color: #fff; font-weight: 600; margin-bottom: 10px;">Aula de {{disciplina}} - {{serie}}</div>
+              <div class="presented-by" style="color: #facc15; text-align: center; font-size: 1.1rem; margin-bottom: 0.2em;">Apresentado por:</div>
+              <div class="teacher-info" style="text-align: center; color: #fff; font-size: 1.2rem;">Professor(a): {{professor}}</div>
+            </div>
+            <div class="image-side">
+              <div class="image-placeholder"></div>
+              <div class="image-content">{{tema_imagem}}</div>
+            </div>
             <div class="slide-number">1/12</div>
           </div>
 
@@ -824,7 +830,8 @@ class TemplateService {
               <div class="content">{{introducao_texto}}</div>
             </div>
             <div class="image-side">
-              <div class="image-placeholder">{{introducao_imagem}}</div>
+              <div class="image-placeholder"></div>
+              <div class="image-content">{{introducao_imagem}}</div>
             </div>
             <div class="slide-number">3/12</div>
           </div>
@@ -841,7 +848,8 @@ class TemplateService {
               </div>
             </div>
             <div class="image-side">
-              <div class="image-placeholder">{{conceitos_imagem}}</div>
+              <div class="image-placeholder"></div>
+              <div class="image-content">{{conceitos_imagem}}</div>
             </div>
             <div class="slide-number">4/12</div>
           </div>
@@ -856,7 +864,8 @@ class TemplateService {
                 <div style="font-size: 1.3rem; margin-bottom: 15px;">{{exemplo_titulo}}</div>
                 <div style="font-size: 1.1rem;">{{exemplo_conteudo}}</div>
               </div>
-              <div class="image-placeholder" style="margin: 20px auto; width: 400px;">{{exemplo_imagem}}</div>
+              <div class="image-placeholder" style="margin: 20px auto; width: 400px;"></div>
+              <div class="image-content" style="text-align:center;">{{exemplo_imagem}}</div>
             </div>
             <div class="slide-number">5/12</div>
           </div>
@@ -874,7 +883,8 @@ class TemplateService {
               </div>
             </div>
             <div class="image-side">
-              <div class="image-placeholder">{{desenvolvimento_imagem}}</div>
+              <div class="image-placeholder"></div>
+              <div class="image-content">{{desenvolvimento_imagem}}</div>
             </div>
             <div class="slide-number">6/12</div>
           </div>
@@ -932,11 +942,11 @@ class TemplateService {
           <!-- Slide 9: Imagem Central -->
           <div class="slide slide-imagem">
             <div class="text-content">
-              <div class="title">{{imagem_titulo}}</div>
+              <div class="title">Imagem Central</div>
               <div class="content">{{imagem_descricao}}</div>
             </div>
             <div class="image-side" style="width: 50%;">
-              <div class="image-placeholder" style="width: 100%; height: 300px;">{{imagem_principal}}</div>
+              <div class="image-placeholder" style="width: 100%; height: 300px; display: flex; align-items: center; justify-content: center;">{{imagem_principal}}</div>
             </div>
             <div class="slide-number">9/12</div>
           </div>
@@ -1010,7 +1020,16 @@ class TemplateService {
         'imagem_titulo', 'imagem_descricao', 'imagem_principal',
         'atividade_pergunta', 'opcao_a', 'opcao_b', 'opcao_c', 'opcao_d',
         'conclusao_texto', 'ponto_chave_1', 'ponto_chave_2',
-        'proximo_passo_1', 'proximo_passo_2', 'proximo_passo_3'
+        'proximo_passo_1', 'proximo_passo_2', 'proximo_passo_3',
+        'slide_1_titulo', 'slide_1_subtitulo', 'tema_imagem',
+        'introducao_imagem', 'conceitos_imagem',
+        'exemplo_imagem', 'desenvolvimento_imagem',
+        'formula_principal', 'formula_explicacao',
+        'tabela_titulo', 'coluna_1', 'coluna_2', 'coluna_3',
+        'linha_1_col_1', 'linha_1_col_2', 'linha_1_col_3',
+        'linha_2_col_1', 'linha_2_col_2', 'linha_2_col_3',
+        'linha_3_col_1', 'linha_3_col_2', 'linha_3_col_3',
+        'imagem_principal', 'imagem_principal_legenda'
       ],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
