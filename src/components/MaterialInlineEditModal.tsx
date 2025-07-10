@@ -794,120 +794,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
             text-align: justify;
             margin-top: 10px;
           }
-
-          /* Estilos específicos para slides */
-          .slide-viewer {
-            background: #1e293b;
-            min-height: 100vh;
-            padding: 20px;
-            font-family: 'Inter', sans-serif;
-          }
-
-          .slide {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 40px;
-            margin: 0 auto 20px;
-            max-width: 900px;
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-          }
-
-          .slide-header {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
-          }
-
-          .slide-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          }
-
-          .slide-logo {
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .slide-brand-text {
-            font-size: 20px;
-            font-weight: 700;
-            color: white;
-          }
-
-          .slide-subject {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-          }
-
-          .slide-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 80px 40px 40px;
-          }
-
-          .slide-title {
-            font-size: 4rem;
-            font-weight: 800;
-            margin-bottom: 20px;
-            line-height: 1.1;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-          }
-
-          .slide-subtitle {
-            font-size: 1.8rem;
-            font-weight: 400;
-            margin-bottom: 30px;
-            opacity: 0.9;
-          }
-
-          .slide-professor {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px 25px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-weight: 500;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-          }
-
-          .slide-image-container {
-            position: absolute;
-            right: 40px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 200px;
-            height: 200px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-          }
           
           @media print {
             body { 
@@ -1328,39 +1214,37 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
           )}
 
           {isMobile && (
-            <>
-              <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/95 backdrop-blur-sm px-8 py-4 rounded-full shadow-xl border-2">
-                <div className="flex items-center space-x-4">
-                  <FileText className="w-8 h-8 text-blue-600" />
-                  <span className="text-xl font-bold text-gray-700">
-                    {currentPage + 1} / {pages.length}
-                  </span>
-                </div>
+            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/95 backdrop-blur-sm px-8 py-4 rounded-full shadow-xl border-2">
+              <div className="flex items-center space-x-4">
+                <FileText className="w-8 h-8 text-blue-600" />
+                <span className="text-xl font-bold text-gray-700">
+                  {currentPage + 1} / {pages.length}
+                </span>
               </div>
+            </div>
+          )}
 
-              {pages.length > 1 && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                    disabled={currentPage === 0}
-                    className="absolute left-6 top-1/2 transform -translate-y-1/2 z-50 w-24 h-24 rounded-full shadow-2xl bg-white/95 backdrop-blur-sm disabled:opacity-30 border-3"
-                  >
-                    <ChevronLeft className="w-12 h-12" />
-                  </Button>
+          {isMobile && pages.length > 1 && (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                disabled={currentPage === 0}
+                className="absolute left-6 top-1/2 transform -translate-y-1/2 z-50 w-24 h-24 rounded-full shadow-2xl bg-white/95 backdrop-blur-sm disabled:opacity-30 border-3"
+              >
+                <ChevronLeft className="w-12 h-12" />
+              </Button>
 
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
-                    disabled={currentPage === pages.length - 1}
-                    className="absolute right-6 top-1/2 transform -translate-y-1/2 z-50 w-24 h-24 rounded-full shadow-2xl bg-white/95 backdrop-blur-sm disabled:opacity-30 border-3"
-                  >
-                    <ChevronRight className="w-12 h-12" />
-                  </Button>
-                </>
-              )}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
+                disabled={currentPage === pages.length - 1}
+                className="absolute right-6 top-1/2 transform -translate-y-1/2 z-50 w-24 h-24 rounded-full shadow-2xl bg-white/95 backdrop-blur-sm disabled:opacity-30 border-3"
+              >
+                <ChevronRight className="w-12 h-12" />
+              </Button>
             </>
           )}
 

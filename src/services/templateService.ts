@@ -1,1902 +1,602 @@
-export class TemplateService {
-  private templates: { [key: string]: string } = {
-    '1': `
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{titulo}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-          
-          * {
+export const templateService = {
+  generateSlideHTML: (data: any): string => {
+    const slideTemplate = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slides - ${data.tema}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Lato:wght@300;400;700&display=swap');
+        
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-          }
-          
-          body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
+            font-family: 'Lato', sans-serif;
+            background: #f0f2f5;
             color: #333;
-            background: #f8fafc;
-            padding: 20px;
-          }
-          
-          .container {
-            max-width: 800px;
-            margin: 0 auto;
+        }
+        
+        .slide {
+            width: 100%;
+            max-width: 1024px;
+            height: 768px;
+            margin: 0 auto 20px auto;
             background: white;
-            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          }
-          
-          .header-section {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid #3b82f6;
-          }
-          
-          .header-section h1 {
-            color: #1e40af;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-          }
-          
-          .info-table {
-            width: 100%;
-            margin-bottom: 30px;
-            border-collapse: collapse;
-            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          }
-          
-          .info-table th {
-            background: #3b82f6;
-            color: white;
-            padding: 12px 15px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.9rem;
-          }
-          
-          .info-table td {
-            background: #f8fafc;
-            padding: 12px 15px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 0.9rem;
-          }
-          
-          .section {
-            margin-bottom: 30px;
-            page-break-inside: avoid;
-          }
-          
-          .section h3 {
-            color: #1e40af;
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #3b82f6;
-            padding-bottom: 5px;
-          }
-          
-          .objectives-list, .skills-list {
-            list-style: none;
-            padding: 0;
-            margin: 15px 0;
-          }
-          
-          .objectives-list li, .skills-list li {
-            margin-bottom: 10px;
-            padding: 12px 15px;
-            background: #f1f5f9;
-            border-left: 4px solid #3b82f6;
-            border-radius: 4px;
-            font-size: 0.95rem;
-            line-height: 1.5;
-          }
-          
-          .skills-list li {
-            border-left-color: #10b981;
-            background: #f0fdf4;
-          }
-          
-          .development-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          }
-          
-          .development-table th {
-            background: #1e40af;
-            color: white;
-            padding: 12px 10px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.85rem;
-          }
-          
-          .development-table td {
-            background: white;
-            padding: 15px 10px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 0.85rem;
-            vertical-align: top;
-            line-height: 1.4;
-          }
-          
-          .development-table tr:nth-child(even) td {
-            background: #f8fafc;
-          }
-          
-          .resources-list {
-            list-style: none;
-            padding: 0;
-            margin: 15px 0;
-          }
-          
-          .resources-list li {
-            margin-bottom: 8px;
-            padding: 10px 15px;
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            border-radius: 4px;
-            font-size: 0.9rem;
-          }
-          
-          .content-text {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            text-align: justify;
-            margin-top: 10px;
-            padding: 15px;
-            background: #f8fafc;
-            border-radius: 6px;
-          }
-          
-          .evaluation-text {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            text-align: justify;
-            margin-top: 10px;
-            padding: 15px;
-            background: #fef2f2;
-            border-left: 4px solid #ef4444;
-            border-radius: 6px;
-          }
-          
-          @media print {
-            body {
-              background: white;
-              padding: 0;
-            }
-            
-            .container {
-              box-shadow: none;
-              padding: 20px;
-            }
-            
-            .section {
-              page-break-inside: avoid;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header-section">
-            <h1>{titulo}</h1>
-            
-            <table class="info-table">
-              <tr>
-                <th>Professor(a)</th>
-                <td>{professor}</td>
-                <th>Data</th>
-                <td>{data}</td>
-              </tr>
-              <tr>
-                <th>Disciplina</th>
-                <td>{disciplina}</td>
-                <th>Série/Ano</th>
-                <td>{serie}</td>
-              </tr>
-              <tr>
-                <th>Tema</th>
-                <td>{tema}</td>
-                <th>Duração</th>
-                <td>{duracao}</td>
-              </tr>
-              <tr>
-                <th>BNCC</th>
-                <td colspan="3">{bncc}</td>
-              </tr>
-            </table>
-          </div>
-          
-          <div class="section">
-            <h3>Objetivos</h3>
-            <ul class="objectives-list">
-              {objetivos}
-            </ul>
-          </div>
-          
-          <div class="section">
-            <h3>Habilidades</h3>
-            <ul class="skills-list">
-              {habilidades}
-            </ul>
-          </div>
-          
-          <div class="section">
-            <h3>Desenvolvimento da Aula</h3>
-            <table class="development-table">
-              <thead>
-                <tr>
-                  <th style="width: 15%;">Etapa</th>
-                  <th style="width: 10%;">Tempo</th>
-                  <th style="width: 45%;">Atividade</th>
-                  <th style="width: 30%;">Recursos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {desenvolvimento}
-              </tbody>
-            </table>
-          </div>
-          
-          <div class="section">
-            <h3>Recursos Didáticos</h3>
-            <ul class="resources-list">
-              {recursos}
-            </ul>
-          </div>
-          
-          <div class="section">
-            <h3>Conteúdos Programáticos</h3>
-            <ul class="objectives-list">
-              {conteudosProgramaticos}
-            </ul>
-          </div>
-          
-          <div class="section">
-            <h3>Metodologia</h3>
-            <div class="content-text">{metodologia}</div>
-          </div>
-          
-          <div class="section">
-            <h3>Avaliação</h3>
-            <div class="evaluation-text">{avaliacao}</div>
-          </div>
-          
-          <div class="section">
-            <h3>Referências</h3>
-            <ul class="objectives-list">
-              {referencias}
-            </ul>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
-
-    '2': `
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{titulo}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-          
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          
-          body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-          }
-          
-          .presentation-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-            width: 100%;
-            max-width: 1400px;
-            min-height: 80vh;
-            position: relative;
-            overflow: hidden;
-          }
-          
-          .slide {
-            display: none;
-            padding: 60px;
-            min-height: 80vh;
-            position: relative;
-            background: white;
-          }
-          
-          .slide.active {
             display: flex;
             flex-direction: column;
-            justify-content: center;
-          }
-          
-          .slide-header {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            font-size: 14px;
-            color: #888;
-            font-weight: 500;
-          }
-          
-          .slide-footer {
-            position: absolute;
-            bottom: 20px;
-            left: 30px;
-            right: 30px;
+            position: relative;
+        }
+        
+        .slide-header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 20px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
-            color: #666;
-          }
-          
-          .slide-footer .logo {
-            font-weight: 700;
-            color: #667eea;
-          }
-          
-          .slide-number {
-            background: #667eea;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-weight: 500;
-          }
-          
-          .slide-1 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-align: center;
-            display: flex !important;
+        }
+        
+        .slide-content {
+            flex: 1;
+            padding: 40px;
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-          }
-          
-          .slide-1 h1 {
-            font-size: 4rem;
+            text-align: center;
+        }
+        
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin: 0 0 30px 0;
+            color: #333;
+            line-height: 1.2;
+            letter-spacing: -1px;
+        }
+        
+        h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
             font-weight: 800;
+            margin: 0 0 25px 0;
+            color: #333;
+        }
+        
+        h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 20px 0;
+            color: #007bff;
+        }
+        
+        p {
+            font-size: 1.3rem;
+            line-height: 1.6;
             margin-bottom: 20px;
-            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
-          }
-          
-          .slide-1 .subtitle {
-            font-size: 1.5rem;
-            font-weight: 300;
-            margin-bottom: 40px;
-            opacity: 0.9;
-          }
-          
-          .slide-1 .info {
-            background: rgba(255,255,255,0.1);
-            padding: 30px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            margin-top: 40px;
-          }
-          
-          .slide-1 .info p {
-            margin: 10px 0;
-            font-size: 1.1rem;
-          }
-          
-          .slide-1 .image-placeholder {
+            color: #555;
+        }
+        
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        li {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            position: relative;
+            padding-left: 30px;
+            color: #555;
+        }
+        
+        li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #007bff;
+            font-weight: bold;
+            font-size: 1.4rem;
+        }
+        
+        .professor-info {
+            font-size: 1.4rem;
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .subtitle {
+            font-size: 1.6rem;
+            color: #ccc;
+            margin-top: 10px;
+            font-weight: 400;
+        }
+        
+        .image-placeholder {
             width: 300px;
             height: 200px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 30px auto;
-            font-size: 14px;
-            text-align: center;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-          }
-          
-          h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 40px;
-            text-align: center;
-          }
-          
-          h3 {
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 20px;
-          }
-          
-          .objectives-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 25px;
-            margin-top: 30px;
-          }
-          
-          .objective-card {
-            background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
-            padding: 25px;
-            border-radius: 15px;
-            border-left: 5px solid #667eea;
-            transition: transform 0.3s ease;
-          }
-          
-          .objective-card:hover {
-            transform: translateY(-5px);
-          }
-          
-          .objective-card .number {
-            background: #667eea;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            margin-bottom: 15px;
-          }
-          
-          .content-section {
-            background: #f8f9ff;
-            padding: 40px;
-            border-radius: 15px;
-            margin: 20px 0;
-          }
-          
-          .content-two-column {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 40px;
-            align-items: start;
-          }
-          
-          .text-content p {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            margin-bottom: 20px;
-            text-align: justify;
-          }
-          
-          .concept-highlight {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            margin: 30px 0;
-          }
-          
-          .concept-highlight h3 {
-            color: white;
-            font-size: 2rem;
-            margin-bottom: 15px;
-          }
-          
-          .development-page {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 40px;
-            align-items: start;
-          }
-          
-          .development-content h3 {
-            color: #667eea;
-            font-size: 2rem;
-            margin-bottom: 25px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid #667eea;
-          }
-          
-          .development-content p {
-            font-size: 1.2rem;
-            line-height: 1.8;
-            text-align: justify;
-            color: #444;
-          }
-          
-          .example-section {
-            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 15px;
-            margin: 20px 0;
-          }
-          
-          .example-section h3 {
-            color: white;
-            font-size: 2.2rem;
-            margin-bottom: 25px;
-            text-align: center;
-          }
-          
-          .example-content {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 30px;
-            align-items: center;
-          }
-          
-          .example-content p {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            text-align: justify;
-          }
-          
-          .image-placeholder {
-            background: rgba(255,255,255,0.1);
-            border: 2px dashed rgba(255,255,255,0.3);
-            border-radius: 15px;
-            height: 250px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            text-align: center;
-            padding: 20px;
-            backdrop-filter: blur(5px);
-          }
-          
-          .slide:not(.slide-1) .image-placeholder {
-            background: #f0f4f8;
+            background: #f8f9fa;
             border: 2px dashed #ddd;
-            color: #666;
-          }
-          
-          .table-container {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin: 30px 0;
-          }
-          
-          table {
-            width: 100%;
-            border-collapse: collapse;
-          }
-          
-          th {
-            background: #667eea;
-            color: white;
-            padding: 20px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 1.1rem;
-          }
-          
-          td {
-            padding: 20px;
-            border-bottom: 1px solid #eee;
-            font-size: 1rem;
-          }
-          
-          tr:hover {
-            background: #f8f9ff;
-          }
-          
-          .activity-section {
-            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
-            padding: 40px;
-            border-radius: 15px;
-            margin: 30px 0;
-          }
-          
-          .activity-section h3 {
-            color: #2d3436;
-            margin-bottom: 30px;
-            text-align: center;
-          }
-          
-          .question {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-          }
-          
-          .options {
-            list-style: none;
-            margin-top: 20px;
-          }
-          
-          .options li {
-            background: #f8f9ff;
-            padding: 12px 20px;
-            margin: 8px 0;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            cursor: pointer;
-            transition: all 0.3s ease;
-          }
-          
-          .options li:hover {
-            background: #e8f2ff;
-            transform: translateX(5px);
-          }
-          
-          .conclusion-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 30px;
-            margin: 30px 0;
-          }
-          
-          .conclusion-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-          }
-          
-          .conclusion-card h4 {
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            color: white;
-          }
-          
-          .next-steps {
-            background: #f8f9ff;
-            padding: 30px;
-            border-radius: 15px;
-            margin-top: 30px;
-          }
-          
-          .next-steps ul {
-            list-style: none;
-            margin-top: 20px;
-          }
-          
-          .next-steps li {
-            background: white;
-            padding: 15px 20px;
-            margin: 10px 0;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-          }
-          
-          .navigation {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            gap: 10px;
-            z-index: 1000;
-          }
-          
-          .nav-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-          }
-          
-          .nav-btn:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-          }
-          
-          .nav-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-          }
-          
-          @media (max-width: 768px) {
-            .slide {
-              padding: 30px 20px;
-            }
-            
-            .slide-1 h1 {
-              font-size: 2.5rem;
-            }
-            
-            h2 {
-              font-size: 2rem;
-            }
-            
-            .objectives-grid,
-            .conclusion-grid {
-              grid-template-columns: 1fr;
-            }
-            
-            .content-two-column,
-            .development-page,
-            .example-content {
-              grid-template-columns: 1fr;
-              gap: 20px;
-            }
-            
-            .navigation {
-              bottom: 20px;
-              right: 20px;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="presentation-container">
-          <!-- Slide 1: Título -->
-          <div class="slide slide-1 active">
-            <h1>{slide_1_titulo}</h1>
-            <div class="subtitle">{slide_1_subtitulo}</div>
-            <div class="image-placeholder">{tema_imagem}</div>
-            <div class="info">
-              <p><strong>Professor(a):</strong> {professor}</p>
-              <p><strong>Data:</strong> {data}</p>
-              <p><strong>Disciplina:</strong> {disciplina}</p>
-              <p><strong>Série:</strong> {serie}</p>
-            </div>
-          </div>
-
-          <!-- Slide 2: Objetivos -->
-          <div class="slide">
-            <div class="slide-header">Slide 2/12</div>
-            <h2>Objetivos da Aula</h2>
-            <div class="objectives-grid">
-              <div class="objective-card">
-                <div class="number">1</div>
-                <p>{objetivo_1}</p>
-              </div>
-              <div class="objective-card">
-                <div class="number">2</div>
-                <p>{objetivo_2}</p>
-              </div>
-              <div class="objective-card">
-                <div class="number">3</div>
-                <p>{objetivo_3}</p>
-              </div>
-              <div class="objective-card">
-                <div class="number">4</div>
-                <p>{objetivo_4}</p>
-              </div>
-            </div>
-            <div class="slide-footer">
-              <div class="logo">AulagIA</div>
-              <div class="slide-number">2/12</div>
-            </div>
-          </div>
-
-          <!-- Slide 3: Introdução -->
-          <div class="slide">
-            <div class="slide-header">Slide 3/12</div>
-            <h2>Introdução</h2>
-            <div class="content-two-column">
-              <div class="text-content">
-                <p>{introducao_texto}</p>
-              </div>
-              <div class="image-placeholder">{introducao_imagem}</div>
-            </div>
-            <div class="slide-footer">
-              <div class="logo">AulagIA</div>
-              <div class="slide-number">3/12</div>
-            </div>
-          </div>
-
-          <!-- Slide 4: Conceito Principal -->
-          <div class="slide">
-            <div class="slide-header">Slide 4/12</div>
-            <h2>Conceito Principal</h2>
-            <div class="content-section">
-              <p>{conceitos_texto}</p>
-            </div>
-            <div class="concept-highlight">
-              <h3>{conceito_principal}</h3>
-            </div>
-            <div class="image-placeholder" style="margin: 20px auto; width: 400px;">{conceitos_imagem}</div>
-            <div class="slide-footer">
-              <div class="logo">AulagIA</div>
-              <div class="slide-number">4/12</div>
-            </div>
-          </div>
-
-          <!-- Slide 5: Desenvolvimento 1 -->
-          <div class="slide">
-            <div class="slide-header">Slide 5/12</div>
-            <h2>Desenvolvimento do Conteúdo</h2>
-            <div class="development-page">
-              <div class="development-content">
-                <h3>{desenvolvimento_1_titulo}</h3>
-                <p>{desenvolvimento_1_texto}</p>
-              </div>
-              <div class="image-placeholder">{desenvolvimento_1_imagem}</div>
-            </div>
-            <div class="slide-footer">
-              <div class="logo">AulagIA</div>
-              <div class="slide-number">5/12</div>
-            </div>
-          </div>
-
-          <!-- Slide 6: Desenvolvimento 2 -->
-          <div class="slide">
-            <div class="slide-header">Slide 6/12</div>
-            <h2>Continuação dos Tópicos</h2>
-            <div class="development-page">
-              <div class="development-content">
-                <h3>{desenvolvimento_2_titulo}</h3>
-                <p>{desenvolvimento_2_texto}</p>
-              </div>
-              <div class="image-placeholder">{desenvolvimento_2_imagem}</div>
-            </div>
-            <div class="slide-footer">
-              <div class="logo">AulagIA</div>
-              <div class="slide-number">6/12</div>
-            </div>
-          </div>
-
-          <!-- Slide 7: Desenvolvimento 3 -->
-          <div class="slide">
-            <div class="slide-header">Slide 7/12</div>
-            <h2>Desenvolvimento do Conteúdo</h2>
-            <div class="development-page">
-              <div class="development-content">
-                <h3>{desenvolvimento_3_titulo}</h3>
-                <p>{desenvolvimento_3_texto}</p>
-              </div>
-              <div class="image-placeholder">{desenvolvimento_3_imagem}</div>
-            </div>
-            <div class="slide-footer">
-              <div class="logo">AulagIA</div>
-              <div class="slide-number">7/12</div>
-            </div>
-          </div>
-
-          <!-- Slide 8: Desenvolvimento 4 -->
-          <div class="slide">
-            <div class="slide-header">Slide 8/12</div>
-            <h2>Continuação dos Tópicos</h2>
-            <div class="development-page">
-              <div class="development-content">
-                <h3>{desenvolvimento_4_titulo}</h3>
-                <p>{desenvolvimento_4_texto}</p>
-              </div>
-              <div class="image-placeholder">{desenvolvimento_4_imagem}</div>
-            </div>
-            <div class="slide-footer">
-              <div class="logo">AulagIA</div>
-              <div class="slide-number">8/12</div>
-            </div>
-          </div>
-
-          <!-- Slide 9: Exemplo Prático -->
-          <div class="slide">
-            <div class="slide-header">Slide 9/12</div>
-            <h2>Exemplo Prático</h2>
-            <div class="example-section">
-              <h3>{exemplo_titulo}</h3>
-              <div class="example-content">
-                <p>{exemplo_conteudo}</p>
-                <div class="image-placeholder">{exemplo_imagem}</div>
-              </div>
-            </div>
-            <div class="slide-footer">
-              <div class="logo">AulagIA</div>
-              <div class="slide-number">9/12</div>
-            </div>
-          </div>
-
-          <!-- Slide 10: Tabela -->
-          <div class="slide">
-            <div class="slide-header">Slide 10/12</div>
-            <h2>{tabela_titulo}</h2>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>{coluna_1}</th>
-                    <th>{coluna_2}</th>
-                    <th>{coluna_3}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>{linha_1_col_1}</td>
-                    <td>{linha_1_col_2}</td>
-                    <td>{linha_1_col_3}</td>
-                  </tr>
-                  <tr>
-                    <td>{linha_2_col_1}</td>
-                    <td>{linha_2_col_2}</td>
-                    <td>{linha_2_col_3}</td>
-                  </tr>
-                  <tr>
-                    <td>{linha_3_col_1}</td>
-                    <td>{linha_3_col_2}</td>
-                    <td>{linha_3_col_3}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="slide-footer">
-              <div class="logo">AulagIA</div>
-              <div class="slide-number">10/12</div>
-            </div>
-          </div>
-
-          <!-- Slide 11: Atividade -->
-          <div class="slide">
-            <div class="slide-header">Slide 11/12</div>
-            <h2>Atividade Interativa</h2>
-            <div class="activity-section">
-              <h3>Responda a pergunta:</h3>
-              <div class="question">
-                <p><strong>{atividade_pergunta}</strong></p>
-                <ul class="options">
-                  <li>A) {opcao_a}</li>
-                  <li>B) {opcao_b}</li>
-                  <li>C) {opcao_c}</li>
-                  <li>D) {opcao_d}</li>
-                </ul>
-              </div>
-            </div>
-            <div class="slide-footer">
-              <div class="logo">AulagIA</div>
-              <div class="slide-number">11/12</div>
-            </div>
-          </div>
-
-          <!-- Slide 12: Conclusão -->
-          <div class="slide">
-            <div class="slide-header">Slide 12/12</div>
-            <h2>Conclusão</h2>
-            <div class="content-section">
-              <p>{conclusao_texto}</p>
-            </div>
-            <div class="conclusion-grid">
-              <div class="conclusion-card">
-                <h4>Pontos-Chave</h4>
-                <p>{ponto_chave_1}</p>
-                <p>{ponto_chave_2}</p>
-              </div>
-              <div class="conclusion-card">
-                <h4>Próximos Passos</h4>
-                <p>{proximo_passo_1}</p>
-                <p>{proximo_passo_2}</p>
-              </div>
-            </div>
-            <div class="next-steps">
-              <h3>Para continuar estudando:</h3>
-              <ul>
-                <li>{proximo_passo_3}</li>
-              </ul>
-            </div>
-            <div class="slide-footer">
-              <div class="logo">AulagIA</div>
-              <div class="slide-number">12/12</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="navigation">
-          <button class="nav-btn" onclick="previousSlide()">← Anterior</button>
-          <button class="nav-btn" onclick="nextSlide()">Próximo →</button>
-        </div>
-
-        <script>
-          let currentSlideIndex = 0;
-          const slides = document.querySelectorAll('.slide');
-          const totalSlides = slides.length;
-
-          function showSlide(index) {
-            slides.forEach((slide, i) => {
-              slide.classList.remove('active');
-              if (i === index) {
-                slide.classList.add('active');
-              }
-            });
-            updateNavigation();
-          }
-
-          function nextSlide() {
-            if (currentSlideIndex < totalSlides - 1) {
-              currentSlideIndex++;
-              showSlide(currentSlideIndex);
-            }
-          }
-
-          function previousSlide() {
-            if (currentSlideIndex > 0) {
-              currentSlideIndex--;
-              showSlide(currentSlideIndex);
-            }
-          }
-
-          function updateNavigation() {
-            const prevBtn = document.querySelector('.nav-btn');
-            const nextBtn = document.querySelectorAll('.nav-btn')[1];
-            
-            prevBtn.disabled = currentSlideIndex === 0;
-            nextBtn.disabled = currentSlideIndex === totalSlides - 1;
-          }
-
-          // Keyboard navigation
-          document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === ' ') {
-              nextSlide();
-            } else if (e.key === 'ArrowLeft') {
-              previousSlide();
-            }
-          });
-
-          // Initialize
-          showSlide(0);
-        </script>
-      </body>
-      </html>
-    `,
-
-    '3': `
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{titulo}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-          
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          
-          body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f8fafc;
-            padding: 20px;
-          }
-          
-          .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          }
-          
-          .header-section {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid #10b981;
-          }
-          
-          .header-section h1 {
-            color: #065f46;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-          }
-          
-          .info-table {
-            width: 100%;
-            margin-bottom: 30px;
-            border-collapse: collapse;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          }
-          
-          .info-table th {
-            background: #10b981;
-            color: white;
-            padding: 12px 15px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.9rem;
-          }
-          
-          .info-table td {
-            background: #f0fdf4;
-            padding: 12px 15px;
-            border-bottom: 1px solid #d1fae5;
-            font-size: 0.9rem;
-          }
-          
-          .instructions {
-            background: #eff6ff;
-            padding: 20px;
-            border-left: 4px solid #3b82f6;
-            margin-bottom: 30px;
-            border-radius: 6px;
-          }
-          
-          .instructions h3 {
-            color: #1e40af;
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-          }
-          
-          .questao-container {
-            margin-bottom: 30px;
-            padding: 25px;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            background: #fafafa;
-            page-break-inside: avoid;
-          }
-          
-          .questao-numero {
-            font-weight: 600;
-            color: #065f46;
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-            padding: 8px 15px;
-            background: #d1fae5;
-            border-radius: 6px;
-            display: inline-block;
-          }
-          
-          .questao-enunciado {
-            margin-bottom: 20px;
-            font-size: 1rem;
-            line-height: 1.6;
-            text-align: justify;
-            color: #374151;
-          }
-          
-          .questao-opcoes {
-            margin-left: 0;
-          }
-          
-          .opcao {
-            margin-bottom: 12px;
-            padding: 12px 15px;
-            background: white;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            display: flex;
-            align-items: flex-start;
-            transition: all 0.2s ease;
-          }
-          
-          .opcao:hover {
-            background: #f9fafb;
-            border-color: #10b981;
-          }
-          
-          .opcao-letra {
-            font-weight: bold;
-            margin-right: 12px;
-            color: #065f46;
-            min-width: 25px;
-            background: #d1fae5;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-          }
-          
-          .opcao-texto {
-            flex: 1;
-            font-size: 0.95rem;
-            line-height: 1.4;
-          }
-          
-          .answer-lines {
-            border-bottom: 1px solid #d1d5db;
-            margin-bottom: 12px;
-            height: 25px;
-            width: 100%;
-            display: block;
-          }
-          
-          .matching-section {
-            display: flex;
-            gap: 30px;
-            margin: 20px 0;
-          }
-          
-          .matching-column {
-            flex: 1;
-          }
-          
-          .matching-column h4 {
-            color: #065f46;
-            margin-bottom: 15px;
-            font-size: 1rem;
-            font-weight: 600;
-          }
-          
-          .matching-item {
-            padding: 12px 15px;
-            border: 1px solid #d1d5db;
-            margin-bottom: 10px;
-            border-radius: 6px;
-            background: #f9fafb;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
-          }
-          
-          .matching-item:hover {
-            background: #f0fdf4;
-            border-color: #10b981;
-          }
-          
-          .fill-blank {
-            display: inline-block;
-            border-bottom: 2px solid #10b981;
-            min-width: 120px;
-            height: 25px;
-            margin: 0 8px;
-            background: #f0fdf4;
-          }
-          
-          .image-space {
-            border: 2px dashed #d1d5db;
-            min-height: 150px;
-            margin: 20px 0;
-            padding: 20px;
-            border-radius: 8px;
-            background: #fafafa;
-            text-align: center;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #6b7280;
-            font-size: 0.9rem;
-          }
-          
-          .math-space {
-            border: 1px solid #e5e7eb;
-            min-height: 100px;
-            margin: 15px 0;
-            padding: 15px;
-            border-radius: 6px;
-            background: #f8fafc;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6b7280;
-            font-size: 0.85rem;
-          }
-          
-          @media print {
-            body {
-              background: white;
-              padding: 0;
-            }
-            
-            .container {
-              box-shadow: none;
-              padding: 20px;
-            }
-            
-            .questao-container {
-              page-break-inside: avoid;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header-section">
-            <h1>{titulo}</h1>
-            
-            <table class="info-table">
-              <tr>
-                <th>Professor(a)</th>
-                <td>{professor}</td>
-                <th>Data</th>
-                <td>{data}</td>
-              </tr>
-              <tr>
-                <th>Disciplina</th>
-                <td>{disciplina}</td>
-                <th>Série/Ano</th>
-                <td>{serie}</td>
-              </tr>
-              <tr>
-                <th>Tema</th>
-                <td>{tema}</td>
-                <th>Duração</th>
-                <td>{duracao}</td>
-              </tr>
-              <tr>
-                <th>BNCC</th>
-                <td colspan="3">{bncc}</td>
-              </tr>
-            </table>
-          </div>
-          
-          <div class="instructions">
-            <h3>Instruções</h3>
-            <p>{instrucoes}</p>
-          </div>
-          
-          {questoes}
-        </div>
-      </body>
-      </html>
-    `,
-
-    '4': `
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{titulo}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-          
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          
-          body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f8fafc;
-            padding: 20px;
-          }
-          
-          .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          }
-          
-          .header-section {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid #dc2626;
-          }
-          
-          .header-section h1 {
-            color: #991b1b;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-          }
-          
-          .info-table {
-            width: 100%;
-            margin-bottom: 30px;
-            border-collapse: collapse;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          }
-          
-          .info-table th {
-            background: #dc2626;
-            color: white;
-            padding: 12px 15px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.9rem;
-          }
-          
-          .info-table td {
-            background: #fef2f2;
-            padding: 12px 15px;
-            border-bottom: 1px solid #fecaca;
-            font-size: 0.9rem;
-          }
-          
-          .instructions {
-            background: #fef3c7;
-            padding: 20px;
-            border-left: 4px solid #f59e0b;
-            margin-bottom: 30px;
-            border-radius: 6px;
-          }
-          
-          .instructions h3 {
-            color: #92400e;
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-          }
-          
-          .questao-container {
-            margin-bottom: 30px;
-            padding: 25px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            background: #fafafa;
-            page-break-inside: avoid;
-            position: relative;
-          }
-          
-          .questao-container:hover {
-            border-color: #dc2626;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1);
-          }
-          
-          .questao-numero {
-            font-weight: 600;
-            color: #991b1b;
-            margin-bottom: 15px;
+            color: #888;
             font-size: 1.1rem;
-            padding: 8px 15px;
-            background: #fecaca;
-            border-radius: 6px;
-            display: inline-block;
-          }
-          
-          .questao-enunciado {
-            margin-bottom: 20px;
-            font-size: 1rem;
-            line-height: 1.6;
-            text-align: justify;
-            color: #374151;
-            font-weight: 500;
-          }
-          
-          .questao-opcoes {
-            margin-left: 0;
-          }
-          
-          .opcao {
-            margin-bottom: 12px;
-            padding: 15px 18px;
-            background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            display: flex;
-            align-items: flex-start;
-            transition: all 0.2s ease;
-            cursor: pointer;
-          }
-          
-          .opcao:hover {
-            background: #fef2f2;
-            border-color: #dc2626;
-            transform: translateX(3px);
-          }
-          
-          .opcao-letra {
-            font-weight: bold;
-            margin-right: 15px;
-            color: #991b1b;
-            min-width: 30px;
-            background: #fecaca;
-            padding: 6px 10px;
-            border-radius: 50%;
-            font-size: 0.9rem;
-            text-align: center;
-          }
-          
-          .opcao-texto {
-            flex: 1;
-            font-size: 0.95rem;
-            line-height: 1.4;
-          }
-          
-          .answer-lines {
-            border-bottom: 2px solid #dc2626;
-            margin-bottom: 15px;
-            height: 30px;
-            width: 100%;
-            display: block;
-          }
-          
-          .pontuacao {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: #dc2626;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-          }
-          
-          .matching-section {
-            display: flex;
-            gap: 30px;
-            margin: 20px 0;
-          }
-          
-          .matching-column {
-            flex: 1;
-          }
-          
-          .matching-column h4 {
-            color: #991b1b;
-            margin-bottom: 15px;
-            font-size: 1rem;
-            font-weight: 600;
-          }
-          
-          .matching-item {
-            padding: 12px 15px;
-            border: 2px solid #e5e7eb;
-            margin-bottom: 10px;
-            border-radius: 6px;
-            background: white;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
-            cursor: pointer;
-          }
-          
-          .matching-item:hover {
-            background: #fef2f2;
-            border-color: #dc2626;
-          }
-          
-          .fill-blank {
-            display: inline-block;
-            border-bottom: 3px solid #dc2626;
-            min-width: 120px;
-            height: 25px;
-            margin: 0 8px;
-            background: #fef2f2;
-          }
-          
-          .image-space {
-            border: 2px dashed #dc2626;
-            min-height: 150px;
-            margin: 20px 0;
-            padding: 20px;
-            border-radius: 8px;
-            background: #fef2f2;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #991b1b;
-            font-size: 0.9rem;
-            font-weight: 500;
-          }
-          
-          .math-space {
-            border: 2px solid #dc2626;
-            min-height: 100px;
-            margin: 15px 0;
-            padding: 15px;
-            border-radius: 6px;
-            background: #fef2f2;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #991b1b;
-            font-size: 0.85rem;
-          }
-          
-          .criteria-section {
-            margin-top: 40px;
-            padding: 20px;
-            background: #f0f9ff;
-            border-left: 4px solid #0ea5e9;
-            border-radius: 6px;
-          }
-          
-          .criteria-section h3 {
-            color: #0c4a6e;
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-          }
-          
-          .criteria-section ul {
-            list-style: none;
-            padding: 0;
-          }
-          
-          .criteria-section li {
-            margin-bottom: 8px;
-            padding: 8px 12px;
-            background: white;
-            border-radius: 4px;
-            border-left: 3px solid #0ea5e9;
-            font-size: 0.9rem;
-          }
-          
-          @media print {
-            body {
-              background: white;
-              padding: 0;
-            }
-            
-            .container {
-              box-shadow: none;
-              padding: 20px;
-            }
-            
-            .questao-container {
-              page-break-inside: avoid;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header-section">
-            <h1>{titulo}</h1>
-            
-            <table class="info-table">
-              <tr>
-                <th>Professor(a)</th>
-                <td>{professor}</td>
-                <th>Data</th>
-                <td>{data}</td>
-              </tr>
-              <tr>
-                <th>Disciplina</th>
-                <td>{disciplina}</td>
-                <th>Série/Ano</th>
-                <td>{serie}</td>
-              </tr>
-              <tr>
-                <th>Tema</th>
-                <td>{tema}</td>
-                <th>Duração</th>
-                <td>{duracao}</td>
-              </tr>
-              <tr>
-                <th>BNCC</th>
-                <td colspan="3">{bncc}</td>
-              </tr>
-            </table>
-          </div>
-          
-          <div class="instructions">
-            <h3>Instruções da Avaliação</h3>
-            <p>{instrucoes}</p>
-          </div>
-          
-          {questoes}
-          
-          <div class="criteria-section">
-            <h3>Critérios de Avaliação</h3>
-            <ul>
-              {criterios_avaliacao}
-            </ul>
-          </div>
-        </div>
-      </body>
-      </html>
-    `
-  };
-
-  renderTemplate(templateId: string, data: any): string {
-    const template = this.templates[templateId];
-    if (!template) {
-      throw new Error(`Template ${templateId} não encontrado`);
-    }
-
-    let rendered = template;
-
-    // Handle different data structures
-    if (typeof data === 'string') {
-      return data;
-    }
-
-    // Replace all placeholders with actual data
-    Object.keys(data).forEach(key => {
-      const placeholder = `{${key}}`;
-      let value = data[key];
-
-      // Handle arrays (like objectives, skills, resources, etc.)
-      if (Array.isArray(value)) {
-        if (key === 'objetivos' || key === 'habilidades' || key === 'recursos' || key === 'conteudosProgramaticos' || key === 'referencias') {
-          value = value.map(item => `<li>${item}</li>`).join('');
-        } else if (key === 'desenvolvimento') {
-          value = value.map(etapa => `
-            <tr>
-              <td><strong>${etapa.etapa}</strong></td>
-              <td>${etapa.tempo}</td>
-              <td>${etapa.atividade}</td>
-              <td>${etapa.recursos}</td>
-            </tr>
-          `).join('');
-        } else if (key === 'questoes') {
-          value = this.renderQuestions(value);
-        } else if (key === 'criterios_avaliacao') {
-          value = value.map(criterio => `<li>${criterio}</li>`).join('');
-        } else {
-          value = value.join(', ');
+            margin: 20px auto;
         }
-      }
+    </style>
+</head>
+<body>
 
-      // Ensure value is a string
-      if (typeof value !== 'string') {
-        value = String(value || '');
-      }
+<!-- Slide 1: Capa -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h1>${data.tema}</h1>
+        <p class="subtitle">Aula de ${data.disciplina} - ${data.serie}</p>
+        <div class="professor-info" style="color: #333; margin-top: 40px;">
+            <span style="color: #ffa500; font-weight: 600;">Apresentado por:</span><br>
+            <strong style="font-size: 1.6rem;">Professor(a): ${data.professor}</strong>
+        </div>
+        <div class="image-placeholder">
+            ${data.tema_imagem || 'Imagem aqui'}
+        </div>
+    </div>
+</div>
 
-      rendered = rendered.replace(new RegExp(placeholder, 'g'), value);
-    });
+<!-- Slide 2: Objetivos -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h2>Objetivos da Aula</h2>
+        <p style="font-weight: 600; font-size: 1.4rem; color: #333; margin-bottom: 30px;">Nossos objetivos para hoje:</p>
+        <ul>
+            ${(data.objetivos || []).map((objetivo: string) => `<li>${objetivo}</li>`).join('')}
+        </ul>
+    </div>
+</div>
 
-    // Clean up any remaining placeholders
-    rendered = rendered.replace(/\{[^}]+\}/g, '');
+<!-- Slide 3: Introdução -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h2>Introdução</h2>
+        <p>${data.introducao}</p>
+        <div class="image-placeholder">
+            ${data.introducao_imagem || 'Imagem aqui'}
+        </div>
+    </div>
+</div>
 
-    return rendered;
-  }
+<!-- Slide 4: Conceitos -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h2>Conceitos Fundamentais</h2>
+        <p>${data.conceitos}</p>
+        <div class="image-placeholder">
+            ${data.conceitos_imagem || 'Imagem aqui'}
+        </div>
+    </div>
+</div>
 
-  private renderQuestions(questoes: any[]): string {
-    return questoes.map((questao, index) => {
-      let questionHtml = `
-        <div class="questao-container">
+<!-- Slide 5: Exemplo -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h2>Exemplo</h2>
+        <p>${data.exemplo}</p>
+        <div class="image-placeholder">
+            ${data.exemplo_imagem || 'Imagem aqui'}
+        </div>
+    </div>
+</div>
+
+<!-- Slide 6: Desenvolvimento 1 -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h2>Desenvolvimento - Parte 1</h2>
+        <p>${data.desenvolvimento1}</p>
+        <div class="image-placeholder">
+            ${data.desenvolvimento1_imagem || 'Imagem aqui'}
+        </div>
+    </div>
+</div>
+
+<!-- Slide 7: Desenvolvimento 2 -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h2>Desenvolvimento - Parte 2</h2>
+        <p>${data.desenvolvimento2}</p>
+        <div class="image-placeholder">
+            ${data.desenvolvimento2_imagem || 'Imagem aqui'}
+        </div>
+    </div>
+</div>
+
+<!-- Slide 8: Desenvolvimento 3 -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h2>Desenvolvimento - Parte 3</h2>
+        <p>${data.desenvolvimento3}</p>
+        <div class="image-placeholder">
+            ${data.desenvolvimento3_imagem || 'Imagem aqui'}
+        </div>
+    </div>
+</div>
+
+<!-- Slide 9: Desenvolvimento 4 -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h2>Desenvolvimento - Parte 4</h2>
+        <p>${data.desenvolvimento4}</p>
+        <div class="image-placeholder">
+            ${data.desenvolvimento4_imagem || 'Imagem aqui'}
+        </div>
+    </div>
+</div>
+
+<!-- Slide 10: Exemplo Prático -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h2>Exemplo Prático</h2>
+        <p>${data.exemplo_pratico}</p>
+        <div class="image-placeholder">
+            ${data.imagem_principal || 'Imagem aqui'}
+        </div>
+    </div>
+</div>
+
+<!-- Slide 11: Revisão -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h2>Revisão</h2>
+        <p>Vamos revisar os principais pontos da aula:</p>
+        <ul>
+            ${(data.objetivos || []).slice(0, 3).map((objetivo: string) => `<li>${objetivo}</li>`).join('')}
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 12: Obrigado -->
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <h2 style="margin: 0; font-size: 2rem;">AulagIA</h2>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; font-weight: 600;">${data.disciplina || 'Disciplina'}</span>
+        </div>
+    </div>
+    <div class="slide-content">
+        <h1 style="font-size: 4rem; color: #007bff;">Obrigado(a)!</h1>
+        <p style="font-size: 1.4rem; margin-top: 30px;">Dúvidas?</p>
+    </div>
+</div>
+
+</body>
+</html>
+    `;
+
+    return slideTemplate;
+  },
+
+  renderTemplate: (templateId: string, content: any): string => {
+    // Template ID mapping:
+    // '1' = plano-de-aula
+    // '2' = slides  
+    // '3' = atividade
+    // '4' = avaliacao
+
+    switch (templateId) {
+      case '2': // slides
+        return templateService.generateSlideHTML(content);
+      
+      case '1': // plano-de-aula
+        return templateService.renderLessonPlan(content);
+      
+      case '3': // atividade
+        return templateService.renderActivity(content);
+      
+      case '4': // avaliacao
+        return templateService.renderAssessment(content);
+      
+      default:
+        console.warn(`Template ID ${templateId} not found, using default HTML rendering`);
+        return templateService.renderGeneric(content);
+    }
+  },
+
+  renderLessonPlan: (content: any): string => {
+    if (typeof content === 'string') {
+      return content;
+    }
+
+    // Handle lesson plan structure
+    let html = '';
+    
+    if (content.titulo || content.tema) {
+      html += `<div class="header-section">
+        <h1>${content.titulo || content.tema}</h1>
+      </div>`;
+    }
+
+    if (content.professor) {
+      html += `<div class="section">
+        <div class="section-title">Professor(a)</div>
+        <div class="section-content">${content.professor}</div>
+      </div>`;
+    }
+
+    if (content.disciplina) {
+      html += `<div class="section">
+        <div class="section-title">Disciplina</div>
+        <div class="section-content">${content.disciplina}</div>
+      </div>`;
+    }
+
+    if (content.objetivos && Array.isArray(content.objetivos)) {
+      html += `<div class="section">
+        <div class="section-title">Objetivos</div>
+        <div class="section-content">
+          <ul>
+            ${content.objetivos.map((obj: string) => `<li>${obj}</li>`).join('')}
+          </ul>
+        </div>
+      </div>`;
+    }
+
+    if (content.desenvolvimento && Array.isArray(content.desenvolvimento)) {
+      html += `<div class="section">
+        <div class="section-title">Desenvolvimento</div>
+        <div class="section-content">`;
+      
+      content.desenvolvimento.forEach((item: any, index: number) => {
+        if (typeof item === 'string') {
+          html += `<p>${item}</p>`;
+        } else if (item && typeof item === 'object') {
+          html += `<div class="development-step">
+            <h4>${item.etapa || `Etapa ${index + 1}`}</h4>
+            ${item.atividade ? `<p><strong>Atividade:</strong> ${item.atividade}</p>` : ''}
+            ${item.tempo ? `<p><strong>Tempo:</strong> ${item.tempo}</p>` : ''}
+          </div>`;
+        }
+      });
+      
+      html += `</div></div>`;
+    }
+
+    if (content.recursos && Array.isArray(content.recursos)) {
+      html += `<div class="section">
+        <div class="section-title">Recursos</div>
+        <div class="section-content">
+          <ul>
+            ${content.recursos.map((recurso: string) => `<li>${recurso}</li>`).join('')}
+          </ul>
+        </div>
+      </div>`;
+    }
+
+    if (content.avaliacao) {
+      html += `<div class="section">
+        <div class="section-title">Avaliação</div>
+        <div class="section-content">${content.avaliacao}</div>
+      </div>`;
+    }
+
+    return html;
+  },
+
+  renderActivity: (content: any): string => {
+    if (typeof content === 'string') {
+      return content;
+    }
+
+    let html = '';
+    
+    if (content.titulo) {
+      html += `<div class="header-section">
+        <h1>${content.titulo}</h1>
+      </div>`;
+    }
+
+    if (content.instrucoes) {
+      html += `<div class="instructions-section">
+        <div class="instructions">${content.instrucoes}</div>
+      </div>`;
+    }
+
+    if (content.questoes && Array.isArray(content.questoes)) {
+      content.questoes.forEach((questao: any, index: number) => {
+        html += `<div class="questao-container">
           <div class="questao-numero">Questão ${questao.numero || index + 1}</div>
-          <div class="questao-enunciado">${questao.pergunta}</div>
-      `;
+          <div class="questao-enunciado">${questao.pergunta || questao.enunciado}</div>`;
 
-      // Add visual elements if present
-      if (questao.imagem) {
-        questionHtml += `<div class="image-space">${questao.imagem}</div>`;
-      }
+        if (questao.opcoes && Array.isArray(questao.opcoes)) {
+          html += `<div class="questao-opcoes">`;
+          questao.opcoes.forEach((opcao: string, optIndex: number) => {
+            const letra = String.fromCharCode(65 + optIndex);
+            html += `<div class="opcao">
+              <span class="opcao-letra">${letra})</span>
+              <span class="opcao-texto">${opcao}</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
 
-      if (questao.grafico) {
-        questionHtml += `<div class="image-space">Gráfico: ${JSON.stringify(questao.grafico)}</div>`;
-      }
-
-      if (questao.figuraGeometrica) {
-        questionHtml += `<div class="math-space">Figura Geométrica: ${JSON.stringify(questao.figuraGeometrica)}</div>`;
-      }
-
-      if (questao.icones && questao.icones.length > 0) {
-        questionHtml += `<div class="image-space">Ícones: ${questao.icones.join(', ')}</div>`;
-      }
-
-      // Handle different question types
-      switch (questao.tipo) {
-        case 'multipla_escolha':
-          if (questao.opcoes && questao.opcoes.length > 0) {
-            questionHtml += '<div class="questao-opcoes">';
-            questao.opcoes.forEach((opcao: string, i: number) => {
-              const letra = String.fromCharCode(65 + i);
-              questionHtml += `
-                <div class="opcao">
-                  <span class="opcao-letra">${letra})</span>
-                  <span class="opcao-texto">${opcao}</span>
-                </div>
-              `;
-            });
-            questionHtml += '</div>';
-          }
-          break;
-
-        case 'verdadeiro_falso':
-          if (questao.opcoes && questao.opcoes.length >= 2) {
-            questionHtml += '<div class="questao-opcoes">';
-            questao.opcoes.forEach((opcao: string, i: number) => {
-              questionHtml += `
-                <div class="opcao">
-                  <span class="opcao-letra">( )</span>
-                  <span class="opcao-texto">${opcao}</span>
-                </div>
-              `;
-            });
-            questionHtml += '</div>';
-          }
-          break;
-
-        case 'ligar':
-          if (questao.colunaA && questao.colunaB) {
-            questionHtml += `
-              <div class="matching-section">
-                <div class="matching-column">
-                  <h4>Coluna A</h4>
-                  ${questao.colunaA.map((item: string, i: number) => 
-                    `<div class="matching-item">(${i + 1}) ${item}</div>`
-                  ).join('')}
-                </div>
-                <div class="matching-column">
-                  <h4>Coluna B</h4>
-                  ${questao.colunaB.map((item: string, i: number) => 
-                    `<div class="matching-item">(${String.fromCharCode(65 + i)}) ${item}</div>`
-                  ).join('')}
-                </div>
-              </div>
-            `;
-          }
-          break;
-
-        case 'completar':
-          if (questao.textoComLacunas) {
-            const textoComEspacos = questao.textoComLacunas.replace(/_+/g, '<span class="fill-blank"></span>');
-            questionHtml += `<div class="questao-opcoes">${textoComEspacos}</div>`;
-          }
-          break;
-
-        case 'dissertativa':
-        case 'desenho':
-          const linhas = questao.linhasResposta || 5;
-          questionHtml += '<div class="questao-opcoes">';
+        // Handle different question types
+        if (questao.tipo === 'dissertativa' || questao.tipo === 'aberta') {
+          const linhas = questao.linhas || 3;
           for (let i = 0; i < linhas; i++) {
-            questionHtml += '<div class="answer-lines"></div>';
+            html += `<div class="answer-lines"></div>`;
           }
-          questionHtml += '</div>';
-          break;
-      }
+        }
 
-      // Add scoring for assessments
-      if (questao.pontuacao) {
-        questionHtml += `<div class="pontuacao">${questao.pontuacao} pts</div>`;
-      }
+        if (questao.tipo === 'calculo' || questao.tipo === 'matematica') {
+          html += `<div class="math-space">Espaço para cálculos</div>`;
+        }
 
-      questionHtml += '</div>';
-      return questionHtml;
-    }).join('');
+        html += `</div>`;
+      });
+    }
+
+    return html;
+  },
+
+  renderAssessment: (content: any): string => {
+    if (typeof content === 'string') {
+      return content;
+    }
+
+    let html = '';
+    
+    if (content.titulo) {
+      html += `<div class="header-section">
+        <h1>${content.titulo}</h1>
+      </div>`;
+    }
+
+    if (content.instrucoes) {
+      html += `<div class="instructions-section">
+        <div class="instructions">${content.instrucoes}</div>
+      </div>`;
+    }
+
+    if (content.questoes && Array.isArray(content.questoes)) {
+      content.questoes.forEach((questao: any, index: number) => {
+        html += `<div class="questao-container">
+          <div class="questao-numero">Questão ${questao.numero || index + 1} ${questao.pontuacao ? `(${questao.pontuacao} pts)` : ''}</div>
+          <div class="questao-enunciado">${questao.pergunta || questao.enunciado}</div>`;
+
+        if (questao.opcoes && Array.isArray(questao.opcoes)) {
+          html += `<div class="questao-opcoes">`;
+          questao.opcoes.forEach((opcao: string, optIndex: number) => {
+            const letra = String.fromCharCode(65 + optIndex);
+            html += `<div class="opcao">
+              <span class="opcao-letra">${letra})</span>
+              <span class="opcao-texto">${opcao}</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+
+        // Handle different question types
+        if (questao.tipo === 'dissertativa' || questao.tipo === 'aberta') {
+          const linhas = questao.linhas || 5;
+          for (let i = 0; i < linhas; i++) {
+            html += `<div class="answer-lines"></div>`;
+          }
+        }
+
+        if (questao.tipo === 'calculo' || questao.tipo === 'matematica') {
+          html += `<div class="math-space">Espaço para cálculos</div>`;
+        }
+
+        html += `</div>`;
+      });
+    }
+
+    return html;
+  },
+
+  renderGeneric: (content: any): string => {
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // Fallback for unknown content types
+    return JSON.stringify(content, null, 2);
   }
-
-  getAvailableTemplates(): { id: string; name: string; description: string }[] {
-    return [
-      {
-        id: '1',
-        name: 'Plano de Aula Clássico',
-        description: 'Template tradicional para planos de aula com seções bem definidas'
-      },
-      {
-        id: '2',
-        name: 'Apresentação de Slides',
-        description: 'Template moderno para apresentações educativas'
-      },
-      {
-        id: '3',
-        name: 'Atividade Educacional',
-        description: 'Template para atividades e exercícios'
-      },
-      {
-        id: '4',
-        name: 'Avaliação Formal',
-        description: 'Template para provas e avaliações'
-      }
-    ];
-  }
-}
-
-export const templateService = new TemplateService();
+};
