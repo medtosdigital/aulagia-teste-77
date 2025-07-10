@@ -232,7 +232,21 @@ Crie slides educativos ESPECÍFICOS sobre "${tema}" para ${disciplina} na ${seri
 
 IMPORTANTE: TODO O CONTEÚDO deve ser baseado especificamente no tema "${tema}". NÃO use conteúdo genérico.
 
-Retorne APENAS o JSON estruturado com 12 slides específicos sobre "${tema}":
+ESTRUTURA OBRIGATÓRIA:
+- Slide 1: Capa com título e informações básicas
+- Slide 2: Objetivos da aula (4 objetivos específicos)
+- Slide 3: Introdução ao tema
+- Slide 4: Conceito principal
+- Slide 5: Desenvolvimento do Conteúdo - Parte 1 (texto explicativo + imagem)
+- Slide 6: Desenvolvimento do Conteúdo - Parte 2 (texto explicativo + imagem)
+- Slide 7: Desenvolvimento do Conteúdo - Parte 3 (texto explicativo + imagem)
+- Slide 8: Desenvolvimento do Conteúdo - Parte 4 (texto explicativo + imagem)
+- Slide 9: Exemplo Prático (exemplo concreto do tema + imagem)
+- Slide 10: Tabela de dados/informações
+- Slide 11: Atividade interativa
+- Slide 12: Conclusão e próximos passos
+
+Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especificamente sobre "${tema}":
 
 {
   "titulo": "${tema} - ${disciplina}",
@@ -250,21 +264,26 @@ Retorne APENAS o JSON estruturado com 12 slides específicos sobre "${tema}":
   "objetivo_2": "[OBJETIVO 2 específico sobre ${tema}]",
   "objetivo_3": "[OBJETIVO 3 específico sobre ${tema}]",
   "objetivo_4": "[OBJETIVO 4 específico sobre ${tema}]",
-  "introducao_texto": "[INTRODUÇÃO específica sobre ${tema}]",
+  "introducao_texto": "[INTRODUÇÃO específica sobre ${tema} - explicação clara do que será aprendido]",
   "introducao_imagem": "descrição visual clara, educativa, sem texto, ilustrando a introdução do tema '${tema}'",
-  "conceitos_texto": "[CONCEITOS fundamentais específicos sobre ${tema}]",
-  "conceito_principal": "[CONCEITO principal de ${tema}]",
+  "conceitos_texto": "[CONCEITOS fundamentais específicos sobre ${tema} - definição clara e didática]",
+  "conceito_principal": "[CONCEITO principal de ${tema} - definição concisa e precisa]",
   "conceitos_imagem": "descrição visual clara, educativa, sem texto, ilustrando os conceitos de '${tema}'",
-  "exemplo_titulo": "[TÍTULO de exemplo prático sobre ${tema}]",
-  "exemplo_conteudo": "[EXEMPLO PRÁTICO específico sobre ${tema}]",
-  "exemplo_imagem": "descrição visual clara, educativa, sem texto, ilustrando um exemplo de '${tema}'",
-  "desenvolvimento_texto": "[DESENVOLVIMENTO específico sobre ${tema}]",
-  "ponto_1": "[PONTO 1 importante sobre ${tema}]",
-  "ponto_2": "[PONTO 2 importante sobre ${tema}]",
-  "desenvolvimento_imagem": "descrição visual clara, educativa, sem texto, ilustrando o desenvolvimento do tema '${tema}'",
-  "formula_titulo": "[TÍTULO de fórmula/regra específica de ${tema}]",
-  "formula_principal": "[FÓRMULA/REGRA principal de ${tema}]",
-  "formula_explicacao": "[EXPLICAÇÃO da fórmula/regra de ${tema}]",
+  "desenvolvimento_1_titulo": "[TÍTULO do primeiro aspecto do desenvolvimento de ${tema}]",
+  "desenvolvimento_1_texto": "[EXPLICAÇÃO detalhada do primeiro aspecto importante de ${tema} - texto didático e claro]",
+  "desenvolvimento_1_imagem": "descrição visual clara, educativa, sem texto, ilustrando o primeiro aspecto de '${tema}'",
+  "desenvolvimento_2_titulo": "[TÍTULO do segundo aspecto do desenvolvimento de ${tema}]",
+  "desenvolvimento_2_texto": "[EXPLICAÇÃO detalhada do segundo aspecto importante de ${tema} - texto didático e claro]",
+  "desenvolvimento_2_imagem": "descrição visual clara, educativa, sem texto, ilustrando o segundo aspecto de '${tema}'",
+  "desenvolvimento_3_titulo": "[TÍTULO do terceiro aspecto do desenvolvimento de ${tema}]",
+  "desenvolvimento_3_texto": "[EXPLICAÇÃO detalhada do terceiro aspecto importante de ${tema} - texto didático e claro]",
+  "desenvolvimento_3_imagem": "descrição visual clara, educativa, sem texto, ilustrando o terceiro aspecto de '${tema}'",
+  "desenvolvimento_4_titulo": "[TÍTULO do quarto aspecto do desenvolvimento de ${tema}]",
+  "desenvolvimento_4_texto": "[EXPLICAÇÃO detalhada do quarto aspecto importante de ${tema} - texto didático e claro]",
+  "desenvolvimento_4_imagem": "descrição visual clara, educativa, sem texto, ilustrando o quarto aspecto de '${tema}'",
+  "exemplo_titulo": "[TÍTULO do exemplo prático de ${tema}]",
+  "exemplo_conteudo": "[EXEMPLO PRÁTICO concreto e específico sobre ${tema} - situação real onde o tema se aplica]",
+  "exemplo_imagem": "descrição visual clara, educativa, sem texto, ilustrando um exemplo prático de '${tema}'",
   "tabela_titulo": "[TÍTULO de tabela específica sobre ${tema}]",
   "coluna_1": "[cabeçalho coluna 1 sobre ${tema}]",
   "coluna_2": "[cabeçalho coluna 2 sobre ${tema}]",
@@ -278,9 +297,6 @@ Retorne APENAS o JSON estruturado com 12 slides específicos sobre "${tema}":
   "linha_3_col_1": "[dado específico de ${tema}]",
   "linha_3_col_2": "[dado específico de ${tema}]",
   "linha_3_col_3": "[dado específico de ${tema}]",
-  "imagem_titulo": "[TÍTULO descritivo sobre ${tema}]",
-  "imagem_descricao": "[DESCRIÇÃO do que a imagem mostra sobre ${tema}]",
-  "imagem_principal": "descrição visual clara, educativa, sem texto, ilustrando o ponto central de '${tema}'",
   "atividade_pergunta": "[PERGUNTA específica sobre ${tema}]",
   "opcao_a": "[alternativa A sobre ${tema}]",
   "opcao_b": "[alternativa B sobre ${tema}]",
@@ -613,4 +629,3 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     };
   }
 }
-
