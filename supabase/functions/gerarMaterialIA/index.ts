@@ -1,4 +1,3 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.2';
 
@@ -54,8 +53,8 @@ IMPORTANTE: Retorne APENAS um JSON válido, sem texto adicional, com a seguinte 
   "introducao_imagem": "Prompt detalhado em português para gerar uma imagem de introdução ao tema ${formData.tema}, didática e colorida",
   "conceitos_imagem": "Prompt detalhado em português para gerar uma imagem explicativa dos conceitos principais de ${formData.tema}",
   "exemplo_imagem": "Prompt detalhado em português para gerar uma imagem com exemplos práticos de ${formData.tema}",
-  "desenvolvimento_imagem": "Prompt detalhado em português para gerar uma imagem sobre o desenvolvimento do tema ${formData.tema}",
-  "imagem_principal": "Prompt detalhado em português para gerar uma imagem principal representando ${formData.tema} de forma educativa",
+  "desenvolvimento_1_imagem": "Prompt detalhado em português para gerar uma imagem sobre o desenvolvimento inicial do tema ${formData.tema}",
+  "desenvolvimento_2_imagem": "Prompt detalhado em português para gerar uma imagem sobre o aprofundamento do tema ${formData.tema}",
   "slides": [
     {
       "numero": 1,
@@ -190,7 +189,7 @@ Varie os tipos de questões e distribua pontuações adequadas.`;
       throw new Error('Failed to parse generated content as JSON');
     }
 
-    // For slides, generate images for specific variables
+    // For slides, generate images using the gerarImagemIA function
     if (materialType === 'slides' && content) {
       console.log('🖼️ Starting image generation for slides');
       
@@ -199,51 +198,50 @@ Varie os tipos de questões e distribua pontuações adequadas.`;
         { key: 'introducao_imagem', prompt: content.introducao_imagem },
         { key: 'conceitos_imagem', prompt: content.conceitos_imagem },
         { key: 'exemplo_imagem', prompt: content.exemplo_imagem },
-        { key: 'desenvolvimento_imagem', prompt: content.desenvolvimento_imagem },
-        { key: 'imagem_principal', prompt: content.imagem_principal },
+        { key: 'desenvolvimento_1_imagem', prompt: content.desenvolvimento_1_imagem },
+        { key: 'desenvolvimento_2_imagem', prompt: content.desenvolvimento_2_imagem },
       ];
+
+      // Create imagensGeradas object to store generated images
+      content.imagensGeradas = {};
 
       for (const { key, prompt: imagePrompt } of imagePrompts) {
         if (imagePrompt && typeof imagePrompt === 'string' && imagePrompt.length > 10) {
           try {
             console.log(`🎨 Generating image for ${key}`);
             
-            const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
+            // Call the gerarImagemIA edge function
+            const imageResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/gerarImagemIA`, {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${OPENAI_API_KEY}`,
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
               },
               body: JSON.stringify({
-                model: 'dall-e-3',
-                prompt: `${imagePrompt}. Estilo: educativo, colorido, adequado para crianças, ilustração didática`,
-                n: 1,
-                size: '1024x1024',
-                quality: 'standard',
+                prompt: imagePrompt
               }),
             });
 
             if (imageResponse.ok) {
               const imageData = await imageResponse.json();
-              const imageUrl = imageData.data[0]?.url;
               
-              if (imageUrl) {
-                content[key] = `<img src="${imageUrl}" alt="Imagem educativa" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" />`;
+              if (imageData.success && imageData.imageUrl) {
+                content.imagensGeradas[key] = imageData.imageUrl;
                 console.log(`✅ Image generated for ${key}`);
               } else {
-                content[key] = '';
-                console.log(`⚠️ No image URL returned for ${key}`);
+                content.imagensGeradas[key] = null;
+                console.log(`⚠️ Failed to generate image for ${key}:`, imageData.error);
               }
             } else {
-              content[key] = '';
-              console.log(`⚠️ Image generation failed for ${key}: ${imageResponse.status}`);
+              content.imagensGeradas[key] = null;
+              console.log(`⚠️ Image generation request failed for ${key}: ${imageResponse.status}`);
             }
           } catch (imageError) {
-            content[key] = '';
+            content.imagensGeradas[key] = null;
             console.warn(`⚠️ Error generating image for ${key}:`, imageError);
           }
         } else {
-          content[key] = '';
+          content.imagensGeradas[key] = null;
           console.log(`⚠️ Invalid prompt for ${key}`);
         }
       }
