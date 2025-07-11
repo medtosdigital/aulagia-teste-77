@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -27,6 +28,51 @@ interface MaterialFormData {
   bncc?: string;
 }
 
+// Função para gerar imagem usando OpenAI
+async function gerarImagemOpenAI(prompt: string): Promise<string | null> {
+  if (!prompt || prompt.trim() === '' || !openAIApiKey) {
+    return null;
+  }
+  
+  try {
+    console.log('🎨 Gerando imagem com OpenAI para prompt:', prompt.substring(0, 100) + '...');
+    
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-image-1', // Usar o modelo mais avançado
+        prompt: prompt.trim(),
+        n: 1,
+        size: '1024x1024',
+        quality: 'high',
+        style: 'natural'
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('❌ Erro na API OpenAI Images:', response.status, response.statusText);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (data.data && data.data[0] && data.data[0].url) {
+      console.log('✅ Imagem gerada com sucesso');
+      return data.data[0].url;
+    }
+    
+    console.error('❌ Resposta inválida da API OpenAI Images:', data);
+    return null;
+  } catch (error) {
+    console.error('❌ Erro ao gerar imagem:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -53,7 +99,7 @@ serve(async (req) => {
     const prompt = generatePrompt(materialType, formData);
     console.log('🎯 Generated prompt for', materialType);
 
-    // Call OpenAI API
+    // Call OpenAI API para gerar o conteúdo
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -93,7 +139,61 @@ serve(async (req) => {
     console.log('✅ Content generated successfully');
 
     // Parse the generated content and structure it appropriately
-    const structuredContent = parseGeneratedContent(materialType, generatedContent, formData);
+    let structuredContent = parseGeneratedContent(materialType, generatedContent, formData);
+
+    // Se for slides, gerar as imagens automaticamente
+    if (materialType === 'slides' && structuredContent) {
+      console.log('🎨 Iniciando geração de imagens para slides...');
+      
+      // Prompts das imagens baseados nas variáveis do conteúdo gerado
+      const imagePrompts: Record<string, string> = {};
+      
+      if (structuredContent.tema_imagem) {
+        imagePrompts.tema_imagem = structuredContent.tema_imagem;
+      }
+      if (structuredContent.slide_1_imagem) {
+        imagePrompts.slide_1_imagem = structuredContent.slide_1_imagem;
+      }
+      if (structuredContent.introducao_imagem) {
+        imagePrompts.introducao_imagem = structuredContent.introducao_imagem;
+      }
+      if (structuredContent.conceitos_imagem) {
+        imagePrompts.conceitos_imagem = structuredContent.conceitos_imagem;
+      }
+      if (structuredContent.desenvolvimento_1_imagem) {
+        imagePrompts.desenvolvimento_1_imagem = structuredContent.desenvolvimento_1_imagem;
+      }
+      if (structuredContent.desenvolvimento_2_imagem) {
+        imagePrompts.desenvolvimento_2_imagem = structuredContent.desenvolvimento_2_imagem;
+      }
+      if (structuredContent.exemplo_imagem) {
+        imagePrompts.exemplo_imagem = structuredContent.exemplo_imagem;
+      }
+
+      // Gerar todas as imagens em paralelo
+      const imagePromises = Object.entries(imagePrompts).map(async ([key, prompt]) => {
+        const imageUrl = await gerarImagemOpenAI(prompt);
+        return { key, imageUrl };
+      });
+
+      const imageResults = await Promise.all(imagePromises);
+      
+      // Adicionar URLs das imagens geradas ao conteúdo estruturado
+      const imagensGeradas: Record<string, string> = {};
+      imageResults.forEach(({ key, imageUrl }) => {
+        if (imageUrl) {
+          imagensGeradas[key] = imageUrl;
+          console.log(`✅ Imagem gerada para ${key}: ${imageUrl.substring(0, 50)}...`);
+        } else {
+          console.log(`⚠️ Falha ao gerar imagem para ${key}`);
+        }
+      });
+
+      // Adicionar as URLs das imagens ao conteúdo estruturado
+      structuredContent.imagensGeradas = imagensGeradas;
+      
+      console.log(`🎨 Geração de imagens concluída. ${Object.keys(imagensGeradas).length} imagens geradas.`);
+    }
 
     return new Response(JSON.stringify({
       success: true,
@@ -631,4 +731,14 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
       content: content
     };
   }
+}
+
+function cleanResourcesForStage(recursos: string): string[] {
+  if (!recursos || typeof recursos !== 'string') return [];
+  
+  return recursos
+    .split(',')
+    .map(recurso => recurso.trim())
+    .filter(recurso => recurso.length > 0)
+    .slice(0, 3); // Limita a 3 recursos por etapa
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Printer, Download } from 'lucide-react';
 import { Button } from './ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './ui/pagination';
@@ -6,106 +6,14 @@ import { exportService } from '@/services/exportService';
 import { GeneratedMaterial } from '@/services/materialService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { supabase } from '@/integrations/supabase/client';
 
 interface SlideViewerProps {
   htmlContent: string;
   material?: GeneratedMaterial;
 }
 
-// Função para gerar imagem usando a Edge Function gerarImagemIA
-async function gerarImagemComIA(prompt: string): Promise<string | null> {
-  if (!prompt || prompt.trim() === '') return null;
-  
-  try {
-    console.log('🎨 Gerando imagem com prompt:', prompt);
-    
-    const { data, error } = await supabase.functions.invoke('gerarImagemIA', {
-      body: { prompt: prompt.trim() }
-    });
-    
-    if (error) {
-      console.error('❌ Erro na Edge Function gerarImagemIA:', error);
-      return null;
-    }
-    
-    if (!data || !data.success || !data.imageUrl) {
-      console.error('❌ Resposta inválida da Edge Function:', data);
-      return null;
-    }
-    
-    console.log('✅ Imagem gerada com sucesso:', data.imageUrl);
-    return data.imageUrl;
-  } catch (error) {
-    console.error('❌ Erro ao gerar imagem:', error);
-    return null;
-  }
-}
-
-// Função para extrair prompts de imagem do conteúdo do material
-function extrairPromptsImagem(material?: GeneratedMaterial): Record<number, string> {
-  if (!material || !material.content) return {};
-  
-  const prompts: Record<number, string> = {};
-  const content = material.content;
-  
-  // Páginas com imagens: 1, 3, 4, 5, 6, 9 (índices 0, 2, 3, 4, 5, 8)
-  const paginasComImagem = [0, 2, 3, 4, 5, 8];
-  
-  paginasComImagem.forEach(index => {
-    let prompt = '';
-    
-    switch (index) {
-      case 0: // Página 1 - Capa
-        prompt = content.slide_1_imagem || content.tema_imagem || '';
-        if (!prompt && content.tema && content.disciplina && content.serie) {
-          prompt = `Ilustração educativa colorida de capa representando o tema '${content.tema}' para ${content.disciplina} na ${content.serie}, estilo didático profissional, sem texto, apropriada para apresentação escolar`;
-        }
-        break;
-      case 2: // Página 3 - Introdução
-        prompt = content.introducao_imagem || '';
-        if (!prompt && content.tema && content.disciplina && content.serie) {
-          prompt = `Ilustração educativa colorida introduzindo visualmente o conceito de '${content.tema}' para ${content.disciplina} na ${content.serie}, estilo didático, sem texto, apropriada para alunos da faixa etária`;
-        }
-        break;
-      case 3: // Página 4 - Conceito Principal
-        prompt = content.conceitos_imagem || '';
-        if (!prompt && content.tema && content.disciplina && content.serie) {
-          prompt = `Ilustração educativa colorida demonstrando visualmente os conceitos principais de '${content.tema}' para ${content.disciplina} na ${content.serie}, estilo didático, sem texto, clara e explicativa`;
-        }
-        break;
-      case 4: // Página 5 - Desenvolvimento 1
-        prompt = content.desenvolvimento_1_imagem || '';
-        if (!prompt && content.tema && content.disciplina && content.serie) {
-          prompt = `Ilustração educativa colorida mostrando o primeiro aspecto importante de '${content.tema}' para ${content.disciplina} na ${content.serie}, estilo didático, sem texto, visualmente explicativa`;
-        }
-        break;
-      case 5: // Página 6 - Desenvolvimento 2
-        prompt = content.desenvolvimento_2_imagem || '';
-        if (!prompt && content.tema && content.disciplina && content.serie) {
-          prompt = `Ilustração educativa colorida demonstrando o segundo aspecto de '${content.tema}' para ${content.disciplina} na ${content.serie}, estilo didático, sem texto, visualmente clara`;
-        }
-        break;
-      case 8: // Página 9 - Exemplo Prático
-        prompt = content.exemplo_imagem || '';
-        if (!prompt && content.tema && content.disciplina && content.serie) {
-          prompt = `Ilustração educativa colorida mostrando um exemplo prático e concreto de '${content.tema}' para ${content.disciplina} na ${content.serie}, estilo didático, sem texto, situação real e aplicável`;
-        }
-        break;
-    }
-    
-    if (prompt && prompt.trim() !== '') {
-      prompts[index] = prompt.trim();
-    }
-  });
-  
-  return prompts;
-}
-
 const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [imagensGeradas, setImagensGeradas] = useState<Record<number, string>>({});
-  const [imagenesCarregando, setImagensCarregando] = useState<Record<number, boolean>>({});
   const isMobile = useIsMobile();
 
   // Generate slides based on content
@@ -118,37 +26,33 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
     }));
   }, [htmlContent]);
 
-  // Gerar imagens automaticamente quando o componente é montado
-  useEffect(() => {
-    const prompts = extrairPromptsImagem(material);
+  // Função para obter imagem gerada para um slide específico
+  const getImagemGerada = (slideIndex: number): string | null => {
+    if (!material?.content?.imagensGeradas) return null;
     
-    // Para cada prompt encontrado, gerar a imagem
-    Object.entries(prompts).forEach(async ([indexStr, prompt]) => {
-      const index = parseInt(indexStr);
-      
-      // Só gera se ainda não tiver imagem gerada e não estiver carregando
-      if (!imagensGeradas[index] && !imagenesCarregando[index]) {
-        console.log(`🎨 Iniciando geração de imagem para slide ${index + 1}:`, prompt);
-        
-        setImagensCarregando(prev => ({ ...prev, [index]: true }));
-        
-        try {
-          const imageUrl = await gerarImagemComIA(prompt);
-          
-          if (imageUrl) {
-            setImagensGeradas(prev => ({ ...prev, [index]: imageUrl }));
-            console.log(`✅ Imagem gerada para slide ${index + 1}:`, imageUrl);
-          } else {
-            console.log(`⚠️ Não foi possível gerar imagem para slide ${index + 1}`);
-          }
-        } catch (error) {
-          console.error(`❌ Erro ao gerar imagem para slide ${index + 1}:`, error);
-        } finally {
-          setImagensCarregando(prev => ({ ...prev, [index]: false }));
-        }
-      }
-    });
-  }, [material, imagensGeradas, imagenesCarregando]);
+    const imagensGeradas = material.content.imagensGeradas;
+    const paginasComImagem = [0, 2, 3, 4, 5, 8]; // Páginas 1, 3, 4, 5, 6, 9
+    
+    if (!paginasComImagem.includes(slideIndex)) return null;
+    
+    // Mapear índice do slide para a chave da imagem
+    switch (slideIndex) {
+      case 0: // Página 1 - Capa
+        return imagensGeradas.slide_1_imagem || imagensGeradas.tema_imagem || null;
+      case 2: // Página 3 - Introdução
+        return imagensGeradas.introducao_imagem || null;
+      case 3: // Página 4 - Conceito Principal
+        return imagensGeradas.conceitos_imagem || null;
+      case 4: // Página 5 - Desenvolvimento 1
+        return imagensGeradas.desenvolvimento_1_imagem || null;
+      case 5: // Página 6 - Desenvolvimento 2
+        return imagensGeradas.desenvolvimento_2_imagem || null;
+      case 8: // Página 9 - Exemplo Prático
+        return imagensGeradas.exemplo_imagem || null;
+      default:
+        return null;
+    }
+  };
 
   const handlePrint = async () => {
     try {
@@ -483,9 +387,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
     // Detectar se é slide de agradecimento OU se é o último slide
     const isObrigado = /obrigado\(a\)|obrigado!/i.test(htmlSemData) || index === slides.length - 1;
 
-    // Exemplo de próximos passos
-    const proximosPassos = ['Acesse novos materiais em aulagia.com.br', 'Compartilhe este material com colegas', 'Explore mais aulas e recursos na plataforma'];
-
     // Logo no canto superior esquerdo
     const logoEsquerda = <div className="absolute top-0 left-0 flex items-center gap-2 p-6 z-10">
         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-md">
@@ -496,6 +397,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
             </div>
         <span className={`text-2xl font-extrabold tracking-tight drop-shadow-sm ${isBlue ? 'text-blue-200' : 'text-blue-700'}`}>AulagIA</span>
       </div>;
+    
     // Disciplina no canto superior direito
     const disciplina = material?.subject || 'Disciplina';
     const disciplinaFormatada = disciplina.charAt(0).toUpperCase() + disciplina.slice(1);
@@ -557,11 +459,11 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
     const paginasDuasColunas = [0, 2, 3, 4, 5, 8]; // índices das páginas com imagens
     if (paginasDuasColunas.includes(index)) {
       // Verificar se há imagem gerada para este slide
+      const imagemGerada = getImagemGerada(index);
       let imagemHtml = '';
-      if (imagensGeradas[index]) {
-        imagemHtml = `<img src="${imagensGeradas[index]}" alt="Imagem gerada por IA" style="max-width:100%;max-height:100%;border-radius:16px;object-fit:cover;" />`;
-      } else if (imagenesCarregando[index]) {
-        imagemHtml = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:1.1rem;color:#666;">🎨 Gerando imagem...</div>';
+      
+      if (imagemGerada) {
+        imagemHtml = `<img src="${imagemGerada}" alt="Imagem gerada por IA" style="max-width:100%;max-height:100%;border-radius:16px;object-fit:cover;" />`;
       } else {
         imagemHtml = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:1.1rem;color:#888;">Imagem aqui</div>';
       }
@@ -614,11 +516,10 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       let subtitulo = `Aula de ${disciplina} - ${serie}`;
       
       // Imagem para a capa
-      let imagemHtml = imagensGeradas[index]
-        ? `<img src="${imagensGeradas[index]}" alt="Imagem gerada por IA" style="max-width:100%;max-height:100%;border-radius:16px;object-fit:cover;" />`
-        : imagenesCarregando[index] 
-          ? '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#666;font-size:1.2rem;">🎨 Gerando imagem...</div>'
-          : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#888;font-size:1.5rem;">Imagem aqui</div>';
+      const imagemGerada = getImagemGerada(index);
+      let imagemHtml = imagemGerada
+        ? `<img src="${imagemGerada}" alt="Imagem gerada por IA" style="max-width:100%;max-height:100%;border-radius:16px;object-fit:cover;" />`
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#888;font-size:1.5rem;">Imagem aqui</div>';
 
       return (
         <div className="relative w-full h-full flex items-center justify-center bg-blue-700 rounded-2xl shadow-2xl overflow-hidden border border-gray-200" style={{
