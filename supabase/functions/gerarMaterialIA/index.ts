@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -257,7 +256,7 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "tema": "${tema}",
   "duracao": "[duração adequada para apresentar slides sobre ${tema}]",
   "bncc": "[códigos BNCC relevantes para ${tema} em ${disciplina}]",
-  "tema_imagem": "ilustração colorida, educativa, sem texto, representando o tema '${tema}' para ${disciplina} na ${serie}",
+  "tema_imagem": "ilustração educativa sobre ${tema} para ${disciplina}, estilo didático, sem texto",
   "slide_1_titulo": "${tema}",
   "slide_1_subtitulo": "Aula de ${disciplina} - ${serie}",
   "objetivo_1": "[OBJETIVO 1 específico sobre ${tema}]",
@@ -265,25 +264,25 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "objetivo_3": "[OBJETIVO 3 específico sobre ${tema}]",
   "objetivo_4": "[OBJETIVO 4 específico sobre ${tema}]",
   "introducao_texto": "[INTRODUÇÃO específica sobre ${tema} - explicação clara do que será aprendido]",
-  "introducao_imagem": "descrição visual clara, educativa, sem texto, ilustrando a introdução do tema '${tema}'",
+  "introducao_imagem": "ilustração sobre introdução ao tema ${tema} para ${disciplina}, educativa, sem texto",
   "conceitos_texto": "[CONCEITOS fundamentais específicos sobre ${tema} - definição clara e didática]",
   "conceito_principal": "[CONCEITO principal de ${tema} - definição concisa e precisa]",
-  "conceitos_imagem": "descrição visual clara, educativa, sem texto, ilustrando os conceitos de '${tema}'",
+  "conceitos_imagem": "diagrama educativo sobre conceitos de ${tema} para ${disciplina}, sem texto",
   "desenvolvimento_1_titulo": "[TÍTULO do primeiro aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_1_texto": "[EXPLICAÇÃO detalhada do primeiro aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_1_imagem": "descrição visual clara, educativa, sem texto, ilustrando o primeiro aspecto de '${tema}'",
+  "desenvolvimento_1_imagem": "ilustração educativa do primeiro aspecto de ${tema} para ${disciplina}, sem texto",
   "desenvolvimento_2_titulo": "[TÍTULO do segundo aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_2_texto": "[EXPLICAÇÃO detalhada do segundo aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_2_imagem": "descrição visual clara, educativa, sem texto, ilustrando o segundo aspecto de '${tema}'",
+  "desenvolvimento_2_imagem": "ilustração educativa do segundo aspecto de ${tema} para ${disciplina}, sem texto",
   "desenvolvimento_3_titulo": "[TÍTULO do terceiro aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_3_texto": "[EXPLICAÇÃO detalhada do terceiro aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_3_imagem": "descrição visual clara, educativa, sem texto, ilustrando o terceiro aspecto de '${tema}'",
+  "desenvolvimento_3_imagem": "ilustração educativa do terceiro aspecto de ${tema} para ${disciplina}, sem texto",
   "desenvolvimento_4_titulo": "[TÍTULO do quarto aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_4_texto": "[EXPLICAÇÃO detalhada do quarto aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_4_imagem": "descrição visual clara, educativa, sem texto, ilustrando o quarto aspecto de '${tema}'",
+  "desenvolvimento_4_imagem": "ilustração educativa do quarto aspecto de ${tema} para ${disciplina}, sem texto",
   "exemplo_titulo": "[TÍTULO do exemplo prático de ${tema}]",
   "exemplo_conteudo": "[EXEMPLO PRÁTICO concreto e específico sobre ${tema} - situação real onde o tema se aplica]",
-  "exemplo_imagem": "descrição visual clara, educativa, sem texto, ilustrando um exemplo prático de '${tema}'",
+  "exemplo_imagem": "exemplo visual prático de ${tema} aplicado em ${disciplina}, educativo, sem texto",
   "tabela_titulo": "[TÍTULO de tabela específica sobre ${tema}]",
   "coluna_1": "[cabeçalho coluna 1 sobre ${tema}]",
   "coluna_2": "[cabeçalho coluna 2 sobre ${tema}]",
@@ -586,10 +585,34 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
             });
         }
 
-        // Após o parse, garantir que tema_imagem sempre exista
+        // Para slides, garantir que todas as imagens tenham prompts adequados
         if (materialType === 'slides') {
+          // Garantir que tema_imagem sempre exista com prompt adequado
           if (!parsedContent.tema_imagem || typeof parsedContent.tema_imagem !== 'string' || parsedContent.tema_imagem.trim() === '') {
-            parsedContent.tema_imagem = `ilustração colorida, educativa, sem texto, representando o tema '${tema}' para ${disciplina} na ${serie}`;
+            parsedContent.tema_imagem = `ilustração educativa sobre ${tema} para ${disciplina}, estilo didático, sem texto`;
+          }
+          
+          // Garantir outros campos de imagem existam
+          if (!parsedContent.introducao_imagem) {
+            parsedContent.introducao_imagem = `ilustração sobre introdução ao tema ${tema} para ${disciplina}, educativa, sem texto`;
+          }
+          if (!parsedContent.conceitos_imagem) {
+            parsedContent.conceitos_imagem = `diagrama educativo sobre conceitos de ${tema} para ${disciplina}, sem texto`;
+          }
+          if (!parsedContent.desenvolvimento_1_imagem) {
+            parsedContent.desenvolvimento_1_imagem = `ilustração educativa do primeiro aspecto de ${tema} para ${disciplina}, sem texto`;
+          }
+          if (!parsedContent.desenvolvimento_2_imagem) {
+            parsedContent.desenvolvimento_2_imagem = `ilustração educativa do segundo aspecto de ${tema} para ${disciplina}, sem texto`;
+          }
+          if (!parsedContent.desenvolvimento_3_imagem) {
+            parsedContent.desenvolvimento_3_imagem = `ilustração educativa do terceiro aspecto de ${tema} para ${disciplina}, sem texto`;
+          }
+          if (!parsedContent.desenvolvimento_4_imagem) {
+            parsedContent.desenvolvimento_4_imagem = `ilustração educativa do quarto aspecto de ${tema} para ${disciplina}, sem texto`;
+          }
+          if (!parsedContent.exemplo_imagem) {
+            parsedContent.exemplo_imagem = `exemplo visual prático de ${tema} aplicado em ${disciplina}, educativo, sem texto`;
           }
         }
 

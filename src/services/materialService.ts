@@ -131,7 +131,13 @@ class MaterialService {
       }
 
       console.log('✅ Content generated successfully with OpenAI');
-      const generatedContent = data.content;
+      let generatedContent = data.content;
+      
+      // Se for slides, gerar imagens para os prompts definidos
+      if (type === 'slides' && generatedContent) {
+        console.log('🎨 Starting image generation for slides...');
+        generatedContent = await this.generateImagesForSlides(generatedContent);
+      }
       
       // Map form data to UserMaterial format
       const materialData = this.mapToUserMaterial(type, formData, generatedContent);
@@ -157,6 +163,59 @@ class MaterialService {
       console.error('❌ Error in generateMaterial:', error);
       throw error;
     }
+  }
+
+  private async generateImagesForSlides(slidesContent: any): Promise<any> {
+    console.log('🎨 Generating images for slides...');
+    
+    // Lista de campos de imagem nos slides com suas prioridades
+    const imageFields = [
+      'tema_imagem',          // Slide 1 - Capa (alta prioridade)
+      'introducao_imagem',    // Slide 3 - Introdução
+      'conceitos_imagem',     // Slide 4 - Conceitos
+      'desenvolvimento_1_imagem', // Slide 5
+      'desenvolvimento_2_imagem', // Slide 6
+      'desenvolvimento_3_imagem', // Slide 7
+      'desenvolvimento_4_imagem', // Slide 8
+      'exemplo_imagem'        // Slide 9 - Exemplo prático
+    ];
+
+    const updatedContent = { ...slidesContent };
+
+    for (const field of imageFields) {
+      const prompt = slidesContent[field];
+      if (prompt && typeof prompt === 'string' && prompt.trim() !== '') {
+        try {
+          console.log(`🎨 Generating image for ${field}:`, prompt);
+          
+          const { data, error } = await supabase.functions.invoke('gerarImagemIA', {
+            body: { prompt: prompt.trim() }
+          });
+
+          if (error) {
+            console.error(`❌ Error generating image for ${field}:`, error);
+            continue; // Continua para a próxima imagem
+          }
+
+          if (data?.success && data?.imageUrl) {
+            updatedContent[field + '_url'] = data.imageUrl;
+            console.log(`✅ Image generated for ${field}:`, data.imageUrl);
+          } else {
+            console.warn(`⚠️ No image URL returned for ${field}`);
+          }
+
+          // Pequeno delay entre chamadas para evitar rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+        } catch (error) {
+          console.error(`❌ Exception generating image for ${field}:`, error);
+          continue; // Continua para a próxima imagem mesmo se uma falhar
+        }
+      }
+    }
+
+    console.log('🎨 Image generation completed for slides');
+    return updatedContent;
   }
 
   async getMaterials(): Promise<GeneratedMaterial[]> {
