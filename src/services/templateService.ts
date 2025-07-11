@@ -782,24 +782,12 @@ export class TemplateService {
           <div class="slide">
             <div class="slide-header">Slide 2/12</div>
             <h2>Objetivos da Aula</h2>
-            <div class="objectives-grid">
-              <div class="objective-card">
-                <div class="number">1</div>
-                <p>{objetivo_1}</p>
-              </div>
-              <div class="objective-card">
-                <div class="number">2</div>
-                <p>{objetivo_2}</p>
-              </div>
-              <div class="objective-card">
-                <div class="number">3</div>
-                <p>{objetivo_3}</p>
-              </div>
-              <div class="objective-card">
-                <div class="number">4</div>
-                <p>{objetivo_4}</p>
-              </div>
-            </div>
+            <ul class="objectives-list" style="list-style: disc inside; color: #fff; font-size: 1.18rem; font-weight: 500; text-align: justify; max-width: 800px; margin: 2.2em auto 0 auto; padding: 0 1.5em;">
+              <li>{objetivo_1}</li>
+              <li>{objetivo_2}</li>
+              <li>{objetivo_3}</li>
+              <li>{objetivo_4}</li>
+            </ul>
             <div class="slide-footer">
               <div class="logo">AulagIA</div>
               <div class="slide-number">2/12</div>

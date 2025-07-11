@@ -436,21 +436,14 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
     // Destacar o primeiro <h2> ou <h3> como tópico principal, estilo extragrosso centralizado, sempre no topo
     // Remove qualquer destaque anterior
     htmlSemData = htmlSemData.replace(/<div class='slide-topic-title.*?>.*?<\/div>/gi, '');
-    // Extrai o título do slide (primeiro <h2> ou <h3>)
-    let slideTitle = '';
-    let matchH2 = htmlSemData.match(/<h2>(.*?)<\/h2>/i);
-    let matchH3 = htmlSemData.match(/<h3>(.*?)<\/h3>/i);
-    if (matchH2) {
-      slideTitle = matchH2[1];
-      htmlSemData = htmlSemData.replace(/<h2>.*?<\/h2>/i, '');
-    } else if (matchH3) {
-      slideTitle = matchH3[1];
-      htmlSemData = htmlSemData.replace(/<h3>.*?<\/h3>/i, '');
-    }
-    // Insere o título centralizado no topo, extragrosso, fonte grossa
-    if (slideTitle) {
-      htmlSemData = `<div style='width:100%;text-align:center;font-family:inherit;font-weight:800;font-size:2.2rem;margin-top:0.7em;margin-bottom:1.2em;'>${slideTitle}</div>` + htmlSemData;
-    }
+    // Remover o texto 'Slide' isolado (caso apareça)
+    htmlSemData = htmlSemData.replace(/<p>\s*Slide\s*<\/p>/gi, '');
+    htmlSemData = htmlSemData.replace(/\bSlide\b/g, '');
+    // Remover títulos de tópicos do topo (ex: Desenvolvimento do Conteúdo, Continuação dos Tópicos, Exemplo Prático, Atividade Interativa, etc.)
+    // Remove <h1> ou <h2> ou <h3> no início do conteúdo
+    htmlSemData = htmlSemData.replace(/^\s*<(h1|h2|h3)[^>]*>.*?<\/(h1|h2|h3)>/i, '');
+    // Remover <h2> específicos do template
+    htmlSemData = htmlSemData.replace(/<h2>\s*(Desenvolvimento do Conteúdo|Continuação dos Tópicos|Exemplo Prático|Atividade Interativa)\s*<\/h2>/gi, '');
 
     // Inserir 'Apresentado por:' acima do nome do professor, se houver, agora com cor amarela
 
@@ -481,15 +474,25 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
 
     // Se for a segunda página (objetivos), aplicar estilo especial ao tópico e à lista
     if (index === 1) {
-      // Título principal destacado, centralizado, extragrosso, verde
-      htmlSemData = htmlSemData.replace(/<h2>(.*?)<\/h2>/i, "<div class='slide-topic-title slide-topic-green' style='font-family:Anton,Arial Black,Impact,Poppins,Lato,Arial,sans-serif;font-weight:900;font-size:2.7rem;color:#059669;text-align:center;letter-spacing:-1px;margin-bottom:0.7em;'>$1</div>");
-      htmlSemData = htmlSemData.replace(/<div class='slide-topic-title slide-topic-green'>(.*?)<\/div>/i, "<div class='slide-topic-title slide-topic-green' style='font-family:Anton,Arial Black,Impact,Poppins,Lato,Arial,sans-serif;font-weight:900;font-size:2.7rem;color:#059669;text-align:center;letter-spacing:-1px;margin-bottom:0.7em;'>$1</div>");
-      // Texto 'Nossos objetivos para hoje:' destacado, centralizado, negrito
-      htmlSemData = htmlSemData.replace(/Nossos objetivos para hoje:/i, "<div style='font-weight:800;font-size:1.35rem;color:#222;text-align:center;margin:1.2em 0 0.7em 0;'>Nossos objetivos para hoje:</div>");
-      // Lista de marcadores com check verde, espaçamento, fonte adequada
-      htmlSemData = htmlSemData.replace(/<ul>([\s\S]*?)<\/ul>/gi, function (_, items) {
-        return `<ul style='list-style:none;padding:0;margin:1.2em 0;'>${items.replace(/<li>(.*?)<\/li>/g, "<li style='font-size:1.18rem;color:#222;font-weight:500;display:flex;align-items:center;margin-bottom:0.7em;'><span style='color:#059669;font-size:1.3em;margin-right:0.5em;'>✔️</span>$1</li>")}</ul>`;
-      });
+      // Título principal destacado, centralizado, cor branca
+      htmlSemData = htmlSemData.replace(/<h2>(.*?)<\/h2>/i, "<div class='slide-topic-title' style='font-family:Poppins, Lato, Arial, sans-serif;font-weight:700;font-size:2.1rem;color:#fff;text-align:center;letter-spacing:-1px;margin-bottom:0.7em;'>$1</div>");
+      htmlSemData = htmlSemData.replace(/<div class='slide-topic-title slide-topic-green'>(.*?)<\/div>/i, "<div class='slide-topic-title' style='font-family:Poppins, Lato, Arial, sans-serif;font-weight:700;font-size:2.1rem;color:#fff;text-align:center;letter-spacing:-1px;margin-bottom:0.7em;'>$1</div>");
+      // Remover números soltos (1, 2, 3, 4) no início de linha
+      htmlSemData = htmlSemData.replace(/(^|<br\s*\/?>|\n)\s*\d+\s*(<br\s*\/?>|\n|$)/g, '$1');
+      // Transformar objetivos em lista com marcadores
+      // Separa linhas de texto em <li> se não houver <ul> já presente
+      if (!/<ul>/i.test(htmlSemData)) {
+        const objetivos = htmlSemData.split(/<div class='slide-topic-title'[^>]*>.*?<\/div>/i)[1] || '';
+        const objetivosList = objetivos
+          .split(/<br\s*\/?>|\n/)
+          .map(linha => linha.trim())
+          .filter(linha => linha.length > 0)
+          .map(obj => `<li>${obj}</li>`)
+          .join('');
+        htmlSemData = htmlSemData.replace(objetivos, `<ul style='list-style: disc inside; color: #fff; font-size: 1.18rem; font-weight: 500; text-align: justify; max-width: 800px; margin: 2.2em auto 0 auto; padding: 0 1.5em;'>${objetivosList}</ul>`);
+      }
+      // Centralizar e justificar a lista
+      htmlSemData = htmlSemData.replace(/<ul /g, "<ul style='list-style: disc inside; color: #fff; font-size: 1.18rem; font-weight: 500; text-align: justify; max-width: 800px; margin: 2.2em auto 0 auto; padding: 0 1.5em;'");
     }
 
     // Layout de duas colunas para páginas específicas
@@ -558,6 +561,82 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
           </style>
         `;
       }
+    }
+    if (index === 0) {
+      // --- NOVO LAYOUT DA CAPA ---
+      // Extrair informações do material
+      let tema = '';
+      let disciplina = material?.subject || 'Matemática';
+      let serie = material?.grade || 'Ensino Fundamental I-3º Ano';
+      let professor = material?.formData?.professor || 'Prof. Maria';
+      // Extrair título (tema) do HTML, se houver
+      const temaMatch = htmlSemData.match(/<h1[^>]*>(.*?)<\/h1>/i);
+      if (temaMatch) tema = temaMatch[1].trim();
+      // Extrair subtítulo (ex: Aula de Matemática - Ensino Fundamental I-3º Ano)
+      let subtitulo = `Aula de ${disciplina} - ${serie}`;
+      // Caixa de imagem
+      let imagemHtml = imagensGeradas[index]
+        ? `<img src="${imagensGeradas[index]}" alt="Imagem gerada IA" style="max-width:100%;max-height:100%;border-radius:16px;" />`
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#888;font-size:1.5rem;">Imagem aqui</div>';
+      // Layout em duas colunas
+      return (
+        <div className="relative w-full h-full flex items-center justify-center bg-blue-700 rounded-2xl shadow-2xl overflow-hidden border border-gray-200" style={{
+          aspectRatio: '4/3',
+          maxWidth: '950px',
+          height: '68vh',
+          minHeight: '500px',
+          margin: '0 auto',
+          fontFamily: 'Poppins, Lato, sans-serif'
+        }}>
+          {/* Logo e nome no canto superior esquerdo */}
+          <div className="absolute top-0 left-0 flex items-center gap-2 p-6 z-10">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-md">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-7 h-7">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
+            </div>
+            <span className="text-2xl font-extrabold tracking-tight drop-shadow-sm text-blue-200">AulagIA</span>
+          </div>
+          {/* Disciplina no canto superior direito */}
+          <div className="absolute top-0 right-0 flex items-center p-6 z-10">
+            <span className="text-lg font-bold text-white">{disciplina}</span>
+          </div>
+          {/* Conteúdo central em duas colunas */}
+          <div className="w-full h-full flex flex-row items-center justify-between p-12 gap-8" style={{maxWidth: 1100, margin: '0 auto'}}>
+            {/* Coluna texto */}
+            <div className="flex-1 flex flex-col items-start justify-center text-left" style={{minWidth: 320}}>
+              <div style={{
+                fontSize: '3.2rem',
+                fontWeight: 700,
+                color: '#fff',
+                lineHeight: 1.08,
+                letterSpacing: '-1px',
+                textShadow: '0 2px 12px #0002',
+                marginBottom: 18,
+                fontFamily: 'Poppins, Lato, Arial, sans-serif',
+                whiteSpace: 'pre-line',
+                textAlign: 'left'
+              }}>{tema || 'Multiplicação\ne Divisão'}</div>
+              <div style={{
+                fontSize: '1.2rem',
+                fontWeight: 700,
+                color: '#fff',
+                marginBottom: 32,
+                textAlign: 'left',
+                textShadow: '0 2px 12px #0002',
+                fontFamily: 'Poppins, Lato, Arial, sans-serif'
+              }}>{subtitulo}</div>
+              <div style={{fontWeight: 800, color: '#fde047', fontSize: '1.35rem', marginBottom: 0, textAlign: 'left'}}>Apresentado por:</div>
+              <div style={{fontWeight: 700, color: '#fff', fontSize: '1.35rem', marginBottom: 0, textAlign: 'left'}}>Professor(a): {professor}</div>
+            </div>
+            {/* Coluna imagem */}
+            <div className="flex-1 flex items-center justify-center" style={{minWidth: 260, maxWidth: 340, height: 240, background: '#e5e7eb', borderRadius: 18}}>
+              <div style={{width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}} dangerouslySetInnerHTML={{__html: imagemHtml}} />
+            </div>
+          </div>
+        </div>
+      );
     }
     return <div className={`relative w-full h-full flex items-center justify-center ${bgClass} rounded-2xl shadow-2xl overflow-hidden border border-gray-200`} style={{
       aspectRatio: '4/3',
@@ -759,10 +838,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
 
             {/* Page Info and Numbers */}
             <div className="flex items-center gap-4">
-              <div className="text-lg font-bold text-gray-700 bg-gray-100 px-[30px] py-0 rounded-lg">
-                Página {currentSlide + 1} de {slides.length}
-              </div>
-              
               {/* Page Numbers */}
               <div className="flex items-center gap-2">
                 {slides.map((_, index) => <button key={index} onClick={() => setCurrentSlide(index)} className={`w-10 h-10 rounded-full text-sm font-bold transition-all duration-200 ${currentSlide === index ? 'bg-blue-600 text-white shadow-lg scale-110' : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105'}`}>
@@ -770,6 +845,12 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
                   </button>)}
               </div>
             </div>
+            {/* Página X de Y flutuante no canto inferior direito, dentro do container azul do slide */}
+            {typeof currentSlide !== 'undefined' && (
+              <div style={{position: 'absolute', right: 32, bottom: 32, zIndex: 30}} className="hidden md:block text-base font-semibold text-gray-700 bg-gray-100 px-4 py-1 rounded-lg whitespace-nowrap shadow pointer-events-none">
+                Página {currentSlide + 1} de {slides.length}
+              </div>
+            )}
 
             {/* Next Button */}
             <Button variant="outline" onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))} disabled={currentSlide === slides.length - 1} className="flex items-center gap-2 h-12 px-6 text-base font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
