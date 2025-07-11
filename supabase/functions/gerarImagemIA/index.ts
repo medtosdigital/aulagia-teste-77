@@ -35,8 +35,8 @@ serve(async (req) => {
       });
     }
 
-    // Usar a API correta de geração de imagens do OpenAI (DALL-E)
-    console.log('📞 Calling OpenAI Images API...');
+    // Usar DALL-E 3 com configurações otimizadas para qualidade e custo
+    console.log('📞 Calling OpenAI Images API with DALL-E 3...');
     const openaiRes = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -44,11 +44,13 @@ serve(async (req) => {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'dall-e-2', // Usar DALL-E 2 que é mais rápido e barato
-        prompt: prompt.substring(0, 1000), // Limitar prompt para DALL-E 2
+        model: 'dall-e-3',
+        prompt: `${prompt.substring(0, 900)}. Clean educational illustration, no text, no words, no letters, simple and clear visual style, child-friendly colors, professional educational content`, // Melhor prompt sem texto
         n: 1,
-        size: '512x512', // Tamanho fixo para consistência
-        response_format: 'url'
+        size: '1024x1024', // Tamanho padrão otimizado
+        quality: 'standard', // Usar qualidade padrão para reduzir custo
+        style: 'natural', // Estilo mais natural e educativo
+        response_format: 'b64_json' // Usar base64 para melhor controle
       })
     });
 
@@ -67,9 +69,9 @@ serve(async (req) => {
     const data = await openaiRes.json();
     console.log('✅ OpenAI response received');
     
-    // Extrair URL da imagem gerada
-    if (!data.data || !data.data[0] || !data.data[0].url) {
-      console.error('❌ No image URL in response:', data);
+    // Extrair dados da imagem gerada
+    if (!data.data || !data.data[0] || !data.data[0].b64_json) {
+      console.error('❌ No image data in response:', data);
       return new Response(JSON.stringify({ 
         success: false, 
         error: 'Imagem não gerada.' 
@@ -79,12 +81,15 @@ serve(async (req) => {
       });
     }
 
-    const imageUrl = data.data[0].url;
-    console.log('🎨 Image generated successfully:', imageUrl);
+    const imageB64 = data.data[0].b64_json;
+    const imageDataUrl = `data:image/png;base64,${imageB64}`;
+    
+    console.log('🎨 Image generated successfully');
     
     return new Response(JSON.stringify({ 
       success: true, 
-      imageUrl: imageUrl 
+      imageUrl: imageDataUrl,
+      imageData: imageB64 // Incluir dados base64 para salvamento
     }), { 
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

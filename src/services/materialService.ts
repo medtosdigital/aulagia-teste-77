@@ -1,4 +1,3 @@
-
 import { userMaterialsService, UserMaterial } from './userMaterialsService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -136,7 +135,7 @@ class MaterialService {
       // Se for slides, gerar imagens para os prompts definidos
       if (type === 'slides' && generatedContent) {
         console.log('🎨 Starting image generation for slides...');
-        generatedContent = await this.generateImagesForSlides(generatedContent);
+        generatedContent = await this.generateImagesForSlides(generatedContent, formData);
       }
       
       // Map form data to UserMaterial format
@@ -165,7 +164,7 @@ class MaterialService {
     }
   }
 
-  private async generateImagesForSlides(slidesContent: any): Promise<any> {
+  private async generateImagesForSlides(slidesContent: any, formData: MaterialFormData): Promise<any> {
     console.log('🎨 Generating images for slides...');
     
     // Lista de campos de imagem nos slides com suas prioridades
@@ -188,8 +187,15 @@ class MaterialService {
         try {
           console.log(`🎨 Generating image for ${field}:`, prompt);
           
+          // Melhorar o prompt baseado no contexto educacional
+          const tema = formData.tema || formData.topic || '';
+          const disciplina = formData.disciplina || formData.subject || '';
+          const serie = formData.serie || formData.grade || '';
+          
+          const enhancedPrompt = `Educational illustration for ${disciplina} class about ${tema} for ${serie} students: ${prompt}. Clean, colorful, child-friendly, no text, no words, no letters, simple educational style`;
+          
           const { data, error } = await supabase.functions.invoke('gerarImagemIA', {
-            body: { prompt: prompt.trim() }
+            body: { prompt: enhancedPrompt }
           });
 
           if (error) {
@@ -198,14 +204,16 @@ class MaterialService {
           }
 
           if (data?.success && data?.imageUrl) {
+            // Salvar tanto a URL quanto os dados base64
             updatedContent[field + '_url'] = data.imageUrl;
-            console.log(`✅ Image generated for ${field}:`, data.imageUrl);
+            updatedContent[field + '_data'] = data.imageData;
+            console.log(`✅ Image generated for ${field}:`, data.imageUrl.substring(0, 50) + '...');
           } else {
             console.warn(`⚠️ No image URL returned for ${field}`);
           }
 
           // Pequeno delay entre chamadas para evitar rate limiting
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
         } catch (error) {
           console.error(`❌ Exception generating image for ${field}:`, error);

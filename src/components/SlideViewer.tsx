@@ -486,7 +486,9 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
       let imagemHtml = '';
       
       if (imageUrl) {
-        imagemHtml = `<img src="${imageUrl}" alt="Imagem gerada por IA" style="max-width:100%;max-height:100%;border-radius:16px;object-fit:cover;" />`;
+        // Tamanho especial para o primeiro slide (capa)
+        const imageSize = index === 0 ? 'width:100%;height:100%;object-fit:cover;' : 'max-width:100%;max-height:100%;object-fit:cover;';
+        imagemHtml = `<img src="${imageUrl}" alt="Imagem gerada por IA" style="${imageSize}border-radius:16px;" />`;
       } else {
         imagemHtml = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#888;font-size:1.1rem;background:#f3f4f6;border-radius:16px;">🎨 Carregando imagem...</div>';
       }
@@ -546,7 +548,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
       let imagemHtml = '';
       
       if (imageUrl) {
-        imagemHtml = `<img src="${imageUrl}" alt="Imagem gerada por IA" style="max-width:100%;max-height:100%;border-radius:16px;object-fit:cover;" />`;
+        imagemHtml = `<img src="${imageUrl}" alt="Imagem gerada por IA" style="width:100%;height:100%;border-radius:16px;object-fit:cover;" />`;
       } else {
         imagemHtml = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#888;font-size:1.5rem;background:#f3f4f6;border-radius:16px;">🎨 Carregando imagem...</div>';
       }
@@ -606,9 +608,9 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
                 fontFamily: 'Poppins, Lato, Arial, sans-serif'
               }}>{subtitulo}</div>
             </div>
-            {/* Coluna imagem */}
+            {/* Coluna imagem - Tamanho maior para capa */}
             <div className="flex-1 flex flex-col items-center justify-center text-center" style={{minWidth: 320}}>
-              <div style={{width: '100%', height: 220, background: '#e5e7eb', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '1.5rem'}} dangerouslySetInnerHTML={{__html: imagemHtml}} />
+              <div style={{width: '100%', height: 280, background: '#e5e7eb', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '1.5rem'}} dangerouslySetInnerHTML={{__html: imagemHtml}} />
             </div>
           </div>
         </div>
