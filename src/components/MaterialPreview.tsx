@@ -355,19 +355,33 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             text-align: center;
             margin: 10px 0 18px 0;
             font-size: 1.5rem;
-            color: #4f46e5;
+            color: #4338ca !important;
             position: relative;
             font-family: 'Inter', sans-serif;
-            font-weight: 700;
+            font-weight: 800 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px;
           }
           h2::after {
             content: '';
-            width: 50px;
-            height: 3px;
-            background: #a78bfa;
+            width: 60px;
+            height: 4px;
+            background: #a5b4fc;
             display: block;
-            margin: 6px auto 0;
+            margin: 8px auto 0;
             border-radius: 2px;
+          }
+          /* Títulos das seções do plano de aula */
+          .section h3 {
+            color: #4338ca !important;
+            font-size: 1.15rem !important;
+            margin-bottom: 15px !important;
+            font-weight: 800 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
+            font-family: 'Inter', sans-serif !important;
           }
           
           /* Tabelas */
@@ -610,6 +624,69 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             }
           }
         </style>
+        <script>
+          window.onload = function() {
+            // Ajuste do título principal
+            var h1 = document.querySelector('.header-section h1');
+            if (h1) {
+              h1.textContent = '';
+              var spanMain = document.createElement('span');
+              spanMain.textContent = 'PLANO DE AULA';
+              spanMain.style.fontWeight = '900';
+              spanMain.style.fontFamily = 'Inter, sans-serif';
+              spanMain.style.fontSize = '1.5rem';
+              spanMain.style.letterSpacing = '0.5px';
+              spanMain.style.textTransform = 'uppercase';
+              spanMain.style.color = '#4338ca';
+              spanMain.style.position = 'relative';
+              spanMain.style.textAlign = 'center';
+              spanMain.style.fontStretch = 'expanded';
+              // Suavizar o efeito de extrabold
+              spanMain.style.textShadow = '';
+              h1.appendChild(spanMain);
+              h1.style.textAlign = 'center';
+              h1.style.background = 'none';
+              h1.style.border = 'none';
+              h1.style.position = 'relative';
+              // Remove sublinhados antigos
+              var next = h1.nextSibling;
+              while (next && next.nodeType === 1 && next.offsetHeight <= 4) {
+                var toRemove = next;
+                next = next.nextSibling;
+                toRemove.remove();
+              }
+              // Sublinhado roxo claro ajustado
+              var underline = document.createElement('div');
+              underline.style.width = '48px';
+              underline.style.height = '2px';
+              underline.style.background = '#a5b4fc';
+              underline.style.margin = '2px auto 0 auto';
+              underline.style.borderRadius = '2px';
+              h1.insertAdjacentElement('afterend', underline);
+            }
+            // Diminuir fonte dos conteúdos e tópicos
+            var content = document.querySelectorAll('.section, .content-text, .evaluation-text, .objectives-list li, .skills-list li, .resources-list li, td, p, li');
+            content.forEach(function(el) {
+              el.style.fontSize = '0.97rem';
+            });
+            var h3s = document.querySelectorAll('.section h3');
+            h3s.forEach(function(h3) {
+              h3.style.fontSize = '1.05rem';
+            });
+            // Diminuir fonte das células de tabela
+            var tableCells = document.querySelectorAll('td, th');
+            tableCells.forEach(function(cell) {
+              cell.style.fontSize = '0.82rem';
+            });
+            // Ajustar tamanho do subtítulo da logo
+            var brandText = document.querySelector('.header .brand-text p');
+            if (brandText) {
+              brandText.style.fontSize = '10px';
+              brandText.style.margin = '-1px 0 0 0';
+              brandText.style.lineHeight = '1';
+            }
+          }
+        </script>
       </head>
       <body>
         ${htmlContent}

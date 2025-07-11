@@ -406,15 +406,33 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
         <span className={`text-lg font-bold ${isBlue ? 'text-white' : 'text-slate-700'}`}>{disciplinaFormatada}</span>
       </div>;
     if (isObrigado) {
-      return <div className="relative w-full h-full flex items-center justify-center bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200" style={{
-        aspectRatio: '4/3',
-        maxWidth: '950px',
-        height: '68vh',
-        minHeight: '500px',
-        margin: '0 auto',
-        fontFamily: 'Poppins, Lato, sans-serif'
-      }}>
-          {logoEsquerda}
+      return <div className="relative w-full h-full flex items-center justify-center bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
+        style={{
+          aspectRatio: '4/3',
+          width: '100%',
+          maxWidth: '950px',
+          minWidth: '320px',
+          height: 'auto',
+          maxHeight: '68vh',
+          minHeight: '240px',
+          margin: '0 auto',
+          fontFamily: 'Poppins, Lato, sans-serif',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#fff',
+          boxSizing: 'border-box',
+        }}>
+          {/* Logo com azul forte */}
+          <div className="absolute top-0 left-0 flex items-center gap-2 p-6 z-10">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-md">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-7 h-7">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
+            </div>
+            <span className="text-2xl font-extrabold tracking-tight drop-shadow-sm" style={{color:'#2563eb'}}>AulagIA</span>
+          </div>
           {disciplinaDireita}
           <div className="w-full h-full flex flex-col items-center justify-center text-center p-12" style={{
           maxWidth: 700,
@@ -429,6 +447,10 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
             textShadow: '0 2px 12px #0001',
             textAlign: 'center'
           }}>OBRIGADO(A)!</div>
+          <div style={{fontSize:'1.15rem',color:'#64748b',marginBottom:18}}>Para mais materiais educativos, visite:</div>
+          <div style={{fontSize:'2rem',fontWeight:700,letterSpacing:'-1px',color:'#2563eb',marginBottom:24,background:'rgba(37,99,235,0.07)',borderRadius:8,padding:'6px 24px',display:'inline-block',boxShadow:'0 2px 8px #2563eb11'}}>aulagia.com.br</div>
+          <div style={{fontSize:'1.05rem',color:'#64748b',marginBottom:2}}>Slides gerados pela AulagIA</div>
+          <div style={{fontSize:'1.05rem',color:'#94a3b8'}}>Sua aula com toque mágico</div>
           </div>
         </div>;
     }
@@ -477,22 +499,10 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
       // Título principal destacado, centralizado, cor branca
       htmlSemData = htmlSemData.replace(/<h2>(.*?)<\/h2>/i, "<div class='slide-topic-title' style='font-family:Poppins, Lato, Arial, sans-serif;font-weight:700;font-size:2.1rem;color:#fff;text-align:center;letter-spacing:-1px;margin-bottom:0.7em;'>$1</div>");
       htmlSemData = htmlSemData.replace(/<div class='slide-topic-title slide-topic-green'>(.*?)<\/div>/i, "<div class='slide-topic-title' style='font-family:Poppins, Lato, Arial, sans-serif;font-weight:700;font-size:2.1rem;color:#fff;text-align:center;letter-spacing:-1px;margin-bottom:0.7em;'>$1</div>");
-      // Remover números soltos (1, 2, 3, 4) no início de linha
-      htmlSemData = htmlSemData.replace(/(^|<br\s*\/?>|\n)\s*\d+\s*(<br\s*\/?>|\n|$)/g, '$1');
-      // Transformar objetivos em lista com marcadores
-      // Separa linhas de texto em <li> se não houver <ul> já presente
-      if (!/<ul>/i.test(htmlSemData)) {
-        const objetivos = htmlSemData.split(/<div class='slide-topic-title'[^>]*>.*?<\/div>/i)[1] || '';
-        const objetivosList = objetivos
-          .split(/<br\s*\/?>|\n/)
-          .map(linha => linha.trim())
-          .filter(linha => linha.length > 0)
-          .map(obj => `<li>${obj}</li>`)
-          .join('');
-        htmlSemData = htmlSemData.replace(objetivos, `<ul style='list-style: disc inside; color: #fff; font-size: 1.18rem; font-weight: 500; text-align: justify; max-width: 800px; margin: 2.2em auto 0 auto; padding: 0 1.5em;'>${objetivosList}</ul>`);
-      }
-      // Centralizar e justificar a lista
-      htmlSemData = htmlSemData.replace(/<ul /g, "<ul style='list-style: disc inside; color: #fff; font-size: 1.18rem; font-weight: 500; text-align: justify; max-width: 800px; margin: 2.2em auto 0 auto; padding: 0 1.5em;'");
+      // Remover <li> vazios e espaços extras
+      htmlSemData = htmlSemData.replace(/<li>\s*<\/li>/g, '');
+      htmlSemData = htmlSemData.replace(/(<li>\s*)+/g, '<li>');
+      htmlSemData = htmlSemData.replace(/(\s*<\/li>)+/g, '</li>');
     }
 
     // Layout de duas colunas para páginas específicas
@@ -602,6 +612,11 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
           <div className="absolute top-0 right-0 flex items-center p-6 z-10">
             <span className="text-lg font-bold text-white">{disciplina}</span>
           </div>
+          {/* Bloco Apresentado por fixo no canto inferior esquerdo */}
+          <div className="absolute left-0 bottom-0 z-20 p-8" style={{paddingLeft:32,paddingBottom:32}}>
+            <div style={{fontWeight: 800, color: '#fde047', fontSize: '1.35rem', marginBottom: 0, textAlign: 'left'}}>Apresentado por:</div>
+            <div style={{fontWeight: 700, color: '#fff', fontSize: '1.15rem', textAlign: 'left'}}>Professor(a): {professor}</div>
+          </div>
           {/* Conteúdo central em duas colunas */}
           <div className="w-full h-full flex flex-row items-center justify-between p-12 gap-8" style={{maxWidth: 1100, margin: '0 auto'}}>
             {/* Coluna texto */}
@@ -627,16 +642,29 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
                 textShadow: '0 2px 12px #0002',
                 fontFamily: 'Poppins, Lato, Arial, sans-serif'
               }}>{subtitulo}</div>
-              <div style={{fontWeight: 800, color: '#fde047', fontSize: '1.35rem', marginBottom: 0, textAlign: 'left'}}>Apresentado por:</div>
-              <div style={{fontWeight: 700, color: '#fff', fontSize: '1.35rem', marginBottom: 0, textAlign: 'left'}}>Professor(a): {professor}</div>
             </div>
             {/* Coluna imagem */}
-            <div className="flex-1 flex items-center justify-center" style={{minWidth: 260, maxWidth: 340, height: 240, background: '#e5e7eb', borderRadius: 18}}>
-              <div style={{width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}} dangerouslySetInnerHTML={{__html: imagemHtml}} />
+            <div className="flex-1 flex flex-col items-center justify-center text-center" style={{minWidth: 320}}>
+              <div style={{width: '100%', height: 220, background: '#e5e7eb', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '1.5rem'}} dangerouslySetInnerHTML={{__html: imagemHtml}} />
             </div>
           </div>
         </div>
       );
+    }
+    // Ajustar fonte e dividir conteúdo em parágrafos para slides de conteúdo (exceto títulos)
+    if (index !== 0 && index !== 1) {
+      // Diminui a fonte do conteúdo
+      htmlSemData = htmlSemData.replace(/<div class=['"]w-full slide-content-rich[^>]*>([\s\S]*?)<\/div>/g, (match, inner) => {
+        // Divide em frases por ponto final
+        const paragrafos = inner.split(/\.(?!\d)/).map(p => p.trim()).filter(Boolean);
+        // Junta em 2-3 parágrafos
+        const chunkSize = Math.ceil(paragrafos.length / 2);
+        const paragrafosAgrupados = [];
+        for (let i = 0; i < paragrafos.length; i += chunkSize) {
+          paragrafosAgrupados.push(paragrafos.slice(i, i + chunkSize).join('. ') + (i + chunkSize < paragrafos.length ? '.' : ''));
+        }
+        return `<div class='w-full slide-content-rich' style='font-size:1.08rem; font-weight:500; line-height:1.6; color:inherit; text-align:justify;'>${paragrafosAgrupados.map(p => `<p>${p}</p>`).join('')}</div>`;
+      });
     }
     return <div className={`relative w-full h-full flex items-center justify-center ${bgClass} rounded-2xl shadow-2xl overflow-hidden border border-gray-200`} style={{
       aspectRatio: '4/3',
@@ -806,22 +834,38 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
       // Mobile: Container com altura muito maior para visualização adequada
       <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" style={{
         aspectRatio: '4/3',
-        maxWidth: '100%',
-        height: '75vh',
-        minHeight: '500px'
+        width: '100%',
+        maxWidth: '95vw',
+        minWidth: '240px',
+        height: 'auto',
+        maxHeight: '75vh',
+        minHeight: '180px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#fff',
+        boxSizing: 'border-box',
       }}>
-            <div className="w-full h-full">
+            <div className="w-full h-full flex items-center justify-center" style={{aspectRatio:'4/3'}}>
               {renderSlide(slides[currentSlide], currentSlide)}
             </div>
           </div> :
       // Desktop: Container com largura e altura balanceadas para não cortar
       <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" style={{
         aspectRatio: '4/3',
-        maxWidth: '800px',
-        height: '60vh',
-        minHeight: '450px'
+        width: '100%',
+        maxWidth: '950px',
+        minWidth: '320px',
+        height: 'auto',
+        maxHeight: '68vh',
+        minHeight: '240px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#fff',
+        boxSizing: 'border-box',
       }}>
-            <div className="w-full h-full">
+            <div className="w-full h-full flex items-center justify-center" style={{aspectRatio:'4/3'}}>
               {renderSlide(slides[currentSlide], currentSlide)}
             </div>
           </div>}
@@ -847,7 +891,7 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
             </div>
             {/* Página X de Y flutuante no canto inferior direito, dentro do container azul do slide */}
             {typeof currentSlide !== 'undefined' && (
-              <div style={{position: 'absolute', right: 32, bottom: 32, zIndex: 30}} className="hidden md:block text-base font-semibold text-gray-700 bg-gray-100 px-4 py-1 rounded-lg whitespace-nowrap shadow pointer-events-none">
+              <div style={{position: 'fixed', right: 400, bottom: 100, zIndex: 50}} className="hidden md:block text-base font-semibold text-gray-700 bg-gray-100 px-4 py-1 rounded-lg whitespace-nowrap shadow pointer-events-none">
                 Página {currentSlide + 1} de {slides.length}
               </div>
             )}

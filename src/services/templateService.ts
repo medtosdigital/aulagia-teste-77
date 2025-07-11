@@ -78,14 +78,14 @@ export class TemplateService {
           }
           
           .section h3 {
-            color: #1e40af;
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #3b82f6;
-            padding-bottom: 5px;
+            color: #7c3aed !important;
+            font-size: 1.3rem !important;
+            margin-bottom: 15px !important;
+            font-weight: 800 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
           }
           
           .objectives-list, .skills-list {
@@ -769,7 +769,7 @@ export class TemplateService {
           <div class="slide slide-1 active">
             <h1>{slide_1_titulo}</h1>
             <div class="subtitle">{slide_1_subtitulo}</div>
-            <div class="image-placeholder">{tema_imagem}</div>
+            <div class="image-placeholder"></div>
             <div class="info">
               <p><strong>Professor(a):</strong> {professor}</p>
               <p><strong>Data:</strong> {data}</p>
@@ -783,13 +783,9 @@ export class TemplateService {
             <div class="slide-header">Slide 2/12</div>
             <h2>Objetivos da Aula</h2>
             <ul class="objectives-list" style="list-style: disc inside; color: #fff; font-size: 1.18rem; font-weight: 500; text-align: justify; max-width: 800px; margin: 2.2em auto 0 auto; padding: 0 1.5em;">
-              <li>{objetivo_1}</li>
-              <li>{objetivo_2}</li>
-              <li>{objetivo_3}</li>
-              <li>{objetivo_4}</li>
+              <li>{objetivo_1}</li><li>{objetivo_2}</li><li>{objetivo_3}</li><li>{objetivo_4}</li>
             </ul>
             <div class="slide-footer">
-              <div class="logo">AulagIA</div>
               <div class="slide-number">2/12</div>
             </div>
           </div>
@@ -802,10 +798,9 @@ export class TemplateService {
               <div class="text-content">
                 <p>{introducao_texto}</p>
               </div>
-              <div class="image-placeholder">{introducao_imagem}</div>
+              <div class="image-placeholder"></div>
             </div>
             <div class="slide-footer">
-              <div class="logo">AulagIA</div>
               <div class="slide-number">3/12</div>
             </div>
           </div>
@@ -818,11 +813,10 @@ export class TemplateService {
               <p>{conceitos_texto}</p>
             </div>
             <div class="concept-highlight">
-              <h3>{conceito_principal}</h3>
+              <p style="font-size:1rem;font-weight:600;color:#FFD600;margin:18px 0 0 0;">{conceito_principal}</p>
             </div>
-            <div class="image-placeholder" style="margin: 20px auto; width: 400px;">{conceitos_imagem}</div>
+            <div class="image-placeholder" style="margin: 20px auto; width: 400px;"></div>
             <div class="slide-footer">
-              <div class="logo">AulagIA</div>
               <div class="slide-number">4/12</div>
             </div>
           </div>
@@ -836,10 +830,9 @@ export class TemplateService {
                 <h3>{desenvolvimento_1_titulo}</h3>
                 <p>{desenvolvimento_1_texto}</p>
               </div>
-              <div class="image-placeholder">{desenvolvimento_1_imagem}</div>
+              <div class="image-placeholder"></div>
             </div>
             <div class="slide-footer">
-              <div class="logo">AulagIA</div>
               <div class="slide-number">5/12</div>
             </div>
           </div>
@@ -853,10 +846,9 @@ export class TemplateService {
                 <h3>{desenvolvimento_2_titulo}</h3>
                 <p>{desenvolvimento_2_texto}</p>
               </div>
-              <div class="image-placeholder">{desenvolvimento_2_imagem}</div>
+              <div class="image-placeholder"></div>
             </div>
             <div class="slide-footer">
-              <div class="logo">AulagIA</div>
               <div class="slide-number">6/12</div>
             </div>
           </div>
@@ -870,10 +862,9 @@ export class TemplateService {
                 <h3>{desenvolvimento_3_titulo}</h3>
                 <p>{desenvolvimento_3_texto}</p>
               </div>
-              <div class="image-placeholder">{desenvolvimento_3_imagem}</div>
+              <div class="image-placeholder"></div>
             </div>
             <div class="slide-footer">
-              <div class="logo">AulagIA</div>
               <div class="slide-number">7/12</div>
             </div>
           </div>
@@ -887,10 +878,9 @@ export class TemplateService {
                 <h3>{desenvolvimento_4_titulo}</h3>
                 <p>{desenvolvimento_4_texto}</p>
               </div>
-              <div class="image-placeholder">{desenvolvimento_4_imagem}</div>
+              <div class="image-placeholder"></div>
             </div>
             <div class="slide-footer">
-              <div class="logo">AulagIA</div>
               <div class="slide-number">8/12</div>
             </div>
           </div>
@@ -903,11 +893,10 @@ export class TemplateService {
               <h3>{exemplo_titulo}</h3>
               <div class="example-content">
                 <p>{exemplo_conteudo}</p>
-                <div class="image-placeholder">{exemplo_imagem}</div>
+                <div class="image-placeholder"></div>
               </div>
             </div>
             <div class="slide-footer">
-              <div class="logo">AulagIA</div>
               <div class="slide-number">9/12</div>
             </div>
           </div>
@@ -916,36 +905,35 @@ export class TemplateService {
           <div class="slide">
             <div class="slide-header">Slide 10/12</div>
             <h2>{tabela_titulo}</h2>
-            <div class="table-container">
-              <table>
+            <div class="table-container" style="display:flex;justify-content:center;align-items:center;margin-top:32px;">
+              <table style="min-width:420px;background:rgba(255,255,255,0.12);border-radius:12px;border-collapse:separate;border-spacing:0 8px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                 <thead>
                   <tr>
-                    <th>{coluna_1}</th>
-                    <th>{coluna_2}</th>
-                    <th>{coluna_3}</th>
+                    <th style="text-align:center;padding:10px 24px 6px 24px;font-size:1.15rem;">{coluna_1}</th>
+                    <th style="text-align:center;padding:10px 24px 6px 24px;font-size:1.15rem;">{coluna_2}</th>
+                    <th style="text-align:center;padding:10px 24px 6px 24px;font-size:1.15rem;">{coluna_3}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>{linha_1_col_1}</td>
-                    <td>{linha_1_col_2}</td>
-                    <td>{linha_1_col_3}</td>
+                    <td style="padding:8px 24px;font-size:1rem;">{linha_1_col_1}</td>
+                    <td style="padding:8px 24px;font-size:1rem;">{linha_1_col_2}</td>
+                    <td style="padding:8px 24px;font-size:1rem;">{linha_1_col_3}</td>
                   </tr>
                   <tr>
-                    <td>{linha_2_col_1}</td>
-                    <td>{linha_2_col_2}</td>
-                    <td>{linha_2_col_3}</td>
+                    <td style="padding:8px 24px;font-size:1rem;">{linha_2_col_1}</td>
+                    <td style="padding:8px 24px;font-size:1rem;">{linha_2_col_2}</td>
+                    <td style="padding:8px 24px;font-size:1rem;">{linha_2_col_3}</td>
                   </tr>
                   <tr>
-                    <td>{linha_3_col_1}</td>
-                    <td>{linha_3_col_2}</td>
-                    <td>{linha_3_col_3}</td>
+                    <td style="padding:8px 24px;font-size:1rem;">{linha_3_col_1}</td>
+                    <td style="padding:8px 24px;font-size:1rem;">{linha_3_col_2}</td>
+                    <td style="padding:8px 24px;font-size:1rem;">{linha_3_col_3}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <div class="slide-footer">
-              <div class="logo">AulagIA</div>
               <div class="slide-number">10/12</div>
             </div>
           </div>
@@ -954,20 +942,37 @@ export class TemplateService {
           <div class="slide">
             <div class="slide-header">Slide 11/12</div>
             <h2>Atividade Interativa</h2>
-            <div class="activity-section">
-              <h3>Responda a pergunta:</h3>
-              <div class="question">
-                <p><strong>{atividade_pergunta}</strong></p>
-                <ul class="options">
-                  <li>A) {opcao_a}</li>
-                  <li>B) {opcao_b}</li>
-                  <li>C) {opcao_c}</li>
-                  <li>D) {opcao_d}</li>
+            <div class="activity-section" style="display:flex;flex-direction:column;align-items:center;">
+              <h3 style="display:flex;align-items:center;gap:10px;justify-content:center;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#FFD600;border-radius:50%;font-size:1.3rem;color:#1e293b;box-shadow:0 2px 6px rgba(0,0,0,0.08);">?</span>
+                Responda a pergunta:
+              </h3>
+              <div class="question" style="animation:fadeInQ 0.7s;display:flex;flex-direction:column;align-items:center;width:100%;">
+                <p style="margin-bottom:18px;display:flex;align-items:center;gap:10px;justify-content:center;">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:#3b82f6;border-radius:50%;font-size:1.1rem;color:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.07);">Q</span>
+                  <strong>{atividade_pergunta}</strong>
+                </p>
+                <ul class="options" style="background:rgba(255,255,255,0.10);border-radius:12px;padding:18px 24px;list-style:none;animation:fadeInOpt 1.1s;display:grid;grid-template-columns:1fr 1fr;gap:18px 32px;justify-items:center;max-width:420px;margin:0 auto;">
+                  <li style="display:flex;align-items:center;gap:10px;justify-content:flex-start;width:100%;">
+                    <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:#f59e42;border-radius:50%;font-size:1.1rem;color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.10);">A</span> {opcao_a}
+                  </li>
+                  <li style="display:flex;align-items:center;gap:10px;justify-content:flex-start;width:100%;">
+                    <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:#38bdf8;border-radius:50%;font-size:1.1rem;color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.10);">B</span> {opcao_b}
+                  </li>
+                  <li style="display:flex;align-items:center;gap:10px;justify-content:flex-start;width:100%;">
+                    <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:#a78bfa;border-radius:50%;font-size:1.1rem;color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.10);">C</span> {opcao_c}
+                  </li>
+                  <li style="display:flex;align-items:center;gap:10px;justify-content:flex-start;width:100%;">
+                    <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:#f87171;border-radius:50%;font-size:1.1rem;color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.10);">D</span> {opcao_d}
+                  </li>
                 </ul>
               </div>
+              <style>
+                @keyframes fadeInQ { from { opacity:0; transform:translateY(24px);} to { opacity:1; transform:none;}}
+                @keyframes fadeInOpt { from { opacity:0; transform:translateY(32px);} to { opacity:1; transform:none;}}
+              </style>
             </div>
             <div class="slide-footer">
-              <div class="logo">AulagIA</div>
               <div class="slide-number">11/12</div>
             </div>
           </div>
@@ -998,7 +1003,6 @@ export class TemplateService {
               </ul>
             </div>
             <div class="slide-footer">
-              <div class="logo">AulagIA</div>
               <div class="slide-number">12/12</div>
             </div>
           </div>
