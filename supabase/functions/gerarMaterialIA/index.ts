@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -232,16 +231,18 @@ Crie slides educativos ESPECÍFICOS sobre "${tema}" para ${disciplina} na ${seri
 
 IMPORTANTE: TODO O CONTEÚDO deve ser baseado especificamente no tema "${tema}". NÃO use conteúdo genérico.
 
+IMPORTANTE: Para as páginas 1, 3, 4, 5, 6 e 9, você deve incluir prompts específicos para geração de imagens usando IA.
+
 ESTRUTURA OBRIGATÓRIA:
-- Slide 1: Capa com título e informações básicas
+- Slide 1: Capa com título e informações básicas (COM IMAGEM)
 - Slide 2: Objetivos da aula (4 objetivos específicos)
-- Slide 3: Introdução ao tema
-- Slide 4: Conceito principal
-- Slide 5: Desenvolvimento do Conteúdo - Parte 1 (texto explicativo + imagem)
-- Slide 6: Desenvolvimento do Conteúdo - Parte 2 (texto explicativo + imagem)
-- Slide 7: Desenvolvimento do Conteúdo - Parte 3 (texto explicativo + imagem)
-- Slide 8: Desenvolvimento do Conteúdo - Parte 4 (texto explicativo + imagem)
-- Slide 9: Exemplo Prático (exemplo concreto do tema + imagem)
+- Slide 3: Introdução ao tema (COM IMAGEM)
+- Slide 4: Conceito principal (COM IMAGEM)
+- Slide 5: Desenvolvimento do Conteúdo - Parte 1 (COM IMAGEM)
+- Slide 6: Desenvolvimento do Conteúdo - Parte 2 (COM IMAGEM)
+- Slide 7: Desenvolvimento do Conteúdo - Parte 3
+- Slide 8: Desenvolvimento do Conteúdo - Parte 4
+- Slide 9: Exemplo Prático (COM IMAGEM)
 - Slide 10: Tabela de dados/informações
 - Slide 11: Atividade interativa
 - Slide 12: Conclusão e próximos passos
@@ -257,24 +258,25 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "tema": "${tema}",
   "duracao": "[duração adequada para apresentar slides sobre ${tema}]",
   "bncc": "[códigos BNCC relevantes para ${tema} em ${disciplina}]",
-  "tema_imagem": "ilustração colorida, educativa, sem texto, representando o tema '${tema}' para ${disciplina} na ${serie}",
+  "tema_imagem": "Ilustração educativa colorida representando o tema '${tema}' para ${disciplina} na ${serie}, estilo didático, sem texto, apropriada para apresentação escolar",
   "slide_1_titulo": "${tema}",
   "slide_1_subtitulo": "Aula de ${disciplina} - ${serie}",
+  "slide_1_imagem": "Ilustração educativa colorida de capa representando o tema '${tema}' para ${disciplina} na ${serie}, estilo didático profissional, sem texto, apropriada para apresentação escolar",
   "objetivo_1": "[OBJETIVO 1 específico sobre ${tema}]",
   "objetivo_2": "[OBJETIVO 2 específico sobre ${tema}]",
   "objetivo_3": "[OBJETIVO 3 específico sobre ${tema}]",
   "objetivo_4": "[OBJETIVO 4 específico sobre ${tema}]",
   "introducao_texto": "[INTRODUÇÃO específica sobre ${tema} - explicação clara do que será aprendido]",
-  "introducao_imagem": "descrição visual clara, educativa, sem texto, ilustrando a introdução do tema '${tema}'",
+  "introducao_imagem": "Ilustração educativa colorida introduzindo visualmente o conceito de '${tema}' para ${disciplina} na ${serie}, estilo didático, sem texto, apropriada para alunos da faixa etária",
   "conceitos_texto": "[CONCEITOS fundamentais específicos sobre ${tema} - definição clara e didática]",
   "conceito_principal": "[CONCEITO principal de ${tema} - definição concisa e precisa]",
-  "conceitos_imagem": "descrição visual clara, educativa, sem texto, ilustrando os conceitos de '${tema}'",
+  "conceitos_imagem": "Ilustração educativa colorida demonstrando visualmente os conceitos principais de '${tema}' para ${disciplina} na ${serie}, estilo didático, sem texto, clara e explicativa",
   "desenvolvimento_1_titulo": "[TÍTULO do primeiro aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_1_texto": "[EXPLICAÇÃO detalhada do primeiro aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_1_imagem": "descrição visual clara, educativa, sem texto, ilustrando o primeiro aspecto de '${tema}'",
+  "desenvolvimento_1_imagem": "Ilustração educativa colorida mostrando o primeiro aspecto importante de '${tema}' para ${disciplina} na ${serie}, estilo didático, sem texto, visualmente explicativa",
   "desenvolvimento_2_titulo": "[TÍTULO do segundo aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_2_texto": "[EXPLICAÇÃO detalhada do segundo aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_2_imagem": "descrição visual clara, educativa, sem texto, ilustrando o segundo aspecto de '${tema}'",
+  "desenvolvimento_2_imagem": "Ilustração educativa colorida demonstrando o segundo aspecto de '${tema}' para ${disciplina} na ${serie}, estilo didático, sem texto, visualmente clara",
   "desenvolvimento_3_titulo": "[TÍTULO do terceiro aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_3_texto": "[EXPLICAÇÃO detalhada do terceiro aspecto importante de ${tema} - texto didático e claro]",
   "desenvolvimento_3_imagem": "descrição visual clara, educativa, sem texto, ilustrando o terceiro aspecto de '${tema}'",
@@ -283,7 +285,7 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "desenvolvimento_4_imagem": "descrição visual clara, educativa, sem texto, ilustrando o quarto aspecto de '${tema}'",
   "exemplo_titulo": "[TÍTULO do exemplo prático de ${tema}]",
   "exemplo_conteudo": "[EXEMPLO PRÁTICO concreto e específico sobre ${tema} - situação real onde o tema se aplica]",
-  "exemplo_imagem": "descrição visual clara, educativa, sem texto, ilustrando um exemplo prático de '${tema}'",
+  "exemplo_imagem": "Ilustração educativa colorida mostrando um exemplo prático e concreto de '${tema}' para ${disciplina} na ${serie}, estilo didático, sem texto, situação real e aplicável",
   "tabela_titulo": "[TÍTULO de tabela específica sobre ${tema}]",
   "coluna_1": "[cabeçalho coluna 1 sobre ${tema}]",
   "coluna_2": "[cabeçalho coluna 2 sobre ${tema}]",
@@ -311,6 +313,7 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
 }
 
 GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". Adapte à faixa etária de ${serie}. Use português brasileiro correto.
+IMPORTANTE: Os campos de imagem (slide_1_imagem, introducao_imagem, conceitos_imagem, desenvolvimento_1_imagem, desenvolvimento_2_imagem, exemplo_imagem) devem conter prompts específicos e detalhados para geração de imagens educativas sobre o tema.
 `;
 
     case 'atividade':
