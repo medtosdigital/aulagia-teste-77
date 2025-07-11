@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Printer, Download } from 'lucide-react';
 import { Button } from './ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './ui/pagination';
@@ -6,13 +6,47 @@ import { exportService } from '@/services/exportService';
 import { GeneratedMaterial } from '@/services/materialService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-
+import { supabase } from '@/integrations/supabase/client';
 interface SlideViewerProps {
   htmlContent: string;
   material?: GeneratedMaterial;
 }
 
-const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
+// Função utilitária para detectar prompt de imagem
+async function gerarImagemSePrompt(html: string): Promise<string | null> {
+  // Detecta {imagem_prompt}...{/imagem_prompt} ou frases como Ilustração de ...
+  let prompt = '';
+  const matchVar = html.match(/\{imagem_prompt\}([\s\S]*?)\{\/imagem_prompt\}/i);
+  if (matchVar) {
+    prompt = matchVar[1].trim();
+  } else {
+    // Busca frases tipo "Ilustração de ...", "Imagem de ...", "Desenho de ..."
+    const matchFrase = html.match(/(?:Ilustração|Imagem|Desenho) de ([^.\n]+)/i);
+    if (matchFrase) {
+      prompt = matchFrase[0].trim();
+    }
+  }
+  if (!prompt) return null;
+  // Chama a Edge Function gerarImagemIA
+  try {
+    const {
+      data,
+      error
+    } = await supabase.functions.invoke('gerarImagemIA', {
+      body: {
+        prompt
+      }
+    });
+    if (error || !data || !data.success || !data.imageUrl) return null;
+    return data.imageUrl;
+  } catch {
+    return null;
+  }
+}
+const SlideViewer: React.FC<SlideViewerProps> = ({
+  htmlContent,
+  material
+}) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
 
@@ -20,40 +54,12 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
   const slides = React.useMemo(() => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, 'text/html');
+    // Seleciona todos os slides do template
     const slideDivs = doc.querySelectorAll('div.slide');
     return Array.from(slideDivs).map(div => ({
       html: div.outerHTML
     }));
   }, [htmlContent]);
-
-  // Função para obter imagem gerada para um slide específico
-  const getImagemGerada = (slideIndex: number): string | null => {
-    if (!material?.content?.imagensGeradas) return null;
-    
-    const imagensGeradas = material.content.imagensGeradas;
-    const paginasComImagem = [0, 2, 3, 4, 5, 8]; // Páginas 1, 3, 4, 5, 6, 9
-    
-    if (!paginasComImagem.includes(slideIndex)) return null;
-    
-    // Mapear índice do slide para a chave da imagem
-    switch (slideIndex) {
-      case 0: // Página 1 - Capa
-        return imagensGeradas.slide_1_imagem || imagensGeradas.tema_imagem || null;
-      case 2: // Página 3 - Introdução
-        return imagensGeradas.introducao_imagem || null;
-      case 3: // Página 4 - Conceito Principal
-        return imagensGeradas.conceitos_imagem || null;
-      case 4: // Página 5 - Desenvolvimento 1
-        return imagensGeradas.desenvolvimento_1_imagem || null;
-      case 5: // Página 6 - Desenvolvimento 2
-        return imagensGeradas.desenvolvimento_2_imagem || null;
-      case 8: // Página 9 - Exemplo Prático
-        return imagensGeradas.exemplo_imagem || null;
-      default:
-        return null;
-    }
-  };
-
   const handlePrint = async () => {
     try {
       // Create print-friendly HTML
@@ -70,7 +76,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       console.error('Print error:', error);
     }
   };
-
   const handleExportPDF = async () => {
     try {
       if (material) {
@@ -87,7 +92,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       toast.error('Erro ao exportar PDF');
     }
   };
-
   const handleExportPPT = async () => {
     try {
       if (material) {
@@ -104,7 +108,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       toast.error('Erro ao exportar PowerPoint');
     }
   };
-
   const generatePrintHTML = () => {
     const today = new Date().toLocaleDateString('pt-BR');
     return `
@@ -320,14 +323,12 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       </html>
     `;
   };
-
   const generateSlidesForPPT = () => {
     return slides.map((slide, index) => ({
       html: slide.html,
       slideNumber: index + 1
     }));
   };
-
   const renderSlideForPrint = (slide: any, index: number) => {
     const slideNumber = index + 1;
     const today = new Date().toLocaleDateString('pt-BR');
@@ -357,7 +358,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
       </div>
     `;
   };
-
   const renderSlideContent = (slide: any, index: number) => {
     // Se slide não tem propriedades específicas, apenas retorna o HTML bruto
     if (!slide.title && !slide.type && !slide.objectives) {
@@ -365,7 +365,6 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
     }
     // (Se no futuro houver slides com propriedades, pode-se reabilitar o switch acima)
   };
-
   const renderSlide = (slide: any, index: number) => {
     // Fundo: azul para o primeiro slide e para os ímpares
     const isBlue = index === 0 || index % 2 !== 0;
@@ -387,6 +386,9 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
     // Detectar se é slide de agradecimento OU se é o último slide
     const isObrigado = /obrigado\(a\)|obrigado!/i.test(htmlSemData) || index === slides.length - 1;
 
+    // Exemplo de próximos passos
+    const proximosPassos = ['Acesse novos materiais em aulagia.com.br', 'Compartilhe este material com colegas', 'Explore mais aulas e recursos na plataforma'];
+
     // Logo no canto superior esquerdo
     const logoEsquerda = <div className="absolute top-0 left-0 flex items-center gap-2 p-6 z-10">
         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-md">
@@ -397,14 +399,12 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
             </div>
         <span className={`text-2xl font-extrabold tracking-tight drop-shadow-sm ${isBlue ? 'text-blue-200' : 'text-blue-700'}`}>AulagIA</span>
       </div>;
-    
     // Disciplina no canto superior direito
     const disciplina = material?.subject || 'Disciplina';
     const disciplinaFormatada = disciplina.charAt(0).toUpperCase() + disciplina.slice(1);
     const disciplinaDireita = <div className="absolute top-0 right-0 flex items-center p-6 z-10">
         <span className={`text-lg font-bold ${isBlue ? 'text-white' : 'text-slate-700'}`}>{disciplinaFormatada}</span>
       </div>;
-
     if (isObrigado) {
       return <div className="relative w-full h-full flex items-center justify-center bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
         style={{
@@ -455,24 +455,94 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         </div>;
     }
 
-    // Layout de duas colunas para páginas específicas (1, 3, 4, 5, 6, 9)
-    const paginasDuasColunas = [0, 2, 3, 4, 5, 8]; // índices das páginas com imagens
-    if (paginasDuasColunas.includes(index)) {
-      // Verificar se há imagem gerada para este slide
-      const imagemGerada = getImagemGerada(index);
-      let imagemHtml = '';
-      
-      if (imagemGerada) {
-        imagemHtml = `<img src="${imagemGerada}" alt="Imagem gerada por IA" style="max-width:100%;max-height:100%;border-radius:16px;object-fit:cover;" />`;
-      } else {
-        imagemHtml = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:1.1rem;color:#888;">Imagem aqui</div>';
-      }
+    // Destacar o primeiro <h2> ou <h3> como tópico principal, estilo extragrosso centralizado, sempre no topo
+    // Remove qualquer destaque anterior
+    htmlSemData = htmlSemData.replace(/<div class='slide-topic-title.*?>.*?<\/div>/gi, '');
+    // Remover o texto 'Slide' isolado (caso apareça)
+    htmlSemData = htmlSemData.replace(/<p>\s*Slide\s*<\/p>/gi, '');
+    htmlSemData = htmlSemData.replace(/\bSlide\b/g, '');
+    // Remover títulos de tópicos do topo (ex: Desenvolvimento do Conteúdo, Continuação dos Tópicos, Exemplo Prático, Atividade Interativa, etc.)
+    // Remove <h1> ou <h2> ou <h3> no início do conteúdo
+    htmlSemData = htmlSemData.replace(/^\s*<(h1|h2|h3)[^>]*>.*?<\/(h1|h2|h3)>/i, '');
+    // Remover <h2> específicos do template
+    htmlSemData = htmlSemData.replace(/<h2>\s*(Desenvolvimento do Conteúdo|Continuação dos Tópicos|Exemplo Prático|Atividade Interativa)\s*<\/h2>/gi, '');
 
-      // Para a página 3 (index 2): imagem à esquerda, texto à direita
+    // Inserir 'Apresentado por:' acima do nome do professor, se houver, agora com cor amarela
+
+    // Após a definição de htmlSemData, adicionar lógica para destacar o título principal/topico do slide.
+    // Usar regex para envolver o primeiro <h2> ou <h3> do htmlSemData com uma div de destaque:
+    // Exemplo:
+    // htmlSemData = htmlSemData.replace(/<h2>(.*?)<\/h2>/, `<div class='slide-topic-title'>$1</div>`);
+    //
+    // No dangerouslySetInnerHTML, adicionar CSS:
+    // .slide-topic-title { text-align: center; font-size: 2.3rem; font-weight: 900; margin-bottom: 1.2em; margin-top: 0.2em; letter-spacing: -1px; text-shadow: 0 2px 12px #0002; }
+    // .slide-topic-green { color: #059669; }
+
+    // Após destacar o tópico principal, garantir fonte extragrossa e usar fonte Anton para o tema/título
+    // Adiciona import da fonte Anton no início do HTML se não existir
+    if (!document.getElementById('anton-font')) {
+      const link = document.createElement('link');
+      link.id = 'anton-font';
+      link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=Anton:wght@400;700;900&display=swap';
+      document.head.appendChild(link);
+    }
+    htmlSemData = htmlSemData.replace(/<div class='slide-topic-title slide-topic-green'>(.*?)<\/div>/gi, "<div class='slide-topic-title slide-topic-green' style='font-family:Anton,Arial Black,Impact,Poppins,Lato,Arial,sans-serif;font-weight:900;font-size:4rem;letter-spacing:-1px;text-align:center;text-shadow:0 2px 12px #0002;'>$1</div>");
+
+    // Ajuste do tamanho da fonte do tema na página 1 (index 0)
+    if (index === 0) {
+      htmlSemData = htmlSemData.replace(/<(h1|h2|h3)([^>]*)>(.*?)<\/(h1|h2|h3)>/i, "<$1$2 style='font-size:1.2rem;font-weight:700;text-align:center;margin-bottom:0.7em;'>$3</$1>");
+    }
+
+    // Se for a segunda página (objetivos), aplicar estilo especial ao tópico e à lista
+    if (index === 1) {
+      // Título principal destacado, centralizado, cor branca
+      htmlSemData = htmlSemData.replace(/<h2>(.*?)<\/h2>/i, "<div class='slide-topic-title' style='font-family:Poppins, Lato, Arial, sans-serif;font-weight:700;font-size:2.1rem;color:#fff;text-align:center;letter-spacing:-1px;margin-bottom:0.7em;'>$1</div>");
+      htmlSemData = htmlSemData.replace(/<div class='slide-topic-title slide-topic-green'>(.*?)<\/div>/i, "<div class='slide-topic-title' style='font-family:Poppins, Lato, Arial, sans-serif;font-weight:700;font-size:2.1rem;color:#fff;text-align:center;letter-spacing:-1px;margin-bottom:0.7em;'>$1</div>");
+      // Remover <li> vazios e espaços extras
+      htmlSemData = htmlSemData.replace(/<li>\s*<\/li>/g, '');
+      htmlSemData = htmlSemData.replace(/(<li>\s*)+/g, '<li>');
+      htmlSemData = htmlSemData.replace(/(\s*<\/li>)+/g, '</li>');
+    }
+
+    // Layout de duas colunas para páginas específicas
+    const paginasDuasColunas = [0, 2, 3, 4, 5, 8]; // index das páginas 1,3,4,5,6,9
+    if (paginasDuasColunas.includes(index)) {
+      // Para a primeira página (index 0), gerar prompt automático com base no tema, disciplina e série
+      let imagemHtml = '';
+      if (index === 0) {
+        // Extrair tema, disciplina e série do HTML
+        let tema = '';
+        let disciplina = '';
+        let serie = '';
+        const temaMatch = htmlSemData.match(/<h1[^>]*>(.*?)<\/h1>/i);
+        if (temaMatch) tema = temaMatch[1].trim();
+        const disciplinaMatch = htmlSemData.match(/Matemática|Português|Ciências|História|Geografia|Arte|Inglês|Física|Química|Biologia|Filosofia|Sociologia|Educação Física|Ensino Religioso/i);
+        if (disciplinaMatch) disciplina = disciplinaMatch[0];
+        const serieMatch = htmlSemData.match(/([1-9][°º]? ano|[1-9]ª? série|Ensino Médio|Ensino Fundamental)/i);
+        if (serieMatch) serie = serieMatch[0];
+        // Monta prompt
+        const prompt = `Capa ilustrativa para o tema: ${tema}, disciplina: ${disciplina}, série: ${serie}. Ilustração colorida, estilo educativo, sem texto.`;
+        // Se já gerou imagem, usa; senão, gera
+        imagemHtml = imagensGeradas[index] ? `<img src="${imagensGeradas[index]}" alt="Imagem gerada IA" style="max-width:100%;max-height:100%;border-radius:16px;" />` : '';
+        // Se ainda não gerou, dispara geração
+        if (!imagensGeradas[index]) {
+          gerarImagemSePrompt(prompt).then(url => {
+            if (url) setImagensGeradas(prev => ({
+              ...prev,
+              [index]: url
+            }));
+          });
+        }
+      } else {
+        // Demais páginas: extrai prompt do conteúdo
+        imagemHtml = imagensGeradas[index] ? `<img src="${imagensGeradas[index]}" alt="Imagem gerada IA" style="max-width:100%;max-height:100%;border-radius:16px;" />` : '';
+      }
+      // Para páginas 3 e 6 (index 2 e 5): imagem à esquerda, texto à direita
       if (index === 2) {
         htmlSemData = `
           <div style='display:flex;flex-direction:row;align-items:center;justify-content:center;width:100%;gap:2.5rem;min-height:320px;flex-wrap:wrap;'>
-            <div class='imagem-intro' style='flex:1 1 220px;min-width:220px;min-height:220px;max-width:320px;max-height:320px;background:#e5e7eb;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#888;margin:0 0.5em;'>${imagemHtml}</div>
+            <div class='imagem-intro' style='flex:1 1 220px;min-width:220px;min-height:220px;max-width:320px;max-height:320px;background:#e5e7eb;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#888;margin:0 0.5em;'>${imagemHtml || 'Imagem aqui'}</div>
             <div style='flex:2 1 320px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-width:260px;'>
               ${htmlSemData}
             </div>
@@ -485,13 +555,13 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
           </style>
         `;
       } else {
-        // Para outras páginas com imagens: imagem à direita, texto à esquerda
+        // Para páginas 1, 4, 5 e 9 (index 0, 3, 4, 5, 8): imagem à direita, texto à esquerda
         htmlSemData = `
           <div style='display:flex;flex-direction:row;align-items:center;justify-content:center;width:100%;gap:2.5rem;min-height:320px;flex-wrap:wrap;'>
             <div style='flex:2 1 320px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-width:260px;'>
               ${htmlSemData}
             </div>
-            <div class='imagem-intro' style='flex:1 1 220px;min-width:220px;min-height:220px;max-width:320px;max-height:320px;background:#e5e7eb;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#888;margin:0 0.5em;'>${imagemHtml}</div>
+            <div class='imagem-intro' style='flex:1 1 220px;min-width:220px;min-height:220px;max-width:320px;max-height:320px;background:#e5e7eb;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#888;margin:0 0.5em;'>${imagemHtml || 'Imagem aqui'}</div>
           </div>
           <style>
             @media (max-width: 800px) {
@@ -502,25 +572,23 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         `;
       }
     }
-
     if (index === 0) {
-      // Layout especial da capa
+      // --- NOVO LAYOUT DA CAPA ---
+      // Extrair informações do material
       let tema = '';
       let disciplina = material?.subject || 'Matemática';
       let serie = material?.grade || 'Ensino Fundamental I-3º Ano';
       let professor = material?.formData?.professor || 'Prof. Maria';
-      
+      // Extrair título (tema) do HTML, se houver
       const temaMatch = htmlSemData.match(/<h1[^>]*>(.*?)<\/h1>/i);
       if (temaMatch) tema = temaMatch[1].trim();
-      
+      // Extrair subtítulo (ex: Aula de Matemática - Ensino Fundamental I-3º Ano)
       let subtitulo = `Aula de ${disciplina} - ${serie}`;
-      
-      // Imagem para a capa
-      const imagemGerada = getImagemGerada(index);
-      let imagemHtml = imagemGerada
-        ? `<img src="${imagemGerada}" alt="Imagem gerada por IA" style="max-width:100%;max-height:100%;border-radius:16px;object-fit:cover;" />`
+      // Caixa de imagem
+      let imagemHtml = imagensGeradas[index]
+        ? `<img src="${imagensGeradas[index]}" alt="Imagem gerada IA" style="max-width:100%;max-height:100%;border-radius:16px;" />`
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#888;font-size:1.5rem;">Imagem aqui</div>';
-
+      // Layout em duas colunas
       return (
         <div className="relative w-full h-full flex items-center justify-center bg-blue-700 rounded-2xl shadow-2xl overflow-hidden border border-gray-200" style={{
           aspectRatio: '4/3',
@@ -583,8 +651,21 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         </div>
       );
     }
-
-    // Renderização padrão para outros slides
+    // Ajustar fonte e dividir conteúdo em parágrafos para slides de conteúdo (exceto títulos)
+    if (index !== 0 && index !== 1) {
+      // Diminui a fonte do conteúdo
+      htmlSemData = htmlSemData.replace(/<div class=['"]w-full slide-content-rich[^>]*>([\s\S]*?)<\/div>/g, (match, inner) => {
+        // Divide em frases por ponto final
+        const paragrafos = inner.split(/\.(?!\d)/).map(p => p.trim()).filter(Boolean);
+        // Junta em 2-3 parágrafos
+        const chunkSize = Math.ceil(paragrafos.length / 2);
+        const paragrafosAgrupados = [];
+        for (let i = 0; i < paragrafos.length; i += chunkSize) {
+          paragrafosAgrupados.push(paragrafos.slice(i, i + chunkSize).join('. ') + (i + chunkSize < paragrafos.length ? '.' : ''));
+        }
+        return `<div class='w-full slide-content-rich' style='font-size:1.08rem; font-weight:500; line-height:1.6; color:inherit; text-align:justify;'>${paragrafosAgrupados.map(p => `<p>${p}</p>`).join('')}</div>`;
+      });
+    }
     return <div className={`relative w-full h-full flex items-center justify-center ${bgClass} rounded-2xl shadow-2xl overflow-hidden border border-gray-200`} style={{
       aspectRatio: '4/3',
       maxWidth: '950px',
@@ -608,43 +689,144 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         maxWidth: 820,
         margin: '0 auto'
       }}>
-          {/* Renderização do conteúdo do slide */}
-          <div className="w-full h-full flex flex-col items-center justify-center text-center" style={{
-        minHeight: 320
-      }}>
-            <div className={`w-full slide-content-rich ${textColor}`} style={{
-          fontSize: '1.35rem',
-          fontWeight: 500,
-          lineHeight: 1.5
+          {/* Se houver imagem central ou ícone, dividir em 2 colunas responsivas */}
+          {hasImagemCentral || hasIcone ? <div className="w-full h-full flex flex-col md:flex-row items-center justify-center text-center gap-8" style={{
+          minHeight: 320
         }}>
-              <div dangerouslySetInnerHTML={{
-            __html: `
-                  <style>
-                    .slide-content-rich ul { list-style: disc inside; color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 1.25rem; margin: 1.2em 0; font-weight: 700; }
-                    .slide-content-rich li { margin-bottom: 0.7em; font-size: 1.18rem; }
-                    .slide-content-rich .formula { background: #fef9c3; color: #b45309; font-family: 'Fira Mono', monospace; font-size: 1.3em; padding: 0.7em 1.3em; border-radius: 10px; margin: 1em auto; display: inline-block; box-shadow: 0 2px 12px #fde68a55; }
-                    .slide-content-rich .imagem-central { display: flex; justify-content: center; margin: 1.5em 0; }
-                    .slide-content-rich .imagem-central img { max-width: 340px; max-height: 220px; border-radius: 14px; box-shadow: 0 4px 24px #6366f133; border: 2px solid #e0e7ff; }
-                    .slide-content-rich .icone { display: inline-block; margin: 0 0.3em; font-size: 2.3em; vertical-align: middle; color: #0ea5e9; }
-                    .slide-content-rich .forma { display: inline-block; margin: 0 0.5em; vertical-align: middle; }
-                    .slide-content-rich .forma svg { width: 54px; height: 54px; }
-                    .slide-content-rich h2, .slide-content-rich h3 { color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 2.1rem; font-weight: 800; margin: 1.2em 0 0.7em 0; }
-                  </style>
-                  ${htmlSemData}
-                `
-          }} />
-          </div>
-          </div>
+              {/* Coluna texto/título */}
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <div style={{
+              fontSize: '2.8rem',
+              fontWeight: 800,
+              color: isBlue ? '#fff' : '#1e293b',
+              marginBottom: 18,
+              lineHeight: 1.1,
+              letterSpacing: '-1px'
+            }} className="slide-title-custom"></div>
+                <div className={`w-full slide-content-rich ${textColor}`} style={{
+              fontSize: '1.35rem',
+              fontWeight: 500,
+              lineHeight: 1.5
+            }}>
+                  <div dangerouslySetInnerHTML={{
+                __html: `
+                      <style>
+                        .slide-content-rich ul { list-style: disc inside; color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 1.25rem; margin: 1.2em 0; font-weight: 700; }
+                        .slide-content-rich li { margin-bottom: 0.7em; font-size: 1.18rem; }
+                        .slide-content-rich .formula { background: #fef9c3; color: #b45309; font-family: 'Fira Mono', monospace; font-size: 1.3em; padding: 0.7em 1.3em; border-radius: 10px; margin: 1em auto; display: inline-block; box-shadow: 0 2px 12px #fde68a55; }
+                        .slide-content-rich .imagem-central { display: flex; justify-content: center; margin: 1.5em 0; }
+                        .slide-content-rich .imagem-central img { max-width: 340px; max-height: 220px; border-radius: 14px; box-shadow: 0 4px 24px #6366f133; border: 2px solid #e0e7ff; }
+                        .slide-content-rich .icone { display: inline-block; margin: 0 0.3em; font-size: 2.3em; vertical-align: middle; color: #0ea5e9; }
+                        .slide-content-rich .forma { display: inline-block; margin: 0 0.5em; vertical-align: middle; }
+                        .slide-content-rich .forma svg { width: 54px; height: 54px; }
+                        .slide-content-rich h2, .slide-content-rich h3 { color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 2.1rem; font-weight: 800; margin: 1.2em 0 0.7em 0; }
+                        .slide-topic-title { text-align: center; font-size: 2.3rem; font-weight: 900; margin-bottom: 1.2em; margin-top: 0.2em; letter-spacing: -1px; text-shadow: 0 2px 12px #0002; }
+                        .slide-topic-green { color: #059669; }
+                      </style>
+                      ${htmlSemData.replace(/(<div class=['"]imagem-central['"][^>]*>.*?<\/div>)/gs, '')}
+                    `
+              }} />
+                </div>
+              </div>
+              {/* Coluna imagem/ícone */}
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <div className="w-full slide-content-rich" style={{
+              fontSize: '1.35rem',
+              color: isBlue ? '#fff' : '#334155',
+              fontWeight: 500,
+              lineHeight: 1.5
+            }}>
+                  <div dangerouslySetInnerHTML={{
+                __html: `
+                      <style>
+                        .slide-content-rich .imagem-central { display: flex; justify-content: center; align-items: center; height: 100%; }
+                        .slide-content-rich .imagem-central img { max-width: 340px; max-height: 260px; border-radius: 18px; box-shadow: 0 4px 24px #6366f133; border: 2px solid #e0e7ff; }
+                        .slide-content-rich .icone { display: inline-block; margin: 0 0.3em; font-size: 3.5em; vertical-align: middle; color: #0ea5e9; }
+                      </style>
+                      ${(htmlSemData.match(/<div class=['"]imagem-central['"][^>]*>.*?<\/div>/gs) || []).join('')}
+                    `
+              }} />
+            </div>
+            </div>
+            </div> : <div className="w-full h-full flex flex-col items-center justify-center text-center" style={{
+          minHeight: 320
+        }}>
+              <div style={{
+            fontSize: '2.8rem',
+            fontWeight: 800,
+            color: isBlue ? '#fff' : '#1e293b',
+            marginBottom: 18,
+            lineHeight: 1.1,
+            letterSpacing: '-1px'
+          }} className="slide-title-custom"></div>
+              <div className={`w-full slide-content-rich ${textColor}`} style={{
+            fontSize: '1.35rem',
+            fontWeight: 500,
+            lineHeight: 1.5
+          }}>
+                <div dangerouslySetInnerHTML={{
+              __html: `
+                    <style>
+                      .slide-content-rich ul { list-style: disc inside; color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 1.25rem; margin: 1.2em 0; font-weight: 700; }
+                      .slide-content-rich li { margin-bottom: 0.7em; font-size: 1.18rem; }
+                      .slide-content-rich .formula { background: #fef9c3; color: #b45309; font-family: 'Fira Mono', monospace; font-size: 1.3em; padding: 0.7em 1.3em; border-radius: 10px; margin: 1em auto; display: inline-block; box-shadow: 0 2px 12px #fde68a55; }
+                      .slide-content-rich .imagem-central { display: flex; justify-content: center; margin: 1.5em 0; }
+                      .slide-content-rich .imagem-central img { max-width: 340px; max-height: 220px; border-radius: 14px; box-shadow: 0 4px 24px #6366f133; border: 2px solid #e0e7ff; }
+                      .slide-content-rich .icone { display: inline-block; margin: 0 0.3em; font-size: 2.3em; vertical-align: middle; color: #0ea5e9; }
+                      .slide-content-rich .forma { display: inline-block; margin: 0 0.5em; vertical-align: middle; }
+                      .slide-content-rich .forma svg { width: 54px; height: 54px; }
+                      .slide-content-rich h2, .slide-content-rich h3 { color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 2.1rem; font-weight: 800; margin: 1.2em 0 0.7em 0; }
+                    </style>
+                    ${htmlSemData}
+                  `
+            }} />
+            </div>
+            </div>}
         </div>
       </div>;
   };
-
+  const [imagensGeradas, setImagensGeradas] = useState<{
+    [key: number]: string;
+  }>({});
+  useEffect(() => {
+    // Para cada slide de duas colunas, tente gerar imagem se houver prompt
+    const paginasDuasColunas = [0, 2, 3, 4, 5, 8];
+    paginasDuasColunas.forEach(async idx => {
+      if (!slides[idx]) return;
+      let html = slides[idx].html;
+      // Página 1: gerar prompt automático
+      if (idx === 0 && !imagensGeradas[0]) {
+        let tema = '';
+        let disciplina = '';
+        let serie = '';
+        const temaMatch = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
+        if (temaMatch) tema = temaMatch[1].trim();
+        const disciplinaMatch = html.match(/Matemática|Português|Ciências|História|Geografia|Arte|Inglês|Física|Química|Biologia|Filosofia|Sociologia|Educação Física|Ensino Religioso/i);
+        if (disciplinaMatch) disciplina = disciplinaMatch[0];
+        const serieMatch = html.match(/([1-9][°º]? ano|[1-9]ª? série|Ensino Médio|Ensino Fundamental)/i);
+        if (serieMatch) serie = serieMatch[0];
+        const prompt = `Capa ilustrativa para o tema: ${tema}, disciplina: ${disciplina}, série: ${serie}. Ilustração colorida, estilo educativo, sem texto.`;
+        const url = await gerarImagemSePrompt(prompt);
+        if (url) setImagensGeradas(prev => ({
+          ...prev,
+          [0]: url
+        }));
+      }
+      // Demais páginas: só gera se ainda não tiver imagem gerada
+      if (idx !== 0 && !imagensGeradas[idx]) {
+        const url = await gerarImagemSePrompt(html);
+        if (url) setImagensGeradas(prev => ({
+          ...prev,
+          [idx]: url
+        }));
+      }
+    });
+  }, [slides]);
   if (slides.length === 0) {
     return <div className="flex items-center justify-center h-96 text-gray-500">
         Nenhum slide encontrado
       </div>;
   }
-
   return <div className="w-full h-full flex flex-col">
       {/* Slide Content com proporção 4:3 corrigida */}
       <div className="flex-1 flex justify-center items-center p-4">
@@ -753,5 +935,4 @@ const SlideViewer: React.FC<SlideViewerProps> = ({ htmlContent, material }) => {
         </div>}
     </div>;
 };
-
 export default SlideViewer;
