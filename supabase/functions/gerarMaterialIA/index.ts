@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -231,13 +232,15 @@ Crie slides educativos ESPECÍFICOS sobre "${tema}" para ${disciplina} na ${seri
 
 IMPORTANTE: TODO O CONTEÚDO deve ser baseado especificamente no tema "${tema}". NÃO use conteúdo genérico.
 
-INSTRUÇÕES CRÍTICAS PARA PROMPTS DE IMAGEM:
-- Todos os prompts de imagem devem ser ESPECÍFICOS, DETALHADOS e CONTEXTUALIZADOS ao tema "${tema}" em ${disciplina}
-- Adapte o conteúdo à faixa etária de ${serie} - use linguagem visual apropriada para a idade
-- Inclua elementos do contexto brasileiro quando relevante (fauna, flora, geografia, cultura)
-- Seja muito específico sobre o que deve aparecer na imagem
-- PROÍBA explicitamente texto, palavras, letras, números ou símbolos escritos nas imagens
-- Especifique cores, estilo, elementos visuais concretos relacionados ao tema
+INSTRUÇÕES CRÍTICAS PARA PROMPTS DE IMAGEM - OTIMIZADOS PARA STABLE DIFFUSION XL:
+- Todos os prompts devem ser ULTRA-ESPECÍFICOS, DETALHADOS e CONTEXTUALIZADOS ao tema "${tema}" em ${disciplina}
+- Adapte o conteúdo visual à faixa etária de ${serie} - use linguagem visual apropriada para a idade
+- Inclua elementos do contexto brasileiro quando relevante (fauna, flora, geografia, cultura brasileira)
+- Seja EXTREMAMENTE específico sobre o que deve aparecer na imagem
+- Use linguagem visual descritiva rica em detalhes: cores, texturas, composição, estilo artístico
+- Especifique elementos concretos: objetos, cenários, pessoas, animais, plantas, elementos geométricos
+- NUNCA mencione texto, palavras, letras, números ou símbolos - isso será tratado automaticamente pelo sistema
+- Foque em elementos visuais puros: formas, cores, objetos, cenários, composições
 
 ESTRUTURA OBRIGATÓRIA:
 - Slide 1: Capa com título e informações básicas
@@ -264,7 +267,7 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "tema": "${tema}",
   "duracao": "[duração adequada para apresentar slides sobre ${tema}]",
   "bncc": "[códigos BNCC relevantes para ${tema} em ${disciplina}]",
-  "tema_imagem": "Ilustração educativa detalhada sobre ${tema} para ensino de ${disciplina} em ${serie}. Mostra [DESCREVA ESPECIFICAMENTE o que deve apareear relacionado ao tema]. Estilo didático brasileiro, colorido, sem qualquer texto, palavra, letra, número ou símbolo escrito",
+  "tema_imagem": "Vibrant educational illustration showcasing ${tema} in Brazilian ${disciplina} context for ${serie} students. Rich colorful composition featuring [DESCREVA ESPECIFICAMENTE elementos visuais relacionados ao tema]. Brazilian educational style, high quality artwork, detailed visual elements, bright engaging colors, clean professional design",
   "slide_1_titulo": "${tema}",
   "slide_1_subtitulo": "Aula de ${disciplina} - ${serie}",
   "objetivo_1": "[OBJETIVO 1 específico sobre ${tema}]",
@@ -272,25 +275,25 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "objetivo_3": "[OBJETIVO 3 específico sobre ${tema}]",
   "objetivo_4": "[OBJETIVO 4 específico sobre ${tema}]",
   "introducao_texto": "[INTRODUÇÃO específica sobre ${tema} - explicação clara do que será aprendido]",
-  "introducao_imagem": "Ilustração introdutória sobre ${tema} em ${disciplina} para ${serie}. Mostra [DESCREVA elementos específicos que introduzem o tema]. Estilo educativo brasileiro, sem texto, adequado para a idade",
+  "introducao_imagem": "Colorful introductory illustration about ${tema} in Brazilian ${disciplina} education for ${serie}. Shows [DESCREVA elementos específicos que introduzem o tema visualmente]. Vibrant educational artwork, engaging composition, age-appropriate visual style, Brazilian cultural context",
   "conceitos_texto": "[CONCEITOS fundamentais específicos sobre ${tema} - definição clara e didática]",
   "conceito_principal": "[CONCEITO principal de ${tema} - definição concisa e precisa]",
-  "conceitos_imagem": "Diagrama visual educativo mostrando conceitos de ${tema} para ${disciplina} em ${serie}. Representa visualmente [DESCREVA os conceitos específicos]. Sem qualquer texto ou palavra. Estilo infográfico brasileiro colorido",
+  "conceitos_imagem": "Educational infographic-style illustration demonstrating key concepts of ${tema} for Brazilian ${disciplina} in ${serie}. Visual representation of [DESCREVA os conceitos específicos visualmente]. Clean infographic design, bright Brazilian educational colors, clear visual hierarchy, engaging layout",
   "desenvolvimento_1_titulo": "[TÍTULO do primeiro aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_1_texto": "[EXPLICAÇÃO detalhada do primeiro aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_1_imagem": "Ilustração educativa específica do primeiro aspecto de ${tema} em ${disciplina}. Mostra [DESCREVA especificamente o primeiro aspecto visual]. Para alunos de ${serie}, sem texto, estilo educativo brasileiro",
+  "desenvolvimento_1_imagem": "Detailed educational artwork showing first key aspect of ${tema} in Brazilian ${disciplina} context. Illustrates [DESCREVA especificamente o primeiro aspecto visual com detalhes ricos]. Professional educational illustration, vibrant colors, age-appropriate for ${serie}, Brazilian educational style, high quality composition",
   "desenvolvimento_2_titulo": "[TÍTULO do segundo aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_2_texto": "[EXPLICAÇÃO detalhada do segundo aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_2_imagem": "Ilustração educativa específica do segundo aspecto de ${tema} em ${disciplina}. Apresenta [DESCREVA especificamente o segundo aspecto visual]. Adequado para ${serie}, sem palavras, estilo didático brasileiro",
+  "desenvolvimento_2_imagem": "Comprehensive visual representation of second aspect of ${tema} in Brazilian ${disciplina} education. Features [DESCREVA especificamente o segundo aspecto com elementos visuais detalhados]. Rich educational artwork, engaging colors, suitable for ${serie} students, Brazilian context, professional quality",
   "desenvolvimento_3_titulo": "[TÍTULO do terceiro aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_3_texto": "[EXPLICAÇÃO detalhada do terceiro aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_3_imagem": "Ilustração educativa específica do terceiro aspecto de ${tema} em ${disciplina}. Retrata [DESCREVA especificamente o terceiro aspecto]. Para faixa etária de ${serie}, sem símbolos escritos, estilo educacional brasileiro",
+  "desenvolvimento_3_imagem": "Educational illustration depicting third important element of ${tema} in Brazilian ${disciplina} curriculum. Showcases [DESCREVA especificamente o terceiro aspecto com detalhes visuais]. Colorful educational design, age-appropriate for ${serie}, Brazilian educational approach, high-quality artwork",
   "desenvolvimento_4_titulo": "[TÍTULO do quarto aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_4_texto": "[EXPLICAÇÃO detalhada do quarto aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_4_imagem": "Ilustração educativa específica do quarto aspecto de ${tema} em ${disciplina}. Demonstra [DESCREVA especificamente o quarto aspecto visual]. Apropriado para ${serie}, sem letras ou números, estilo pedagógico brasileiro",
+  "desenvolvimento_4_imagem": "Professional educational artwork illustrating fourth key component of ${tema} for Brazilian ${disciplina}. Demonstrates [DESCREVA especificamente o quarto aspecto com elementos visuais ricos]. Vibrant educational illustration, engaging design for ${serie}, Brazilian pedagogical style, detailed composition",
   "exemplo_titulo": "[TÍTULO do exemplo prático de ${tema}]",
   "exemplo_conteudo": "[EXEMPLO PRÁTICO concreto e específico sobre ${tema} - situação real onde o tema se aplica]",
-  "exemplo_imagem": "Exemplo visual prático de aplicação de ${tema} no contexto brasileiro de ${disciplina}. Ilustra [DESCREVA especificamente o exemplo prático]. Para estudantes de ${serie}, sem qualquer texto escrito, estilo realista educativo",
+  "exemplo_imagem": "Realistic educational scene showing practical application of ${tema} in Brazilian context for ${disciplina}. Depicts [DESCREVA especificamente o exemplo prático com cenário detalhado]. High-quality realistic illustration, Brazilian setting, educational purpose for ${serie}, engaging visual storytelling, professional artwork",
   "tabela_titulo": "[TÍTULO de tabela específica sobre ${tema}]",
   "coluna_1": "[cabeçalho coluna 1 sobre ${tema}]",
   "coluna_2": "[cabeçalho coluna 2 sobre ${tema}]",
@@ -317,14 +320,15 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "proximo_passo_3": "[PASSO 3 para continuar estudando ${tema}]"
 }
 
-REGRAS FINAIS PARA PROMPTS DE IMAGEM:
-1. Cada prompt de imagem deve ser único e específico ao contexto
-2. Adapte o vocabulário visual à faixa etária de ${serie}
-3. Inclua referências ao contexto brasileiro quando apropriado
-4. Seja muito detalhado sobre elementos visuais (cores, objetos, cenários)
-5. SEMPRE proíba texto, palavras, letras, números ou símbolos escritos nas imagens
-6. Especifique cores, estilo, elementos visuais concretos relacionados ao tema
-7. Garanta que cada imagem tenha propósito pedagógico específico
+REGRAS FINAIS PARA PROMPTS DE IMAGEM OTIMIZADOS PARA STABLE DIFFUSION XL:
+1. Cada prompt deve ser único, específico e ultra-detalhado
+2. Use vocabulário visual rico: cores específicas, texturas, composições, estilos artísticos
+3. Adapte a complexidade visual à faixa etária de ${serie}
+4. Inclua contexto brasileiro quando educacionalmente relevante
+5. Seja extremamente específico sobre elementos visuais: objetos, cenários, pessoas, elementos naturais
+6. Use descrições que evoquem qualidade artística: "high quality", "professional artwork", "detailed composition"
+7. Especifique o estilo educacional brasileiro: "Brazilian educational style", "pedagogical approach"
+8. Garanta que cada prompt tenha propósito pedagógico específico e claro
 
 GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". Adapte à faixa etária de ${serie}. Use português brasileiro correto.
 `;
@@ -602,34 +606,34 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
             });
         }
 
-        // Para slides, garantir que todas as imagens tenham prompts adequados
+        // Para slides, garantir que todas as imagens tenham prompts otimizados para SDXL
         if (materialType === 'slides') {
-          // Garantir que tema_imagem sempre exista com prompt adequado
+          // Garantir que tema_imagem sempre exista com prompt otimizado para SDXL
           if (!parsedContent.tema_imagem || typeof parsedContent.tema_imagem !== 'string' || parsedContent.tema_imagem.trim() === '') {
-            parsedContent.tema_imagem = `Ilustração educativa detalhada sobre ${tema} para ensino de ${disciplina} em ${serie}. Estilo didático brasileiro, colorido, sem qualquer texto, palavra, letra, número ou símbolo escrito`;
+            parsedContent.tema_imagem = `Vibrant educational illustration showcasing ${tema} in Brazilian ${disciplina} context for ${serie} students. Rich colorful composition, high quality artwork, detailed visual elements, bright engaging colors, clean professional design`;
           }
           
-          // Garantir outros campos de imagem existam com prompts mais específicos
+          // Garantir outros campos de imagem com prompts otimizados para SDXL
           if (!parsedContent.introducao_imagem) {
-            parsedContent.introducao_imagem = `Ilustração introdutória sobre ${tema} em ${disciplina} para ${serie}. Estilo educativo brasileiro, sem texto, adequado para a idade`;
+            parsedContent.introducao_imagem = `Colorful introductory illustration about ${tema} in Brazilian ${disciplina} education for ${serie}. Vibrant educational artwork, engaging composition, age-appropriate visual style, Brazilian cultural context`;
           }
           if (!parsedContent.conceitos_imagem) {
-            parsedContent.conceitos_imagem = `Diagrama visual educativo mostrando conceitos de ${tema} para ${disciplina} em ${serie}. Sem qualquer texto ou palavra. Estilo infográfico brasileiro colorido`;
+            parsedContent.conceitos_imagem = `Educational infographic-style illustration demonstrating key concepts of ${tema} for Brazilian ${disciplina} in ${serie}. Clean infographic design, bright Brazilian educational colors, clear visual hierarchy, engaging layout`;
           }
           if (!parsedContent.desenvolvimento_1_imagem) {
-            parsedContent.desenvolvimento_1_imagem = `Ilustração educativa específica do primeiro aspecto de ${tema} em ${disciplina}. Para alunos de ${serie}, sem texto, estilo educativo brasileiro`;
+            parsedContent.desenvolvimento_1_imagem = `Detailed educational artwork showing first key aspect of ${tema} in Brazilian ${disciplina} context. Professional educational illustration, vibrant colors, age-appropriate for ${serie}, Brazilian educational style, high quality composition`;
           }
           if (!parsedContent.desenvolvimento_2_imagem) {
-            parsedContent.desenvolvimento_2_imagem = `Ilustração educativa específica do segundo aspecto de ${tema} em ${disciplina}. Adequado para ${serie}, sem palavras, estilo didático brasileiro`;
+            parsedContent.desenvolvimento_2_imagem = `Comprehensive visual representation of second aspect of ${tema} in Brazilian ${disciplina} education. Rich educational artwork, engaging colors, suitable for ${serie} students, Brazilian context, professional quality`;
           }
           if (!parsedContent.desenvolvimento_3_imagem) {
-            parsedContent.desenvolvimento_3_imagem = `Ilustração educativa específica do terceiro aspecto de ${tema} em ${disciplina}. Retrata [DESCREVA especificamente o terceiro aspecto]. Para faixa etária de ${serie}, sem símbolos escritos, estilo educacional brasileiro`;
+            parsedContent.desenvolvimento_3_imagem = `Educational illustration depicting third important element of ${tema} in Brazilian ${disciplina} curriculum. Colorful educational design, age-appropriate for ${serie}, Brazilian educational approach, high-quality artwork`;
           }
           if (!parsedContent.desenvolvimento_4_imagem) {
-            parsedContent.desenvolvimento_4_imagem = `Ilustração educativa específica do quarto aspecto de ${tema} em ${disciplina}. Demonstra [DESCREVA especificamente o quarto aspecto visual]. Apropriado para ${serie}, sem letras ou números, estilo pedagógico brasileiro`;
+            parsedContent.desenvolvimento_4_imagem = `Professional educational artwork illustrating fourth key component of ${tema} for Brazilian ${disciplina}. Vibrant educational illustration, engaging design for ${serie}, Brazilian pedagogical style, detailed composition`;
           }
           if (!parsedContent.exemplo_imagem) {
-            parsedContent.exemplo_imagem = `Exemplo visual prático de aplicação de ${tema} no contexto brasileiro de ${disciplina}. Ilustra [DESCREVA especificamente o exemplo prático]. Para estudantes de ${serie}, sem qualquer texto escrito, estilo realista educativo`;
+            parsedContent.exemplo_imagem = `Realistic educational scene showing practical application of ${tema} in Brazilian context for ${disciplina}. High-quality realistic illustration, Brazilian setting, educational purpose for ${serie}, engaging visual storytelling, professional artwork`;
           }
         }
 

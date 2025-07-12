@@ -16,7 +16,7 @@ serve(async (req) => {
 
   try {
     const { prompt } = await req.json();
-    console.log('🎨 Generating image with prompt:', prompt);
+    console.log('🎨 Generating image with optimized SDXL model:', prompt.substring(0, 100) + '...');
     
     if (!prompt || typeof prompt !== 'string') {
       console.error('❌ Invalid prompt provided');
@@ -41,29 +41,36 @@ serve(async (req) => {
       auth: REPLICATE_API_TOKEN,
     });
 
-    // Usar o prompt original já otimizado pela IA do gerarMaterialIA, apenas adicionando instruções anti-texto
-    const finalPrompt = `${prompt}. IMPORTANTE: nenhum texto, palavra, letra, número, símbolo escrito ou caractere deve aparecer na imagem. Ilustração limpa sem elementos textuais. Estilo educativo brasileiro colorido e atrativo para estudantes.`;
+    // Otimizar prompt com estrutura mais robusta contra texto
+    const optimizedPrompt = `${prompt}. High quality illustration, clean design, educational style, vibrant colors, professional artwork, detailed visual elements, Brazilian educational context`;
 
-    console.log('📞 Calling Replicate API with FLUX model...');
+    // Prompt negativo robusto específico contra texto
+    const negativePrompt = "text, letters, words, writing, alphabet, numbers, symbols, typography, captions, labels, signs, watermarks, logos, inscriptions, script, handwriting, printed text, digital text, overlaid text, embedded text, readable characters, linguistic elements, textual content, written language, font, typeface";
+
+    console.log('📞 Calling Replicate API with Stable Diffusion XL...');
     
-    // Usar FLUX model que é mais estável e confiável para educação
+    // Usar Stable Diffusion XL com parâmetros otimizados
     const output = await replicate.run(
-      "black-forest-labs/flux-schnell",
+      "stability-ai/stable-diffusion-xl-base-1.0",
       {
         input: {
-          prompt: finalPrompt,
-          go_fast: true,
-          megapixels: "1",
+          prompt: optimizedPrompt,
+          negative_prompt: negativePrompt,
+          width: 1024,
+          height: 1024,
           num_outputs: 1,
-          aspect_ratio: "1:1",
-          output_format: "webp",
-          output_quality: 85,
-          num_inference_steps: 4
+          scheduler: "K_DPM_2_ANCESTRAL",
+          num_inference_steps: 25,
+          guidance_scale: 8.0,
+          prompt_strength: 0.9,
+          seed: Math.floor(Math.random() * 1000000),
+          refine: "expert_ensemble_refiner",
+          high_noise_frac: 0.8
         }
       }
     );
 
-    console.log('✅ Replicate response received:', output);
+    console.log('✅ SDXL response received:', output);
     
     if (!output || !Array.isArray(output) || output.length === 0) {
       console.error('❌ No image data in response:', output);
@@ -79,7 +86,7 @@ serve(async (req) => {
     const imageUrl = output[0];
     console.log('📥 Image URL received:', imageUrl);
     
-    // Baixar a imagem e converter para base64 para manter compatibilidade
+    // Baixar a imagem e converter para base64
     console.log('📥 Converting image to base64...');
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) {
@@ -96,7 +103,7 @@ serve(async (req) => {
     const imageArrayBuffer = await imageResponse.arrayBuffer();
     console.log('📦 Image downloaded, size:', imageArrayBuffer.byteLength, 'bytes');
     
-    // Melhor conversão para base64
+    // Conversão otimizada para base64
     const uint8Array = new Uint8Array(imageArrayBuffer);
     let binaryString = '';
     for (let i = 0; i < uint8Array.length; i++) {
@@ -105,7 +112,7 @@ serve(async (req) => {
     const imageB64 = btoa(binaryString);
     
     // Detectar formato da imagem baseado no cabeçalho
-    let mimeType = 'image/webp'; // Default para FLUX
+    let mimeType = 'image/png'; // Default para SDXL
     if (uint8Array[0] === 0xFF && uint8Array[1] === 0xD8) {
       mimeType = 'image/jpeg';
     } else if (uint8Array[0] === 0x89 && uint8Array[1] === 0x50) {
@@ -114,13 +121,16 @@ serve(async (req) => {
     
     const imageDataUrl = `data:${mimeType};base64,${imageB64}`;
     
-    console.log('🎨 Image generated successfully with Replicate FLUX model');
+    console.log('🎨 Image generated successfully with Stable Diffusion XL');
     console.log('📊 Image stats - Size:', imageArrayBuffer.byteLength, 'bytes, Type:', mimeType);
+    console.log('🚫 Anti-text measures applied: Negative prompt + SDXL model');
     
     return new Response(JSON.stringify({ 
       success: true, 
       imageUrl: imageDataUrl,
-      imageData: imageB64 // Incluir dados base64 para salvamento
+      imageData: imageB64,
+      model: 'stable-diffusion-xl-base-1.0',
+      antiTextMeasures: true
     }), { 
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
