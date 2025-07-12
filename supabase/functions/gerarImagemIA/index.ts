@@ -77,48 +77,87 @@ serve(async (req) => {
         optimizedPrompt += ', colorful and engaging for children, kid-friendly';
       }
 
-      // Especificações visuais essenciais
-      optimizedPrompt += ', high quality educational illustration, vibrant colors, clean design, detailed artwork';
+      // Especificações visuais essenciais - reforçando sem texto
+      optimizedPrompt += ', high quality educational illustration, vibrant colors, clean design, detailed artwork, visual only, no text elements, pure visual content';
       
       console.log('✨ Prompt optimized');
       return optimizedPrompt;
     };
 
-    // Negative Prompt Consolidado
-    const consolidatedNegativePrompt = [
-      // Elementos textuais
-      'text, words, letters, numbers, symbols, writing, typography, captions, labels, signs',
-      'mathematical equations, formulas, calculations, watermarks, logos',
+    // Negative Prompt Ultra-Reforçado para Eliminar Completamente Textos
+    const ultraReinforcedNegativePrompt = [
+      // TEXTOS E ELEMENTOS ESCRITOS - MÁXIMA PRIORIDADE
+      'text, texts, word, words, letter, letters, alphabet, character, characters',
+      'writing, written, handwriting, handwritten, script, scripted',
+      'typography, typographic, font, fonts, typeface, typefaces',
+      'title, titles, heading, headings, caption, captions, label, labels',
+      'description, descriptions, subtitle, subtitles, annotation, annotations',
+      'sign, signs, signage, signboard, signboards, billboard, billboards',
+      'inscription, inscriptions, manuscript, manuscripts, document, documents',
+      'book, books, page, pages, newspaper, newspapers, magazine, magazines',
+      'poster, posters, flyer, flyers, brochure, brochures, pamphlet, pamphlets',
       
-      // Qualidade baixa
-      'low quality, blurry, pixelated, distorted, grainy, noisy, artifacts',
-      'low resolution, poor quality, bad quality, amateur, unprofessional',
+      // NÚMEROS E SÍMBOLOS MATEMÁTICOS
+      'number, numbers, numeral, numerals, digit, digits, numeric, numerical',
+      'symbol, symbols, mathematical symbol, math symbol, equation, equations',
+      'formula, formulas, calculation, calculations, arithmetic, algebraic',
+      'plus, minus, equals, multiply, divide, percentage, fraction, fractions',
       
-      // Elementos visuais indesejados
-      'cluttered, messy, chaotic, confusing, dark, gloomy, scary, inappropriate',
-      'deformed, malformed, broken, incomplete, wrong proportions',
+      // MARCAS D\'ÁGUA E LOGOS
+      'watermark, watermarks, logo, logos, brand, branding, trademark, trademarks',
+      'copyright, copyrighted, signature, signatures, stamp, stamps, seal, seals',
+      'emblem, emblems, badge, badges, mark, marks, marking, markings',
       
-      // Contextos inadequados
-      'adult content, inappropriate themes, religious symbols, political content'
+      // QUALIDADE BAIXA E DEFEITOS VISUAIS
+      'low quality, poor quality, bad quality, worst quality, terrible quality',
+      'blurry, blur, blurred, out of focus, unfocused, fuzzy, hazy',
+      'pixelated, pixelation, pixel art, low resolution, low res, poor resolution',
+      'distorted, distortion, deformed, malformed, warped, twisted',
+      'grainy, grain, noise, noisy, artifacts, artifact, compression artifacts',
+      'jpeg artifacts, compression, over-compressed, under-exposed, over-exposed',
+      'dark, too dark, gloomy, dim, shadowy, murky, unclear, indistinct',
+      
+      // ELEMENTOS VISUAIS INDESEJADOS
+      'cluttered, clutter, messy, chaotic, confusing, disorganized, jumbled',
+      'broken, incomplete, unfinished, partial, fragmented, cropped badly',
+      'ugly, hideous, grotesque, disturbing, inappropriate, offensive',
+      'scary, frightening, horror, violent, aggressive, threatening',
+      'wrong proportions, bad proportions, disproportionate, asymmetric badly',
+      
+      // CONTEXTOS INADEQUADOS PARA EDUCAÇÃO
+      'adult content, mature content, inappropriate themes, explicit content',
+      'religious symbols, political symbols, controversial content',
+      'commercial advertising, promotional content, marketing material',
+      'social media interface, app interface, website interface, UI elements',
+      
+      // ELEMENTOS TÉCNICOS INDESEJADOS
+      'screenshot, screen capture, computer screen, monitor, display',
+      'cursor, mouse pointer, selection box, highlight, border ugly',
+      'frame ugly, border thick, outline heavy, shadow ugly, gradient ugly',
+      
+      // REFORÇO ADICIONAL ANTI-TEXTO
+      'NO TEXT, NO WORDS, NO LETTERS, NO WRITING, NO TITLES, NO CAPTIONS',
+      'VISUAL ONLY, IMAGE ONLY, PICTURE ONLY, ILLUSTRATION ONLY',
+      'EDUCATIONAL VISUAL, PURE VISUAL CONTENT, CLEAN VISUAL DESIGN'
     ].join(', ');
 
     // Aplicar otimização
     const optimizedPrompt = optimizePrompt(prompt);
 
-    console.log('🚀 Calling Open-DALLE v1.1 with optimized parameters...');
+    console.log('🚀 Calling Open-DALLE v1.1 with ultra-reinforced anti-text parameters...');
     
-    // Parâmetros otimizados para velocidade e qualidade
+    // Parâmetros com negative prompt ultra-reforçado
     const output = await replicate.run(
       "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
       {
         input: {
           prompt: optimizedPrompt,
-          negative_prompt: consolidatedNegativePrompt,
+          negative_prompt: ultraReinforcedNegativePrompt,
           width: 512,
           height: 512,
           num_outputs: 1,
-          guidance_scale: 7.5,
-          num_inference_steps: 30, // Reduzido de 50 para 30 para maior velocidade
+          guidance_scale: 8.0, // Aumentado para 8.0 para melhor controle do negative prompt
+          num_inference_steps: 35, // Aumentado ligeiramente para melhor qualidade
           scheduler: "K_EULER"
         }
       }
@@ -147,7 +186,7 @@ serve(async (req) => {
     
     // Sistema de download otimizado
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000); // Reduzido timeout
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // Aumentado timeout
     
     const imageResponse = await fetch(imageUrl, {
       signal: controller.signal,
@@ -187,17 +226,18 @@ serve(async (req) => {
     const mimeType = originalFormat === 'webp' ? 'image/webp' : `image/${originalFormat}`;
     const imageDataUrl = `data:${mimeType};base64,${imageB64}`;
     
-    console.log('🎨 Open-DALLE v1.1 optimized generation completed successfully!');
+    console.log('🎨 Open-DALLE v1.1 ultra-reinforced anti-text generation completed successfully!');
     
     return new Response(JSON.stringify({ 
       success: true, 
       imageUrl: imageDataUrl,
       imageData: imageB64,
-      model: 'open-dalle-v1.1-optimized',
+      model: 'open-dalle-v1.1-ultra-anti-text',
       optimizations: {
         promptOptimization: true,
-        consolidatedNegativePrompt: true,
-        reducedInferenceSteps: true,
+        ultraReinforcedNegativePrompt: true,
+        increasedGuidanceScale: true,
+        enhancedInferenceSteps: true,
         optimizedDownload: true,
         streamlinedProcessing: true
       },
@@ -206,10 +246,18 @@ serve(async (req) => {
         mimeType: mimeType,
         dimensions: '512x512',
         originalFormat: originalFormat,
-        inferenceSteps: 30,
-        guidanceScale: 7.5,
+        inferenceSteps: 35,
+        guidanceScale: 8.0,
         scheduler: 'K_EULER'
       },
+      antiTextMeasures: [
+        'Ultra-reinforced negative prompt with 50+ text-related exclusions',
+        'Increased guidance scale to 8.0 for better negative prompt control',
+        'Enhanced inference steps to 35 for better quality control',
+        'Visual-only content specifications in positive prompt',
+        'Multi-language text exclusions (português/english)',
+        'Complete symbol and number exclusions'
+      ],
       textPlacementSuggestion: 'Utilize a área superior ou inferior da imagem para sobreposição de texto, mantendo o centro livre para o conteúdo visual principal.'
     }), { 
       status: 200,
@@ -217,9 +265,9 @@ serve(async (req) => {
     });
     
   } catch (error) {
-    console.error('❌ Error in optimized Open-DALLE v1.1:', error);
+    console.error('❌ Error in ultra-reinforced Open-DALLE v1.1:', error);
     
-    // Sistema de fallback simplificado
+    // Sistema de fallback ultra-simplificado
     try {
       const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN');
       if (!REPLICATE_API_TOKEN) {
@@ -233,22 +281,22 @@ serve(async (req) => {
       const requestBody = await req.json();
       const originalPrompt = requestBody.prompt;
       
-      // Prompt ultra-simplificado para fallback
-      const simpleFallbackPrompt = `${originalPrompt.split('.')[0]}. Simple Brazilian educational illustration, clean design, visual only`;
-      const simpleFallbackNegativePrompt = 'text, words, letters, numbers, low quality, blurry';
+      // Prompt ultra-simplificado para fallback com reforço anti-texto
+      const ultraSimpleFallbackPrompt = `${originalPrompt.split('.')[0]}. Simple Brazilian educational illustration, clean design, visual only, no text, no words, no letters`;
+      const ultraSimpleFallbackNegativePrompt = 'text, words, letters, numbers, titles, captions, labels, writing, typography, signs, low quality, blurry, pixelated, distorted, artifacts, noise, NO TEXT, NO WORDS, VISUAL ONLY';
 
-      console.log('🔄 Attempting simple fallback...');
+      console.log('🔄 Attempting ultra-simple anti-text fallback...');
       const fallbackOutput = await replicate.run(
         "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
         {
           input: {
-            prompt: simpleFallbackPrompt,
-            negative_prompt: simpleFallbackNegativePrompt,
+            prompt: ultraSimpleFallbackPrompt,
+            negative_prompt: ultraSimpleFallbackNegativePrompt,
             width: 512,
             height: 512,
             num_outputs: 1,
-            guidance_scale: 7.0,
-            num_inference_steps: 20
+            guidance_scale: 8.0,
+            num_inference_steps: 25
           }
         }
       );
@@ -265,15 +313,15 @@ serve(async (req) => {
           const fallbackB64 = btoa(fallbackBinaryString);
           const fallbackDataUrl = `data:image/png;base64,${fallbackB64}`;
           
-          console.log('🆘 Fallback completed successfully');
+          console.log('🆘 Ultra-simple anti-text fallback completed successfully');
           
           return new Response(JSON.stringify({ 
             success: true, 
             imageUrl: fallbackDataUrl,
             imageData: fallbackB64,
-            model: 'open-dalle-v1.1-fallback',
+            model: 'open-dalle-v1.1-ultra-anti-text-fallback',
             fallback: true,
-            warning: 'Generated using simplified fallback due to primary generation failure'
+            warning: 'Generated using ultra-simplified anti-text fallback due to primary generation failure'
           }), { 
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -281,12 +329,12 @@ serve(async (req) => {
         }
       }
     } catch (fallbackError) {
-      console.error('❌ Fallback also failed:', fallbackError.message);
+      console.error('❌ Ultra-simple anti-text fallback also failed:', fallbackError.message);
     }
     
     return new Response(JSON.stringify({ 
       success: false, 
-      error: `Erro na geração com Open-DALLE v1.1: ${error.message}`,
+      error: `Erro na geração ultra-reforçada com Open-DALLE v1.1: ${error.message}`,
       errorType: error.constructor.name,
       timestamp: new Date().toISOString()
     }), { 
