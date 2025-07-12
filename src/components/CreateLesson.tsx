@@ -129,6 +129,21 @@ class FormErrorBoundary extends React.Component<{children: React.ReactNode}, {ha
   }
 }
 
+interface ProgressStage {
+  id: string;
+  title: string;
+  description: string;
+  estimatedDuration: number; // em segundos
+  icon?: React.ComponentType<any>;
+}
+
+interface GenerationProgress {
+  stage: string;
+  progress: number;
+  message: string;
+  isComplete: boolean;
+}
+
 const CreateLesson: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -143,7 +158,12 @@ const CreateLesson: React.FC = () => {
     subjects: [''] as string[]
   });
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationProgress, setGenerationProgress] = useState<GenerationProgress>({
+    stage: 'validation',
+    progress: 0,
+    message: 'Preparando validação...',
+    isComplete: false
+  });
   const [generatedMaterial, setGeneratedMaterial] = useState<GeneratedMaterial | null>(null);
   const [showMaterialModal, setShowMaterialModal] = useState(false);
   const [showNextStepsModal, setShowNextStepsModal] = useState(false);
@@ -162,6 +182,55 @@ const CreateLesson: React.FC = () => {
     handlePlanSelection,
     availablePlans 
   } = useUpgradeModal();
+
+  // Definir estágios de progresso baseados no tipo de material
+  const getProgressStages = (materialType: string): ProgressStage[] => {
+    const baseStages: ProgressStage[] = [
+      {
+        id: 'validation',
+        title: 'Validação BNCC',
+        description: 'Verificando alinhamento com a Base Nacional Comum Curricular',
+        estimatedDuration: 10,
+        icon: Brain
+      },
+      {
+        id: 'content-generation',
+        title: 'Geração de Conteúdo',
+        description: 'Criando conteúdo pedagógico personalizado com IA',
+        estimatedDuration: 25,
+        icon: Wand2
+      }
+    ];
+
+    if (materialType === 'slides') {
+      baseStages.push({
+        id: 'image-generation',
+        title: 'Geração de Imagens',
+        description: 'Criando imagens educativas para os slides',
+        estimatedDuration: 45,
+        icon: Sparkles
+      });
+    }
+
+    baseStages.push({
+      id: 'finalization',
+      title: 'Finalizando',
+      description: 'Salvando e organizando seu material',
+      estimatedDuration: 5,
+      icon: BookOpen
+    });
+
+    return baseStages;
+  };
+
+  const updateProgress = (stage: string, progress: number, message: string, isComplete: boolean = false) => {
+    setGenerationProgress({
+      stage,
+      progress: Math.min(100, Math.max(0, progress)),
+      message,
+      isComplete
+    });
+  };
 
   const materialTypes: MaterialTypeOption[] = [
     {
@@ -308,19 +377,16 @@ const CreateLesson: React.FC = () => {
       }
     }
 
-    // ETAPA 1: Abrir modal de carregamento
-    console.log('📊 Iniciando validação BNCC - abrindo modal de carregamento');
+    // ETAPA 1: Iniciar processo de geração
+    console.log('📊 Iniciando processo de geração - abrindo modal de carregamento');
     setStep('generating');
     setIsGenerating(true);
-    setGenerationProgress(20);
-
-    // Aguardar um pouco para mostrar o modal
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    updateProgress('validation', 15, 'Iniciando validação BNCC...');
 
     try {
       // ETAPA 2: Validar tema(s) na BNCC
       console.log('🔍 Chamando validação BNCC');
-      setGenerationProgress(40);
+      updateProgress('validation', 35, 'Validando alinhamento com a BNCC...');
       
       // Extrair série sem a categoria
       const serieParaValidacao = formData.grade.includes('-') 
@@ -331,6 +397,8 @@ const CreateLesson: React.FC = () => {
         // Para avaliações, usar validação múltipla
         const temasParaValidacao = formData.subjects.filter(s => s.trim() !== '');
         console.log('📋 Dados para validação múltipla:', { temas: temasParaValidacao, disciplina: formData.subject, serie: serieParaValidacao });
+        
+        updateProgress('validation', 60, 'Validando múltiplos conteúdos...');
         
         const enhancedValidationData = await EnhancedBNCCValidationService.validateMultipleTopics(
           temasParaValidacao, 
@@ -351,7 +419,7 @@ const CreateLesson: React.FC = () => {
           // FECHAR modal de carregamento
           setIsGenerating(false);
           setStep('form');
-          setGenerationProgress(0);
+          updateProgress('validation', 0, 'Preparando validação...');
           
           // Aguardar transição e abrir modal de validação
           setTimeout(() => {
@@ -364,6 +432,8 @@ const CreateLesson: React.FC = () => {
         // Para outros tipos, usar validação simples
         const tema = formData.topic;
         console.log('📋 Dados para validação simples:', { tema, disciplina: formData.subject, serie: serieParaValidacao });
+        
+        updateProgress('validation', 60, 'Verificando conformidade BNCC...');
         
         const validationResponse = await supabase.functions.invoke('validarTemaBNCC', {
           body: { 
@@ -397,7 +467,7 @@ const CreateLesson: React.FC = () => {
           // FECHAR modal de carregamento
           setIsGenerating(false);
           setStep('form');
-          setGenerationProgress(0);
+          updateProgress('validation', 0, 'Preparando validação...');
           
           // Aguardar transição e abrir modal de validação
           setTimeout(() => {
@@ -410,7 +480,10 @@ const CreateLesson: React.FC = () => {
 
       // ETAPA 4: Se chegou aqui, tema(s) está(ão) alinhado(s) - continuar com geração
       console.log('✅ Tema(s) alinhado(s) com BNCC - continuando com geração');
-      setGenerationProgress(60);
+      updateProgress('validation', 85, 'Validação BNCC concluída com sucesso!');
+      
+      // Aguardar um momento para mostrar conclusão da validação
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       await realizarGeracao();
       
@@ -420,7 +493,7 @@ const CreateLesson: React.FC = () => {
       // Em caso de erro na validação, PARAR o processo
       setIsGenerating(false);
       setStep('form');
-      setGenerationProgress(0);
+      updateProgress('validation', 0, 'Preparando validação...');
       
       toast.error(`Erro na validação BNCC: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
@@ -434,7 +507,7 @@ const CreateLesson: React.FC = () => {
     // Voltar para modal de carregamento
     setStep('generating');
     setIsGenerating(true);
-    setGenerationProgress(60);
+    updateProgress('validation', 85, 'Validação BNCC concluída com sucesso!');
     
     // Aguardar um pouco e continuar geração
     setTimeout(async () => {
@@ -466,27 +539,15 @@ const CreateLesson: React.FC = () => {
       toast.error('Limite de materiais atingido! Faça upgrade para continuar.');
       setIsGenerating(false);
       setStep('form');
-      setGenerationProgress(0);
+      updateProgress('validation', 0, 'Preparando validação...');
       openUpgradeModal();
       return;
     }
 
-    const progressSteps = [
-      { progress: 75, message: 'Gerando conteúdo pedagógico...' },
-      { progress: 90, message: 'Aplicando padrões da BNCC...' },
-      { progress: 98, message: 'Salvando material...' }
-    ];
-
-    let stepIndex = 0;
-    const progressInterval = setInterval(() => {
-      if (stepIndex < progressSteps.length) {
-        setGenerationProgress(progressSteps[stepIndex].progress);
-        console.log('Progress:', progressSteps[stepIndex].message);
-        stepIndex++;
-      }
-    }, 1000);
-
     try {
+      // ETAPA 1: Preparar geração de conteúdo
+      updateProgress('content-generation', 10, 'Preparando geração de conteúdo...');
+      
       // Buscar nome do professor (perfil)
       let professor = '';
       if (user?.id) {
@@ -532,8 +593,13 @@ const CreateLesson: React.FC = () => {
         } : {})
       };
 
+      // ETAPA 2: Gerar conteúdo principal
+      updateProgress('content-generation', 30, 'Gerando conteúdo pedagógico...');
       console.log('📋 Dados do material sendo enviados:', materialFormData);
+      
       let material = await materialService.generateMaterial(selectedType!, materialFormData);
+      
+      updateProgress('content-generation', 70, 'Processando e validando conteúdo...');
       
       // Validate and fix questions if it's an activity or assessment
       if ((selectedType === 'atividade' || selectedType === 'avaliacao') && material?.content?.questoes) {
@@ -553,42 +619,75 @@ const CreateLesson: React.FC = () => {
         console.log('✅ Questões validadas e corrigidas:', material.content.questoes);
       }
       
-      console.log('✅ Material gerado e salvo com sucesso:', material.id);
+      updateProgress('content-generation', 95, 'Conteúdo gerado com sucesso!');
+      console.log('✅ Material gerado com sucesso:', material.id);
 
-      // INÍCIO DA LÓGICA DE GERAÇÃO E INJEÇÃO DAS IMAGENS IA NAS VARIÁVEIS DOS SLIDES
+      // ETAPA 3: Gerar imagens (apenas para slides)
       if (selectedType === 'slides' && material && material.content) {
+        updateProgress('image-generation', 10, 'Preparando geração de imagens educativas...');
+        
         // Mapeamento das variáveis de imagem por página (índices baseados no template)
         const variaveisImagem = [
-          { idx: 0, var: 'tema_imagem', prompt: () => material.content.tema_imagem },
-          { idx: 2, var: 'introducao_imagem', prompt: () => material.content.introducao_imagem },
-          { idx: 3, var: 'conceitos_imagem', prompt: () => material.content.conceitos_imagem },
-          { idx: 4, var: 'exemplo_imagem', prompt: () => material.content.exemplo_imagem },
-          { idx: 5, var: 'desenvolvimento_imagem', prompt: () => material.content.desenvolvimento_imagem },
-          { idx: 8, var: 'imagem_principal', prompt: () => material.content.imagem_principal },
+          { idx: 0, var: 'tema_imagem', prompt: () => material.content.tema_imagem, priority: 'high', context: 'capa' },
+          { idx: 2, var: 'introducao_imagem', prompt: () => material.content.introducao_imagem, priority: 'high', context: 'introdução' },
+          { idx: 3, var: 'conceitos_imagem', prompt: () => material.content.conceitos_imagem, priority: 'medium', context: 'conceitos' },
+          { idx: 4, var: 'exemplo_imagem', prompt: () => material.content.exemplo_imagem, priority: 'high', context: 'exemplo' },
+          { idx: 5, var: 'desenvolvimento_imagem', prompt: () => material.content.desenvolvimento_imagem, priority: 'medium', context: 'desenvolvimento' },
+          { idx: 8, var: 'imagem_principal', prompt: () => material.content.imagem_principal, priority: 'medium', context: 'principal' }
         ];
+
+        let completedImages = 0;
+        const totalImages = variaveisImagem.filter(item => {
+          const prompt = item.prompt();
+          return prompt && typeof prompt === 'string' && prompt.length > 8;
+        }).length;
+
         for (const item of variaveisImagem) {
           const prompt = item.prompt();
           if (prompt && typeof prompt === 'string' && prompt.length > 8) {
             try {
-              const { data: imgData, error } = await supabase.functions.invoke('gerarImagemIA', { body: { prompt } });
+              const currentProgress = 10 + Math.floor((completedImages / totalImages) * 80);
+              updateProgress('image-generation', currentProgress, 
+                `Gerando imagem ${completedImages + 1} de ${totalImages} (${item.context})...`);
+              
+              const { data: imgData, error } = await supabase.functions.invoke('gerarImagemIA', { 
+                body: { prompt } 
+              });
+              
               if (imgData && imgData.success && imgData.imageUrl) {
                 material.content[item.var] = `<img src="${imgData.imageUrl}" alt="Imagem IA" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" />`;
+                console.log(`✅ Imagem gerada com sucesso para ${item.var}`);
               } else {
                 material.content[item.var] = '';
+                console.warn(`⚠️ Falha ao gerar imagem para ${item.var}`);
               }
+              
+              completedImages++;
+              
             } catch (e) {
               material.content[item.var] = '';
               console.warn('Erro ao gerar imagem IA para', item.var, e);
+              completedImages++;
             }
-          } else {
-            material.content[item.var] = '';
           }
         }
+        
+        updateProgress('image-generation', 95, 'Finalizando geração de imagens...');
+        console.log(`🎨 Geração de imagens concluída: ${completedImages}/${totalImages} imagens processadas`);
       }
-      // FIM DA LÓGICA DE GERAÇÃO E INJEÇÃO DAS IMAGENS IA
 
-      clearInterval(progressInterval);
-      setGenerationProgress(100);
+      // ETAPA 4: Finalização
+      updateProgress('finalization', 30, 'Salvando material no seu perfil...');
+      
+      // Aguardar um momento para simular salvamento
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      updateProgress('finalization', 80, 'Organizando conteúdo...');
+      
+      // Aguardar mais um momento
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      updateProgress('finalization', 100, 'Material criado com sucesso!', true);
 
       setTimeout(() => {
         setIsGenerating(false);
@@ -608,14 +707,13 @@ const CreateLesson: React.FC = () => {
             grade: material.grade
           });
         }
-      }, 1000);
+      }, 1500);
 
     } catch (error) {
       console.error('❌ Erro na geração:', error);
-      clearInterval(progressInterval);
       setIsGenerating(false);
       setStep('form');
-      setGenerationProgress(0);
+      updateProgress('validation', 0, 'Preparando validação...');
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao gerar material';
       toast.error(`Erro ao criar material: ${errorMessage}`);
     }
@@ -1163,6 +1261,11 @@ const CreateLesson: React.FC = () => {
   }
 
   if (step === 'generating') {
+    const stages = getProgressStages(selectedType || '');
+    const currentStageIndex = stages.findIndex(stage => stage.id === generationProgress.stage);
+    const currentStage = stages[currentStageIndex];
+    const StageIcon = currentStage?.icon || BookOpen;
+
     return (
       <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
@@ -1171,9 +1274,9 @@ const CreateLesson: React.FC = () => {
               {/* Centered icon section */}
               <div className="relative mb-6">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
-                  <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                  <StageIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white animate-pulse" />
                 </div>
-                <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-yellow-400 rounded-full flex items-center justify-center animate-bounce">
                   <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
                 </div>
               </div>
@@ -1182,26 +1285,58 @@ const CreateLesson: React.FC = () => {
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-                    Criando seu material...
+                    {currentStage?.title || 'Processando...'}
                   </h2>
-                  <p className="text-sm sm:text-base text-gray-600">
-                    {generationProgress < 30 ? 'Validando tema na BNCC...' : 
-                     generationProgress < 50 ? 'Validação concluída!' :
-                     'Gerando conteúdo e salvando no seu perfil'}
+                  <p className="text-sm sm:text-base text-gray-600 mb-2">
+                    {currentStage?.description || 'Aguarde enquanto processamos seu material...'}
+                  </p>
+                  <p className="text-xs sm:text-sm text-blue-600 font-medium">
+                    {generationProgress.message}
                   </p>
                 </div>
                 
                 {/* Progress section */}
                 <div className="space-y-3">
-                  <Progress value={generationProgress} className="h-2 bg-gray-200" />
+                  <Progress value={generationProgress.progress} className="h-3 bg-gray-200" />
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">
-                      {generationProgress < 100 ? 'Processando...' : 'Salvando material...'}
+                      Etapa {currentStageIndex + 1} de {stages.length}
                     </span>
                     <span className="text-sm font-semibold text-gray-900">
-                      {Math.round(generationProgress)}%
+                      {Math.round(generationProgress.progress)}%
                     </span>
                   </div>
+                </div>
+
+                {/* Stages indicator */}
+                <div className="flex justify-center space-x-2">
+                  {stages.map((stage, index) => {
+                    const isCompleted = index < currentStageIndex;
+                    const isCurrent = index === currentStageIndex;
+                    
+                    return (
+                      <div
+                        key={stage.id}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                          isCompleted 
+                            ? 'bg-green-500' 
+                            : isCurrent 
+                              ? 'bg-blue-500 animate-pulse' 
+                              : 'bg-gray-300'
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Friendly reassurance message */}
+                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                  <p className="text-xs sm:text-sm text-blue-700">
+                    {selectedType === 'slides' 
+                      ? '✨ Estamos criando um material incrível com imagens personalizadas! Isso pode levar alguns minutos.'
+                      : '🎯 Nossa IA está trabalhando para criar o melhor material possível para você!'
+                    }
+                  </p>
                 </div>
               </div>
             </div>
