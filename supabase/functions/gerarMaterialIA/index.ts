@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -333,4 +334,231 @@ GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". Adapte à faixa etária de ${
 `;
 
     case 'atividade':
-      const numQuestoes = formData.numeroQuestoes || formData.quantidadeQuest
+      const numQuestoes = formData.numeroQuestoes || formData.quantidadeQuestoes || 10;
+      const tiposQuestoes = formData.tiposQuestoes || (formData.tipoQuestoes ? [formData.tipoQuestoes] : ['multipla-escolha', 'verdadeiro-falso', 'completar-lacunas']);
+      
+      return `
+Você é um professor especialista em criar ATIVIDADES DE APRENDIZAGEM ATIVA seguindo a BNCC.
+
+Crie uma ATIVIDADE EDUCATIVA INTERATIVA sobre "${tema}" para ${disciplina} na ${serie}.
+
+IMPORTANTE: Este é um material de ATIVIDADE PRÁTICA focado em APRENDIZAGEM ATIVA, não uma avaliação formal. 
+O objetivo é ENVOLVER os alunos em práticas educativas dinâmicas e participativas sobre "${tema}".
+
+CARACTERÍSTICAS DE UMA ATIVIDADE (não avaliação):
+- Foco no PROCESSO DE APRENDIZAGEM, não na verificação
+- Exercícios PRÁTICOS e INTERATIVOS
+- Ambiente de COLABORAÇÃO e DESCOBERTA
+- Feedback FORMATIVO e CONSTRUTIVO
+- Estímulo à PARTICIPAÇÃO ATIVA dos estudantes
+- Desenvolvimento de HABILIDADES através da prática
+
+TIPOS DE QUESTÕES SOLICITADOS: ${tiposQuestoes.join(', ')}
+NÚMERO DE QUESTÕES: ${numQuestoes}
+
+Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
+
+{
+  "titulo": "Atividade Prática - ${tema}",
+  "professor": "${professor}",
+  "data": "${data}",
+  "disciplina": "${disciplina}",
+  "serie": "${serie}",
+  "tema": "${tema}",
+  "tipo_material": "atividade",
+  "duracao": "[duração adequada para a atividade prática sobre ${tema}]",
+  "bncc": "[códigos BNCC específicos para ${tema} em ${disciplina}]",
+  "objetivo_geral": "[OBJETIVO EDUCATIVO da atividade prática sobre ${tema} - foco no processo de aprendizagem]",
+  "objetivos_especificos": [
+    "[OBJETIVO ESPECÍFICO 1 da atividade sobre ${tema}]",
+    "[OBJETIVO ESPECÍFICO 2 da atividade sobre ${tema}]",
+    "[OBJETIVO ESPECÍFICO 3 da atividade sobre ${tema}]"
+  ],
+  "introducao": "[INTRODUÇÃO motivadora para a atividade sobre ${tema} - explicar o propósito da prática]",
+  "instrucoes": "[INSTRUÇÕES CLARAS de como realizar a atividade sobre ${tema} - passo a passo]",
+  "questoes": [
+    ${Array.from({length: numQuestoes}, (_, i) => `{
+      "numero": ${i + 1},
+      "tipo": "[TIPO da questão ${i + 1} - escolha entre: ${tiposQuestoes.join(', ')}]",
+      "enunciado": "[ENUNCIADO da questão ${i + 1} sobre ${tema} - focado na prática educativa]",
+      "opcoes": [
+        "[OPÇÃO A - quando aplicável]",
+        "[OPÇÃO B - quando aplicável]",
+        "[OPÇÃO C - quando aplicável]",
+        "[OPÇÃO D - quando aplicável]"
+      ],
+      "resposta_correta": "[RESPOSTA CORRETA ou orientação]",
+      "explicacao": "[EXPLICAÇÃO EDUCATIVA sobre ${tema} - feedback formativo]",
+      "dica_pedagogica": "[DICA para o professor sobre esta questão]"
+    }`).join(',\n    ')}
+  ],
+  "recursos_necessarios": [
+    "[RECURSO 1 para realizar a atividade sobre ${tema}]",
+    "[RECURSO 2 para realizar a atividade sobre ${tema}]",
+    "[RECURSO 3 para realizar a atividade sobre ${tema}]"
+  ],
+  "metodologia": "[METODOLOGIA da atividade - como conduzir a prática sobre ${tema}]",
+  "criterios_acompanhamento": [
+    "[CRITÉRIO 1 para acompanhar o desenvolvimento dos alunos]",
+    "[CRITÉRIO 2 para acompanhar o desenvolvimento dos alunos]",
+    "[CRITÉRIO 3 para acompanhar o desenvolvimento dos alunos]"
+  ],
+  "sugestoes_adaptacao": "[SUGESTÕES para adaptar a atividade a diferentes níveis de aprendizagem]",
+  "extensao_atividade": "[SUGESTÕES para estender ou aprofundar a atividade sobre ${tema}]",
+  "referencias": [
+    "[REFERÊNCIA 1 sobre ${tema} em ${disciplina}]",
+    "[REFERÊNCIA 2 sobre ${tema} em ${disciplina}]"
+  ]
+}
+
+INSTRUÇÕES FINAIS CRÍTICAS:
+1. FOQUE em atividades PRÁTICAS e INTERATIVAS
+2. Use linguagem MOTIVADORA e ENVOLVENTE
+3. Promova PARTICIPAÇÃO ATIVA dos estudantes
+4. Inclua FEEDBACK E EXPLICAÇÕES EDUCATIVAS
+5. Adapte à faixa etária de ${serie}
+6. Use português brasileiro correto
+`;
+
+    case 'avaliacao':
+      const numQuestoesAval = formData.numeroQuestoes || formData.quantidadeQuestoes || 10;
+      const tiposQuestoesAval = formData.tiposQuestoes || (formData.tipoQuestoes ? [formData.tipoQuestoes] : ['multipla-escolha', 'verdadeiro-falso', 'dissertativa']);
+      
+      return `
+Você é um professor especialista em criar AVALIAÇÕES FORMAIS seguindo a BNCC.
+
+Crie uma AVALIAÇÃO ESTRUTURADA sobre "${tema}" para ${disciplina} na ${serie}.
+
+IMPORTANTE: Este é um material de AVALIAÇÃO FORMAL focado na VERIFICAÇÃO DE APRENDIZAGEM sobre "${tema}".
+O objetivo é MENSURAR o conhecimento adquirido pelos alunos de forma objetiva e criteriosa.
+
+CARACTERÍSTICAS DE UMA AVALIAÇÃO (não atividade):
+- Foco na VERIFICAÇÃO DO APRENDIZADO
+- Questões OBJETIVAS e MENSURÁVEIS  
+- Critérios CLAROS de correção
+- Ambiente FORMAL de teste
+- Feedback AVALIATIVO e CLASSIFICATÓRIO
+- Verificação do DOMÍNIO dos conteúdos
+- Instrumentos de MEDIÇÃO do conhecimento
+
+TIPOS DE QUESTÕES SOLICITADOS: ${tiposQuestoesAval.join(', ')}
+NÚMERO DE QUESTÕES: ${numQuestoesAval}
+
+Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
+
+{
+  "titulo": "Avaliação - ${tema}",
+  "professor": "${professor}",
+  "data": "${data}",
+  "disciplina": "${disciplina}",
+  "serie": "${serie}",
+  "tema": "${tema}",
+  "tipo_material": "avaliacao",
+  "duracao": "[duração adequada para a avaliação sobre ${tema}]",
+  "valor_total": "[PONTUAÇÃO TOTAL da avaliação - ex: 10,0 pontos]",
+  "bncc": "[códigos BNCC específicos para ${tema} em ${disciplina}]",
+  "objetivo_avaliativo": "[OBJETIVO da avaliação - verificar aprendizagem sobre ${tema}]",
+  "competencias_avaliadas": [
+    "[COMPETÊNCIA 1 avaliada sobre ${tema}]",
+    "[COMPETÊNCIA 2 avaliada sobre ${tema}]",
+    "[COMPETÊNCIA 3 avaliada sobre ${tema}]"
+  ],
+  "instrucoes_gerais": "[INSTRUÇÕES FORMAIS para realização da avaliação sobre ${tema}]",
+  "questoes": [
+    ${Array.from({length: numQuestoesAval}, (_, i) => `{
+      "numero": ${i + 1},
+      "tipo": "[TIPO da questão ${i + 1} - escolha entre: ${tiposQuestoesAval.join(', ')}]",
+      "valor": "[PONTUAÇÃO da questão ${i + 1} - ex: 1,0 ponto]",
+      "enunciado": "[ENUNCIADO da questão ${i + 1} sobre ${tema} - claro e objetivo]",
+      "opcoes": [
+        "[OPÇÃO A - quando aplicável]",
+        "[OPÇÃO B - quando aplicável]",
+        "[OPÇÃO C - quando aplicável]",
+        "[OPÇÃO D - quando aplicável]"
+      ],
+      "resposta_correta": "[RESPOSTA CORRETA]",
+      "criterios_correcao": "[CRITÉRIOS para correção desta questão]",
+      "habilidade_avaliada": "[HABILIDADE BNCC avaliada nesta questão]"
+    }`).join(',\n    ')}
+  ],
+  "criterios_avaliacao": {
+    "excelente": "[CRITÉRIO para conceito EXCELENTE (90-100%)]",
+    "bom": "[CRITÉRIO para conceito BOM (70-89%)]",
+    "satisfatorio": "[CRITÉRIO para conceito SATISFATÓRIO (50-69%)]",
+    "insuficiente": "[CRITÉRIO para conceito INSUFICIENTE (0-49%)]"
+  },
+  "rubrica_avaliacao": [
+    {
+      "aspecto": "[ASPECTO 1 avaliado sobre ${tema}]",
+      "criterio": "[CRITÉRIO de avaliação para este aspecto]",
+      "pontuacao": "[PONTUAÇÃO para este aspecto]"
+    },
+    {
+      "aspecto": "[ASPECTO 2 avaliado sobre ${tema}]", 
+      "criterio": "[CRITÉRIO de avaliação para este aspecto]",
+      "pontuacao": "[PONTUAÇÃO para este aspecto]"
+    },
+    {
+      "aspecto": "[ASPECTO 3 avaliado sobre ${tema}]",
+      "criterio": "[CRITÉRIO de avaliação para este aspecto]", 
+      "pontuacao": "[PONTUAÇÃO para este aspecto]"
+    }
+  ],
+  "observacoes_correcao": "[ORIENTAÇÕES para correção da avaliação sobre ${tema}]",
+  "feedback_pos_avaliacao": "[ORIENTAÇÕES para feedback após correção]",
+  "referencias": [
+    "[REFERÊNCIA 1 sobre ${tema} em ${disciplina}]",
+    "[REFERÊNCIA 2 sobre ${tema} em ${disciplina}]"
+  ]
+}
+
+INSTRUÇÕES FINAIS CRÍTICAS:
+1. FOQUE na VERIFICAÇÃO OBJETIVA do aprendizado
+2. Use linguagem FORMAL e CLARA
+3. Estabeleça CRITÉRIOS MENSURÁVEIS de avaliação
+4. Inclua RUBRICAS E PONTUAÇÕES específicas
+5. Adapte à faixa etária de ${serie}
+6. Use português brasileiro correto
+`;
+
+    default:
+      return `Gere um material educativo sobre ${tema} para ${disciplina} na ${serie}.`;
+  }
+}
+
+function parseGeneratedContent(materialType: string, content: string, formData: MaterialFormData) {
+  try {
+    // Try to parse as JSON first
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    
+    // If not JSON, return structured content based on material type
+    return {
+      titulo: `${materialType.charAt(0).toUpperCase() + materialType.slice(1)} - ${formData.tema || formData.topic || 'Material Educativo'}`,
+      conteudo: content,
+      tipo_material: materialType,
+      disciplina: formData.disciplina || formData.subject,
+      serie: formData.serie || formData.grade,
+      tema: formData.tema || formData.topic,
+      professor: formData.professor || '',
+      data: formData.data || new Date().toISOString().split('T')[0]
+    };
+  } catch (error) {
+    console.error('Error parsing generated content:', error);
+    
+    // Return basic structure if parsing fails
+    return {
+      titulo: `${materialType.charAt(0).toUpperCase() + materialType.slice(1)} - ${formData.tema || formData.topic || 'Material Educativo'}`,
+      conteudo: content,
+      tipo_material: materialType,
+      disciplina: formData.disciplina || formData.subject,
+      serie: formData.serie || formData.grade,
+      tema: formData.tema || formData.topic,
+      professor: formData.professor || '',
+      data: formData.data || new Date().toISOString().split('T')[0],
+      erro: 'Conteúdo gerado mas não foi possível estruturar completamente'
+    };
+  }
+}
