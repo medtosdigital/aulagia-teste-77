@@ -232,15 +232,18 @@ Crie slides educativos ESPECÍFICOS sobre "${tema}" para ${disciplina} na ${seri
 
 IMPORTANTE: TODO O CONTEÚDO deve ser baseado especificamente no tema "${tema}". NÃO use conteúdo genérico.
 
-INSTRUÇÕES CRÍTICAS PARA PROMPTS DE IMAGEM - OTIMIZADOS PARA STABLE DIFFUSION XL:
-- Todos os prompts devem ser ULTRA-ESPECÍFICOS, DETALHADOS e CONTEXTUALIZADOS ao tema "${tema}" em ${disciplina}
+INSTRUÇÕES CRÍTICAS PARA PROMPTS DE IMAGEM - OTIMIZADOS PARA OPEN-DALLE v1.1:
+- Todos os prompts devem ser ULTRA-ESPECÍFICOS, EXTREMAMENTE DETALHADOS e CONTEXTUALIZADOS ao tema "${tema}" em ${disciplina}
 - Adapte o conteúdo visual à faixa etária de ${serie} - use linguagem visual apropriada para a idade
 - Inclua elementos do contexto brasileiro quando relevante (fauna, flora, geografia, cultura brasileira)
-- Seja EXTREMAMENTE específico sobre o que deve aparecer na imagem
-- Use linguagem visual descritiva rica em detalhes: cores, texturas, composição, estilo artístico
-- Especifique elementos concretos: objetos, cenários, pessoas, animais, plantas, elementos geométricos
+- Seja EXTREMAMENTE específico sobre o que deve aparecer na imagem - descreva objetos, cenários, cores, composições
+- Use linguagem visual descritiva rica em detalhes: cores específicas, texturas detalhadas, composição visual, estilo artístico
+- Especifique elementos concretos e tangíveis: objetos físicos, cenários reais, pessoas, animais, plantas, elementos geométricos, equipamentos
 - NUNCA mencione texto, palavras, letras, números ou símbolos - isso será tratado automaticamente pelo sistema
-- Foque em elementos visuais puros: formas, cores, objetos, cenários, composições
+- Foque em elementos visuais puros: formas, cores, objetos, cenários, composições, materiais, texturas
+- Para cada prompt, imagine que você está descrevendo uma cena para um artista que nunca viu o conceito antes
+- Use pelo menos 3-4 características visuais específicas em cada prompt (cor, forma, textura, composição)
+- Inclua elementos de profundidade e composição visual (primeiro plano, segundo plano, fundo)
 
 ESTRUTURA OBRIGATÓRIA:
 - Slide 1: Capa com título e informações básicas
@@ -267,7 +270,7 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "tema": "${tema}",
   "duracao": "[duração adequada para apresentar slides sobre ${tema}]",
   "bncc": "[códigos BNCC relevantes para ${tema} em ${disciplina}]",
-  "tema_imagem": "Vibrant educational illustration showcasing ${tema} in Brazilian ${disciplina} context for ${serie} students. Rich colorful composition featuring [DESCREVA ESPECIFICAMENTE elementos visuais relacionados ao tema]. Brazilian educational style, high quality artwork, detailed visual elements, bright engaging colors, clean professional design",
+  "tema_imagem": "Ultra-detailed vibrant educational illustration showcasing the core concept of ${tema} in Brazilian ${disciplina} context for ${serie} students. Rich colorful composition featuring [DESCREVA ESPECIFICAMENTE 4-5 elementos visuais únicos relacionados ao tema com cores, formas, texturas e posicionamento detalhados]. Professional Brazilian educational artwork with bright engaging colors, clean modern design, high-quality detailed visual elements, perfect lighting and depth",
   "slide_1_titulo": "${tema}",
   "slide_1_subtitulo": "Aula de ${disciplina} - ${serie}",
   "objetivo_1": "[OBJETIVO 1 específico sobre ${tema}]",
@@ -275,25 +278,25 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "objetivo_3": "[OBJETIVO 3 específico sobre ${tema}]",
   "objetivo_4": "[OBJETIVO 4 específico sobre ${tema}]",
   "introducao_texto": "[INTRODUÇÃO específica sobre ${tema} - explicação clara do que será aprendido]",
-  "introducao_imagem": "Colorful introductory illustration about ${tema} in Brazilian ${disciplina} education for ${serie}. Shows [DESCREVA elementos específicos que introduzem o tema visualmente]. Vibrant educational artwork, engaging composition, age-appropriate visual style, Brazilian cultural context",
+  "introducao_imagem": "Captivating introductory scene about ${tema} in Brazilian ${disciplina} education for ${serie}. Detailed composition showing [DESCREVA especificamente 3-4 elementos que introduzem o tema visualmente com cores, posições, texturas e materiais]. Warm inviting colors, engaging educational atmosphere, professional artwork with depth and visual interest, modern Brazilian pedagogical style",
   "conceitos_texto": "[CONCEITOS fundamentais específicos sobre ${tema} - definição clara e didática]",
   "conceito_principal": "[CONCEITO principal de ${tema} - definição concisa e precisa]",
-  "conceitos_imagem": "Educational infographic-style illustration demonstrating key concepts of ${tema} for Brazilian ${disciplina} in ${serie}. Visual representation of [DESCREVA os conceitos específicos visualmente]. Clean infographic design, bright Brazilian educational colors, clear visual hierarchy, engaging layout",
+  "conceitos_imagem": "Professional educational infographic-style illustration demonstrating key concepts of ${tema} for Brazilian ${disciplina} in ${serie}. Sophisticated visual representation featuring [DESCREVA os conceitos específicos visualmente com objetos concretos, cores vibrantes, formas geométricas, materiais e texturas]. Clean infographic design with bright Brazilian educational colors, clear visual hierarchy, engaging modern layout with excellent contrast and readability",
   "desenvolvimento_1_titulo": "[TÍTULO do primeiro aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_1_texto": "[EXPLICAÇÃO detalhada do primeiro aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_1_imagem": "Detailed educational artwork showing first key aspect of ${tema} in Brazilian ${disciplina} context. Illustrates [DESCREVA especificamente o primeiro aspecto visual com detalhes ricos]. Professional educational illustration, vibrant colors, age-appropriate for ${serie}, Brazilian educational style, high quality composition",
+  "desenvolvimento_1_imagem": "Extremely detailed educational artwork showcasing the first critical aspect of ${tema} in Brazilian ${disciplina} context. Rich visual composition illustrating [DESCREVA especificamente o primeiro aspecto com 4-5 elementos visuais únicos: objetos específicos, cenários detalhados, cores precisas, texturas, materiais, posicionamento]. Professional high-quality educational illustration with vibrant colors, perfect for ${serie} students, Brazilian educational excellence, exceptional visual depth and clarity",
   "desenvolvimento_2_titulo": "[TÍTULO do segundo aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_2_texto": "[EXPLICAÇÃO detalhada do segundo aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_2_imagem": "Comprehensive visual representation of second aspect of ${tema} in Brazilian ${disciplina} education. Features [DESCREVA especificamente o segundo aspecto com elementos visuais detalhados]. Rich educational artwork, engaging colors, suitable for ${serie} students, Brazilian context, professional quality",
+  "desenvolvimento_2_imagem": "Comprehensive ultra-detailed visual representation of the second key aspect of ${tema} in Brazilian ${disciplina} education. Sophisticated composition featuring [DESCREVA especificamente o segundo aspecto com elementos visuais únicos: equipamentos, materiais, cenários, pessoas, objetos, cores específicas, texturas, iluminação]. Rich educational artwork with engaging colors, perfectly suited for ${serie} students, Brazilian cultural context, professional quality with outstanding visual appeal",
   "desenvolvimento_3_titulo": "[TÍTULO do terceiro aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_3_texto": "[EXPLICAÇÃO detalhada do terceiro aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_3_imagem": "Educational illustration depicting third important element of ${tema} in Brazilian ${disciplina} curriculum. Showcases [DESCREVA especificamente o terceiro aspecto com detalhes visuais]. Colorful educational design, age-appropriate for ${serie}, Brazilian educational approach, high-quality artwork",
+  "desenvolvimento_3_imagem": "Masterful educational illustration depicting the third essential element of ${tema} in Brazilian ${disciplina} curriculum. Detailed visual showcase featuring [DESCREVA especificamente o terceiro aspecto com elementos concretos: objetos físicos, cenários reais, materiais específicos, cores vibrantes, texturas, composição visual]. Colorful educational design perfectly adapted for ${serie}, Brazilian educational methodology, high-quality artistic execution with remarkable detail and visual storytelling",
   "desenvolvimento_4_titulo": "[TÍTULO do quarto aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_4_texto": "[EXPLICAÇÃO detalhada do quarto aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_4_imagem": "Professional educational artwork illustrating fourth key component of ${tema} for Brazilian ${disciplina}. Demonstrates [DESCREVA especificamente o quarto aspecto com elementos visuais ricos]. Vibrant educational illustration, engaging design for ${serie}, Brazilian pedagogical style, detailed composition",
+  "desenvolvimento_4_imagem": "Professional ultra-detailed educational artwork illustrating the fourth key component of ${tema} for Brazilian ${disciplina}. Exceptional visual composition demonstrating [DESCREVA especificamente o quarto aspecto com elementos visuais ricos: materiais didáticos, equipamentos, cenários educacionais, cores específicas, texturas, profundidade visual]. Vibrant educational illustration with outstanding design for ${serie}, Brazilian pedagogical style, detailed artistic composition with perfect educational clarity and visual impact",
   "exemplo_titulo": "[TÍTULO do exemplo prático de ${tema}]",
   "exemplo_conteudo": "[EXEMPLO PRÁTICO concreto e específico sobre ${tema} - situação real onde o tema se aplica]",
-  "exemplo_imagem": "Realistic educational scene showing practical application of ${tema} in Brazilian context for ${disciplina}. Depicts [DESCREVA especificamente o exemplo prático com cenário detalhado]. High-quality realistic illustration, Brazilian setting, educational purpose for ${serie}, engaging visual storytelling, professional artwork",
+  "exemplo_imagem": "Realistic ultra-detailed educational scene showing practical application of ${tema} in authentic Brazilian context for ${disciplina}. Vivid composition depicting [DESCREVA especificamente o exemplo prático com cenário completo: ambiente, pessoas, objetos, ações, materiais, cores, texturas, iluminação natural]. High-quality realistic illustration with Brazilian setting, educational purpose perfectly aligned with ${serie}, engaging visual storytelling, professional artwork with exceptional realism and educational value",
   "tabela_titulo": "[TÍTULO de tabela específica sobre ${tema}]",
   "coluna_1": "[cabeçalho coluna 1 sobre ${tema}]",
   "coluna_2": "[cabeçalho coluna 2 sobre ${tema}]",
@@ -320,15 +323,17 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "proximo_passo_3": "[PASSO 3 para continuar estudando ${tema}]"
 }
 
-REGRAS FINAIS PARA PROMPTS DE IMAGEM OTIMIZADOS PARA STABLE DIFFUSION XL:
-1. Cada prompt deve ser único, específico e ultra-detalhado
-2. Use vocabulário visual rico: cores específicas, texturas, composições, estilos artísticos
-3. Adapte a complexidade visual à faixa etária de ${serie}
-4. Inclua contexto brasileiro quando educacionalmente relevante
-5. Seja extremamente específico sobre elementos visuais: objetos, cenários, pessoas, elementos naturais
-6. Use descrições que evoquem qualidade artística: "high quality", "professional artwork", "detailed composition"
-7. Especifique o estilo educacional brasileiro: "Brazilian educational style", "pedagogical approach"
-8. Garanta que cada prompt tenha propósito pedagógico específico e claro
+REGRAS FINAIS PARA PROMPTS DE IMAGEM OTIMIZADOS PARA OPEN-DALLE v1.1:
+1. Cada prompt deve ser único, específico e ULTRA-DETALHADO com pelo menos 4-5 características visuais específicas
+2. Use vocabulário visual extremamente rico: cores específicas (azul royal, verde esmeralda), texturas detalhadas (madeira polida, metal brilhante), composições elaboradas, estilos artísticos precisos
+3. Adapte a complexidade visual à faixa etária de ${serie} - seja específico sobre elementos apropriados para a idade
+4. Inclua contexto brasileiro quando educacionalmente relevante: fauna específica (araras, tucanos), flora (ipês, palmeiras), geografia (cerrado, mata atlântica), elementos culturais
+5. Seja extremamente específico sobre elementos visuais: objetos físicos concretos, cenários detalhados, pessoas em ações específicas, elementos naturais precisos
+6. Use descrições que evoquem qualidade artística excepcional: "high quality", "professional artwork", "detailed composition", "exceptional visual clarity", "outstanding detail"
+7. Especifique o estilo educacional brasileiro: "Brazilian educational excellence", "pedagogical approach", "cultural context"
+8. Garanta que cada prompt tenha propósito pedagógico específico e claro, com elementos visuais que apoiem diretamente o aprendizado
+9. Inclua elementos de profundidade visual: primeiro plano, segundo plano, fundo, perspectiva, iluminação
+10. Descreva materiais e texturas específicas: papel, madeira, metal, tecido, plástico, vidro, pedra, etc.
 
 GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". Adapte à faixa etária de ${serie}. Use português brasileiro correto.
 `;

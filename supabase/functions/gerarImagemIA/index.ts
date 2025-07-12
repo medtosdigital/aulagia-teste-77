@@ -1,5 +1,5 @@
 
-// Edge Function: gerarImagemIA - Stable Diffusion Version
+// Edge Function: gerarImagemIA - Open-DALLE v1.1 Version
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Replicate from "https://esm.sh/replicate@0.30.0";
 
@@ -16,7 +16,7 @@ serve(async (req) => {
 
   try {
     const { prompt } = await req.json();
-    console.log('🎨 Starting STABLE DIFFUSION image generation...');
+    console.log('🎨 Starting OPEN-DALLE v1.1 image generation...');
     console.log('📝 Original prompt:', prompt?.substring(0, 100) + '...');
     
     if (!prompt || typeof prompt !== 'string') {
@@ -44,21 +44,21 @@ serve(async (req) => {
       auth: REPLICATE_API_TOKEN,
     });
 
-    // Sistema Ultra-Inteligente de Otimização de Prompts para Stable Diffusion
+    // Sistema Ultra-Inteligente de Otimização de Prompts para Open-DALLE v1.1
     const ultraIntelligentPromptOptimizer = (originalPrompt: string): string => {
-      console.log('🧠 Applying ultra-intelligent prompt optimization for Stable Diffusion...');
+      console.log('🧠 Applying ultra-intelligent prompt optimization for Open-DALLE v1.1...');
       
       // Análise contextual avançada
       const context = {
-        isMath: /math|geometric|número|forma|cálculo|equação/i.test(originalPrompt),
-        isScience: /science|biology|ciência|biologia|química|física/i.test(originalPrompt),
-        isHistory: /history|história|brasil|cultura/i.test(originalPrompt),
-        isGeography: /geography|geografia|mapa|região/i.test(originalPrompt),
-        isElementary: /elementary|fundamental|criança|infantil/i.test(originalPrompt),
+        isMath: /math|geometric|número|forma|cálculo|equação|geometry|mathematical/i.test(originalPrompt),
+        isScience: /science|biology|ciência|biologia|química|física|scientific|laboratory/i.test(originalPrompt),
+        isHistory: /history|história|brasil|cultura|historical|cultural/i.test(originalPrompt),
+        isGeography: /geography|geografia|mapa|região|geographical|landscape/i.test(originalPrompt),
+        isElementary: /elementary|fundamental|criança|infantil|children|kids/i.test(originalPrompt),
         isBrazilian: /brazilian|brasil|cultura brasileira/i.test(originalPrompt)
       };
 
-      // Simplificação e otimização do prompt para Stable Diffusion
+      // Otimização específica para Open-DALLE v1.1
       let optimizedPrompt = originalPrompt
         .replace(/\b(texto|text|palavra|word|número|number|letra|letter|símbolo|symbol)\b/gi, '')
         .replace(/\b(escrito|written|digitado|typed)\b/gi, '')
@@ -69,54 +69,54 @@ serve(async (req) => {
         optimizedPrompt += ', Brazilian educational context';
       }
 
-      // Especificações de disciplina otimizadas para Stable Diffusion
+      // Especificações de disciplina otimizadas para Open-DALLE v1.1
       if (context.isMath) {
-        optimizedPrompt += ', clean geometric shapes, mathematical concept illustration, educational diagram';
+        optimizedPrompt += ', clean geometric shapes, mathematical concept illustration, educational diagram, colorful math elements';
       } else if (context.isScience) {
-        optimizedPrompt += ', scientific illustration, natural elements, educational science concept';
+        optimizedPrompt += ', scientific illustration, natural elements, educational science concept, laboratory equipment';
       } else if (context.isHistory) {
-        optimizedPrompt += ', Brazilian historical illustration, cultural elements, educational history';
+        optimizedPrompt += ', Brazilian historical illustration, cultural elements, educational history, historical artifacts';
       } else if (context.isGeography) {
-        optimizedPrompt += ', Brazilian geographical illustration, landscape elements, educational geography';
+        optimizedPrompt += ', Brazilian geographical illustration, landscape elements, educational geography, maps and terrain';
       }
 
       // Faixa etária apropriada
       if (context.isElementary) {
-        optimizedPrompt += ', colorful and engaging for children, kid-friendly illustration';
+        optimizedPrompt += ', colorful and engaging for children, kid-friendly illustration, playful educational design';
       }
 
-      // Especificações visuais para Stable Diffusion
-      optimizedPrompt += ', high quality educational illustration, vibrant colors, clean design, detailed artwork';
+      // Especificações visuais otimizadas para Open-DALLE v1.1
+      optimizedPrompt += ', high quality educational illustration, vibrant colors, clean professional design, detailed artwork, modern educational style';
       
-      // ESTRATÉGIA ANTI-TEXTO ULTRA ROBUSTA para Stable Diffusion
-      optimizedPrompt += ', ABSOLUTELY NO TEXT, NO WORDS, NO LETTERS, NO NUMBERS, NO SYMBOLS, NO WRITING, pure visual illustration only, clean image without any textual elements, text-free illustration';
+      // ESTRATÉGIA ANTI-TEXTO ULTRA ROBUSTA para Open-DALLE v1.1
+      optimizedPrompt += ', ABSOLUTELY NO TEXT, NO WORDS, NO LETTERS, NO NUMBERS, NO SYMBOLS, NO WRITING, pure visual illustration only, clean image without any textual elements, text-free educational illustration';
       
-      console.log('✨ Stable Diffusion optimized prompt preview:', optimizedPrompt.substring(0, 150) + '...');
+      console.log('✨ Open-DALLE v1.1 optimized prompt preview:', optimizedPrompt.substring(0, 150) + '...');
       return optimizedPrompt;
     };
 
     // Aplicar otimização ultra-inteligente
     const ultraOptimizedPrompt = ultraIntelligentPromptOptimizer(prompt);
 
-    console.log('🚀 Calling Stable Diffusion with optimized parameters...');
+    console.log('🚀 Calling Open-DALLE v1.1 with optimized parameters...');
     
-    // Parâmetros otimizados para Stable Diffusion
+    // Parâmetros otimizados para Open-DALLE v1.1
     const output = await replicate.run(
-      "stability-ai/stable-diffusion:ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4",
+      "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
       {
         input: {
           prompt: ultraOptimizedPrompt,
           width: 512,
           height: 512,
           num_outputs: 1,
-          num_inference_steps: 50,
           guidance_scale: 7.5,
+          num_inference_steps: 50,
           scheduler: "K_EULER"
         }
       }
     );
 
-    console.log('✅ Stable Diffusion generation completed successfully');
+    console.log('✅ Open-DALLE v1.1 generation completed successfully');
     console.log('📦 Output type:', typeof output, Array.isArray(output) ? 'Array' : 'Object');
     
     if (!output) {
@@ -226,9 +226,9 @@ serve(async (req) => {
     const mimeType = originalFormat === 'webp' ? 'image/webp' : `image/${originalFormat}`;
     const imageDataUrl = `data:${mimeType};base64,${imageB64}`;
     
-    console.log('🎨 STABLE DIFFUSION image generation completed successfully!');
-    console.log('📊 Final Stable Diffusion generation stats:');
-    console.log('  ✓ Model: stability-ai/stable-diffusion (optimized)');
+    console.log('🎨 OPEN-DALLE v1.1 image generation completed successfully!');
+    console.log('📊 Final Open-DALLE v1.1 generation stats:');
+    console.log('  ✓ Model: lucataco/open-dalle-v1.1 (optimized)');
     console.log('  ✓ Size: 512x512px (as requested)');
     console.log('  ✓ Format:', originalFormat);
     console.log('  ✓ File size:', imageSizeKB, 'KB');
@@ -242,14 +242,14 @@ serve(async (req) => {
       success: true, 
       imageUrl: imageDataUrl,
       imageData: imageB64,
-      model: 'stable-diffusion-optimized',
+      model: 'open-dalle-v1.1-optimized',
       optimizations: {
         ultraIntelligentContext: true,
         antiTextStrategy: 'ultra-robust',
         brazilianContext: 'fully-integrated',
         educationalOptimization: 'maximum',
         promptSimplification: 'radical',
-        stableDiffusionOptimized: true,
+        openDalleOptimized: true,
         highQualityInference: true
       },
       stats: {
@@ -269,7 +269,7 @@ serve(async (req) => {
     });
     
   } catch (error) {
-    console.error('❌ CRITICAL ERROR in Stable Diffusion gerarImagemIA:', error);
+    console.error('❌ CRITICAL ERROR in Open-DALLE v1.1 gerarImagemIA:', error);
     console.error('📋 Detailed error analysis:');
     console.error('  - Type:', error.constructor.name);
     console.error('  - Message:', error.message);
@@ -294,17 +294,17 @@ serve(async (req) => {
       // Prompt ultra-simplificado para fallback
       const ultraSimpleFallbackPrompt = `${originalPrompt.split('.')[0]}. Simple Brazilian educational illustration, clean design, no text, no symbols, visual only`;
 
-      console.log('📞 Ultra-simple fallback attempt with Stable Diffusion...');
+      console.log('📞 Ultra-simple fallback attempt with Open-DALLE v1.1...');
       const fallbackOutput = await replicate.run(
-        "stability-ai/stable-diffusion:ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4",
+        "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
         {
           input: {
             prompt: ultraSimpleFallbackPrompt,
             width: 512,
             height: 512,
             num_outputs: 1,
-            num_inference_steps: 20,
-            guidance_scale: 7.0
+            guidance_scale: 7.0,
+            num_inference_steps: 25
           }
         }
       );
@@ -322,15 +322,15 @@ serve(async (req) => {
           const fallbackB64 = btoa(fallbackBinaryString);
           const fallbackDataUrl = `data:image/png;base64,${fallbackB64}`;
           
-          console.log('🆘 Ultra-intelligent Stable Diffusion fallback completed successfully');
+          console.log('🆘 Ultra-intelligent Open-DALLE v1.1 fallback completed successfully');
           
           return new Response(JSON.stringify({ 
             success: true, 
             imageUrl: fallbackDataUrl,
             imageData: fallbackB64,
-            model: 'stable-diffusion-ultra-fallback',
+            model: 'open-dalle-v1.1-ultra-fallback',
             fallback: true,
-            warning: 'Generated using ultra-simplified Stable Diffusion fallback due to primary generation failure',
+            warning: 'Generated using ultra-simplified Open-DALLE v1.1 fallback due to primary generation failure',
             textPlacementSuggestion: 'Coloque texto nas bordas da imagem para melhor legibilidade.'
           }), { 
             status: 200,
@@ -339,13 +339,13 @@ serve(async (req) => {
         }
       }
     } catch (fallbackError) {
-      console.error('❌ Ultra-intelligent Stable Diffusion fallback also failed:', fallbackError.message);
+      console.error('❌ Ultra-intelligent Open-DALLE v1.1 fallback also failed:', fallbackError.message);
     }
     
     // Resposta de erro final com sugestão
     return new Response(JSON.stringify({ 
       success: false, 
-      error: `Erro na geração com Stable Diffusion: ${error.message}`,
+      error: `Erro na geração com Open-DALLE v1.1: ${error.message}`,
       errorType: error.constructor.name,
       timestamp: new Date().toISOString(),
       troubleshooting: 'Verifique a conectividade e tente novamente. Sistema de fallback também falhou.',
