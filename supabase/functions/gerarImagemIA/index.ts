@@ -1,5 +1,5 @@
 
-// Edge Function: gerarImagemIA - Open-DALLE v1.1 Version
+// Edge Function: gerarImagemIA - Open-DALLE v1.1 Version with Negative Prompt
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Replicate from "https://esm.sh/replicate@0.30.0";
 
@@ -16,7 +16,7 @@ serve(async (req) => {
 
   try {
     const { prompt } = await req.json();
-    console.log('🎨 Starting OPEN-DALLE v1.1 image generation...');
+    console.log('🎨 Starting OPEN-DALLE v1.1 image generation with negative prompt...');
     console.log('📝 Original prompt:', prompt?.substring(0, 100) + '...');
     
     if (!prompt || typeof prompt !== 'string') {
@@ -95,17 +95,54 @@ serve(async (req) => {
       return optimizedPrompt;
     };
 
+    // Sistema de Negative Prompt Ultra-Avançado
+    const generateUltraRobustNegativePrompt = (): string => {
+      console.log('🚫 Generating ultra-robust negative prompt for Open-DALLE v1.1...');
+      
+      const negativePrompt = [
+        // Elementos textuais proibidos
+        'text, words, letters, numbers, symbols, writing, typography, fonts, captions, labels, signs, banners',
+        'written text, printed text, handwritten text, digital text, overlaid text, watermarks, logos',
+        'mathematical equations, formulas, calculations, numeric values, percentages, fractions',
+        
+        // Qualidade baixa proibida
+        'low quality, blurry, pixelated, distorted, grainy, noisy, artifacts, compression artifacts',
+        'low resolution, poor quality, bad quality, worst quality, amateur, unprofessional',
+        'jpeg artifacts, digital noise, color banding, oversaturated, undersaturated',
+        
+        // Elementos visuais indesejados
+        'cluttered, messy, chaotic, confusing, overwhelming, busy background',
+        'dark, gloomy, scary, inappropriate, violent, disturbing content',
+        'commercial logos, brand names, advertisements, promotional content',
+        
+        // Problemas técnicos
+        'deformed, malformed, broken, incomplete, cut off, cropped badly',
+        'duplicate elements, repetitive patterns, mirror effects, kaleidoscope',
+        'wrong proportions, anatomical errors, perspective issues',
+        
+        // Contextos inadequados para educação
+        'adult content, inappropriate themes, complex adult concepts',
+        'religious symbols, political content, controversial topics',
+        'outdated references, culturally insensitive content'
+      ].join(', ');
+      
+      console.log('🚫 Ultra-robust negative prompt generated:', negativePrompt.substring(0, 100) + '...');
+      return negativePrompt;
+    };
+
     // Aplicar otimização ultra-inteligente
     const ultraOptimizedPrompt = ultraIntelligentPromptOptimizer(prompt);
+    const ultraRobustNegativePrompt = generateUltraRobustNegativePrompt();
 
-    console.log('🚀 Calling Open-DALLE v1.1 with optimized parameters...');
+    console.log('🚀 Calling Open-DALLE v1.1 with optimized parameters and negative prompt...');
     
-    // Parâmetros otimizados para Open-DALLE v1.1
+    // Parâmetros otimizados para Open-DALLE v1.1 com negative prompt
     const output = await replicate.run(
       "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
       {
         input: {
           prompt: ultraOptimizedPrompt,
+          negative_prompt: ultraRobustNegativePrompt,
           width: 512,
           height: 512,
           num_outputs: 1,
@@ -116,7 +153,7 @@ serve(async (req) => {
       }
     );
 
-    console.log('✅ Open-DALLE v1.1 generation completed successfully');
+    console.log('✅ Open-DALLE v1.1 generation completed successfully with negative prompt');
     console.log('📦 Output type:', typeof output, Array.isArray(output) ? 'Array' : 'Object');
     
     if (!output) {
@@ -226,13 +263,14 @@ serve(async (req) => {
     const mimeType = originalFormat === 'webp' ? 'image/webp' : `image/${originalFormat}`;
     const imageDataUrl = `data:${mimeType};base64,${imageB64}`;
     
-    console.log('🎨 OPEN-DALLE v1.1 image generation completed successfully!');
+    console.log('🎨 OPEN-DALLE v1.1 image generation completed successfully with negative prompt!');
     console.log('📊 Final Open-DALLE v1.1 generation stats:');
     console.log('  ✓ Model: lucataco/open-dalle-v1.1 (optimized)');
     console.log('  ✓ Size: 512x512px (as requested)');
     console.log('  ✓ Format:', originalFormat);
     console.log('  ✓ File size:', imageSizeKB, 'KB');
     console.log('  ✓ Anti-text strategy: ULTRA ROBUST');
+    console.log('  ✓ Negative prompt: ULTRA ADVANCED');
     console.log('  ✓ Brazilian context: FULLY INTEGRATED');
     console.log('  ✓ Educational optimization: MAXIMUM');
     console.log('  ✓ Inference steps: 50 (high quality)');
@@ -242,15 +280,17 @@ serve(async (req) => {
       success: true, 
       imageUrl: imageDataUrl,
       imageData: imageB64,
-      model: 'open-dalle-v1.1-optimized',
+      model: 'open-dalle-v1.1-optimized-with-negative-prompt',
       optimizations: {
         ultraIntelligentContext: true,
         antiTextStrategy: 'ultra-robust',
+        negativePrompt: 'ultra-advanced',
         brazilianContext: 'fully-integrated',
         educationalOptimization: 'maximum',
         promptSimplification: 'radical',
         openDalleOptimized: true,
-        highQualityInference: true
+        highQualityInference: true,
+        qualityEnhancement: 'negative-prompt-enabled'
       },
       stats: {
         sizeKB: imageSizeKB,
@@ -260,7 +300,8 @@ serve(async (req) => {
         originalFormat: originalFormat,
         inferenceSteps: 50,
         guidanceScale: 7.5,
-        scheduler: 'K_EULER'
+        scheduler: 'K_EULER',
+        negativePromptEnabled: true
       },
       textPlacementSuggestion: 'Utilize a área superior ou inferior da imagem para sobreposição de texto, mantendo o centro livre para o conteúdo visual principal.'
     }), { 
@@ -275,8 +316,8 @@ serve(async (req) => {
     console.error('  - Message:', error.message);
     console.error('  - Stack preview:', error.stack?.substring(0, 300));
     
-    // Sistema de fallback ultra-inteligente
-    console.log('🔄 Activating ultra-intelligent fallback system...');
+    // Sistema de fallback ultra-inteligente com negative prompt
+    console.log('🔄 Activating ultra-intelligent fallback system with negative prompt...');
     
     try {
       const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN');
@@ -293,13 +334,17 @@ serve(async (req) => {
       
       // Prompt ultra-simplificado para fallback
       const ultraSimpleFallbackPrompt = `${originalPrompt.split('.')[0]}. Simple Brazilian educational illustration, clean design, no text, no symbols, visual only`;
+      
+      // Negative prompt simplificado para fallback
+      const simpleFallbackNegativePrompt = 'text, words, letters, numbers, low quality, blurry, distorted';
 
-      console.log('📞 Ultra-simple fallback attempt with Open-DALLE v1.1...');
+      console.log('📞 Ultra-simple fallback attempt with Open-DALLE v1.1 and negative prompt...');
       const fallbackOutput = await replicate.run(
         "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
         {
           input: {
             prompt: ultraSimpleFallbackPrompt,
+            negative_prompt: simpleFallbackNegativePrompt,
             width: 512,
             height: 512,
             num_outputs: 1,
@@ -322,15 +367,15 @@ serve(async (req) => {
           const fallbackB64 = btoa(fallbackBinaryString);
           const fallbackDataUrl = `data:image/png;base64,${fallbackB64}`;
           
-          console.log('🆘 Ultra-intelligent Open-DALLE v1.1 fallback completed successfully');
+          console.log('🆘 Ultra-intelligent Open-DALLE v1.1 fallback with negative prompt completed successfully');
           
           return new Response(JSON.stringify({ 
             success: true, 
             imageUrl: fallbackDataUrl,
             imageData: fallbackB64,
-            model: 'open-dalle-v1.1-ultra-fallback',
+            model: 'open-dalle-v1.1-ultra-fallback-with-negative-prompt',
             fallback: true,
-            warning: 'Generated using ultra-simplified Open-DALLE v1.1 fallback due to primary generation failure',
+            warning: 'Generated using ultra-simplified Open-DALLE v1.1 fallback with negative prompt due to primary generation failure',
             textPlacementSuggestion: 'Coloque texto nas bordas da imagem para melhor legibilidade.'
           }), { 
             status: 200,
@@ -339,13 +384,13 @@ serve(async (req) => {
         }
       }
     } catch (fallbackError) {
-      console.error('❌ Ultra-intelligent Open-DALLE v1.1 fallback also failed:', fallbackError.message);
+      console.error('❌ Ultra-intelligent Open-DALLE v1.1 fallback with negative prompt also failed:', fallbackError.message);
     }
     
     // Resposta de erro final com sugestão
     return new Response(JSON.stringify({ 
       success: false, 
-      error: `Erro na geração com Open-DALLE v1.1: ${error.message}`,
+      error: `Erro na geração com Open-DALLE v1.1 e negative prompt: ${error.message}`,
       errorType: error.constructor.name,
       timestamp: new Date().toISOString(),
       troubleshooting: 'Verifique a conectividade e tente novamente. Sistema de fallback também falhou.',
