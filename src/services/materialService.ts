@@ -165,7 +165,7 @@ class MaterialService {
   }
 
   private async generateImagesForSlides(slidesContent: any, formData: MaterialFormData): Promise<any> {
-    console.log('🎨 Generating images for slides...');
+    console.log('🎨 Generating images for slides with improved prompts...');
     
     // Lista de campos de imagem nos slides com suas prioridades
     const imageFields = [
@@ -185,17 +185,12 @@ class MaterialService {
       const prompt = slidesContent[field];
       if (prompt && typeof prompt === 'string' && prompt.trim() !== '') {
         try {
-          console.log(`🎨 Generating image for ${field}:`, prompt);
+          console.log(`🎨 Generating image for ${field} with optimized prompt:`, prompt.substring(0, 100) + '...');
           
-          // Melhorar o prompt baseado no contexto educacional
-          const tema = formData.tema || formData.topic || '';
-          const disciplina = formData.disciplina || formData.subject || '';
-          const serie = formData.serie || formData.grade || '';
-          
-          const enhancedPrompt = `Educational illustration for ${disciplina} class about ${tema} for ${serie} students: ${prompt}. Clean, colorful, child-friendly, no text, no words, no letters, simple educational style`;
-          
+          // Passar o prompt original otimizado diretamente para gerarImagemIA
+          // O prompt já vem contextualizado e específico do gerarMaterialIA
           const { data, error } = await supabase.functions.invoke('gerarImagemIA', {
-            body: { prompt: enhancedPrompt }
+            body: { prompt: prompt }
           });
 
           if (error) {
@@ -207,7 +202,7 @@ class MaterialService {
             // Salvar tanto a URL quanto os dados base64
             updatedContent[field + '_url'] = data.imageUrl;
             updatedContent[field + '_data'] = data.imageData;
-            console.log(`✅ Image generated for ${field}:`, data.imageUrl.substring(0, 50) + '...');
+            console.log(`✅ Image generated for ${field} successfully`);
           } else {
             console.warn(`⚠️ No image URL returned for ${field}`);
           }

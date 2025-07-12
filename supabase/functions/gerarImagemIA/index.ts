@@ -41,23 +41,23 @@ serve(async (req) => {
       auth: REPLICATE_API_TOKEN,
     });
 
-    // Melhorar o prompt com estilo educacional consistente
-    const enhancedPrompt = `${prompt.substring(0, 800)}. Clean, colorful, child-friendly educational illustration, no text, no words, no letters, simple educational style, with a soft golden or light golden background, warm tones, elegant but playful look, consistent lighting, high-resolution, professional educational content, vibrant colors, suitable for children`;
+    // Usar o prompt original já otimizado pela IA do gerarMaterialIA, apenas adicionando instruções anti-texto
+    const finalPrompt = `${prompt}. IMPORTANTE: nenhum texto, palavra, letra, número, símbolo escrito ou caractere deve aparecer na imagem. Ilustração limpa sem elementos textuais. Estilo educativo brasileiro colorido e atrativo para estudantes.`;
 
     console.log('📞 Calling Replicate API with FLUX model...');
     
-    // Usar FLUX model que é mais estável e confiável
+    // Usar FLUX model que é mais estável e confiável para educação
     const output = await replicate.run(
       "black-forest-labs/flux-schnell",
       {
         input: {
-          prompt: enhancedPrompt,
+          prompt: finalPrompt,
           go_fast: true,
           megapixels: "1",
           num_outputs: 1,
           aspect_ratio: "1:1",
           output_format: "webp",
-          output_quality: 80,
+          output_quality: 85,
           num_inference_steps: 4
         }
       }

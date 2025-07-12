@@ -231,6 +231,14 @@ Crie slides educativos ESPECÍFICOS sobre "${tema}" para ${disciplina} na ${seri
 
 IMPORTANTE: TODO O CONTEÚDO deve ser baseado especificamente no tema "${tema}". NÃO use conteúdo genérico.
 
+INSTRUÇÕES CRÍTICAS PARA PROMPTS DE IMAGEM:
+- Todos os prompts de imagem devem ser ESPECÍFICOS, DETALHADOS e CONTEXTUALIZADOS ao tema "${tema}" em ${disciplina}
+- Adapte o conteúdo à faixa etária de ${serie} - use linguagem visual apropriada para a idade
+- Inclua elementos do contexto brasileiro quando relevante (fauna, flora, geografia, cultura)
+- Seja muito específico sobre o que deve aparecer na imagem
+- PROÍBA explicitamente texto, palavras, letras, números ou símbolos escritos nas imagens
+- Especifique cores, estilo, elementos visuais concretos relacionados ao tema
+
 ESTRUTURA OBRIGATÓRIA:
 - Slide 1: Capa com título e informações básicas
 - Slide 2: Objetivos da aula (4 objetivos específicos)
@@ -256,7 +264,7 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "tema": "${tema}",
   "duracao": "[duração adequada para apresentar slides sobre ${tema}]",
   "bncc": "[códigos BNCC relevantes para ${tema} em ${disciplina}]",
-  "tema_imagem": "ilustração educativa sobre ${tema} para ${disciplina}, estilo didático, sem texto",
+  "tema_imagem": "Ilustração educativa detalhada sobre ${tema} para ensino de ${disciplina} em ${serie}. Mostra [DESCREVA ESPECIFICAMENTE o que deve apareear relacionado ao tema]. Estilo didático brasileiro, colorido, sem qualquer texto, palavra, letra, número ou símbolo escrito",
   "slide_1_titulo": "${tema}",
   "slide_1_subtitulo": "Aula de ${disciplina} - ${serie}",
   "objetivo_1": "[OBJETIVO 1 específico sobre ${tema}]",
@@ -264,25 +272,25 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "objetivo_3": "[OBJETIVO 3 específico sobre ${tema}]",
   "objetivo_4": "[OBJETIVO 4 específico sobre ${tema}]",
   "introducao_texto": "[INTRODUÇÃO específica sobre ${tema} - explicação clara do que será aprendido]",
-  "introducao_imagem": "ilustração sobre introdução ao tema ${tema} para ${disciplina}, educativa, sem texto",
+  "introducao_imagem": "Ilustração introdutória sobre ${tema} em ${disciplina} para ${serie}. Mostra [DESCREVA elementos específicos que introduzem o tema]. Estilo educativo brasileiro, sem texto, adequado para a idade",
   "conceitos_texto": "[CONCEITOS fundamentais específicos sobre ${tema} - definição clara e didática]",
   "conceito_principal": "[CONCEITO principal de ${tema} - definição concisa e precisa]",
-  "conceitos_imagem": "diagrama educativo sobre conceitos de ${tema} para ${disciplina}, sem texto",
+  "conceitos_imagem": "Diagrama visual educativo mostrando conceitos de ${tema} para ${disciplina} em ${serie}. Representa visualmente [DESCREVA os conceitos específicos]. Sem qualquer texto ou palavra. Estilo infográfico brasileiro colorido",
   "desenvolvimento_1_titulo": "[TÍTULO do primeiro aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_1_texto": "[EXPLICAÇÃO detalhada do primeiro aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_1_imagem": "ilustração educativa do primeiro aspecto de ${tema} para ${disciplina}, sem texto",
+  "desenvolvimento_1_imagem": "Ilustração educativa específica do primeiro aspecto de ${tema} em ${disciplina}. Mostra [DESCREVA especificamente o primeiro aspecto visual]. Para alunos de ${serie}, sem texto, estilo educativo brasileiro",
   "desenvolvimento_2_titulo": "[TÍTULO do segundo aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_2_texto": "[EXPLICAÇÃO detalhada do segundo aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_2_imagem": "ilustração educativa do segundo aspecto de ${tema} para ${disciplina}, sem texto",
+  "desenvolvimento_2_imagem": "Ilustração educativa específica do segundo aspecto de ${tema} em ${disciplina}. Apresenta [DESCREVA especificamente o segundo aspecto visual]. Adequado para ${serie}, sem palavras, estilo didático brasileiro",
   "desenvolvimento_3_titulo": "[TÍTULO do terceiro aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_3_texto": "[EXPLICAÇÃO detalhada do terceiro aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_3_imagem": "ilustração educativa do terceiro aspecto de ${tema} para ${disciplina}, sem texto",
+  "desenvolvimento_3_imagem": "Ilustração educativa específica do terceiro aspecto de ${tema} em ${disciplina}. Retrata [DESCREVA especificamente o terceiro aspecto]. Para faixa etária de ${serie}, sem símbolos escritos, estilo educacional brasileiro",
   "desenvolvimento_4_titulo": "[TÍTULO do quarto aspecto do desenvolvimento de ${tema}]",
   "desenvolvimento_4_texto": "[EXPLICAÇÃO detalhada do quarto aspecto importante de ${tema} - texto didático e claro]",
-  "desenvolvimento_4_imagem": "ilustração educativa do quarto aspecto de ${tema} para ${disciplina}, sem texto",
+  "desenvolvimento_4_imagem": "Ilustração educativa específica do quarto aspecto de ${tema} em ${disciplina}. Demonstra [DESCREVA especificamente o quarto aspecto visual]. Apropriado para ${serie}, sem letras ou números, estilo pedagógico brasileiro",
   "exemplo_titulo": "[TÍTULO do exemplo prático de ${tema}]",
   "exemplo_conteudo": "[EXEMPLO PRÁTICO concreto e específico sobre ${tema} - situação real onde o tema se aplica]",
-  "exemplo_imagem": "exemplo visual prático de ${tema} aplicado em ${disciplina}, educativo, sem texto",
+  "exemplo_imagem": "Exemplo visual prático de aplicação de ${tema} no contexto brasileiro de ${disciplina}. Ilustra [DESCREVA especificamente o exemplo prático]. Para estudantes de ${serie}, sem qualquer texto escrito, estilo realista educativo",
   "tabela_titulo": "[TÍTULO de tabela específica sobre ${tema}]",
   "coluna_1": "[cabeçalho coluna 1 sobre ${tema}]",
   "coluna_2": "[cabeçalho coluna 2 sobre ${tema}]",
@@ -308,6 +316,15 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
   "proximo_passo_2": "[PASSO 2 para continuar estudando ${tema}]",
   "proximo_passo_3": "[PASSO 3 para continuar estudando ${tema}]"
 }
+
+REGRAS FINAIS PARA PROMPTS DE IMAGEM:
+1. Cada prompt de imagem deve ser único e específico ao contexto
+2. Adapte o vocabulário visual à faixa etária de ${serie}
+3. Inclua referências ao contexto brasileiro quando apropriado
+4. Seja muito detalhado sobre elementos visuais (cores, objetos, cenários)
+5. SEMPRE proíba texto, palavras, letras, números ou símbolos escritos nas imagens
+6. Especifique cores, estilo, elementos visuais concretos relacionados ao tema
+7. Garanta que cada imagem tenha propósito pedagógico específico
 
 GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". Adapte à faixa etária de ${serie}. Use português brasileiro correto.
 `;
@@ -589,30 +606,30 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         if (materialType === 'slides') {
           // Garantir que tema_imagem sempre exista com prompt adequado
           if (!parsedContent.tema_imagem || typeof parsedContent.tema_imagem !== 'string' || parsedContent.tema_imagem.trim() === '') {
-            parsedContent.tema_imagem = `ilustração educativa sobre ${tema} para ${disciplina}, estilo didático, sem texto`;
+            parsedContent.tema_imagem = `Ilustração educativa detalhada sobre ${tema} para ensino de ${disciplina} em ${serie}. Estilo didático brasileiro, colorido, sem qualquer texto, palavra, letra, número ou símbolo escrito`;
           }
           
-          // Garantir outros campos de imagem existam
+          // Garantir outros campos de imagem existam com prompts mais específicos
           if (!parsedContent.introducao_imagem) {
-            parsedContent.introducao_imagem = `ilustração sobre introdução ao tema ${tema} para ${disciplina}, educativa, sem texto`;
+            parsedContent.introducao_imagem = `Ilustração introdutória sobre ${tema} em ${disciplina} para ${serie}. Estilo educativo brasileiro, sem texto, adequado para a idade`;
           }
           if (!parsedContent.conceitos_imagem) {
-            parsedContent.conceitos_imagem = `diagrama educativo sobre conceitos de ${tema} para ${disciplina}, sem texto`;
+            parsedContent.conceitos_imagem = `Diagrama visual educativo mostrando conceitos de ${tema} para ${disciplina} em ${serie}. Sem qualquer texto ou palavra. Estilo infográfico brasileiro colorido`;
           }
           if (!parsedContent.desenvolvimento_1_imagem) {
-            parsedContent.desenvolvimento_1_imagem = `ilustração educativa do primeiro aspecto de ${tema} para ${disciplina}, sem texto`;
+            parsedContent.desenvolvimento_1_imagem = `Ilustração educativa específica do primeiro aspecto de ${tema} em ${disciplina}. Para alunos de ${serie}, sem texto, estilo educativo brasileiro`;
           }
           if (!parsedContent.desenvolvimento_2_imagem) {
-            parsedContent.desenvolvimento_2_imagem = `ilustração educativa do segundo aspecto de ${tema} para ${disciplina}, sem texto`;
+            parsedContent.desenvolvimento_2_imagem = `Ilustração educativa específica do segundo aspecto de ${tema} em ${disciplina}. Adequado para ${serie}, sem palavras, estilo didático brasileiro`;
           }
           if (!parsedContent.desenvolvimento_3_imagem) {
-            parsedContent.desenvolvimento_3_imagem = `ilustração educativa do terceiro aspecto de ${tema} para ${disciplina}, sem texto`;
+            parsedContent.desenvolvimento_3_imagem = `Ilustração educativa específica do terceiro aspecto de ${tema} em ${disciplina}. Retrata [DESCREVA especificamente o terceiro aspecto]. Para faixa etária de ${serie}, sem símbolos escritos, estilo educacional brasileiro`;
           }
           if (!parsedContent.desenvolvimento_4_imagem) {
-            parsedContent.desenvolvimento_4_imagem = `ilustração educativa do quarto aspecto de ${tema} para ${disciplina}, sem texto`;
+            parsedContent.desenvolvimento_4_imagem = `Ilustração educativa específica do quarto aspecto de ${tema} em ${disciplina}. Demonstra [DESCREVA especificamente o quarto aspecto visual]. Apropriado para ${serie}, sem letras ou números, estilo pedagógico brasileiro`;
           }
           if (!parsedContent.exemplo_imagem) {
-            parsedContent.exemplo_imagem = `exemplo visual prático de ${tema} aplicado em ${disciplina}, educativo, sem texto`;
+            parsedContent.exemplo_imagem = `Exemplo visual prático de aplicação de ${tema} no contexto brasileiro de ${disciplina}. Ilustra [DESCREVA especificamente o exemplo prático]. Para estudantes de ${serie}, sem qualquer texto escrito, estilo realista educativo`;
           }
         }
 
