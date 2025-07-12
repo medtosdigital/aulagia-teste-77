@@ -175,6 +175,11 @@ export class TemplateService {
             border-left: 4px solid #ef4444;
             border-radius: 6px;
           }
+
+          .page-break {
+            page-break-before: always;
+            margin-top: 40px;
+          }
           
           @media print {
             body {
@@ -189,6 +194,10 @@ export class TemplateService {
             
             .section {
               page-break-inside: avoid;
+            }
+            
+            .page-break {
+              page-break-before: always;
             }
           }
         </style>
@@ -212,14 +221,14 @@ export class TemplateService {
                 <td>{serie}</td>
               </tr>
               <tr>
-                <th>Tema</th>
-                <td>{tema}</td>
+                <th>BNCC</th>
+                <td>{bncc}</td>
                 <th>Duração</th>
                 <td>{duracao}</td>
               </tr>
               <tr>
-                <th>BNCC</th>
-                <td colspan="3">{bncc}</td>
+                <th>Tema</th>
+                <td colspan="3">{tema}</td>
               </tr>
             </table>
           </div>
@@ -265,25 +274,28 @@ export class TemplateService {
           <div class="section">
             <h3>Conteúdos Programáticos</h3>
             <ul class="objectives-list">
-              {conteudosProgramaticos}
+              {conteudos_programaticos}
             </ul>
           </div>
           
-          <div class="section">
-            <h3>Metodologia</h3>
-            <div class="content-text">{metodologia}</div>
-          </div>
-          
-          <div class="section">
-            <h3>Avaliação</h3>
-            <div class="evaluation-text">{avaliacao}</div>
-          </div>
-          
-          <div class="section">
-            <h3>Referências</h3>
-            <ul class="objectives-list">
-              {referencias}
-            </ul>
+          <!-- PÁGINA 2 -->
+          <div class="page-break">
+            <div class="section">
+              <h3>Metodologia</h3>
+              <div class="content-text">{metodologia}</div>
+            </div>
+            
+            <div class="section">
+              <h3>Avaliação</h3>
+              <div class="evaluation-text">{avaliacao}</div>
+            </div>
+            
+            <div class="section">
+              <h3>Referências</h3>
+              <ul class="objectives-list">
+                {referencias}
+              </ul>
+            </div>
           </div>
         </div>
       </body>
@@ -1724,7 +1736,7 @@ export class TemplateService {
 
       // Handle arrays (like objectives, skills, resources, etc.)
       if (Array.isArray(value)) {
-        if (key === 'objetivos' || key === 'habilidades' || key === 'recursos' || key === 'conteudosProgramaticos' || key === 'referencias') {
+        if (key === 'objetivos' || key === 'habilidades' || key === 'recursos' || key === 'conteudos_programaticos' || key === 'referencias') {
           value = value.map(item => `<li>${item}</li>`).join('');
         } else if (key === 'desenvolvimento') {
           value = value.map(etapa => `
