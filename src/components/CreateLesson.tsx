@@ -13,6 +13,7 @@ import { materialService, GeneratedMaterial } from '@/services/materialService';
 import MaterialModal from './MaterialModal';
 import NextStepsModal from './NextStepsModal';
 import BNCCValidationModal from './BNCCValidationModal';
+import EnhancedBNCCValidationModal from './EnhancedBNCCValidationModal';
 import { UpgradeModal } from './UpgradeModal';
 import BlockedFeature from './BlockedFeature';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
@@ -21,6 +22,8 @@ import { toast } from 'sonner';
 import { activityService } from '@/services/activityService';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { BNCCValidationService } from '@/services/bnccValidationService';
+import { EnhancedBNCCValidationService } from '@/services/enhancedBNCCValidationService';
 
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
 
@@ -41,6 +44,23 @@ interface ValidationResult {
   confidence: number;
   suggestions: string[];
   feedback: string;
+}
+
+interface EnhancedBNCCValidation {
+  overallValid: boolean;
+  individualValidations: IndividualBNCCValidation[];
+  overallFeedback: string;
+  hasPartiallyValid: boolean;
+  validThemes: string[];
+  invalidThemes: string[];
+}
+
+interface IndividualBNCCValidation {
+  tema: string;
+  isValid: boolean;
+  confidence: number;
+  feedback: string;
+  suggestions: string[];
 }
 
 // Cache em memória para listas auxiliares
@@ -127,7 +147,10 @@ const CreateLesson: React.FC = () => {
   const [showMaterialModal, setShowMaterialModal] = useState(false);
   const [showNextStepsModal, setShowNextStepsModal] = useState(false);
   const [showBNCCValidation, setShowBNCCValidation] = useState(false);
+  const [showEnhancedBNCCValidation, setShowEnhancedBNCCValidation] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [enhancedValidationResult, setEnhancedValidationResult] = useState<EnhancedBNCCValidation | null>(null);
+  const [invalidSubjects, setInvalidSubjects] = useState<string[]>([]);
 
   // Hooks para gerenciamento de planos e limites
   const { createMaterial, isLimitReached, getRemainingMaterials, currentPlan, canPerformAction, canEditMaterials, canCreateAssessments } = usePlanPermissions();
@@ -201,16 +224,32 @@ const CreateLesson: React.FC = () => {
         ...formData,
         subjects: newSubjects
       });
+      
+      // Remove from invalid subjects if it was there
+      const removedSubject = formData.subjects[index];
+      if (invalidSubjects.includes(removedSubject)) {
+        setInvalidSubjects(invalidSubjects.filter(s => s !== removedSubject));
+      }
     }
   };
 
   const updateSubject = (index: number, value: string) => {
     const newSubjects = [...formData.subjects];
+    const oldValue = newSubjects[index];
     newSubjects[index] = value;
     setFormData({
       ...formData,
       subjects: newSubjects
     });
+    
+    // Update invalid subjects list
+    if (invalidSubjects.includes(oldValue)) {
+      const updatedInvalidSubjects = invalidSubjects.filter(s => s !== oldValue);
+      if (value && !updatedInvalidSubjects.includes(value)) {
+        // Don't automatically add to invalid - let validation determine
+      }
+      setInvalidSubjects(updatedInvalidSubjects);
+    }
   };
 
   const handleTypeSelection = (type: MaterialType) => {
@@ -278,65 +317,98 @@ const CreateLesson: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     try {
-      // ETAPA 2: Validar tema na BNCC
-      console.log('🔍 Chamando validação BNCC rigorosa');
+      // ETAPA 2: Validar tema(s) na BNCC
+      console.log('🔍 Chamando validação BNCC');
       setGenerationProgress(40);
-      
-      const tema = selectedType === 'avaliacao' 
-        ? formData.subjects.filter(s => s.trim() !== '').join(', ') 
-        : formData.topic;
       
       // Extrair série sem a categoria
       const serieParaValidacao = formData.grade.includes('-') 
         ? formData.grade.split('-')[1] 
         : formData.grade;
       
-      console.log('📋 Dados para validação:', { tema, disciplina: formData.subject, serie: serieParaValidacao });
-      
-      const validationResponse = await supabase.functions.invoke('validarTemaBNCC', {
-        body: { 
-          tema, 
-          disciplina: formData.subject, 
-          serie: serieParaValidacao 
+      if (selectedType === 'avaliacao') {
+        // Para avaliações, usar validação múltipla
+        const temasParaValidacao = formData.subjects.filter(s => s.trim() !== '');
+        console.log('📋 Dados para validação múltipla:', { temas: temasParaValidacao, disciplina: formData.subject, serie: serieParaValidacao });
+        
+        const enhancedValidationData = await EnhancedBNCCValidationService.validateMultipleTopics(
+          temasParaValidacao, 
+          formData.subject, 
+          serieParaValidacao
+        );
+        
+        console.log('📊 Resultado da validação múltipla:', enhancedValidationData);
+        setEnhancedValidationResult(enhancedValidationData);
+        
+        // ETAPA 3: Verificar resultado da validação
+        if (!enhancedValidationData.overallValid) {
+          console.log('⚠️ Nem todos os temas estão alinhados com BNCC - parando processo e abrindo modal de validação');
+          
+          // Marcar temas inválidos
+          setInvalidSubjects(enhancedValidationData.invalidThemes);
+          
+          // FECHAR modal de carregamento
+          setIsGenerating(false);
+          setStep('form');
+          setGenerationProgress(0);
+          
+          // Aguardar transição e abrir modal de validação
+          setTimeout(() => {
+            setShowEnhancedBNCCValidation(true);
+          }, 300);
+          
+          return; // PARAR AQUI - não gerar material
         }
-      });
+      } else {
+        // Para outros tipos, usar validação simples
+        const tema = formData.topic;
+        console.log('📋 Dados para validação simples:', { tema, disciplina: formData.subject, serie: serieParaValidacao });
+        
+        const validationResponse = await supabase.functions.invoke('validarTemaBNCC', {
+          body: { 
+            tema, 
+            disciplina: formData.subject, 
+            serie: serieParaValidacao 
+          }
+        });
 
-      if (validationResponse.error) {
-        console.error('❌ Erro na validação BNCC:', validationResponse.error);
-        throw new Error(validationResponse.error.message);
+        if (validationResponse.error) {
+          console.error('❌ Erro na validação BNCC:', validationResponse.error);
+          throw new Error(validationResponse.error.message);
+        }
+
+        const validationData = validationResponse.data;
+        console.log('📊 Resultado da validação simples:', validationData);
+
+        const validationResult: ValidationResult = {
+          isValid: Boolean(validationData.alinhado),
+          confidence: validationData.alinhado ? 1 : 0,
+          suggestions: Array.isArray(validationData.sugestoes) ? validationData.sugestoes : [],
+          feedback: validationData.mensagem || 'Validação BNCC concluída.'
+        };
+
+        setValidationResult(validationResult);
+
+        // ETAPA 3: Verificar resultado da validação
+        if (!validationResult.isValid) {
+          console.log('⚠️ Tema NÃO alinhado com BNCC - parando processo e abrindo modal de validação');
+          
+          // FECHAR modal de carregamento
+          setIsGenerating(false);
+          setStep('form');
+          setGenerationProgress(0);
+          
+          // Aguardar transição e abrir modal de validação
+          setTimeout(() => {
+            setShowBNCCValidation(true);
+          }, 300);
+          
+          return; // PARAR AQUI - não gerar material
+        }
       }
 
-      const validationData = validationResponse.data;
-      console.log('📊 Resultado da validação BNCC:', validationData);
-
-      const validationResult: ValidationResult = {
-        isValid: Boolean(validationData.alinhado),
-        confidence: validationData.alinhado ? 1 : 0,
-        suggestions: Array.isArray(validationData.sugestoes) ? validationData.sugestoes : [],
-        feedback: validationData.mensagem || 'Validação BNCC concluída.'
-      };
-
-      setValidationResult(validationResult);
-
-      // ETAPA 3: Verificar resultado da validação
-      if (!validationResult.isValid) {
-        console.log('⚠️ Tema NÃO alinhado com BNCC - parando processo e abrindo modal de validação');
-        
-        // FECHAR modal de carregamento
-        setIsGenerating(false);
-        setStep('form');
-        setGenerationProgress(0);
-        
-        // Aguardar transição e abrir modal de validação
-        setTimeout(() => {
-          setShowBNCCValidation(true);
-        }, 300);
-        
-        return; // PARAR AQUI - não gerar material
-      }
-
-      // ETAPA 4: Se chegou aqui, tema está alinhado - continuar com geração
-      console.log('✅ Tema alinhado com BNCC - continuando com geração');
+      // ETAPA 4: Se chegou aqui, tema(s) está(ão) alinhado(s) - continuar com geração
+      console.log('✅ Tema(s) alinhado(s) com BNCC - continuando com geração');
       setGenerationProgress(60);
       
       await realizarGeracao();
@@ -356,6 +428,7 @@ const CreateLesson: React.FC = () => {
   const handleBNCCValidationAccept = async () => {
     console.log('👤 Usuário escolheu gerar material mesmo com tema não alinhado');
     setShowBNCCValidation(false);
+    setShowEnhancedBNCCValidation(false);
     
     // Voltar para modal de carregamento
     setStep('generating');
@@ -371,8 +444,16 @@ const CreateLesson: React.FC = () => {
   const handleBNCCValidationClose = () => {
     console.log('👤 Usuário fechou modal de validação BNCC');
     setShowBNCCValidation(false);
+    setShowEnhancedBNCCValidation(false);
     setValidationResult(null);
+    setEnhancedValidationResult(null);
     // Usuário volta para o formulário para corrigir
+  };
+
+  const handleFixThemes = (invalidThemes: string[]) => {
+    console.log('👤 Usuário escolheu corrigir temas específicos:', invalidThemes);
+    setInvalidSubjects(invalidThemes);
+    // Modal já será fechado pelo componente
   };
 
   const realizarGeracao = async () => {
@@ -569,6 +650,15 @@ const CreateLesson: React.FC = () => {
     return value;
   };
 
+  const getSubjectInputStyle = (subject: string, index: number) => {
+    const isInvalid = invalidSubjects.includes(subject) && subject.trim() !== '';
+    return `h-12 text-base border-2 rounded-xl bg-gray-50 focus:bg-white transition-all ${
+      isInvalid 
+        ? 'border-red-300 focus:border-red-400 bg-red-50' 
+        : 'border-gray-200 focus:border-blue-400'
+    }`;
+  };
+
   if (step === 'selection') {
     return (
       <>
@@ -676,6 +766,17 @@ const CreateLesson: React.FC = () => {
           onAccept={handleBNCCValidationAccept} 
         />
         
+        {/* Modal de validação BNCC avançada (para avaliações) */}
+        <EnhancedBNCCValidationModal 
+          open={showEnhancedBNCCValidation} 
+          onClose={handleBNCCValidationClose} 
+          validationData={enhancedValidationResult}
+          disciplina={formData.subject || ''} 
+          serie={formData.grade} 
+          onAccept={handleBNCCValidationAccept}
+          onFixThemes={handleFixThemes}
+        />
+        
         {/* Modal de visualização do material - aparece primeiro */}
         <MaterialModal 
           material={generatedMaterial} 
@@ -780,29 +881,38 @@ const CreateLesson: React.FC = () => {
                       </p>
                       
                       <div className="space-y-3">
-                        {formData.subjects.map((subject, index) => (
-                          <div key={index} className="flex items-center space-x-3">
-                            <div className="flex-1">
-                              <Input 
-                                placeholder={`Ex: ${index === 0 ? 'Equações do 1º grau' : index === 1 ? 'Sistemas lineares' : 'Funções quadráticas'}`}
-                                value={subject} 
-                                onChange={e => updateSubject(index, e.target.value)} 
-                                className="h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
-                              />
+                        {formData.subjects.map((subject, index) => {
+                          const isInvalid = invalidSubjects.includes(subject) && subject.trim() !== '';
+                          
+                          return (
+                            <div key={index} className="flex items-center space-x-3">
+                              <div className="flex-1">
+                                <Input 
+                                  placeholder={`Ex: ${index === 0 ? 'Equações do 1º grau' : index === 1 ? 'Sistemas lineares' : 'Funções quadráticas'}`}
+                                  value={subject} 
+                                  onChange={e => updateSubject(index, e.target.value)} 
+                                  className={getSubjectInputStyle(subject, index)}
+                                />
+                                {isInvalid && (
+                                  <p className="text-xs text-red-600 mt-1 ml-2">
+                                    Este conteúdo não está alinhado com a BNCC para a série selecionada
+                                  </p>
+                                )}
+                              </div>
+                              {formData.subjects.length > 1 && (
+                                <Button 
+                                  type="button" 
+                                  onClick={() => removeSubject(index)} 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="flex items-center justify-center w-12 h-12 hover:bg-red-50 border-red-200 text-red-500"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              )}
                             </div>
-                            {formData.subjects.length > 1 && (
-                              <Button 
-                                type="button" 
-                                onClick={() => removeSubject(index)} 
-                                variant="outline" 
-                                size="sm" 
-                                className="flex items-center justify-center w-12 h-12 hover:bg-red-50 border-red-200 text-red-500"
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                       
                       {/* Botão Adicionar movido para baixo dos campos */}
@@ -983,7 +1093,7 @@ const CreateLesson: React.FC = () => {
             </div>
           </main>
 
-          {/* Modal de validação BNCC */}
+          {/* Modal de validação BNCC simples (para outros tipos) */}
           <BNCCValidationModal 
             open={showBNCCValidation} 
             onClose={handleBNCCValidationClose} 
@@ -992,6 +1102,17 @@ const CreateLesson: React.FC = () => {
             disciplina={formData.subject || ''} 
             serie={formData.grade} 
             onAccept={handleBNCCValidationAccept} 
+          />
+
+          {/* Modal de validação BNCC avançada (para avaliações) */}
+          <EnhancedBNCCValidationModal 
+            open={showEnhancedBNCCValidation} 
+            onClose={handleBNCCValidationClose} 
+            validationData={enhancedValidationResult}
+            disciplina={formData.subject || ''} 
+            serie={formData.grade} 
+            onAccept={handleBNCCValidationAccept}
+            onFixThemes={handleFixThemes}
           />
 
           {/* Modal de visualização do material - aparece primeiro */}
