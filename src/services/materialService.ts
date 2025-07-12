@@ -1,4 +1,3 @@
-
 import { userMaterialsService, UserMaterial } from './userMaterialsService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -133,10 +132,10 @@ class MaterialService {
       console.log('✅ Content generated successfully with OpenAI');
       let generatedContent = data.content;
       
-      // Se for slides, gerar imagens para os prompts definidos
+      // Se for slides, gerar imagens com o sistema ultra-otimizado
       if (type === 'slides' && generatedContent) {
-        console.log('🎨 Starting optimized image generation for slides...');
-        generatedContent = await this.generateImagesForSlides(generatedContent, formData);
+        console.log('🎨 Starting ULTRA-OPTIMIZED image generation for slides...');
+        generatedContent = await this.generateUltraOptimizedImagesForSlides(generatedContent, formData);
       }
       
       // Map form data to UserMaterial format
@@ -165,77 +164,151 @@ class MaterialService {
     }
   }
 
-  private async generateImagesForSlides(slidesContent: any, formData: MaterialFormData): Promise<any> {
-    console.log('🎨 Starting optimized image generation for slides...');
+  private async generateUltraOptimizedImagesForSlides(slidesContent: any, formData: MaterialFormData): Promise<any> {
+    console.log('🎨 Starting ULTRA-OPTIMIZED image generation for slides v2.0...');
     
-    // Lista de campos de imagem nos slides com suas prioridades
-    const imageFields = [
-      'tema_imagem',          // Slide 1 - Capa (alta prioridade)
-      'introducao_imagem',    // Slide 3 - Introdução
-      'conceitos_imagem',     // Slide 4 - Conceitos
-      'desenvolvimento_1_imagem', // Slide 5
-      'desenvolvimento_2_imagem', // Slide 6
-      'desenvolvimento_3_imagem', // Slide 7
-      'desenvolvimento_4_imagem', // Slide 8
-      'exemplo_imagem'        // Slide 9 - Exemplo prático
+    // Campos de imagem otimizados por prioridade educacional
+    const prioritizedImageFields = [
+      { field: 'tema_imagem', priority: 'high', context: 'capa' },
+      { field: 'introducao_imagem', priority: 'high', context: 'introdução' },
+      { field: 'conceitos_imagem', priority: 'medium', context: 'conceitos' },
+      { field: 'exemplo_imagem', priority: 'high', context: 'exemplo' },
+      { field: 'desenvolvimento_1_imagem', priority: 'medium', context: 'desenvolvimento' },
+      { field: 'desenvolvimento_2_imagem', priority: 'low', context: 'desenvolvimento' },
+      { field: 'desenvolvimento_3_imagem', priority: 'low', context: 'desenvolvimento' },
+      { field: 'desenvolvimento_4_imagem', priority: 'low', context: 'desenvolvimento' }
     ];
 
     const updatedContent = { ...slidesContent };
     let successfulGenerations = 0;
     let totalAttempts = 0;
+    let highPrioritySuccess = 0;
+    let highPriorityTotal = 0;
 
-    for (const field of imageFields) {
+    // Processar campos por prioridade
+    const sortedFields = prioritizedImageFields.sort((a, b) => {
+      const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+      return priorityOrder[a.priority as keyof typeof priorityOrder] - priorityOrder[b.priority as keyof typeof priorityOrder];
+    });
+
+    for (const fieldInfo of sortedFields) {
+      const { field, priority, context } = fieldInfo;
       const prompt = slidesContent[field];
+      
       if (prompt && typeof prompt === 'string' && prompt.trim() !== '') {
         totalAttempts++;
+        if (priority === 'high') highPriorityTotal++;
+        
         try {
-          console.log(`🎨 Generating optimized image for ${field}...`);
-          console.log(`📝 Using intelligent prompt optimization for: ${prompt.substring(0, 100)}...`);
+          console.log(`🎨 Generating ULTRA-OPTIMIZED ${priority} priority image for ${field} (${context})...`);
+          console.log(`📝 Ultra-optimizing prompt: ${prompt.substring(0, 80)}...`);
           
-          // O prompt já vem otimizado do gerarMaterialIA, mas vamos garantir contexto adicional
-          const enhancedPrompt = `${prompt}, educational illustration for Brazilian students, high quality artwork, vibrant colors, clean design, NO TEXT OR WORDS`;
+          // Sistema de otimização contextual por disciplina
+          const contextualPrompt = this.optimizePromptByContext(prompt, formData, context);
+          
+          console.log(`🧠 Contextually optimized prompt: ${contextualPrompt.substring(0, 100)}...`);
 
           const { data, error } = await supabase.functions.invoke('gerarImagemIA', {
-            body: { prompt: enhancedPrompt }
+            body: { prompt: contextualPrompt }
           });
 
           if (error) {
-            console.error(`❌ Error generating image for ${field}:`, error);
-            continue; // Continua para a próxima imagem
+            console.error(`❌ Error generating ultra-optimized image for ${field}:`, error);
+            continue;
           }
 
           if (data?.success && data?.imageUrl) {
-            // Salvar tanto a URL quanto os dados base64
+            // Salvar dados da imagem ultra-otimizada
             updatedContent[field + '_url'] = data.imageUrl;
             updatedContent[field + '_data'] = data.imageData;
-            successfulGenerations++;
             
-            console.log(`✅ Image generated successfully for ${field}`);
+            // Salvar sugestão de posicionamento de texto se disponível
+            if (data.textPlacementSuggestion) {
+              updatedContent[field + '_text_placement'] = data.textPlacementSuggestion;
+            }
+            
+            successfulGenerations++;
+            if (priority === 'high') highPrioritySuccess++;
+            
+            console.log(`✅ ULTRA-OPTIMIZED image generated successfully for ${field} (${priority} priority)`);
             if (data.stats) {
-              console.log(`📊 Image stats - Size: ${data.stats.sizeKB}KB, Format: ${data.stats.mimeType}`);
+              console.log(`📊 Ultra-optimized stats - Size: ${data.stats.sizeKB}KB, Format: ${data.stats.mimeType}`);
             }
           } else {
-            console.warn(`⚠️ No image URL returned for ${field}`);
+            console.warn(`⚠️ No ultra-optimized image URL returned for ${field}`);
           }
 
-          // Delay otimizado entre chamadas para evitar rate limiting
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          // Delay inteligente baseado na prioridade
+          const delay = priority === 'high' ? 2000 : priority === 'medium' ? 1500 : 1000;
+          await new Promise(resolve => setTimeout(resolve, delay));
           
         } catch (error) {
-          console.error(`❌ Exception generating image for ${field}:`, error);
-          continue; // Continua para a próxima imagem mesmo se uma falhar
+          console.error(`❌ Exception in ultra-optimized generation for ${field}:`, error);
+          continue;
         }
       }
     }
 
-    console.log(`🎨 Optimized image generation completed for slides`);
-    console.log(`📊 Generation summary: ${successfulGenerations}/${totalAttempts} images generated successfully`);
+    console.log(`🎨 ULTRA-OPTIMIZED image generation completed for slides v2.0`);
+    console.log(`📊 Ultra-optimization summary:`);
+    console.log(`  ✓ Total: ${successfulGenerations}/${totalAttempts} images generated`);
+    console.log(`  ✓ High Priority: ${highPrioritySuccess}/${highPriorityTotal} critical images`);
+    console.log(`  ✓ Success Rate: ${Math.round((successfulGenerations/totalAttempts) * 100)}%`);
+    console.log(`  ✓ Critical Success Rate: ${Math.round((highPrioritySuccess/highPriorityTotal) * 100)}%`);
     
-    if (successfulGenerations === 0 && totalAttempts > 0) {
-      console.warn('⚠️ No images were generated successfully, but slides content will still be available');
+    // Verificar se pelo menos as imagens de alta prioridade foram geradas
+    if (highPrioritySuccess === 0 && highPriorityTotal > 0) {
+      console.warn('⚠️ CRITICAL: No high-priority images were generated successfully');
+    } else if (highPrioritySuccess >= Math.ceil(highPriorityTotal * 0.7)) {
+      console.log('✅ SUCCESS: Majority of critical images generated successfully');
     }
     
     return updatedContent;
+  }
+
+  private optimizePromptByContext(originalPrompt: string, formData: MaterialFormData, slideContext: string): string {
+    console.log('🧠 Applying contextual prompt optimization...');
+    
+    // Análise da disciplina
+    const subject = (formData.disciplina || formData.subject || '').toLowerCase();
+    const grade = (formData.serie || formData.grade || '').toLowerCase();
+    
+    // Contexto educacional brasileiro
+    let optimizedPrompt = originalPrompt;
+    
+    // Otimizações por disciplina
+    if (subject.includes('matemática') || subject.includes('math')) {
+      optimizedPrompt += ', mathematical concept illustration, geometric shapes, Brazilian educational context';
+    } else if (subject.includes('ciência') || subject.includes('science')) {
+      optimizedPrompt += ', scientific illustration, natural phenomena, Brazilian educational context';
+    } else if (subject.includes('história') || subject.includes('history')) {
+      optimizedPrompt += ', Brazilian historical illustration, cultural elements';
+    } else if (subject.includes('geografia') || subject.includes('geography')) {
+      optimizedPrompt += ', Brazilian geographical illustration, landscape elements';
+    } else if (subject.includes('português') || subject.includes('language')) {
+      optimizedPrompt += ', Brazilian language arts illustration, communication concept';
+    }
+    
+    // Otimizações por contexto do slide
+    if (slideContext === 'capa') {
+      optimizedPrompt += ', attractive cover illustration, engaging title design';
+    } else if (slideContext === 'conceitos') {
+      optimizedPrompt += ', clear concept visualization, explanatory illustration';
+    } else if (slideContext === 'exemplo') {
+      optimizedPrompt += ', practical example illustration, real-world application';
+    }
+    
+    // Otimizações por série
+    if (grade.includes('fundamental') || grade.includes('elementary')) {
+      optimizedPrompt += ', child-friendly illustration, colorful and engaging';
+    } else if (grade.includes('médio') || grade.includes('high')) {
+      optimizedPrompt += ', sophisticated illustration, mature educational design';
+    }
+    
+    // Estratégia anti-texto ultra-robusta contextual
+    optimizedPrompt += ', Brazilian educational illustration, high quality, clean design, ABSOLUTELY NO TEXT, NO WORDS, NO LETTERS, NO NUMBERS, visual elements only';
+    
+    return optimizedPrompt;
   }
 
   async getMaterials(): Promise<GeneratedMaterial[]> {
@@ -295,7 +368,6 @@ class MaterialService {
       if (updates.grade) userMaterialUpdates.grade = updates.grade;
       if (updates.content) userMaterialUpdates.content = JSON.stringify(updates.content);
       if (updates.type) userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
-      // Garantir que o campo type sempre seja enviado
       if (!userMaterialUpdates.type && updates.type) {
         userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
       }
@@ -334,10 +406,7 @@ class MaterialService {
   }
 
   private mapToUserMaterial(type: string, formData: MaterialFormData, content: any): Omit<UserMaterial, 'id' | 'createdAt' | 'status'> {
-    // Get topic/title - handle both single topic and multiple subjects for evaluations
     const title = this.generateTitle(type, formData);
-    
-    // Map type correctly
     const materialType = type === 'plano-de-aula' ? 'plano-aula' : type as 'plano-aula' | 'atividade' | 'slides' | 'avaliacao';
     
     return {
@@ -345,7 +414,7 @@ class MaterialService {
       type: materialType,
       subject: formData.disciplina || formData.subject || 'Não informado',
       grade: formData.serie || formData.grade || 'Não informado',
-      userId: '', // This will be set by userMaterialsService using authenticated user
+      userId: '',
       content: JSON.stringify(content)
     };
   }
@@ -360,14 +429,12 @@ class MaterialService {
     
     const typeLabel = typeLabels[type as keyof typeof typeLabels] || 'Material';
     
-    // For evaluations with multiple subjects, join them
     if (type === 'avaliacao' && formData.assuntos && formData.assuntos.length > 0) {
-      const topics = formData.assuntos.filter(s => s.trim() !== '').slice(0, 2); // Take first 2 topics
+      const topics = formData.assuntos.filter(s => s.trim() !== '').slice(0, 2);
       const topicText = topics.length > 1 ? `${topics[0]} e mais` : topics[0];
       return `${typeLabel} - ${topicText}`;
     }
     
-    // For other types, use the main topic
     const topic = formData.tema || formData.topic || 'Conteúdo Personalizado';
     return `${typeLabel} - ${topic}`;
   }
