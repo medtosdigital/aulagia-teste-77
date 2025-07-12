@@ -1,5 +1,5 @@
 
-// Edge Function: gerarImagemIA - Versão Otimizada 2.0
+// Edge Function: gerarImagemIA
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Replicate from "https://esm.sh/replicate@0.30.0";
 
@@ -16,7 +16,7 @@ serve(async (req) => {
 
   try {
     const { prompt } = await req.json();
-    console.log('🎨 Starting OPTIMIZED image generation v2.0...');
+    console.log('🎨 Starting optimized image generation process...');
     console.log('📝 Original prompt:', prompt?.substring(0, 100) + '...');
     
     if (!prompt || typeof prompt !== 'string') {
@@ -44,80 +44,78 @@ serve(async (req) => {
       auth: REPLICATE_API_TOKEN,
     });
 
-    // Sistema Ultra-Inteligente de Otimização de Prompts v2.0
-    const ultraIntelligentPromptOptimizer = (originalPrompt: string): string => {
-      console.log('🧠 Applying ultra-intelligent prompt optimization...');
+    // Sistema inteligente de contexto para otimizar prompts
+    const intelligentPromptOptimizer = (originalPrompt: string): string => {
+      // Detectar contexto educacional brasileiro
+      const brazilianContext = originalPrompt.toLowerCase().includes('brazilian') || 
+                              originalPrompt.toLowerCase().includes('brasil');
       
-      // Análise contextual avançada
-      const context = {
-        isMath: /math|geometric|número|forma|cálculo|equação/i.test(originalPrompt),
-        isScience: /science|biology|ciência|biologia|química|física/i.test(originalPrompt),
-        isHistory: /history|história|brasil|cultura/i.test(originalPrompt),
-        isGeography: /geography|geografia|mapa|região/i.test(originalPrompt),
-        isElementary: /elementary|fundamental|criança|infantil/i.test(originalPrompt),
-        isBrazilian: /brazilian|brasil|cultura brasileira/i.test(originalPrompt)
-      };
-
-      // Simplificação radical do prompt (estratégia principal)
-      let optimizedPrompt = originalPrompt
-        .replace(/\b(texto|text|palavra|word|número|number|letra|letter|símbolo|symbol)\b/gi, '')
-        .replace(/\b(escrito|written|digitado|typed)\b/gi, '')
-        .trim();
-
-      // Contexto educacional brasileiro essencial
-      if (!context.isBrazilian) {
+      // Detectar faixa etária
+      const isElementary = originalPrompt.toLowerCase().includes('elementary') ||
+                          originalPrompt.toLowerCase().includes('fundamental');
+      
+      // Detectar disciplina
+      const isMath = originalPrompt.toLowerCase().includes('math') ||
+                    originalPrompt.toLowerCase().includes('geometric');
+      const isScience = originalPrompt.toLowerCase().includes('science') ||
+                       originalPrompt.toLowerCase().includes('biology');
+      
+      // Construir prompt otimizado baseado no contexto
+      let optimizedPrompt = originalPrompt;
+      
+      // Adicionar contexto brasileiro se não presente
+      if (!brazilianContext) {
         optimizedPrompt += ', Brazilian educational context';
       }
-
-      // Especificações de disciplina otimizadas
-      if (context.isMath) {
-        optimizedPrompt += ', clean geometric shapes, visual mathematics concept';
-      } else if (context.isScience) {
-        optimizedPrompt += ', scientific illustration, natural elements';
-      } else if (context.isHistory) {
-        optimizedPrompt += ', Brazilian historical illustration';
-      } else if (context.isGeography) {
-        optimizedPrompt += ', Brazilian geographical elements';
-      }
-
-      // Faixa etária apropriada
-      if (context.isElementary) {
-        optimizedPrompt += ', colorful and engaging for children';
-      }
-
-      // Especificações visuais essenciais
-      optimizedPrompt += ', high quality educational illustration, vibrant colors, clean minimalist design';
       
-      // ESTRATÉGIA ANTI-TEXTO ULTRA ROBUSTA
-      optimizedPrompt += ', ABSOLUTELY NO TEXT, NO WORDS, NO LETTERS, NO NUMBERS, NO SYMBOLS, NO WRITING, pure visual illustration only, clean image without any textual elements';
+      // Adicionar especificações de qualidade visual
+      optimizedPrompt += ', high quality educational illustration, vibrant colors, clean design, professional artwork, detailed visual elements';
       
-      console.log('✨ Optimized prompt preview:', optimizedPrompt.substring(0, 150) + '...');
+      // Adicionar especificações por disciplina
+      if (isMath) {
+        optimizedPrompt += ', clear geometric shapes, precise mathematical visualization';
+      }
+      if (isScience) {
+        optimizedPrompt += ', scientific accuracy, educational diagrams';
+      }
+      
+      // Adicionar especificações por faixa etária
+      if (isElementary) {
+        optimizedPrompt += ', age-appropriate for elementary students, engaging and colorful';
+      }
+      
+      // Estratégia anti-texto ULTRA robusta
+      optimizedPrompt += ', NO TEXT, NO WORDS, NO LETTERS, NO WRITING, pure visual content only';
+      
       return optimizedPrompt;
     };
 
-    // Aplicar otimização ultra-inteligente
-    const ultraOptimizedPrompt = ultraIntelligentPromptOptimizer(prompt);
+    // Otimizar prompt com sistema inteligente
+    const optimizedPrompt = intelligentPromptOptimizer(prompt);
 
-    console.log('🚀 Calling Flux Schnell with ULTRA-OPTIMIZED parameters...');
+    console.log('🎯 Optimized prompt with intelligent context:', optimizedPrompt.substring(0, 150) + '...');
     
-    // Parâmetros ultra-otimizados para melhor qualidade
+    // Usar Flux Schnell como modelo principal (mais confiável e rápido)
+    console.log('📞 Calling Flux Schnell with optimized parameters...');
+    
     const output = await replicate.run(
       "black-forest-labs/flux-schnell",
       {
         input: {
-          prompt: ultraOptimizedPrompt,
+          prompt: optimizedPrompt,
           go_fast: true,
           num_outputs: 1,
           aspect_ratio: "1:1",
-          output_format: "webp", // WEBP para melhor compressão
-          output_quality: 90,     // Qualidade alta
-          num_inference_steps: 4  // Otimizado para velocidade
+          output_format: "png",
+          output_quality: 90,
+          num_inference_steps: 4
         }
       }
     );
 
-    console.log('✅ Ultra-optimized generation completed successfully');
-    console.log('📦 Output type:', typeof output, Array.isArray(output) ? 'Array' : 'Object');
+    console.log('✅ Flux Schnell API call completed successfully');
+    console.log('📦 Raw output type:', typeof output);
+    console.log('📦 Raw output structure:', Array.isArray(output) ? 'Array' : 'Object');
     
     if (!output) {
       console.error('❌ No output from Replicate API');
@@ -127,8 +125,10 @@ serve(async (req) => {
     let imageUrl;
     if (Array.isArray(output) && output.length > 0) {
       imageUrl = output[0];
+      console.log('📸 Image URL extracted from array:', imageUrl?.substring(0, 50) + '...');
     } else if (typeof output === 'string') {
       imageUrl = output;
+      console.log('📸 Image URL from string:', imageUrl?.substring(0, 50) + '...');
     } else {
       console.error('❌ Unexpected output format:', output);
       throw new Error('Formato de resposta inesperado da API');
@@ -139,61 +139,69 @@ serve(async (req) => {
       throw new Error('URL da imagem inválida');
     }
 
-    console.log('📥 Downloading image with ultra-robust system...');
+    console.log('📥 Downloading image with robust retry mechanism...');
     
-    // Sistema de download ultra-robusto
+    // Download da imagem com sistema de retry melhorado
     let imageResponse;
-    const maxRetries = 3;
-    let currentRetry = 0;
+    let retries = 3;
+    let delay = 1000; // Começar com 1 segundo
     
-    while (currentRetry < maxRetries) {
+    while (retries > 0) {
       try {
-        console.log(`📡 Download attempt ${currentRetry + 1}/${maxRetries}...`);
+        console.log(`📡 Download attempt ${4 - retries}/3...`);
         
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 25000);
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
         
         imageResponse = await fetch(imageUrl, {
           signal: controller.signal,
           headers: {
-            'User-Agent': 'Mozilla/5.0 (EducationalBot/2.0)',
-            'Accept': 'image/webp,image/*,*/*'
+            'User-Agent': 'Mozilla/5.0 (compatible; EducationalImageBot/1.0)'
           }
         });
         
         clearTimeout(timeoutId);
         
         if (imageResponse.ok) {
-          console.log('✅ Image downloaded successfully');
+          console.log('✅ Image downloaded successfully on attempt', 4 - retries);
           break;
         } else {
-          throw new Error(`HTTP ${imageResponse.status}: ${imageResponse.statusText}`);
+          console.warn(`⚠️ Download failed with status: ${imageResponse.status} - ${imageResponse.statusText}`);
+          retries--;
+          if (retries > 0) {
+            console.log(`⏳ Waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2; // Exponential backoff
+          }
         }
       } catch (error) {
-        currentRetry++;
-        console.warn(`⚠️ Download attempt ${currentRetry} failed:`, error.message);
-        
-        if (currentRetry >= maxRetries) {
-          throw new Error('Falha ao baixar imagem após todas as tentativas');
+        console.warn(`⚠️ Download attempt failed with error:`, error.message);
+        retries--;
+        if (retries > 0) {
+          console.log(`⏳ Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2; // Exponential backoff
         }
-        
-        // Delay exponencial entre tentativas
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, currentRetry) * 1000));
       }
     }
 
-    console.log('📊 Processing downloaded image...');
+    if (!imageResponse || !imageResponse.ok) {
+      console.error('❌ All download attempts failed');
+      throw new Error('Falha ao baixar imagem após todas as tentativas');
+    }
+
+    console.log('✅ Image downloaded successfully');
     const imageArrayBuffer = await imageResponse.arrayBuffer();
     const imageSizeKB = Math.round(imageArrayBuffer.byteLength / 1024);
     console.log('📦 Image size:', imageSizeKB, 'KB');
     
-    // Conversão ultra-otimizada para base64
-    console.log('🔄 Converting to base64 with ultra-optimized method...');
+    // Conversão otimizada e simplificada para base64
+    console.log('🔄 Converting to base64 with optimized method...');
     
     const uint8Array = new Uint8Array(imageArrayBuffer);
     
-    // Método de conversão otimizado em chunks menores
-    const chunkSize = 4096;
+    // Método otimizado para conversão base64 (mais eficiente)
+    const chunkSize = 8192; // 8KB chunks para melhor performance
     const chunks: string[] = [];
     
     for (let i = 0; i < uint8Array.length; i += chunkSize) {
@@ -204,75 +212,67 @@ serve(async (req) => {
     const binaryString = chunks.join('');
     const imageB64 = btoa(binaryString);
     
-    console.log('✅ Ultra-optimized base64 conversion completed');
-    console.log('📊 Base64 size:', Math.round(imageB64.length / 1024), 'KB');
+    console.log('✅ Base64 conversion completed successfully');
+    console.log('📊 Base64 length:', Math.round(imageB64.length / 1024), 'KB');
     
-    // Detecção inteligente de MIME type
-    let mimeType = 'image/webp'; // Default para WEBP otimizado
-    const signature = uint8Array.slice(0, 12);
+    // Detectar formato da imagem com precisão
+    let mimeType = 'image/png'; // Default para PNG
+    const signature = uint8Array.slice(0, 8);
     
-    // Detecção precisa do formato
     if (signature[0] === 0xFF && signature[1] === 0xD8) {
       mimeType = 'image/jpeg';
     } else if (signature[0] === 0x89 && signature[1] === 0x50 && signature[2] === 0x4E && signature[3] === 0x47) {
       mimeType = 'image/png';
     } else if (signature[0] === 0x47 && signature[1] === 0x49 && signature[2] === 0x46) {
       mimeType = 'image/gif';
-    } else if (signature[0] === 0x52 && signature[1] === 0x49 && signature[2] === 0x46 && signature[3] === 0x46 &&
-               signature[8] === 0x57 && signature[9] === 0x45 && signature[10] === 0x42 && signature[11] === 0x50) {
+    } else if (signature[0] === 0x52 && signature[1] === 0x49 && signature[2] === 0x46 && signature[3] === 0x46) {
       mimeType = 'image/webp';
     }
     
     const imageDataUrl = `data:${mimeType};base64,${imageB64}`;
     
-    console.log('🎨 ULTRA-OPTIMIZED image generation completed successfully!');
-    console.log('📊 Final ultra-optimization stats:');
-    console.log('  ✓ Model: black-forest-labs/flux-schnell (ultra-optimized)');
-    console.log('  ✓ Format: WEBP (optimized compression)');
-    console.log('  ✓ Quality: 90% (high quality)');
+    console.log('🎨 Image generation completed successfully!');
+    console.log('📊 Final generation stats:');
+    console.log('  ✓ Model: black-forest-labs/flux-schnell (optimized)');
     console.log('  ✓ Size:', imageSizeKB, 'KB');
-    console.log('  ✓ Anti-text strategy: ULTRA ROBUST');
-    console.log('  ✓ Brazilian context: FULLY INTEGRATED');
-    console.log('  ✓ Educational optimization: MAXIMUM');
-    console.log('  ✓ Prompt simplification: RADICAL');
+    console.log('  ✓ Format:', mimeType);
+    console.log('  ✓ Quality: High (90%)');
+    console.log('  ✓ Anti-text strategy: Enhanced');
+    console.log('  ✓ Brazilian context: Integrated');
+    console.log('  ✓ Educational optimization: Active');
     
     return new Response(JSON.stringify({ 
       success: true, 
       imageUrl: imageDataUrl,
       imageData: imageB64,
-      model: 'flux-schnell-ultra-optimized-v2',
+      model: 'flux-schnell-optimized',
       optimizations: {
-        ultraIntelligentContext: true,
-        antiTextStrategy: 'ultra-robust',
-        brazilianContext: 'fully-integrated',
-        educationalOptimization: 'maximum',
-        promptSimplification: 'radical',
-        webpFormat: true,
-        highQuality: true
+        intelligentContext: true,
+        antiTextStrategy: 'enhanced',
+        brazilianContext: true,
+        educationalOptimization: true
       },
       stats: {
         sizeKB: imageSizeKB,
         mimeType: mimeType,
         base64LengthKB: Math.round(imageB64.length / 1024),
         quality: 90,
-        aspectRatio: '1:1',
-        format: 'webp-optimized'
-      },
-      textPlacementSuggestion: 'Utilize a área superior ou inferior da imagem para sobreposição de texto, mantendo o centro livre para o conteúdo visual principal.'
+        aspectRatio: '1:1'
+      }
     }), { 
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
-    console.error('❌ CRITICAL ERROR in ultra-optimized gerarImagemIA v2.0:', error);
-    console.error('📋 Detailed error analysis:');
+    console.error('❌ Critical error in optimized gerarImagemIA function:', error);
+    console.error('📋 Error analysis:');
     console.error('  - Type:', error.constructor.name);
     console.error('  - Message:', error.message);
-    console.error('  - Stack preview:', error.stack?.substring(0, 300));
+    console.error('  - Stack (first 500 chars):', error.stack?.substring(0, 500));
     
-    // Sistema de fallback ultra-inteligente
-    console.log('🔄 Activating ultra-intelligent fallback system...');
+    // Sistema de fallback melhorado
+    console.log('🔄 Initiating intelligent fallback system...');
     
     try {
       const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN');
@@ -287,48 +287,49 @@ serve(async (req) => {
       const requestBody = await req.json();
       const originalPrompt = requestBody.prompt;
       
-      // Prompt ultra-simplificado para fallback
-      const ultraSimpleFallbackPrompt = `${originalPrompt.split('.')[0]}. Simple Brazilian educational illustration, clean design, no text, no symbols, visual only`;
+      // Prompt simplificado para fallback
+      const fallbackPrompt = `${originalPrompt}. Simple educational illustration, clean design, no text, Brazilian context`;
 
-      console.log('📞 Ultra-simple fallback attempt...');
+      console.log('📞 Attempting fallback with simplified Flux model...');
       const fallbackOutput = await replicate.run(
         "black-forest-labs/flux-schnell",
         {
           input: {
-            prompt: ultraSimpleFallbackPrompt,
+            prompt: fallbackPrompt,
             go_fast: true,
             num_outputs: 1,
             aspect_ratio: "1:1",
-            output_format: "webp",
-            output_quality: 80,
-            num_inference_steps: 4
+            output_format: "png",
+            output_quality: 80
           }
         }
       );
 
+      console.log('✅ Fallback succeeded');
+      
       if (fallbackOutput && Array.isArray(fallbackOutput) && fallbackOutput[0]) {
         const fallbackImageUrl = fallbackOutput[0];
         
-        // Download e conversão simplificada
+        // Download e conversão simplificada para fallback
         const fallbackResponse = await fetch(fallbackImageUrl);
         if (fallbackResponse.ok) {
           const fallbackArrayBuffer = await fallbackResponse.arrayBuffer();
           const fallbackUint8Array = new Uint8Array(fallbackArrayBuffer);
           
+          // Conversão direta e simples
           const fallbackBinaryString = Array.from(fallbackUint8Array, byte => String.fromCharCode(byte)).join('');
           const fallbackB64 = btoa(fallbackBinaryString);
-          const fallbackDataUrl = `data:image/webp;base64,${fallbackB64}`;
+          const fallbackDataUrl = `data:image/png;base64,${fallbackB64}`;
           
-          console.log('🆘 Ultra-intelligent fallback completed successfully');
+          console.log('🎨 Fallback image generation completed successfully');
           
           return new Response(JSON.stringify({ 
             success: true, 
             imageUrl: fallbackDataUrl,
             imageData: fallbackB64,
-            model: 'flux-schnell-ultra-fallback',
+            model: 'flux-schnell-fallback',
             fallback: true,
-            warning: 'Generated using ultra-simplified fallback due to primary generation failure',
-            textPlacementSuggestion: 'Coloque texto nas bordas da imagem para melhor legibilidade.'
+            warning: 'Generated using simplified fallback due to primary generation failure'
           }), { 
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -336,17 +337,16 @@ serve(async (req) => {
         }
       }
     } catch (fallbackError) {
-      console.error('❌ Ultra-intelligent fallback also failed:', fallbackError.message);
+      console.error('❌ Fallback system also failed:', fallbackError.message);
     }
     
-    // Resposta de erro final com sugestão
+    // Resposta de erro final com informações detalhadas
     return new Response(JSON.stringify({ 
       success: false, 
-      error: `Erro na geração ultra-otimizada: ${error.message}`,
+      error: `Erro na geração de imagem: ${error.message}`,
       errorType: error.constructor.name,
       timestamp: new Date().toISOString(),
-      troubleshooting: 'Verifique a conectividade e tente novamente. Sistema de fallback também falhou.',
-      suggestion: 'Considere simplificar o prompt ou usar um tema mais básico para a geração de imagem.'
+      troubleshooting: 'Verifique a conectividade e tente novamente. Se o problema persistir, entre em contato com o suporte.'
     }), { 
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
