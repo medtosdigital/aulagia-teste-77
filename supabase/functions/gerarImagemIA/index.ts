@@ -16,7 +16,7 @@ serve(async (req) => {
 
   try {
     const { prompt } = await req.json();
-    console.log('🎨 Starting image generation process...');
+    console.log('🎨 Starting optimized image generation process...');
     console.log('📝 Original prompt:', prompt?.substring(0, 100) + '...');
     
     if (!prompt || typeof prompt !== 'string') {
@@ -44,36 +44,78 @@ serve(async (req) => {
       auth: REPLICATE_API_TOKEN,
     });
 
-    // Otimizar prompt com estrutura mais robusta contra texto
-    const optimizedPrompt = `${prompt}. High quality educational illustration, clean design, vibrant colors, professional artwork, detailed visual elements, Brazilian educational context, no text, no words, no letters`;
+    // Sistema inteligente de contexto para otimizar prompts
+    const intelligentPromptOptimizer = (originalPrompt: string): string => {
+      // Detectar contexto educacional brasileiro
+      const brazilianContext = originalPrompt.toLowerCase().includes('brazilian') || 
+                              originalPrompt.toLowerCase().includes('brasil');
+      
+      // Detectar faixa etária
+      const isElementary = originalPrompt.toLowerCase().includes('elementary') ||
+                          originalPrompt.toLowerCase().includes('fundamental');
+      
+      // Detectar disciplina
+      const isMath = originalPrompt.toLowerCase().includes('math') ||
+                    originalPrompt.toLowerCase().includes('geometric');
+      const isScience = originalPrompt.toLowerCase().includes('science') ||
+                       originalPrompt.toLowerCase().includes('biology');
+      
+      // Construir prompt otimizado baseado no contexto
+      let optimizedPrompt = originalPrompt;
+      
+      // Adicionar contexto brasileiro se não presente
+      if (!brazilianContext) {
+        optimizedPrompt += ', Brazilian educational context';
+      }
+      
+      // Adicionar especificações de qualidade visual
+      optimizedPrompt += ', high quality educational illustration, vibrant colors, clean design, professional artwork, detailed visual elements';
+      
+      // Adicionar especificações por disciplina
+      if (isMath) {
+        optimizedPrompt += ', clear geometric shapes, precise mathematical visualization';
+      }
+      if (isScience) {
+        optimizedPrompt += ', scientific accuracy, educational diagrams';
+      }
+      
+      // Adicionar especificações por faixa etária
+      if (isElementary) {
+        optimizedPrompt += ', age-appropriate for elementary students, engaging and colorful';
+      }
+      
+      // Estratégia anti-texto ULTRA robusta
+      optimizedPrompt += ', NO TEXT, NO WORDS, NO LETTERS, NO WRITING, pure visual content only';
+      
+      return optimizedPrompt;
+    };
 
-    // Prompt negativo robusto específico contra texto
-    const negativePrompt = "text, letters, words, writing, alphabet, numbers, symbols, typography, captions, labels, signs, watermarks, logos, inscriptions, script, handwriting, printed text, digital text, overlaid text, embedded text, readable characters, linguistic elements, textual content, written language, font, typeface, book, newspaper, document, paper with text";
+    // Otimizar prompt com sistema inteligente
+    const optimizedPrompt = intelligentPromptOptimizer(prompt);
 
-    console.log('📞 Calling Replicate API with optimized SDXL parameters...');
-    console.log('🎯 Optimized prompt:', optimizedPrompt.substring(0, 150) + '...');
+    console.log('🎯 Optimized prompt with intelligent context:', optimizedPrompt.substring(0, 150) + '...');
     
-    // Usar Stable Diffusion XL com parâmetros simplificados e testados
+    // Usar Flux Schnell como modelo principal (mais confiável e rápido)
+    console.log('📞 Calling Flux Schnell with optimized parameters...');
+    
     const output = await replicate.run(
-      "stability-ai/stable-diffusion-xl-base-1.0",
+      "black-forest-labs/flux-schnell",
       {
         input: {
           prompt: optimizedPrompt,
-          negative_prompt: negativePrompt,
-          width: 1024,
-          height: 1024,
+          go_fast: true,
           num_outputs: 1,
-          scheduler: "DPMSolverMultistep",
-          num_inference_steps: 20,
-          guidance_scale: 7.5,
-          seed: Math.floor(Math.random() * 1000000)
+          aspect_ratio: "1:1",
+          output_format: "png",
+          output_quality: 90,
+          num_inference_steps: 4
         }
       }
     );
 
-    console.log('✅ SDXL API call completed');
+    console.log('✅ Flux Schnell API call completed successfully');
     console.log('📦 Raw output type:', typeof output);
-    console.log('📦 Raw output:', JSON.stringify(output).substring(0, 200) + '...');
+    console.log('📦 Raw output structure:', Array.isArray(output) ? 'Array' : 'Object');
     
     if (!output) {
       console.error('❌ No output from Replicate API');
@@ -83,10 +125,10 @@ serve(async (req) => {
     let imageUrl;
     if (Array.isArray(output) && output.length > 0) {
       imageUrl = output[0];
-      console.log('📸 Image URL from array:', imageUrl);
+      console.log('📸 Image URL extracted from array:', imageUrl?.substring(0, 50) + '...');
     } else if (typeof output === 'string') {
       imageUrl = output;
-      console.log('📸 Image URL from string:', imageUrl);
+      console.log('📸 Image URL from string:', imageUrl?.substring(0, 50) + '...');
     } else {
       console.error('❌ Unexpected output format:', output);
       throw new Error('Formato de resposta inesperado da API');
@@ -97,92 +139,125 @@ serve(async (req) => {
       throw new Error('URL da imagem inválida');
     }
 
-    console.log('📥 Downloading image from URL:', imageUrl.substring(0, 50) + '...');
+    console.log('📥 Downloading image with robust retry mechanism...');
     
-    // Baixar a imagem com timeout e retry
+    // Download da imagem com sistema de retry melhorado
     let imageResponse;
     let retries = 3;
+    let delay = 1000; // Começar com 1 segundo
+    
     while (retries > 0) {
       try {
-        console.log(`📡 Attempting download (${4 - retries}/3)...`);
+        console.log(`📡 Download attempt ${4 - retries}/3...`);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+        
         imageResponse = await fetch(imageUrl, {
-          signal: AbortSignal.timeout(30000) // 30 second timeout
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; EducationalImageBot/1.0)'
+          }
         });
         
+        clearTimeout(timeoutId);
+        
         if (imageResponse.ok) {
+          console.log('✅ Image downloaded successfully on attempt', 4 - retries);
           break;
         } else {
-          console.warn(`⚠️ Download attempt failed with status: ${imageResponse.status}`);
+          console.warn(`⚠️ Download failed with status: ${imageResponse.status} - ${imageResponse.statusText}`);
           retries--;
           if (retries > 0) {
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+            console.log(`⏳ Waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2; // Exponential backoff
           }
         }
       } catch (error) {
         console.warn(`⚠️ Download attempt failed with error:`, error.message);
         retries--;
         if (retries > 0) {
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+          console.log(`⏳ Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2; // Exponential backoff
         }
       }
     }
 
     if (!imageResponse || !imageResponse.ok) {
-      console.error('❌ Failed to download image after all retries');
-      throw new Error('Falha ao baixar imagem gerada');
+      console.error('❌ All download attempts failed');
+      throw new Error('Falha ao baixar imagem após todas as tentativas');
     }
 
     console.log('✅ Image downloaded successfully');
     const imageArrayBuffer = await imageResponse.arrayBuffer();
-    console.log('📦 Image size:', imageArrayBuffer.byteLength, 'bytes');
+    const imageSizeKB = Math.round(imageArrayBuffer.byteLength / 1024);
+    console.log('📦 Image size:', imageSizeKB, 'KB');
     
-    // Conversão otimizada para base64 usando TextDecoder
+    // Conversão otimizada e simplificada para base64
+    console.log('🔄 Converting to base64 with optimized method...');
+    
     const uint8Array = new Uint8Array(imageArrayBuffer);
-    console.log('🔄 Converting to base64...');
     
-    // Método mais eficiente para conversão
-    const chunks = [];
-    const chunkSize = 0x8000; // 32KB chunks
+    // Método otimizado para conversão base64 (mais eficiente)
+    const chunkSize = 8192; // 8KB chunks para melhor performance
+    const chunks: string[] = [];
+    
     for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      chunks.push(String.fromCharCode.apply(null, Array.from(uint8Array.subarray(i, i + chunkSize))));
+      const chunk = uint8Array.subarray(i, i + chunkSize);
+      chunks.push(String.fromCharCode(...chunk));
     }
+    
     const binaryString = chunks.join('');
     const imageB64 = btoa(binaryString);
     
-    console.log('✅ Base64 conversion completed, length:', imageB64.length);
+    console.log('✅ Base64 conversion completed successfully');
+    console.log('📊 Base64 length:', Math.round(imageB64.length / 1024), 'KB');
     
-    // Detectar formato da imagem
-    let mimeType = 'image/png'; // Default
-    if (uint8Array[0] === 0xFF && uint8Array[1] === 0xD8) {
+    // Detectar formato da imagem com precisão
+    let mimeType = 'image/png'; // Default para PNG
+    const signature = uint8Array.slice(0, 8);
+    
+    if (signature[0] === 0xFF && signature[1] === 0xD8) {
       mimeType = 'image/jpeg';
-    } else if (uint8Array[0] === 0x89 && uint8Array[1] === 0x50) {
+    } else if (signature[0] === 0x89 && signature[1] === 0x50 && signature[2] === 0x4E && signature[3] === 0x47) {
       mimeType = 'image/png';
-    } else if (uint8Array[0] === 0x47 && uint8Array[1] === 0x49) {
+    } else if (signature[0] === 0x47 && signature[1] === 0x49 && signature[2] === 0x46) {
       mimeType = 'image/gif';
-    } else if (uint8Array[0] === 0x52 && uint8Array[1] === 0x49) {
+    } else if (signature[0] === 0x52 && signature[1] === 0x49 && signature[2] === 0x46 && signature[3] === 0x46) {
       mimeType = 'image/webp';
     }
     
     const imageDataUrl = `data:${mimeType};base64,${imageB64}`;
     
     console.log('🎨 Image generation completed successfully!');
-    console.log('📊 Final stats:');
-    console.log('  - Model: stability-ai/stable-diffusion-xl-base-1.0');
-    console.log('  - Size:', imageArrayBuffer.byteLength, 'bytes');
-    console.log('  - Format:', mimeType);
-    console.log('  - Base64 length:', imageB64.length);
-    console.log('  - Anti-text measures: Advanced negative prompting');
+    console.log('📊 Final generation stats:');
+    console.log('  ✓ Model: black-forest-labs/flux-schnell (optimized)');
+    console.log('  ✓ Size:', imageSizeKB, 'KB');
+    console.log('  ✓ Format:', mimeType);
+    console.log('  ✓ Quality: High (90%)');
+    console.log('  ✓ Anti-text strategy: Enhanced');
+    console.log('  ✓ Brazilian context: Integrated');
+    console.log('  ✓ Educational optimization: Active');
     
     return new Response(JSON.stringify({ 
       success: true, 
       imageUrl: imageDataUrl,
       imageData: imageB64,
-      model: 'stable-diffusion-xl-base-1.0',
-      antiTextMeasures: true,
+      model: 'flux-schnell-optimized',
+      optimizations: {
+        intelligentContext: true,
+        antiTextStrategy: 'enhanced',
+        brazilianContext: true,
+        educationalOptimization: true
+      },
       stats: {
-        sizeBytes: imageArrayBuffer.byteLength,
+        sizeKB: imageSizeKB,
         mimeType: mimeType,
-        base64Length: imageB64.length
+        base64LengthKB: Math.round(imageB64.length / 1024),
+        quality: 90,
+        aspectRatio: '1:1'
       }
     }), { 
       status: 200,
@@ -190,16 +265,16 @@ serve(async (req) => {
     });
     
   } catch (error) {
-    console.error('❌ Critical error in gerarImagemIA function:', error);
-    console.error('📋 Error details:');
-    console.error('  - Name:', error.name);
+    console.error('❌ Critical error in optimized gerarImagemIA function:', error);
+    console.error('📋 Error analysis:');
+    console.error('  - Type:', error.constructor.name);
     console.error('  - Message:', error.message);
-    console.error('  - Stack:', error.stack);
+    console.error('  - Stack (first 500 chars):', error.stack?.substring(0, 500));
     
-    // Fallback: Try simpler Flux model as backup
+    // Sistema de fallback melhorado
+    console.log('🔄 Initiating intelligent fallback system...');
+    
     try {
-      console.log('🔄 Attempting fallback with Flux model...');
-      
       const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN');
       if (!REPLICATE_API_TOKEN) {
         throw new Error('API key not available for fallback');
@@ -209,46 +284,52 @@ serve(async (req) => {
         auth: REPLICATE_API_TOKEN,
       });
 
-      const { prompt } = await req.json();
-      const simplePrompt = `${prompt}. Educational illustration, no text, clean design`;
+      const requestBody = await req.json();
+      const originalPrompt = requestBody.prompt;
+      
+      // Prompt simplificado para fallback
+      const fallbackPrompt = `${originalPrompt}. Simple educational illustration, clean design, no text, Brazilian context`;
 
-      console.log('📞 Calling Flux fallback model...');
+      console.log('📞 Attempting fallback with simplified Flux model...');
       const fallbackOutput = await replicate.run(
         "black-forest-labs/flux-schnell",
         {
           input: {
-            prompt: simplePrompt,
+            prompt: fallbackPrompt,
             go_fast: true,
             num_outputs: 1,
             aspect_ratio: "1:1",
             output_format: "png",
-            output_quality: 90
+            output_quality: 80
           }
         }
       );
 
-      console.log('✅ Fallback model succeeded');
+      console.log('✅ Fallback succeeded');
       
       if (fallbackOutput && Array.isArray(fallbackOutput) && fallbackOutput[0]) {
         const fallbackImageUrl = fallbackOutput[0];
         
-        // Simple download and conversion for fallback
+        // Download e conversão simplificada para fallback
         const fallbackResponse = await fetch(fallbackImageUrl);
         if (fallbackResponse.ok) {
           const fallbackArrayBuffer = await fallbackResponse.arrayBuffer();
           const fallbackUint8Array = new Uint8Array(fallbackArrayBuffer);
+          
+          // Conversão direta e simples
           const fallbackBinaryString = Array.from(fallbackUint8Array, byte => String.fromCharCode(byte)).join('');
           const fallbackB64 = btoa(fallbackBinaryString);
           const fallbackDataUrl = `data:image/png;base64,${fallbackB64}`;
           
-          console.log('🎨 Fallback image generation completed');
+          console.log('🎨 Fallback image generation completed successfully');
           
           return new Response(JSON.stringify({ 
             success: true, 
             imageUrl: fallbackDataUrl,
             imageData: fallbackB64,
             model: 'flux-schnell-fallback',
-            fallback: true
+            fallback: true,
+            warning: 'Generated using simplified fallback due to primary generation failure'
           }), { 
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -256,13 +337,16 @@ serve(async (req) => {
         }
       }
     } catch (fallbackError) {
-      console.error('❌ Fallback also failed:', fallbackError.message);
+      console.error('❌ Fallback system also failed:', fallbackError.message);
     }
     
+    // Resposta de erro final com informações detalhadas
     return new Response(JSON.stringify({ 
       success: false, 
-      error: `Erro na geração: ${error.message}`,
-      details: error.name
+      error: `Erro na geração de imagem: ${error.message}`,
+      errorType: error.constructor.name,
+      timestamp: new Date().toISOString(),
+      troubleshooting: 'Verifique a conectividade e tente novamente. Se o problema persistir, entre em contato com o suporte.'
     }), { 
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

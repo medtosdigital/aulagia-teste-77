@@ -1,3 +1,4 @@
+
 import { userMaterialsService, UserMaterial } from './userMaterialsService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -134,7 +135,7 @@ class MaterialService {
       
       // Se for slides, gerar imagens para os prompts definidos
       if (type === 'slides' && generatedContent) {
-        console.log('🎨 Starting image generation for slides...');
+        console.log('🎨 Starting optimized image generation for slides...');
         generatedContent = await this.generateImagesForSlides(generatedContent, formData);
       }
       
@@ -165,7 +166,7 @@ class MaterialService {
   }
 
   private async generateImagesForSlides(slidesContent: any, formData: MaterialFormData): Promise<any> {
-    console.log('🎨 Generating images for slides with improved prompts...');
+    console.log('🎨 Starting optimized image generation for slides...');
     
     // Lista de campos de imagem nos slides com suas prioridades
     const imageFields = [
@@ -180,17 +181,22 @@ class MaterialService {
     ];
 
     const updatedContent = { ...slidesContent };
+    let successfulGenerations = 0;
+    let totalAttempts = 0;
 
     for (const field of imageFields) {
       const prompt = slidesContent[field];
       if (prompt && typeof prompt === 'string' && prompt.trim() !== '') {
+        totalAttempts++;
         try {
-          console.log(`🎨 Generating image for ${field} with optimized prompt:`, prompt.substring(0, 100) + '...');
+          console.log(`🎨 Generating optimized image for ${field}...`);
+          console.log(`📝 Using intelligent prompt optimization for: ${prompt.substring(0, 100)}...`);
           
-          // Passar o prompt original otimizado diretamente para gerarImagemIA
-          // O prompt já vem contextualizado e específico do gerarMaterialIA
+          // O prompt já vem otimizado do gerarMaterialIA, mas vamos garantir contexto adicional
+          const enhancedPrompt = `${prompt}, educational illustration for Brazilian students, high quality artwork, vibrant colors, clean design, NO TEXT OR WORDS`;
+
           const { data, error } = await supabase.functions.invoke('gerarImagemIA', {
-            body: { prompt: prompt }
+            body: { prompt: enhancedPrompt }
           });
 
           if (error) {
@@ -202,13 +208,18 @@ class MaterialService {
             // Salvar tanto a URL quanto os dados base64
             updatedContent[field + '_url'] = data.imageUrl;
             updatedContent[field + '_data'] = data.imageData;
-            console.log(`✅ Image generated for ${field} successfully`);
+            successfulGenerations++;
+            
+            console.log(`✅ Image generated successfully for ${field}`);
+            if (data.stats) {
+              console.log(`📊 Image stats - Size: ${data.stats.sizeKB}KB, Format: ${data.stats.mimeType}`);
+            }
           } else {
             console.warn(`⚠️ No image URL returned for ${field}`);
           }
 
-          // Pequeno delay entre chamadas para evitar rate limiting
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          // Delay otimizado entre chamadas para evitar rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1500));
           
         } catch (error) {
           console.error(`❌ Exception generating image for ${field}:`, error);
@@ -217,7 +228,13 @@ class MaterialService {
       }
     }
 
-    console.log('🎨 Image generation completed for slides');
+    console.log(`🎨 Optimized image generation completed for slides`);
+    console.log(`📊 Generation summary: ${successfulGenerations}/${totalAttempts} images generated successfully`);
+    
+    if (successfulGenerations === 0 && totalAttempts > 0) {
+      console.warn('⚠️ No images were generated successfully, but slides content will still be available');
+    }
+    
     return updatedContent;
   }
 
