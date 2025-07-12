@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { materialService, GeneratedMaterial } from '@/services/materialService';
+import { QuestionParserService } from '@/services/questionParserService';
 import MaterialModal from './MaterialModal';
 import NextStepsModal from './NextStepsModal';
 import BNCCValidationModal from './BNCCValidationModal';
@@ -532,7 +533,26 @@ const CreateLesson: React.FC = () => {
       };
 
       console.log('📋 Dados do material sendo enviados:', materialFormData);
-      const material = await materialService.generateMaterial(selectedType!, materialFormData);
+      let material = await materialService.generateMaterial(selectedType!, materialFormData);
+      
+      // Validate and fix questions if it's an activity or assessment
+      if ((selectedType === 'atividade' || selectedType === 'avaliacao') && material?.content?.questoes) {
+        console.log('🔧 Validando e corrigindo questões geradas...');
+        
+        const validationResult = QuestionParserService.validateQuestionSet(material.content.questoes);
+        
+        if (validationResult.warnings.length > 0) {
+          console.warn('⚠️ Avisos na validação das questões:', validationResult.warnings);
+        }
+        
+        // Fix questions structure
+        material.content.questoes = material.content.questoes.map((questao: any, index: number) => 
+          QuestionParserService.validateAndFixQuestion(questao, index)
+        );
+        
+        console.log('✅ Questões validadas e corrigidas:', material.content.questoes);
+      }
+      
       console.log('✅ Material gerado e salvo com sucesso:', material.id);
 
       // INÍCIO DA LÓGICA DE GERAÇÃO E INJEÇÃO DAS IMAGENS IA NAS VARIÁVEIS DOS SLIDES

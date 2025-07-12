@@ -356,6 +356,23 @@ CARACTERÍSTICAS DE UMA ATIVIDADE (não avaliação):
 TIPOS DE QUESTÕES SOLICITADOS: ${tiposQuestoes.join(', ')}
 NÚMERO DE QUESTÕES: ${numQuestoes}
 
+OBRIGATÓRIO - TIPOS DE QUESTÕES DISPONÍVEIS:
+1. "multipla_escolha" - 4 alternativas (A, B, C, D) com apenas uma correta
+2. "verdadeiro_falso" - Afirmação para marcar V ou F
+3. "completar" - Frase com lacuna para completar
+4. "ligar" - Conectar itens da coluna A com itens da coluna B
+5. "dissertativa" - Pergunta aberta para resposta por extenso
+6. "desenho" - Solicita desenho ou esquema como resposta
+
+REGRAS CRÍTICAS PARA GERAÇÃO DAS QUESTÕES:
+- Distribua os tipos de questões de forma EQUILIBRADA conforme solicitado
+- Para questões "multipla_escolha": sempre 4 alternativas válidas e plausíveis
+- Para questões "ligar": forneça exatamente 4 itens na coluna A e 4 na coluna B
+- Para questões "completar": deixe uma lacuna clara marcada com ______
+- Para questões "verdadeiro_falso": crie afirmações que exijam análise
+- Para questões "dissertativa": faça perguntas que promovam reflexão
+- Para questões "desenho": solicite representações visuais pedagógicas
+
 Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
 
 {
@@ -377,20 +394,42 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
   "introducao": "[INTRODUÇÃO motivadora para a atividade sobre ${tema} - explicar o propósito da prática]",
   "instrucoes": "[INSTRUÇÕES CLARAS de como realizar a atividade sobre ${tema} - passo a passo]",
   "questoes": [
-    ${Array.from({length: numQuestoes}, (_, i) => `{
+    ${Array.from({length: numQuestoes}, (_, i) => {
+      const tipoIndex = i % tiposQuestoes.length;
+      const tipo = tiposQuestoes[tipoIndex];
+      let tipoFinal = tipo;
+      
+      // Mapear tipos para os aceitos pelo sistema
+      if (tipo === 'multipla-escolha') tipoFinal = 'multipla_escolha';
+      if (tipo === 'verdadeiro-falso') tipoFinal = 'verdadeiro_falso';
+      if (tipo === 'completar-lacunas') tipoFinal = 'completar';
+      
+      return `{
       "numero": ${i + 1},
-      "tipo": "[TIPO da questão ${i + 1} - escolha entre: ${tiposQuestoes.join(', ')}]",
-      "enunciado": "[ENUNCIADO da questão ${i + 1} sobre ${tema} - focado na prática educativa]",
-      "opcoes": [
-        "[OPÇÃO A - quando aplicável]",
-        "[OPÇÃO B - quando aplicável]",
-        "[OPÇÃO C - quando aplicável]",
-        "[OPÇÃO D - quando aplicável]"
+      "tipo": "${tipoFinal}",
+      "enunciado": "[ENUNCIADO da questão ${i + 1} sobre ${tema} - adaptado para tipo ${tipoFinal}]",
+      ${tipoFinal === 'multipla_escolha' ? `"opcoes": [
+        "[ALTERNATIVA A - plausível e relacionada ao tema]",
+        "[ALTERNATIVA B - plausível e relacionada ao tema]", 
+        "[ALTERNATIVA C - plausível e relacionada ao tema]",
+        "[ALTERNATIVA D - plausível e relacionada ao tema]"
+      ],` : tipoFinal === 'ligar' ? `"coluna_a": [
+        "[ITEM A1 - conceito/termo sobre ${tema}]",
+        "[ITEM A2 - conceito/termo sobre ${tema}]",
+        "[ITEM A3 - conceito/termo sobre ${tema}]",
+        "[ITEM A4 - conceito/termo sobre ${tema}]"
       ],
-      "resposta_correta": "[RESPOSTA CORRETA ou orientação]",
+      "coluna_b": [
+        "[ITEM B1 - definição/descrição sobre ${tema}]",
+        "[ITEM B2 - definição/descrição sobre ${tema}]",
+        "[ITEM B3 - definição/descrição sobre ${tema}]",
+        "[ITEM B4 - definição/descrição sobre ${tema}]"
+      ],` : `"opcoes": [],`}
+      "resposta_correta": "[RESPOSTA CORRETA ou orientação detalhada]",
       "explicacao": "[EXPLICAÇÃO EDUCATIVA sobre ${tema} - feedback formativo]",
       "dica_pedagogica": "[DICA para o professor sobre esta questão]"
-    }`).join(',\n    ')}
+    }`;
+    }).join(',\n    ')}
   ],
   "recursos_necessarios": [
     "[RECURSO 1 para realizar a atividade sobre ${tema}]",
@@ -412,12 +451,16 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
 }
 
 INSTRUÇÕES FINAIS CRÍTICAS:
-1. FOQUE em atividades PRÁTICAS e INTERATIVAS
-2. Use linguagem MOTIVADORA e ENVOLVENTE
-3. Promova PARTICIPAÇÃO ATIVA dos estudantes
-4. Inclua FEEDBACK E EXPLICAÇÕES EDUCATIVAS
-5. Adapte à faixa etária de ${serie}
-6. Use português brasileiro correto
+1. DISTRIBUA os tipos de questões EQUILIBRADAMENTE entre os tipos solicitados
+2. Para "multipla_escolha": sempre 4 alternativas válidas e plausíveis
+3. Para "ligar": exatamente 4 itens em cada coluna com correspondências claras
+4. Para "completar": use lacunas claras marcadas com ______
+5. Para "verdadeiro_falso": crie afirmações que exijam análise crítica
+6. FOQUE em atividades PRÁTICAS e INTERATIVAS
+7. Use linguagem MOTIVADORA e ENVOLVENTE
+8. Promova PARTICIPAÇÃO ATIVA dos estudantes
+9. Adapte à faixa etária de ${serie}
+10. Use português brasileiro correto
 `;
 
     case 'avaliacao':
@@ -444,6 +487,23 @@ CARACTERÍSTICAS DE UMA AVALIAÇÃO (não atividade):
 TIPOS DE QUESTÕES SOLICITADOS: ${tiposQuestoesAval.join(', ')}
 NÚMERO DE QUESTÕES: ${numQuestoesAval}
 
+OBRIGATÓRIO - TIPOS DE QUESTÕES DISPONÍVEIS:
+1. "multipla_escolha" - 4 alternativas (A, B, C, D) com apenas uma correta
+2. "verdadeiro_falso" - Afirmação para marcar V ou F
+3. "completar" - Frase com lacuna para completar
+4. "ligar" - Conectar itens da coluna A com itens da coluna B
+5. "dissertativa" - Pergunta aberta para resposta por extenso
+6. "desenho" - Solicita desenho ou esquema como resposta
+
+REGRAS CRÍTICAS PARA GERAÇÃO DAS QUESTÕES:
+- Distribua os tipos de questões de forma EQUILIBRADA conforme solicitado
+- Para questões "multipla_escolha": sempre 4 alternativas válidas e plausíveis
+- Para questões "ligar": forneça exatamente 4 itens na coluna A e 4 na coluna B
+- Para questões "completar": deixe uma lacuna clara marcada com ______
+- Para questões "verdadeiro_falso": crie afirmações que exijam análise
+- Para questões "dissertativa": faça perguntas que promovam análise crítica
+- Para questões "desenho": solicite representações visuais técnicas
+
 Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
 
 {
@@ -465,21 +525,43 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
   ],
   "instrucoes_gerais": "[INSTRUÇÕES FORMAIS para realização da avaliação sobre ${tema}]",
   "questoes": [
-    ${Array.from({length: numQuestoesAval}, (_, i) => `{
+    ${Array.from({length: numQuestoesAval}, (_, i) => {
+      const tipoIndex = i % tiposQuestoesAval.length;
+      const tipo = tiposQuestoesAval[tipoIndex];
+      let tipoFinal = tipo;
+      
+      // Mapear tipos para os aceitos pelo sistema
+      if (tipo === 'multipla-escolha') tipoFinal = 'multipla_escolha';
+      if (tipo === 'verdadeiro-falso') tipoFinal = 'verdadeiro_falso';
+      if (tipo === 'completar-lacunas') tipoFinal = 'completar';
+      
+      return `{
       "numero": ${i + 1},
-      "tipo": "[TIPO da questão ${i + 1} - escolha entre: ${tiposQuestoesAval.join(', ')}]",
+      "tipo": "${tipoFinal}",
       "valor": "[PONTUAÇÃO da questão ${i + 1} - ex: 1,0 ponto]",
-      "enunciado": "[ENUNCIADO da questão ${i + 1} sobre ${tema} - claro e objetivo]",
-      "opcoes": [
-        "[OPÇÃO A - quando aplicável]",
-        "[OPÇÃO B - quando aplicável]",
-        "[OPÇÃO C - quando aplicável]",
-        "[OPÇÃO D - quando aplicável]"
+      "enunciado": "[ENUNCIADO da questão ${i + 1} sobre ${tema} - claro e objetivo para tipo ${tipoFinal}]",
+      ${tipoFinal === 'multipla_escolha' ? `"opcoes": [
+        "[ALTERNATIVA A - tecnicamente correta ou incorreta]",
+        "[ALTERNATIVA B - tecnicamente correta ou incorreta]", 
+        "[ALTERNATIVA C - tecnicamente correta ou incorreta]",
+        "[ALTERNATIVA D - tecnicamente correta ou incorreta]"
+      ],` : tipoFinal === 'ligar' ? `"coluna_a": [
+        "[ITEM A1 - conceito/termo sobre ${tema}]",
+        "[ITEM A2 - conceito/termo sobre ${tema}]",
+        "[ITEM A3 - conceito/termo sobre ${tema}]",
+        "[ITEM A4 - conceito/termo sobre ${tema}]"
       ],
+      "coluna_b": [
+        "[ITEM B1 - definição/descrição sobre ${tema}]",
+        "[ITEM B2 - definição/descrição sobre ${tema}]",
+        "[ITEM B3 - definição/descrição sobre ${tema}]",
+        "[ITEM B4 - definição/descrição sobre ${tema}]"
+      ],` : `"opcoes": [],`}
       "resposta_correta": "[RESPOSTA CORRETA]",
       "criterios_correcao": "[CRITÉRIOS para correção desta questão]",
       "habilidade_avaliada": "[HABILIDADE BNCC avaliada nesta questão]"
-    }`).join(',\n    ')}
+    }`;
+    }).join(',\n    ')}
   ],
   "criterios_avaliacao": {
     "excelente": "[CRITÉRIO para conceito EXCELENTE (90-100%)]",
@@ -513,12 +595,17 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
 }
 
 INSTRUÇÕES FINAIS CRÍTICAS:
-1. FOQUE na VERIFICAÇÃO OBJETIVA do aprendizado
-2. Use linguagem FORMAL e CLARA
-3. Estabeleça CRITÉRIOS MENSURÁVEIS de avaliação
-4. Inclua RUBRICAS E PONTUAÇÕES específicas
-5. Adapte à faixa etária de ${serie}
-6. Use português brasileiro correto
+1. DISTRIBUA os tipos de questões EQUILIBRADAMENTE entre os tipos solicitados
+2. Para "multipla_escolha": sempre 4 alternativas válidas e plausíveis
+3. Para "ligar": exatamente 4 itens em cada coluna com correspondências verificáveis
+4. Para "completar": use lacunas claras marcadas com ______
+5. Para "verdadeiro_falso": crie afirmações que exijam conhecimento específico
+6. FOQUE na VERIFICAÇÃO OBJETIVA do aprendizado
+7. Use linguagem FORMAL e CLARA
+8. Estabeleça CRITÉRIOS MENSURÁVEIS de avaliação
+9. Inclua RUBRICAS E PONTUAÇÕES específicas
+10. Adapte à faixa etária de ${serie}
+11. Use português brasileiro correto
 `;
 
     default:
@@ -531,7 +618,65 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     // Try to parse as JSON first
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      const parsedContent = JSON.parse(jsonMatch[0]);
+      
+      // Enhanced parsing for activities and assessments with better question handling
+      if (materialType === 'atividade' || materialType === 'avaliacao') {
+        if (parsedContent.questoes && Array.isArray(parsedContent.questoes)) {
+          parsedContent.questoes = parsedContent.questoes.map((questao: any, index: number) => {
+            // Ensure proper question structure
+            const processedQuestion = {
+              numero: questao.numero || (index + 1),
+              tipo: questao.tipo || 'multipla_escolha',
+              enunciado: questao.enunciado || '',
+              opcoes: questao.opcoes || [],
+              coluna_a: questao.coluna_a || [],
+              coluna_b: questao.coluna_b || [],
+              resposta_correta: questao.resposta_correta || '',
+              explicacao: questao.explicacao || '',
+              dica_pedagogica: questao.dica_pedagogica || '',
+              ...(materialType === 'avaliacao' && {
+                valor: questao.valor || '1,0 ponto',
+                criterios_correcao: questao.criterios_correcao || '',
+                habilidade_avaliada: questao.habilidade_avaliada || ''
+              })
+            };
+
+            // Validate question types and structure
+            switch (processedQuestion.tipo) {
+              case 'multipla_escolha':
+                if (!Array.isArray(processedQuestion.opcoes) || processedQuestion.opcoes.length !== 4) {
+                  processedQuestion.opcoes = [
+                    'Alternativa A - aguardando conteúdo',
+                    'Alternativa B - aguardando conteúdo', 
+                    'Alternativa C - aguardando conteúdo',
+                    'Alternativa D - aguardando conteúdo'
+                  ];
+                }
+                break;
+              case 'ligar':
+                if (!Array.isArray(processedQuestion.coluna_a) || processedQuestion.coluna_a.length !== 4) {
+                  processedQuestion.coluna_a = ['Item A1', 'Item A2', 'Item A3', 'Item A4'];
+                }
+                if (!Array.isArray(processedQuestion.coluna_b) || processedQuestion.coluna_b.length !== 4) {
+                  processedQuestion.coluna_b = ['Item B1', 'Item B2', 'Item B3', 'Item B4'];
+                }
+                processedQuestion.opcoes = []; // Clear opcoes for matching questions
+                break;
+              case 'verdadeiro_falso':
+              case 'completar':
+              case 'dissertativa':
+              case 'desenho':
+                processedQuestion.opcoes = []; // Clear opcoes for these types
+                break;
+            }
+
+            return processedQuestion;
+          });
+        }
+      }
+      
+      return parsedContent;
     }
     
     // If not JSON, return structured content based on material type
