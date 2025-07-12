@@ -1,6 +1,7 @@
 
 // Edge Function: gerarImagemIA
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import Replicate from "https://esm.sh/replicate@0.25.2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,53 +26,47 @@ serve(async (req) => {
       });
     }
 
-    // Chave da OpenAI deve ser configurada como variável de ambiente segura
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      console.error('❌ OpenAI API key not configured');
+    // Chave da Replicate deve ser configurada como variável de ambiente segura
+    const REPLICATE_API_KEY = Deno.env.get('REPLICATE_API_TOKEN');
+    if (!REPLICATE_API_KEY) {
+      console.error('❌ Replicate API key not configured');
       return new Response(JSON.stringify({ success: false, error: 'API key não configurada.' }), { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Usar DALL-E 3 com configurações otimizadas para qualidade e custo
-    console.log('📞 Calling OpenAI Images API with DALL-E 3...');
-    const openaiRes = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'dall-e-3',
-        prompt: `${prompt.substring(0, 900)}. Clean educational illustration, no text, no words, no letters, simple and clear visual style, child-friendly colors, professional educational content`, // Melhor prompt sem texto
-        n: 1,
-        size: '1024x1024', // Tamanho padrão otimizado
-        quality: 'standard', // Usar qualidade padrão para reduzir custo
-        style: 'natural', // Estilo mais natural e educativo
-        response_format: 'b64_json' // Usar base64 para melhor controle
-      })
+    // Inicializar cliente Replicate
+    const replicate = new Replicate({
+      auth: REPLICATE_API_KEY,
     });
 
-    if (!openaiRes.ok) {
-      const errorText = await openaiRes.text();
-      console.error('❌ OpenAI API error:', openaiRes.status, errorText);
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Erro na OpenAI: ' + errorText 
-      }), { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+    // Melhorar o prompt com estilo educacional consistente
+    const enhancedPrompt = `${prompt.substring(0, 800)}. Clean, colorful, child-friendly educational illustration, no text, no words, no letters, simple educational style, with a soft golden or light golden background, warm tones, elegant but playful look, consistent lighting, high-resolution, professional educational content, vibrant colors, suitable for children`;
 
-    const data = await openaiRes.json();
-    console.log('✅ OpenAI response received');
+    console.log('📞 Calling Replicate API with Stable Diffusion...');
     
-    // Extrair dados da imagem gerada
-    if (!data.data || !data.data[0] || !data.data[0].b64_json) {
-      console.error('❌ No image data in response:', data);
+    // Usar Stable Diffusion com configurações otimizadas para conteúdo educacional
+    const output = await replicate.run(
+      "stability-ai/stable-diffusion:ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4",
+      {
+        input: {
+          prompt: enhancedPrompt,
+          width: 512,
+          height: 512,
+          num_inference_steps: 50,
+          guidance_scale: 7.5,
+          scheduler: "DPMSolverMultistep",
+          num_outputs: 1,
+          seed: Math.floor(Math.random() * 1000000)
+        }
+      }
+    );
+
+    console.log('✅ Replicate response received');
+    
+    if (!output || !Array.isArray(output) || output.length === 0) {
+      console.error('❌ No image data in response:', output);
       return new Response(JSON.stringify({ 
         success: false, 
         error: 'Imagem não gerada.' 
@@ -81,10 +76,27 @@ serve(async (req) => {
       });
     }
 
-    const imageB64 = data.data[0].b64_json;
+    const imageUrl = output[0];
+    
+    // Baixar a imagem e converter para base64 para manter compatibilidade
+    console.log('📥 Converting image to base64...');
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      console.error('❌ Failed to fetch generated image');
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Erro ao baixar imagem gerada.' 
+      }), { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const imageBuffer = await imageResponse.arrayBuffer();
+    const imageB64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
     const imageDataUrl = `data:image/png;base64,${imageB64}`;
     
-    console.log('🎨 Image generated successfully');
+    console.log('🎨 Image generated successfully with Replicate');
     
     return new Response(JSON.stringify({ 
       success: true, 
