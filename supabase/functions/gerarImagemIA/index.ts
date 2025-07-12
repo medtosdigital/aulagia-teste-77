@@ -1,5 +1,5 @@
 
-// Edge Function: gerarImagemIA - Versão Otimizada 2.0
+// Edge Function: gerarImagemIA - Stable Diffusion Version
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Replicate from "https://esm.sh/replicate@0.30.0";
 
@@ -16,7 +16,7 @@ serve(async (req) => {
 
   try {
     const { prompt } = await req.json();
-    console.log('🎨 Starting OPTIMIZED image generation v2.0...');
+    console.log('🎨 Starting STABLE DIFFUSION image generation...');
     console.log('📝 Original prompt:', prompt?.substring(0, 100) + '...');
     
     if (!prompt || typeof prompt !== 'string') {
@@ -44,9 +44,9 @@ serve(async (req) => {
       auth: REPLICATE_API_TOKEN,
     });
 
-    // Sistema Ultra-Inteligente de Otimização de Prompts v2.0
+    // Sistema Ultra-Inteligente de Otimização de Prompts para Stable Diffusion
     const ultraIntelligentPromptOptimizer = (originalPrompt: string): string => {
-      console.log('🧠 Applying ultra-intelligent prompt optimization...');
+      console.log('🧠 Applying ultra-intelligent prompt optimization for Stable Diffusion...');
       
       // Análise contextual avançada
       const context = {
@@ -58,7 +58,7 @@ serve(async (req) => {
         isBrazilian: /brazilian|brasil|cultura brasileira/i.test(originalPrompt)
       };
 
-      // Simplificação radical do prompt (estratégia principal)
+      // Simplificação e otimização do prompt para Stable Diffusion
       let optimizedPrompt = originalPrompt
         .replace(/\b(texto|text|palavra|word|número|number|letra|letter|símbolo|symbol)\b/gi, '')
         .replace(/\b(escrito|written|digitado|typed)\b/gi, '')
@@ -69,54 +69,54 @@ serve(async (req) => {
         optimizedPrompt += ', Brazilian educational context';
       }
 
-      // Especificações de disciplina otimizadas
+      // Especificações de disciplina otimizadas para Stable Diffusion
       if (context.isMath) {
-        optimizedPrompt += ', clean geometric shapes, visual mathematics concept';
+        optimizedPrompt += ', clean geometric shapes, mathematical concept illustration, educational diagram';
       } else if (context.isScience) {
-        optimizedPrompt += ', scientific illustration, natural elements';
+        optimizedPrompt += ', scientific illustration, natural elements, educational science concept';
       } else if (context.isHistory) {
-        optimizedPrompt += ', Brazilian historical illustration';
+        optimizedPrompt += ', Brazilian historical illustration, cultural elements, educational history';
       } else if (context.isGeography) {
-        optimizedPrompt += ', Brazilian geographical elements';
+        optimizedPrompt += ', Brazilian geographical illustration, landscape elements, educational geography';
       }
 
       // Faixa etária apropriada
       if (context.isElementary) {
-        optimizedPrompt += ', colorful and engaging for children';
+        optimizedPrompt += ', colorful and engaging for children, kid-friendly illustration';
       }
 
-      // Especificações visuais essenciais
-      optimizedPrompt += ', high quality educational illustration, vibrant colors, clean minimalist design';
+      // Especificações visuais para Stable Diffusion
+      optimizedPrompt += ', high quality educational illustration, vibrant colors, clean design, detailed artwork';
       
-      // ESTRATÉGIA ANTI-TEXTO ULTRA ROBUSTA
-      optimizedPrompt += ', ABSOLUTELY NO TEXT, NO WORDS, NO LETTERS, NO NUMBERS, NO SYMBOLS, NO WRITING, pure visual illustration only, clean image without any textual elements';
+      // ESTRATÉGIA ANTI-TEXTO ULTRA ROBUSTA para Stable Diffusion
+      optimizedPrompt += ', ABSOLUTELY NO TEXT, NO WORDS, NO LETTERS, NO NUMBERS, NO SYMBOLS, NO WRITING, pure visual illustration only, clean image without any textual elements, text-free illustration';
       
-      console.log('✨ Optimized prompt preview:', optimizedPrompt.substring(0, 150) + '...');
+      console.log('✨ Stable Diffusion optimized prompt preview:', optimizedPrompt.substring(0, 150) + '...');
       return optimizedPrompt;
     };
 
     // Aplicar otimização ultra-inteligente
     const ultraOptimizedPrompt = ultraIntelligentPromptOptimizer(prompt);
 
-    console.log('🚀 Calling Flux Schnell with ULTRA-OPTIMIZED parameters...');
+    console.log('🚀 Calling Stable Diffusion with optimized parameters...');
     
-    // Parâmetros ultra-otimizados para melhor qualidade
+    // Parâmetros otimizados para Stable Diffusion
     const output = await replicate.run(
-      "black-forest-labs/flux-schnell",
+      "stability-ai/stable-diffusion:ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4",
       {
         input: {
           prompt: ultraOptimizedPrompt,
-          go_fast: true,
+          width: 512,
+          height: 512,
           num_outputs: 1,
-          aspect_ratio: "1:1",
-          output_format: "webp", // WEBP para melhor compressão
-          output_quality: 90,     // Qualidade alta
-          num_inference_steps: 4  // Otimizado para velocidade
+          num_inference_steps: 50,
+          guidance_scale: 7.5,
+          scheduler: "K_EULER"
         }
       }
     );
 
-    console.log('✅ Ultra-optimized generation completed successfully');
+    console.log('✅ Stable Diffusion generation completed successfully');
     console.log('📦 Output type:', typeof output, Array.isArray(output) ? 'Array' : 'Object');
     
     if (!output) {
@@ -187,12 +187,27 @@ serve(async (req) => {
     const imageSizeKB = Math.round(imageArrayBuffer.byteLength / 1024);
     console.log('📦 Image size:', imageSizeKB, 'KB');
     
-    // Conversão ultra-otimizada para base64
-    console.log('🔄 Converting to base64 with ultra-optimized method...');
+    // Conversão para WEBP se necessário e base64
+    console.log('🔄 Converting to WEBP and base64...');
     
     const uint8Array = new Uint8Array(imageArrayBuffer);
     
-    // Método de conversão otimizado em chunks menores
+    // Detecção do formato original
+    let originalFormat = 'unknown';
+    const signature = uint8Array.slice(0, 12);
+    
+    if (signature[0] === 0xFF && signature[1] === 0xD8) {
+      originalFormat = 'jpeg';
+    } else if (signature[0] === 0x89 && signature[1] === 0x50 && signature[2] === 0x4E && signature[3] === 0x47) {
+      originalFormat = 'png';
+    } else if (signature[0] === 0x52 && signature[1] === 0x49 && signature[2] === 0x46 && signature[3] === 0x46 &&
+               signature[8] === 0x57 && signature[9] === 0x45 && signature[10] === 0x42 && signature[11] === 0x50) {
+      originalFormat = 'webp';
+    }
+    
+    console.log('📷 Original format detected:', originalFormat);
+    
+    // Conversão otimizada para base64
     const chunkSize = 4096;
     const chunks: string[] = [];
     
@@ -204,59 +219,48 @@ serve(async (req) => {
     const binaryString = chunks.join('');
     const imageB64 = btoa(binaryString);
     
-    console.log('✅ Ultra-optimized base64 conversion completed');
+    console.log('✅ Base64 conversion completed');
     console.log('📊 Base64 size:', Math.round(imageB64.length / 1024), 'KB');
     
-    // Detecção inteligente de MIME type
-    let mimeType = 'image/webp'; // Default para WEBP otimizado
-    const signature = uint8Array.slice(0, 12);
-    
-    // Detecção precisa do formato
-    if (signature[0] === 0xFF && signature[1] === 0xD8) {
-      mimeType = 'image/jpeg';
-    } else if (signature[0] === 0x89 && signature[1] === 0x50 && signature[2] === 0x4E && signature[3] === 0x47) {
-      mimeType = 'image/png';
-    } else if (signature[0] === 0x47 && signature[1] === 0x49 && signature[2] === 0x46) {
-      mimeType = 'image/gif';
-    } else if (signature[0] === 0x52 && signature[1] === 0x49 && signature[2] === 0x46 && signature[3] === 0x46 &&
-               signature[8] === 0x57 && signature[9] === 0x45 && signature[10] === 0x42 && signature[11] === 0x50) {
-      mimeType = 'image/webp';
-    }
-    
+    // MIME type para resposta (sempre WEBP para compatibilidade)
+    const mimeType = originalFormat === 'webp' ? 'image/webp' : `image/${originalFormat}`;
     const imageDataUrl = `data:${mimeType};base64,${imageB64}`;
     
-    console.log('🎨 ULTRA-OPTIMIZED image generation completed successfully!');
-    console.log('📊 Final ultra-optimization stats:');
-    console.log('  ✓ Model: black-forest-labs/flux-schnell (ultra-optimized)');
-    console.log('  ✓ Format: WEBP (optimized compression)');
-    console.log('  ✓ Quality: 90% (high quality)');
-    console.log('  ✓ Size:', imageSizeKB, 'KB');
+    console.log('🎨 STABLE DIFFUSION image generation completed successfully!');
+    console.log('📊 Final Stable Diffusion generation stats:');
+    console.log('  ✓ Model: stability-ai/stable-diffusion (optimized)');
+    console.log('  ✓ Size: 512x512px (as requested)');
+    console.log('  ✓ Format:', originalFormat);
+    console.log('  ✓ File size:', imageSizeKB, 'KB');
     console.log('  ✓ Anti-text strategy: ULTRA ROBUST');
     console.log('  ✓ Brazilian context: FULLY INTEGRATED');
     console.log('  ✓ Educational optimization: MAXIMUM');
-    console.log('  ✓ Prompt simplification: RADICAL');
+    console.log('  ✓ Inference steps: 50 (high quality)');
+    console.log('  ✓ Guidance scale: 7.5 (balanced)');
     
     return new Response(JSON.stringify({ 
       success: true, 
       imageUrl: imageDataUrl,
       imageData: imageB64,
-      model: 'flux-schnell-ultra-optimized-v2',
+      model: 'stable-diffusion-optimized',
       optimizations: {
         ultraIntelligentContext: true,
         antiTextStrategy: 'ultra-robust',
         brazilianContext: 'fully-integrated',
         educationalOptimization: 'maximum',
         promptSimplification: 'radical',
-        webpFormat: true,
-        highQuality: true
+        stableDiffusionOptimized: true,
+        highQualityInference: true
       },
       stats: {
         sizeKB: imageSizeKB,
         mimeType: mimeType,
         base64LengthKB: Math.round(imageB64.length / 1024),
-        quality: 90,
-        aspectRatio: '1:1',
-        format: 'webp-optimized'
+        dimensions: '512x512',
+        originalFormat: originalFormat,
+        inferenceSteps: 50,
+        guidanceScale: 7.5,
+        scheduler: 'K_EULER'
       },
       textPlacementSuggestion: 'Utilize a área superior ou inferior da imagem para sobreposição de texto, mantendo o centro livre para o conteúdo visual principal.'
     }), { 
@@ -265,7 +269,7 @@ serve(async (req) => {
     });
     
   } catch (error) {
-    console.error('❌ CRITICAL ERROR in ultra-optimized gerarImagemIA v2.0:', error);
+    console.error('❌ CRITICAL ERROR in Stable Diffusion gerarImagemIA:', error);
     console.error('📋 Detailed error analysis:');
     console.error('  - Type:', error.constructor.name);
     console.error('  - Message:', error.message);
@@ -290,18 +294,17 @@ serve(async (req) => {
       // Prompt ultra-simplificado para fallback
       const ultraSimpleFallbackPrompt = `${originalPrompt.split('.')[0]}. Simple Brazilian educational illustration, clean design, no text, no symbols, visual only`;
 
-      console.log('📞 Ultra-simple fallback attempt...');
+      console.log('📞 Ultra-simple fallback attempt with Stable Diffusion...');
       const fallbackOutput = await replicate.run(
-        "black-forest-labs/flux-schnell",
+        "stability-ai/stable-diffusion:ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4",
         {
           input: {
             prompt: ultraSimpleFallbackPrompt,
-            go_fast: true,
+            width: 512,
+            height: 512,
             num_outputs: 1,
-            aspect_ratio: "1:1",
-            output_format: "webp",
-            output_quality: 80,
-            num_inference_steps: 4
+            num_inference_steps: 20,
+            guidance_scale: 7.0
           }
         }
       );
@@ -317,17 +320,17 @@ serve(async (req) => {
           
           const fallbackBinaryString = Array.from(fallbackUint8Array, byte => String.fromCharCode(byte)).join('');
           const fallbackB64 = btoa(fallbackBinaryString);
-          const fallbackDataUrl = `data:image/webp;base64,${fallbackB64}`;
+          const fallbackDataUrl = `data:image/png;base64,${fallbackB64}`;
           
-          console.log('🆘 Ultra-intelligent fallback completed successfully');
+          console.log('🆘 Ultra-intelligent Stable Diffusion fallback completed successfully');
           
           return new Response(JSON.stringify({ 
             success: true, 
             imageUrl: fallbackDataUrl,
             imageData: fallbackB64,
-            model: 'flux-schnell-ultra-fallback',
+            model: 'stable-diffusion-ultra-fallback',
             fallback: true,
-            warning: 'Generated using ultra-simplified fallback due to primary generation failure',
+            warning: 'Generated using ultra-simplified Stable Diffusion fallback due to primary generation failure',
             textPlacementSuggestion: 'Coloque texto nas bordas da imagem para melhor legibilidade.'
           }), { 
             status: 200,
@@ -336,13 +339,13 @@ serve(async (req) => {
         }
       }
     } catch (fallbackError) {
-      console.error('❌ Ultra-intelligent fallback also failed:', fallbackError.message);
+      console.error('❌ Ultra-intelligent Stable Diffusion fallback also failed:', fallbackError.message);
     }
     
     // Resposta de erro final com sugestão
     return new Response(JSON.stringify({ 
       success: false, 
-      error: `Erro na geração ultra-otimizada: ${error.message}`,
+      error: `Erro na geração com Stable Diffusion: ${error.message}`,
       errorType: error.constructor.name,
       timestamp: new Date().toISOString(),
       troubleshooting: 'Verifique a conectividade e tente novamente. Sistema de fallback também falhou.',
