@@ -4,14 +4,13 @@ interface BNCCValidation {
   confidence: number;
   suggestions: string[];
   feedback: string;
-  justificativa?: string;
 }
 
 const SUPABASE_EDGE_URL = "https://xmxpteviwcnrljtxvaoo.supabase.co/functions/v1/validarTemaBNCC";
 
 export class BNCCValidationService {
   static async validateTopic(tema: string, disciplina: string, serie: string): Promise<BNCCValidation> {
-    console.log('🔍 Validando tema na BNCC (versão aprimorada):', { tema, disciplina, serie });
+    console.log('🔍 Validando tema na BNCC:', { tema, disciplina, serie });
     
     try {
       const response = await fetch(SUPABASE_EDGE_URL, {
@@ -41,10 +40,9 @@ export class BNCCValidationService {
 
       const result: BNCCValidation = {
         isValid: Boolean(data.alinhado),
-        confidence: data.confianca || (data.alinhado ? 0.8 : 0.3),
+        confidence: data.alinhado ? 1 : 0,
         suggestions: Array.isArray(data.sugestoes) ? data.sugestoes : [],
-        feedback: data.mensagem || 'Validação concluída.',
-        justificativa: data.justificativa || ''
+        feedback: data.mensagem || 'Validação concluída.'
       };
 
       console.log('✅ Resultado da validação processado:', result);
@@ -53,57 +51,13 @@ export class BNCCValidationService {
     } catch (error) {
       console.error('❌ Erro ao validar tema na BNCC:', error);
       
-      // Retornar um resultado de fallback mais permissivo
+      // Retornar um resultado de fallback em caso de erro
       return {
-        isValid: true, // Ser mais permissivo em caso de erro
-        confidence: 0.5,
+        isValid: true, // Em caso de erro, permitir prosseguir
+        confidence: 0,
         suggestions: [],
-        feedback: 'Não foi possível validar completamente o tema no momento. Prosseguindo com a criação do material.',
-        justificativa: 'Erro de validação - fallback aplicado'
+        feedback: 'Não foi possível validar o tema no momento. Prosseguindo com a criação do material.'
       };
     }
-  }
-
-  // Método para validar múltiplos temas de uma vez
-  static async validateMultipleTopics(temas: string[], disciplina: string, serie: string): Promise<BNCCValidation[]> {
-    console.log('🔍 Validando múltiplos temas:', { temas, disciplina, serie });
-    
-    const promises = temas.map(tema => this.validateTopic(tema, disciplina, serie));
-    
-    try {
-      const results = await Promise.all(promises);
-      console.log('✅ Validação múltipla concluída:', results);
-      return results;
-    } catch (error) {
-      console.error('❌ Erro na validação múltipla:', error);
-      
-      // Retornar fallback para todos os temas
-      return temas.map(tema => ({
-        isValid: true,
-        confidence: 0.5,
-        suggestions: [],
-        feedback: 'Erro na validação múltipla. Prosseguindo com a criação.',
-        justificativa: 'Fallback por erro de validação'
-      }));
-    }
-  }
-
-  // Método para obter estatísticas de validação
-  static getValidationStats(validations: BNCCValidation[]): {
-    totalValid: number;
-    totalInvalid: number;
-    averageConfidence: number;
-    overallValid: boolean;
-  } {
-    const valid = validations.filter(v => v.isValid);
-    const invalid = validations.filter(v => !v.isValid);
-    const avgConfidence = validations.reduce((acc, v) => acc + v.confidence, 0) / validations.length;
-    
-    return {
-      totalValid: valid.length,
-      totalInvalid: invalid.length,
-      averageConfidence: avgConfidence,
-      overallValid: invalid.length === 0
-    };
   }
 }
