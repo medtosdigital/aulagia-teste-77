@@ -35,7 +35,7 @@ Handlebars.registerHelper('abc', function (index) {
   return String.fromCharCode(97 + index);
 });
 
-export const getPlanoDeAulaTemplate = () => `
+const getPlanoDeAulaTemplate = () => `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -158,7 +158,7 @@ export const getPlanoDeAulaTemplate = () => `
 </html>
 `;
 
-export const getSlidesTemplate = () => `
+const getSlidesTemplate = () => `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -297,7 +297,7 @@ export const getSlidesTemplate = () => `
 </html>
 `;
 
-export const getAtividadeTemplate = () => `
+const getAtividadeTemplate = () => `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -430,7 +430,7 @@ export const getAtividadeTemplate = () => `
 </html>
 `;
 
-export const getAvaliacaoTemplate = () => `
+const getAvaliacaoTemplate = () => `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
