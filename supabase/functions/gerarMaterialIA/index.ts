@@ -1,7 +1,6 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Replicate from "https://esm.sh/replicate@0.30.0";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -55,48 +54,43 @@ serve(async (req) => {
     const prompt = generatePrompt(materialType, formData);
     console.log('🎯 Generated prompt for', materialType);
 
-    const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN');
-    if (!REPLICATE_API_TOKEN) {
-      console.error('❌ Replicate API key not configured');
-      return new Response(JSON.stringify({ error: 'Replicate API key not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    const replicate = new Replicate({ auth: REPLICATE_API_TOKEN });
-    const output = await replicate.run(
-      "deepseek-ai/deepseek-v3:8b-instruct",
-      {
-        input: {
-          prompt: prompt,
-          temperature: 0.6,
-          max_tokens: 3500,
-          top_p: 0.9,
-          top_k: 40,
-          repetition_penalty: 1.1,
-          stop: ["```", "---", "###", "END"]
-        }
-      }
-    );
-    if (!output) {
-      console.error('❌ Nenhuma resposta da API Replicate');
+    // Call OpenAI API
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'Você é um assistente especializado em criar materiais educacionais seguindo a BNCC. Retorne sempre conteúdo estruturado e pedagógico com base nas diretrizes brasileiras de educação. Seja específico e detalhado em todas as seções, evitando campos vazios ou incompletos. GERE TODO O CONTEÚDO baseado no tema, disciplina e série informados - não use templates genéricos. Use português brasileiro correto, sem erros de gramática ou ortografia.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 4000,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('❌ OpenAI API error:', response.status, response.statusText);
+      const errorData = await response.text();
+      console.error('Error details:', errorData);
       return new Response(JSON.stringify({ error: 'Failed to generate content' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    let generatedContent = '';
-    if (Array.isArray(output)) {
-      generatedContent = output.join('');
-    } else if (typeof output === 'string') {
-      generatedContent = output;
-    } else {
-      console.error('❌ Formato de resposta inesperado da Replicate:', output);
-      return new Response(JSON.stringify({ error: 'Failed to generate content' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+
+    const data = await response.json();
+    const generatedContent = data.choices[0].message.content;
+
     console.log('✅ Content generated successfully');
 
     // Parse the generated content and structure it appropriately
@@ -146,11 +140,14 @@ IMPORTANTE: GERE TODO O CONTEÚDO baseado especificamente no tema "${tema}" para
 INSTRUÇÕES CRÍTICAS PARA O PLANO DE AULA:
 
 1. HABILIDADES BNCC:
-   - Forneça EXATAMENTE 3 habilidades
+   - Forneça EXATAMENTE DE 1 A 4 habilidades que CORRESPONDAM AO ${tema} E O CONTEÚDO GERADO PARA O PLANO DE AULA
    - Cada habilidade deve ter código REAL da BNCC (ex: EF03MA19, EF67LP28)
-   - Os códigos devem ser específicos para a disciplina ${disciplina} e série ${serie}
-   - Formato obrigatório: array de objetos com "codigo" e "descricao"
-   - Descrições devem ser claras e específicas sobre ${tema}
+   - Os códigos devem ser específicos para O ${tema} da ${disciplina} e série ${serie}
+   - Formato obrigatório: array de objetos com 'codigo' e 'descricao'
+   - Descrições devem ser claras e específicas sobre os códigos da BNCC GERADOS
+   - Só utilize códigos e descrições reais da BNCC, consultando obrigatoriamente a base oficial (https://basenacionalcomum.mec.gov.br/)
+   - NÃO invente códigos ou descrições. Relacione o código e a descrição exatamente como consta na BNCC oficial
+   - O código deve ser específico para o tema "${tema}", disciplina "${disciplina}" e série "${serie}"
 
 2. DESENVOLVIMENTO DAS ETAPAS:
    - Cada etapa deve ter recursos ÚNICOS e específicos
