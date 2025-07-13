@@ -408,7 +408,23 @@ class MaterialService {
   private mapToUserMaterial(type: string, formData: MaterialFormData, content: any): Omit<UserMaterial, 'id' | 'createdAt' | 'status'> {
     const title = this.generateTitle(type, formData);
     const materialType = type === 'plano-de-aula' ? 'plano-aula' : type as 'plano-aula' | 'atividade' | 'slides' | 'avaliacao';
-    
+
+    // Corrigir habilidades para sempre salvar como array de strings
+    let habilidades: string[] = [];
+    if (content.habilidades && Array.isArray(content.habilidades)) {
+      habilidades = content.habilidades.map((h: any) => {
+        if (typeof h === 'object' && h.codigo && h.descricao) {
+          return `${h.codigo} - ${h.descricao}`;
+        } else if (typeof h === 'string') {
+          return h;
+        }
+        return '';
+      });
+      content.habilidades = habilidades;
+    } else if (typeof content.habilidades === 'string') {
+      content.habilidades = [content.habilidades];
+    }
+
     return {
       title,
       type: materialType,
@@ -420,23 +436,13 @@ class MaterialService {
   }
 
   private generateTitle(type: string, formData: MaterialFormData): string {
-    const typeLabels = {
-      'plano-de-aula': 'Plano de Aula',
-      'slides': 'Slides',
-      'atividade': 'Atividade',
-      'avaliacao': 'Avaliação'
-    };
-    
-    const typeLabel = typeLabels[type as keyof typeof typeLabels] || 'Material';
-    
     if (type === 'avaliacao' && formData.assuntos && formData.assuntos.length > 0) {
       const topics = formData.assuntos.filter(s => s.trim() !== '').slice(0, 2);
       const topicText = topics.length > 1 ? `${topics[0]} e mais` : topics[0];
-      return `${typeLabel} - ${topicText}`;
+      return topicText;
     }
-    
     const topic = formData.tema || formData.topic || 'Conteúdo Personalizado';
-    return `${typeLabel} - ${topic}`;
+    return topic;
   }
 
   private convertToGeneratedMaterial(userMaterial: UserMaterial, content: any, formData: MaterialFormData): GeneratedMaterial {
@@ -475,9 +481,20 @@ class MaterialService {
         }
         return '';
       });
+    } else if (typeof content.habilidades === 'string') {
+      habilidades = [content.habilidades];
     }
     // Ajuste do campo BNCC: apenas os códigos
-    const bncc = bnccCodigos.join(', ');
+    let bncc = '';
+    if (bnccCodigos.length > 0) {
+      bncc = bnccCodigos.join(', ');
+    } else if (Array.isArray(content.bncc)) {
+      bncc = content.bncc.join(', ');
+    } else if (typeof content.bncc === 'string') {
+      bncc = content.bncc;
+    } else if (formData && formData.bncc) {
+      bncc = formData.bncc;
+    }
     return {
       id: userMaterial.id,
       title: userMaterial.title,

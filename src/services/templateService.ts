@@ -1763,7 +1763,7 @@ export class TemplateService {
       let questionHtml = `
         <div class="questao-container">
           <div class="questao-numero">Questão ${questao.numero || index + 1}</div>
-          <div class="questao-enunciado">${questao.pergunta}</div>
+          <div class="questao-enunciado">${questao.pergunta || questao.enunciado || ''}</div>
       `;
 
       // Add visual elements if present

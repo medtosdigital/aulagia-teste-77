@@ -162,6 +162,7 @@ INSTRUÇÕES CRÍTICAS PARA O PLANO DE AULA:
 4. DURAÇÃO:
    - Calcule duração total baseada nos tempos das etapas
    - Seja realista para o tema e série
+   - Sempre exiba a duração total no formato: "X minutos (Y aula(s))", considerando que cada aula tem 50 minutos. Exemplo: 50 minutos (1 Aula), 100 minutos (2 Aulas).
 
 Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPECÍFICO sobre "${tema}":
 
@@ -172,7 +173,7 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
   "disciplina": "${disciplina}",
   "serie": "${serie}",
   "tema": "${tema}",
-  "duracao": "[CALCULE duração total baseada nas etapas - ex: 50 minutos, 100 minutos (2 aulas)]",
+  "duracao": "[CALCULE duração total baseada nas etapas e exiba no formato: X minutos (Y aula(s)), considerando 50 minutos = 1 aula. Exemplo: 50 minutos (1 Aula), 100 minutos (2 Aulas)]",
   "habilidades": [
     {"codigo": "[CÓDIGO BNCC REAL 1 - ex: EF03MA19]", "descricao": "[DESCRIÇÃO COMPLETA da habilidade 1 sobre ${tema}]"},
     {"codigo": "[CÓDIGO BNCC REAL 2 - ex: EF03MA20]", "descricao": "[DESCRIÇÃO COMPLETA da habilidade 2 sobre ${tema}]"},
