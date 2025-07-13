@@ -560,3 +560,29 @@ export const getAvaliacaoTemplate = () => `
 </body>
 </html>
 `;
+
+const templates = {
+  '1': getPlanoDeAulaTemplate(),
+  '2': getSlidesTemplate(),
+  '3': getAtividadeTemplate(),
+  '4': getAvaliacaoTemplate()
+};
+
+export const templateService = {
+  renderTemplate: (templateId: string, data: any): string => {
+    const templateString = templates[templateId as keyof typeof templates];
+    if (!templateString) {
+      throw new Error(`Template ${templateId} not found`);
+    }
+    
+    const template = Handlebars.compile(templateString);
+    return template(data);
+  },
+  
+  getTemplate: (templateId: string): string => {
+    return templates[templateId as keyof typeof templates] || templates['1'];
+  }
+};
+
+// Export individual template functions for backward compatibility
+export { getPlanoDeAulaTemplate, getSlidesTemplate, getAtividadeTemplate, getAvaliacaoTemplate };
