@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, BookOpen, Lightbulb, CheckCircle, Loader2, FileText, ExternalLink } from 'lucide-react';
+import { AlertTriangle, BookOpen, Lightbulb, CheckCircle, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BNCCValidationModalProps {
@@ -13,7 +13,6 @@ interface BNCCValidationModalProps {
     confidence: number;
     suggestions: string[];
     feedback: string;
-    relatedSkills?: string[];
   } | null;
   tema: string;
   disciplina: string;
@@ -62,7 +61,7 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
       <DialogContent className={`${
         isMobile 
           ? 'w-[95vw] h-[90vh] max-w-none max-h-none m-2 rounded-2xl' 
-          : 'max-w-3xl rounded-xl'
+          : 'max-w-2xl rounded-xl'
       } p-0 overflow-hidden flex flex-col`}>
         
         {/* Header fixo */}
@@ -73,7 +72,7 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
             isMobile ? 'text-base' : 'text-xl'
           }`}>
             <AlertTriangle className={`text-orange-600 ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
-            <span>Validação BNCC - Dados Oficiais</span>
+            <span>Validação do Tema</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -86,7 +85,7 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
               <div className="flex items-center space-x-2 mb-3">
                 <BookOpen className="w-4 h-4 text-gray-600" />
                 <h3 className={`font-semibold text-gray-800 ${isMobile ? 'text-sm' : 'text-base'}`}>
-                  Informações do Tema
+                  Informações Atuais
                 </h3>
               </div>
               
@@ -124,58 +123,16 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
                   <h4 className={`font-semibold text-red-800 mb-2 ${
                     isMobile ? 'text-sm' : 'text-base'
                   }`}>
-                    Tema Não Alinhado com a BNCC
+                    Tema Não Recomendado
                   </h4>
                   <p className={`text-red-700 leading-relaxed break-words ${
                     isMobile ? 'text-xs' : 'text-sm'
                   }`}>
                     {validationData.feedback}
                   </p>
-                  
-                  <div className="mt-3 pt-3 border-t border-red-200">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="w-4 h-4 text-red-600" />
-                      <span className={`font-medium text-red-800 ${
-                        isMobile ? 'text-xs' : 'text-sm'
-                      }`}>
-                        Análise baseada em dados extraídos do site oficial da BNCC
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-center space-x-2">
-                      <div className={`px-2 py-1 bg-red-100 border border-red-300 rounded text-red-800 ${
-                        isMobile ? 'text-xs' : 'text-sm'
-                      }`}>
-                        Confiança: {Math.round(validationData.confidence * 100)}%
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Mostrar habilidades relacionadas se disponíveis */}
-            {validationData.relatedSkills && validationData.relatedSkills.length > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <div className="flex items-start space-x-3">
-                  <FileText className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h4 className={`font-semibold text-blue-800 mb-3 ${
-                      isMobile ? 'text-sm' : 'text-base'
-                    }`}>
-                      Códigos BNCC Relacionados:
-                    </h4>
-                    <div className={`space-y-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                      {validationData.relatedSkills.map((skill, index) => (
-                        <div key={index} className="flex items-start text-blue-700 bg-blue-100 p-2 rounded border border-blue-200">
-                          <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                          <span className="break-words leading-relaxed font-mono text-blue-900 font-medium">{skill}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Sugestões */}
             {validationData.suggestions && validationData.suggestions.length > 0 && (
@@ -186,13 +143,13 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
                     <h4 className={`font-semibold text-green-800 mb-3 ${
                       isMobile ? 'text-sm' : 'text-base'
                     }`}>
-                      Sugestões de Temas Alinhados à BNCC:
+                      Sugestões de Temas Alternativos:
                     </h4>
-                    <div className={`space-y-3 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                    <div className={`space-y-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       {validationData.suggestions.map((suggestion, index) => (
-                        <div key={index} className="flex items-start text-green-700 bg-green-100 p-3 rounded border border-green-200">
+                        <div key={index} className="flex items-start text-green-700">
                           <div className="w-2 h-2 bg-green-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                          <span className="break-words leading-relaxed font-medium">{suggestion}</span>
+                          <span className="break-words leading-relaxed">{suggestion}</span>
                         </div>
                       ))}
                     </div>
@@ -200,46 +157,6 @@ const BNCCValidationModal: React.FC<BNCCValidationModalProps> = ({
                 </div>
               </div>
             )}
-
-            {/* Link para a BNCC oficial */}
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-              <div className="flex items-center space-x-2 mb-2">
-                <ExternalLink className="w-4 h-4 text-purple-600" />
-                <span className={`text-purple-800 font-medium ${
-                  isMobile ? 'text-sm' : 'text-base'
-                }`}>
-                  Consulte a BNCC Oficial
-                </span>
-              </div>
-              <p className={`text-purple-700 mb-3 ${
-                isMobile ? 'text-xs' : 'text-sm'
-              }`}>
-                Para verificar as habilidades específicas da sua disciplina e série, acesse o site oficial da BNCC.
-              </p>
-              <a 
-                href="https://basenacionalcomum.mec.gov.br/abase/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className={`inline-flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors ${
-                  isMobile ? 'text-xs' : 'text-sm'
-                }`}
-              >
-                <span>Acessar BNCC</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-
-            {/* Informação sobre a fonte dos dados */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-              <div className="flex items-center space-x-2">
-                <FileText className="w-4 h-4 text-blue-600" />
-                <span className={`text-blue-800 font-medium ${
-                  isMobile ? 'text-xs' : 'text-sm'
-                }`}>
-                  Esta validação utiliza dados extraídos diretamente do site oficial da BNCC para máxima precisão
-                </span>
-              </div>
-            </div>
           </div>
         </div>
 
