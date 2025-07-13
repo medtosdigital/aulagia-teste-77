@@ -1,5 +1,4 @@
 
-
 // Função para renderizar questões em templates HTML
 export function renderQuestions(questoes: any[]): string {
   if (!Array.isArray(questoes) || questoes.length === 0) {
@@ -13,23 +12,24 @@ export function renderQuestions(questoes: any[]): string {
     const tipo = questao.tipo || 'multipla_escolha';
 
     let questionHtml = `
-      <div class="question-item mb-6 p-4 border border-gray-200 rounded-lg">
-        <div class="question-header mb-3">
-          <h3 class="font-semibold text-lg text-gray-800">Questão ${numero}</h3>
-          <span class="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">${tipo.replace('_', ' ')}</span>
+      <div class="mb-6">
+        <div class="mb-2">
+          <span class="font-bold text-gray-800">Questão ${numero}</span>
         </div>
-        <div class="question-content">
-          <p class="question-text mb-3 text-gray-700">${enunciado}</p>`;
+        <div class="mb-3">
+          <p class="text-gray-700">${enunciado}</p>
+        </div>`;
 
     // Renderizar conteúdo específico por tipo de questão
     switch (tipo) {
       case 'multipla_escolha':
         if (questao.opcoes && Array.isArray(questao.opcoes)) {
-          questionHtml += '<div class="options-list ml-4">';
+          questionHtml += '<div class="ml-4 space-y-1">';
           questao.opcoes.forEach((opcao: string, idx: number) => {
             const letra = String.fromCharCode(97 + idx).toUpperCase();
-            questionHtml += `<div class="option-item mb-2">
-              <span class="font-medium">${letra})</span> ${opcao}
+            questionHtml += `<div class="flex items-start">
+              <span class="font-medium mr-2">${letra})</span>
+              <span>${opcao}</span>
             </div>`;
           });
           questionHtml += '</div>';
@@ -38,24 +38,30 @@ export function renderQuestions(questoes: any[]): string {
 
       case 'verdadeiro_falso':
         questionHtml += `
-          <div class="tf-options ml-4">
-            <div class="option-item mb-2">( ) Verdadeiro</div>
-            <div class="option-item mb-2">( ) Falso</div>
+          <div class="ml-4 space-y-2">
+            <div class="flex items-center">
+              <span class="mr-2">( )</span>
+              <span>Verdadeiro</span>
+            </div>
+            <div class="flex items-center">
+              <span class="mr-2">( )</span>
+              <span>Falso</span>
+            </div>
           </div>`;
         break;
 
       case 'ligar':
         if (questao.coluna_a && questao.coluna_b) {
-          questionHtml += '<div class="columns-container grid grid-cols-2 gap-4 ml-4">';
-          questionHtml += '<div class="column-a"><h4 class="font-medium mb-2">Coluna A:</h4>';
+          questionHtml += '<div class="ml-4 grid grid-cols-2 gap-8">';
+          questionHtml += '<div><h4 class="font-medium mb-2">Coluna A:</h4>';
           questao.coluna_a.forEach((item: string, idx: number) => {
-            questionHtml += `<div class="column-item mb-1">${idx + 1}. ${item}</div>`;
+            questionHtml += `<div class="mb-1">${idx + 1}. ${item}</div>`;
           });
           questionHtml += '</div>';
-          questionHtml += '<div class="column-b"><h4 class="font-medium mb-2">Coluna B:</h4>';
+          questionHtml += '<div><h4 class="font-medium mb-2">Coluna B:</h4>';
           questao.coluna_b.forEach((item: string, idx: number) => {
             const letra = String.fromCharCode(97 + idx);
-            questionHtml += `<div class="column-item mb-1">${letra}. ${item}</div>`;
+            questionHtml += `<div class="mb-1">${letra}. ${item}</div>`;
           });
           questionHtml += '</div></div>';
         }
@@ -63,46 +69,30 @@ export function renderQuestions(questoes: any[]): string {
 
       case 'completar':
         if (questao.textoComLacunas) {
-          questionHtml += `<div class="completion-text ml-4">${questao.textoComLacunas}</div>`;
+          questionHtml += `<div class="ml-4">${questao.textoComLacunas}</div>`;
         } else {
-          questionHtml += '<div class="completion-space ml-4 border-b border-gray-400" style="min-height: 20px; width: 200px;"></div>';
+          questionHtml += '<div class="ml-4"><div class="border-b border-gray-400 inline-block" style="min-width: 200px; height: 20px;"></div></div>';
         }
         break;
 
       case 'dissertativa':
         const linhas = questao.linhasResposta || 5;
-        questionHtml += '<div class="essay-space ml-4">';
+        questionHtml += '<div class="ml-4">';
         for (let i = 0; i < linhas; i++) {
-          questionHtml += '<div class="answer-line border-b border-gray-300 mb-2" style="height: 24px;"></div>';
+          questionHtml += '<div class="border-b border-gray-300 mb-3" style="height: 24px;"></div>';
         }
         questionHtml += '</div>';
         break;
 
       case 'desenho':
-        questionHtml += '<div class="drawing-space ml-4 border-2 border-dashed border-gray-300 rounded" style="height: 150px; display: flex; align-items: center; justify-content: center; color: #9CA3AF;">Espaço para desenho</div>';
+        questionHtml += '<div class="ml-4"><div class="border-2 border-dashed border-gray-300 rounded p-8 text-center text-gray-500" style="height: 150px; display: flex; align-items: center; justify-content: center;">Espaço para desenho</div></div>';
         break;
 
       default:
-        questionHtml += '<div class="unknown-question-type ml-4 text-red-500">Tipo de questão não reconhecido</div>';
+        questionHtml += '<div class="ml-4 text-red-500">Tipo de questão não reconhecido</div>';
     }
 
-    // Adicionar resposta correta se disponível
-    if (questao.resposta_correta) {
-      questionHtml += `
-        <div class="answer-section mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
-          <strong>Resposta:</strong> ${questao.resposta_correta}
-        </div>`;
-    }
-
-    // Adicionar explicação se disponível
-    if (questao.explicacao) {
-      questionHtml += `
-        <div class="explanation-section mt-2 p-2 bg-gray-50 border border-gray-200 rounded">
-          <strong>Explicação:</strong> ${questao.explicacao}
-        </div>`;
-    }
-
-    questionHtml += '</div></div>';
+    questionHtml += '</div>';
     return questionHtml;
   }).join('');
 }
@@ -133,44 +123,17 @@ export function validateQuestionStructure(questao: any): boolean {
 
 // Função para normalizar questões
 export function normalizeQuestion(questao: any, index: number): any {
-  const normalized = {
+  return {
     numero: questao.numero || (index + 1),
     tipo: questao.tipo || 'multipla_escolha',
     enunciado: questao.enunciado || questao.pergunta || `Questão ${index + 1}`,
     pergunta: questao.pergunta || questao.enunciado || `Questão ${index + 1}`,
-    resposta_correta: questao.resposta_correta || '',
-    explicacao: questao.explicacao || '',
-    opcoes: [],
-    coluna_a: [],
-    coluna_b: [],
-    textoComLacunas: '',
-    linhasResposta: 5
+    opcoes: questao.opcoes || [],
+    coluna_a: questao.coluna_a || [],
+    coluna_b: questao.coluna_b || [],
+    textoComLacunas: questao.textoComLacunas || '',
+    linhasResposta: questao.linhasResposta || 5
   };
-
-  // Configurar campos específicos por tipo
-  switch (normalized.tipo) {
-    case 'multipla_escolha':
-      normalized.opcoes = Array.isArray(questao.opcoes) ? questao.opcoes : [
-        'Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'
-      ];
-      break;
-    case 'ligar':
-      normalized.coluna_a = Array.isArray(questao.coluna_a) ? questao.coluna_a : ['Item A1', 'Item A2', 'Item A3', 'Item A4'];
-      normalized.coluna_b = Array.isArray(questao.coluna_b) ? questao.coluna_b : ['Item B1', 'Item B2', 'Item B3', 'Item B4'];
-      break;
-    case 'completar':
-      normalized.textoComLacunas = questao.textoComLacunas || questao.enunciado || '';
-      break;
-    case 'dissertativa':
-    case 'desenho':
-      normalized.linhasResposta = questao.linhasResposta || 5;
-      break;
-    case 'verdadeiro_falso':
-      normalized.opcoes = ['Verdadeiro', 'Falso'];
-      break;
-  }
-
-  return normalized;
 }
 
 // Template básico para renderização de materiais
@@ -200,58 +163,82 @@ const renderTemplate = (templateId: string, content: any): string => {
 const renderLessonPlan = (content: any): string => {
   if (!content) return '<div>Conteúdo não disponível</div>';
   
-  let html = '<div class="lesson-plan">';
-  
-  if (content.titulo) {
-    html += `<h1>${content.titulo}</h1>`;
-  }
+  let html = `
+    <div class="max-w-4xl mx-auto p-8 bg-white">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">${content.titulo || 'Plano de Aula'}</h1>
+        <div class="text-sm text-gray-600">
+          <span>Professor: ${content.professor || ''}</span> | 
+          <span>Disciplina: ${content.disciplina || ''}</span> | 
+          <span>Série: ${content.serie || ''}</span>
+        </div>
+      </div>`;
   
   if (content.objetivos) {
-    html += '<h2>Objetivos</h2>';
+    html += `
+      <div class="mb-6">
+        <h2 class="text-xl font-bold text-blue-600 mb-3">OBJETIVOS</h2>
+        <ul class="list-disc list-inside space-y-1">`;
+    
     if (Array.isArray(content.objetivos)) {
-      html += '<ul>';
       content.objetivos.forEach((objetivo: string) => {
-        html += `<li>${objetivo}</li>`;
+        html += `<li class="text-gray-700">${objetivo}</li>`;
       });
-      html += '</ul>';
     } else {
-      html += `<p>${content.objetivos}</p>`;
+      html += `<li class="text-gray-700">${content.objetivos}</li>`;
     }
+    
+    html += '</ul></div>';
   }
   
   if (content.desenvolvimento) {
-    html += '<h2>Desenvolvimento</h2>';
+    html += `
+      <div class="mb-6">
+        <h2 class="text-xl font-bold text-blue-600 mb-3">DESENVOLVIMENTO</h2>`;
+    
     if (Array.isArray(content.desenvolvimento)) {
       content.desenvolvimento.forEach((etapa: any) => {
         if (typeof etapa === 'string') {
-          html += `<p>${etapa}</p>`;
+          html += `<p class="mb-2 text-gray-700">${etapa}</p>`;
         } else if (etapa.etapa) {
-          html += `<h3>${etapa.etapa}</h3>`;
-          if (etapa.atividade) html += `<p>${etapa.atividade}</p>`;
-          if (etapa.tempo) html += `<p><strong>Tempo:</strong> ${etapa.tempo}</p>`;
+          html += `
+            <div class="mb-4 p-3 border-l-4 border-blue-300 bg-blue-50">
+              <h3 class="font-bold text-gray-800">${etapa.etapa}</h3>
+              ${etapa.atividade ? `<p class="text-gray-700 mt-1">${etapa.atividade}</p>` : ''}
+              ${etapa.tempo ? `<p class="text-sm text-blue-600 mt-1"><strong>Tempo:</strong> ${etapa.tempo}</p>` : ''}
+            </div>`;
         }
       });
     } else {
-      html += `<p>${content.desenvolvimento}</p>`;
+      html += `<p class="text-gray-700">${content.desenvolvimento}</p>`;
     }
+    
+    html += '</div>';
   }
   
   if (content.recursos) {
-    html += '<h2>Recursos</h2>';
+    html += `
+      <div class="mb-6">
+        <h2 class="text-xl font-bold text-blue-600 mb-3">RECURSOS NECESSÁRIOS</h2>
+        <ul class="list-disc list-inside space-y-1">`;
+    
     if (Array.isArray(content.recursos)) {
-      html += '<ul>';
       content.recursos.forEach((recurso: string) => {
-        html += `<li>${recurso}</li>`;
+        html += `<li class="text-gray-700">${recurso}</li>`;
       });
-      html += '</ul>';
     } else {
-      html += `<p>${content.recursos}</p>`;
+      html += `<li class="text-gray-700">${content.recursos}</li>`;
     }
+    
+    html += '</ul></div>';
   }
   
   if (content.avaliacao) {
-    html += '<h2>Avaliação</h2>';
-    html += `<p>${content.avaliacao}</p>`;
+    html += `
+      <div class="mb-6">
+        <h2 class="text-xl font-bold text-blue-600 mb-3">AVALIAÇÃO</h2>
+        <p class="text-gray-700">${content.avaliacao}</p>
+      </div>`;
   }
   
   html += '</div>';
@@ -262,41 +249,48 @@ const renderLessonPlan = (content: any): string => {
 const renderSlides = (content: any): string => {
   if (!content || !Array.isArray(content)) return '<div>Slides não disponíveis</div>';
   
-  let html = '<div class="slides">';
+  let html = '<div class="space-y-8">';
   content.forEach((slide: any, index: number) => {
-    html += `<div class="slide" data-slide="${index + 1}">`;
-    if (slide.titulo) {
-      html += `<h2>${slide.titulo}</h2>`;
-    }
+    html += `
+      <div class="bg-white p-8 border border-gray-200 rounded-lg shadow-sm">
+        <div class="text-center mb-6">
+          <div class="text-sm text-gray-500 mb-2">Slide ${index + 1}</div>
+          <h2 class="text-2xl font-bold text-gray-800">${slide.titulo || `Slide ${index + 1}`}</h2>
+        </div>`;
+    
     if (slide.conteudo) {
       if (Array.isArray(slide.conteudo)) {
-        html += '<ul>';
+        html += '<ul class="space-y-2 text-lg">';
         slide.conteudo.forEach((item: string) => {
-          html += `<li>${item}</li>`;
+          html += `<li class="flex items-start"><span class="text-blue-500 mr-2">•</span><span>${item}</span></li>`;
         });
         html += '</ul>';
       } else {
-        html += `<p>${slide.conteudo}</p>`;
+        html += `<p class="text-lg text-gray-700">${slide.conteudo}</p>`;
       }
     }
+    
     html += '</div>';
   });
   html += '</div>';
   return html;
 };
 
-// Função para renderizar atividade
+// Função para renderizar atividade (SEM respostas e explicações)
 const renderActivity = (content: any): string => {
   if (!content) return '<div>Atividade não disponível</div>';
   
-  let html = '<div class="activity">';
-  
-  if (content.titulo) {
-    html += `<h1>${content.titulo}</h1>`;
-  }
+  let html = `
+    <div class="max-w-4xl mx-auto p-8 bg-white">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">${content.titulo || 'Atividade Prática'}</h1>
+      </div>`;
   
   if (content.instrucoes) {
-    html += `<div class="instructions">${content.instrucoes}</div>`;
+    html += `
+      <div class="mb-8 p-4 bg-blue-50 border-l-4 border-blue-400">
+        <p class="text-gray-700">${content.instrucoes}</p>
+      </div>`;
   }
   
   if (content.questoes && Array.isArray(content.questoes)) {
@@ -307,18 +301,21 @@ const renderActivity = (content: any): string => {
   return html;
 };
 
-// Função para renderizar avaliação
+// Função para renderizar avaliação (COM respostas apenas se especificado)
 const renderAssessment = (content: any): string => {
   if (!content) return '<div>Avaliação não disponível</div>';
   
-  let html = '<div class="assessment">';
-  
-  if (content.titulo) {
-    html += `<h1>${content.titulo}</h1>`;
-  }
+  let html = `
+    <div class="max-w-4xl mx-auto p-8 bg-white">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">${content.titulo || 'Avaliação'}</h1>
+      </div>`;
   
   if (content.instrucoes) {
-    html += `<div class="instructions">${content.instrucoes}</div>`;
+    html += `
+      <div class="mb-8 p-4 bg-purple-50 border-l-4 border-purple-400">
+        <p class="text-gray-700">${content.instrucoes}</p>
+      </div>`;
   }
   
   if (content.questoes && Array.isArray(content.questoes)) {
@@ -349,4 +346,3 @@ export const templateService = {
 
 // Exportação padrão
 export default templateService;
-
