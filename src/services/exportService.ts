@@ -3,6 +3,11 @@ import { Document, Packer, Paragraph, TextRun, AlignmentType, PageBreak, Table, 
 import { saveAs } from 'file-saver';
 import { GeneratedMaterial, LessonPlan, Activity, Slide, Assessment } from './materialService';
 import { templateService } from './templateService';
+import { splitContentIntoPages, enhanceHtmlWithNewTemplate } from './materialRenderUtils';
+import { compile } from '@onedoc/react-print';
+import React from 'react';
+import printJS from 'print-js';
+import html2pdf from 'html2pdf.js';
 
 class ExportService {
   private wrapPageContentWithTemplate = (content: string, isFirstPage: boolean, material: GeneratedMaterial): string => {
@@ -134,32 +139,28 @@ class ExportService {
       }
 
       const pages: string[] = [];
-      const sectionsPerPage = 3;
-      let sectionIndex = 0;
-
       const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
-      
-      while (sectionIndex < sections.length) {
-        const isFirstPage = pages.length === 0;
-        const sectionsForPage = [];
-        
-        for (let i = 0; i < sectionsPerPage && sectionIndex < sections.length; i++) {
-          sectionsForPage.push(sections[sectionIndex]);
-          sectionIndex++;
-        }
-
-        let pageContent = '';
-        if (isFirstPage) {
-          pageContent += header;
-        }
-        
-        sectionsForPage.forEach(section => {
-          pageContent += section.outerHTML;
-        });
-
-        pages.push(this.wrapPageContentWithTemplate(pageContent, isFirstPage, material));
-      }
-      
+      // Nova lógica: Primeira página = até Metodologia, Segunda página = Metodologia + Avaliação + Referências
+      // Encontrar índices das seções
+      let metodologiaIdx = -1, avaliacaoIdx = -1, referenciasIdx = -1;
+      sections.forEach((section, idx) => {
+        const h3 = section.querySelector('h3');
+        if (!h3) return;
+        const title = h3.textContent?.toLowerCase() || '';
+        if (title.includes('metodologia')) metodologiaIdx = idx;
+        if (title.includes('avaliação')) avaliacaoIdx = idx;
+        if (title.includes('referências')) referenciasIdx = idx;
+      });
+      // Primeira página: da seção 0 até antes de Metodologia
+      const firstPageSections = Array.from(sections).slice(0, metodologiaIdx);
+      // Segunda página: Metodologia, Avaliação e Referências
+      const secondPageSections = Array.from(sections).slice(metodologiaIdx, referenciasIdx + 1);
+      let pageContent = header;
+      firstPageSections.forEach(section => { pageContent += section.outerHTML; });
+      pages.push(this.wrapPageContentWithTemplate(pageContent, true, material));
+      let secondPageContent = '';
+      secondPageSections.forEach(section => { secondPageContent += section.outerHTML; });
+      pages.push(this.wrapPageContentWithTemplate(secondPageContent, false, material));
       return pages.length > 0 ? pages : [htmlContent];
     }
 
@@ -588,6 +589,26 @@ class ExportService {
     `;
   };
 
+  private getTemplateId(type: string): string {
+    const typeMap = {
+      'plano-de-aula': '1',
+      'slides': '2',
+      'atividade': '3',
+      'avaliacao': '4'
+    };
+    return typeMap[type as keyof typeof typeMap] || '1';
+  }
+
+  private getTypeLabel(type: string): string {
+    const labels = {
+      'plano-de-aula': 'Plano de Aula',
+      'slides': 'Slides',
+      'atividade': 'Atividade',
+      'avaliacao': 'Avaliação'
+    };
+    return labels[type as keyof typeof labels] || type;
+  }
+
   async exportToPDF(material: GeneratedMaterial): Promise<void> {
     try {
       if (material.type === 'slides') {
@@ -596,14 +617,14 @@ class ExportService {
       }
 
       const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
-      const pages = this.splitContentIntoPages(renderedHtml, material);
+      const pages = splitContentIntoPages(renderedHtml, material);
       
       let finalHtml = '';
       pages.forEach((page) => {
         finalHtml += page;
       });
       
-      const styledHtml = this.enhanceHtmlWithNewTemplate(finalHtml, material);
+      const styledHtml = enhanceHtmlWithNewTemplate(finalHtml, material);
       
       // Criar um iframe oculto para renderizar o HTML
       const iframe = document.createElement('iframe');
@@ -719,7 +740,7 @@ class ExportService {
 
       // Renderizar conteúdo e dividir em páginas usando o novo sistema
       const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
-      const pages = this.splitContentIntoPages(renderedHtml, material);
+      const pages = splitContentIntoPages(renderedHtml, material);
       
       // Processar cada página
       pages.forEach((pageContent, pageIndex) => {
@@ -1281,24 +1302,194 @@ class ExportService {
     await this.exportSlidesToPDF(material);
   }
 
-  private getTemplateId(type: string): string {
-    const typeMap = {
-      'plano-de-aula': '1',
-      'slides': '2',
-      'atividade': '3',
-      'avaliacao': '4'
+  // Download automático de PDF usando html2pdf.js (frontend puro)
+  async exportToPDFDownload(material: GeneratedMaterial): Promise<void> {
+    // Gerar o HTML do material igual ao modal
+    const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
+    const pages = splitContentIntoPages(renderedHtml, material);
+    // Filtrar páginas vazias (sem conteúdo relevante)
+    const filteredPages = pages.filter(pageHtml => {
+      const temp = document.createElement('div');
+      temp.innerHTML = pageHtml;
+      const content = temp.querySelector('.content');
+      return content && content.textContent && content.textContent.trim().length > 10;
+    });
+    const finalHtml = filteredPages.join('');
+    const htmlToExport = enhanceHtmlWithNewTemplate(finalHtml, material);
+
+    // Criar um iframe temporário para garantir renderização fiel
+    let iframe = document.getElementById('pdf-html2pdf-iframe') as HTMLIFrameElement | null;
+    if (iframe) {
+      // Remover apenas o iframe antigo, se existir
+      if (iframe.parentNode === document.body) document.body.removeChild(iframe);
+    }
+    iframe = document.createElement('iframe');
+    iframe.id = 'pdf-html2pdf-iframe';
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+    iframe.srcdoc = htmlToExport;
+
+    iframe.onload = async () => {
+      // Injetar CSS extra para remover margens/fundo e garantir fidelidade
+      const extraStyle = iframe.contentDocument?.createElement('style');
+      if (extraStyle) {
+        extraStyle.innerHTML = `
+          body { background: white !important; margin: 0 !important; padding: 0 !important; width: 210mm !important; min-width: 210mm !important; max-width: 210mm !important; display: block !important; }
+          .page { width: 210mm !important; min-width: 210mm !important; max-width: 210mm !important; margin: 0 auto 0 auto !important; background: white !important; box-shadow: none !important; border-radius: 0 !important; page-break-after: always !important; margin-bottom: 0 !important; margin-top: 0 !important; }
+          .page:last-of-type, .page:last-child { page-break-after: unset !important; margin-bottom: 0 !important; }
+          .footer { bottom: 6mm !important; height: 6mm !important; }
+          .header { top: 2mm !important; }
+          .header .brand-text h1 { font-size: 1.18rem !important; color: #0ea5e9 !important; font-weight: 800 !important; letter-spacing: -0.2px !important; margin: 0 !important; font-family: 'Inter', sans-serif !important; line-height: 1 !important; text-transform: none !important; }
+          .header .brand-text p { font-size: 0.78rem !important; color: #6b7280 !important; font-weight: 400 !important; margin: 0 !important; line-height: 1 !important; font-family: 'Inter', sans-serif !important; }
+          ul, ol { margin: 0 0 0 1.1em !important; padding: 0 !important; }
+          ul li, ol li { margin-bottom: 0.08em !important; font-size: 0.92rem !important; line-height: 1.28 !important; }
+          ul { list-style-type: disc !important; }
+          ol { list-style-type: decimal !important; }
+          .content, .section, .content-text, .evaluation-text, .objectives-list li, .skills-list li, .resources-list li, td, p, li, h3, h2, h1 { font-size: 0.92rem !important; line-height: 1.35 !important; }
+          .section h3, h3 { font-size: 1.01rem !important; font-weight: 700 !important; margin-bottom: 8px !important; margin-top: 18px !important; }
+          h2 { font-size: 1.32rem !important; font-weight: 800 !important; margin: 8px 0 14px 0 !important; }
+          h1 { font-size: 1.32rem !important; font-weight: 900 !important; margin: 0 0 10px 0 !important; letter-spacing: 0.5px !important; }
+          td, th { font-size: 0.89rem !important; }
+          .footer { font-size: 0.75rem !important; }
+        `;
+        iframe.contentDocument.head.appendChild(extraStyle);
+      }
+      // Esperar um pouco para garantir renderização
+      setTimeout(async () => {
+        await html2pdf()
+          .set({
+            margin: 0,
+            filename: `${material.title || 'material'}.pdf`,
+            html2canvas: { scale: 1.5, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'] }
+          })
+          .from(iframe.contentDocument?.documentElement)
+          .save();
+        // Limpar iframe após exportação
+        if (iframe && iframe.parentNode === document.body) document.body.removeChild(iframe);
+      }, 400);
     };
-    return typeMap[type as keyof typeof typeMap] || '1';
   }
 
-  private getTypeLabel(type: string): string {
-    const labels = {
-      'plano-de-aula': 'Plano de Aula',
-      'slides': 'Slides',
-      'atividade': 'Atividade',
-      'avaliacao': 'Avaliação'
+  // Nova função: exportação PDF fiel usando @onedoc/react-print
+  async exportToPDFWithOnedoc(material: GeneratedMaterial): Promise<void> {
+    try {
+      // Gerar o HTML do material igual ao modal
+      const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
+      const pages = splitContentIntoPages(renderedHtml, material);
+      const finalHtml = pages.join('');
+      const htmlToExport = enhanceHtmlWithNewTemplate(finalHtml, material);
+
+      // Compilar o HTML com o onedoc (gera HTML fiel ao React)
+      const compiledHtml = await compile(
+        // Como não temos um componente React, usamos o HTML já pronto
+        // O compile aceita ReactElement, mas para HTML puro, apenas insere como string
+        // Aqui, usamos um div para envolver o HTML
+        React.createElement('div', { dangerouslySetInnerHTML: { __html: htmlToExport } }),
+        { emotion: false }
+      );
+
+      // Criar um iframe temporário para imprimir
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.left = '-9999px';
+      iframe.style.top = '0';
+      iframe.style.width = '210mm';
+      iframe.style.height = '297mm';
+      document.body.appendChild(iframe);
+      iframe.contentDocument?.open();
+      iframe.contentDocument?.write(compiledHtml);
+      iframe.contentDocument?.close();
+      // Aguarda o carregamento e imprime
+      setTimeout(() => {
+        iframe.contentWindow?.print();
+        setTimeout(() => document.body.removeChild(iframe), 2000);
+      }, 1000);
+    } catch (error) {
+      console.error('Erro na exportação PDF com Onedoc:', error);
+      throw error;
+    }
+  }
+
+  // Nova função: exportação PDF fiel usando print-js
+  async exportToPDFPrintJS(material: GeneratedMaterial): Promise<void> {
+    // Gerar o HTML do material igual ao modal
+    const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
+    const pages = splitContentIntoPages(renderedHtml, material);
+    const finalHtml = pages.join('');
+    const htmlToExport = enhanceHtmlWithNewTemplate(finalHtml, material);
+
+    // Criar um div oculto no DOM para o conteúdo
+    let printContainer = document.getElementById('print-js-container');
+    if (!printContainer) {
+      printContainer = document.createElement('div');
+      printContainer.id = 'print-js-container';
+      printContainer.style.display = 'none';
+      document.body.appendChild(printContainer);
+    }
+    printContainer.innerHTML = htmlToExport;
+
+    // Chamar print-js para exportar como PDF
+    printJS({
+      printable: 'print-js-container',
+      type: 'html',
+      style: '', // O CSS já está embutido no HTML
+      scanStyles: false,
+      documentTitle: material.title || 'material',
+      showModal: false,
+      targetStyles: ['*'],
+      css: '',
+      onPrintDialogClose: () => {
+        // Limpar o container após exportar
+        printContainer && (printContainer.innerHTML = '');
+      },
+      onError: (err: any) => {
+        console.error('Erro ao exportar PDF com print-js:', err);
+      }
+    });
+  }
+
+  // Solução híbrida: exportação PDF via print automático do iframe (fiel ao modal)
+  async exportToPDFHybridPrint(material: GeneratedMaterial): Promise<void> {
+    // Gerar o HTML do material igual ao modal
+    const renderedHtml = templateService.renderTemplate(this.getTemplateId(material.type), material.content);
+    const pages = splitContentIntoPages(renderedHtml, material);
+    const finalHtml = pages.join('');
+    const htmlToExport = enhanceHtmlWithNewTemplate(finalHtml, material);
+
+    // Criar um iframe oculto
+    let printIframe = document.getElementById('pdf-print-iframe') as HTMLIFrameElement | null;
+    if (printIframe) {
+      printIframe.remove();
+    }
+    printIframe = document.createElement('iframe');
+    printIframe.id = 'pdf-print-iframe';
+    printIframe.style.position = 'fixed';
+    printIframe.style.right = '0';
+    printIframe.style.bottom = '0';
+    printIframe.style.width = '0';
+    printIframe.style.height = '0';
+    printIframe.style.border = 'none';
+    printIframe.style.visibility = 'hidden';
+    document.body.appendChild(printIframe);
+
+    // Escrever o HTML no iframe
+    printIframe.srcdoc = htmlToExport;
+
+    // Esperar o carregamento do iframe e acionar print
+    printIframe.onload = () => {
+      setTimeout(() => {
+        printIframe?.contentWindow?.focus();
+        printIframe?.contentWindow?.print();
+      }, 300);
     };
-    return labels[type as keyof typeof labels] || type;
   }
 }
 

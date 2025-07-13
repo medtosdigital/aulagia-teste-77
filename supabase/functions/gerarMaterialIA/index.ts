@@ -160,16 +160,16 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
   "serie": "${serie}",
   "tema": "${tema}",
   "duracao": "[GERE uma duração adequada baseada no tema, por exemplo: 50 minutos, 100 minutos (2 aulas), etc]",
-  "bncc": "[BUSQUE e RETORNE códigos BNCC REAIS, ESPECÍFICOS e OBRIGATORIAMENTE EXATOS para o tema '${tema}' em ${disciplina} na ${serie}. O código BNCC deve ser SEMPRE o mais aderente e diretamente relacionado ao tema da aula, nunca genérico. Exemplo: Se o tema for 'Geometria', retorne apenas códigos BNCC que tratam de Geometria, como EF03MA17. NÃO retorne códigos de outros temas. Se não souber códigos específicos, deixe vazio.]",
+  "habilidades": [
+    {"codigo": "[CÓDIGO BNCC 1 EXATO, ex: EF03MA19]", "descricao": "[DESCRIÇÃO DA HABILIDADE 1 sobre ${tema} em ${disciplina} na ${serie}]"},
+    {"codigo": "[CÓDIGO BNCC 2 EXATO]", "descricao": "[DESCRIÇÃO DA HABILIDADE 2]"},
+    {"codigo": "[CÓDIGO BNCC 3 EXATO]", "descricao": "[DESCRIÇÃO DA HABILIDADE 3]"}
+  ],
+  "bncc": [CÓDIGOS BNCC das habilidades acima, ex: ["EF03MA19", "EF03MA20"]],
   "objetivos": [
     "[OBJETIVO ESPECÍFICO 1 sobre ${tema}]",
     "[OBJETIVO ESPECÍFICO 2 sobre ${tema}]",
     "[OBJETIVO ESPECÍFICO 3 sobre ${tema}]"
-  ],
-  "habilidades": [
-    "[HABILIDADE ESPECÍFICA 1 que será desenvolvida com ${tema}]",
-    "[HABILIDADE ESPECÍFICA 2 que será desenvolvida com ${tema}]",
-    "[HABILIDADE ESPECÍFICA 3 que será desenvolvida com ${tema}]"
   ],
   "desenvolvimento": [
     { 
@@ -222,6 +222,8 @@ INSTRUÇÕES FINAIS CRÍTICAS:
 4. Os recursos devem ser específicos e apropriados para a atividade daquela etapa
 5. Use português brasileiro correto sem erros gramaticais
 6. NÃO REPITA recursos entre etapas diferentes
+7. As habilidades devem ser sempre um array de objetos com código e descrição, e os códigos devem ser reais e específicos da BNCC para o tema, disciplina e série.
+8. O campo bncc deve ser um array apenas com os códigos das habilidades.
 `;
 
     case 'slides':
@@ -624,7 +626,32 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsedContent = JSON.parse(jsonMatch[0]);
-      
+      // --- AJUSTE HABILIDADES E BNCC PARA PLANO DE AULA ---
+      if (materialType === 'plano-de-aula') {
+        // Garante que habilidades seja array de objetos {codigo, descricao}
+        if (Array.isArray(parsedContent.habilidades)) {
+          parsedContent.habilidades = parsedContent.habilidades.map((h: any) => {
+            if (typeof h === 'object' && h.codigo && h.descricao) {
+              return h;
+            } else if (typeof h === 'string') {
+              // Tenta separar código e descrição
+              const match = h.match(/([A-Z]{2}\d{2}[A-Z]{2}\d{2,})\s*[-:]?\s*(.*)/);
+              if (match) {
+                return { codigo: match[1], descricao: match[2] };
+              }
+              return { codigo: '', descricao: h };
+            }
+            return { codigo: '', descricao: '' };
+          });
+        } else {
+          parsedContent.habilidades = [];
+        }
+        // Garante que bncc seja array apenas com os códigos das habilidades
+        parsedContent.bncc = Array.isArray(parsedContent.habilidades)
+          ? parsedContent.habilidades.map((h: any) => h.codigo).filter((c: string) => !!c)
+          : [];
+      }
+      // --- FIM AJUSTE ---
       // Enhanced parsing for activities and assessments with better question handling
       if (materialType === 'atividade' || materialType === 'avaliacao') {
         if (parsedContent.questoes && Array.isArray(parsedContent.questoes)) {

@@ -259,7 +259,7 @@ const MaterialsList: React.FC = () => {
 
     try {
       if (format === 'pdf') {
-        await exportService.exportToPDF(material as GeneratedMaterial);
+        await exportService.exportToPDFDownload(material as GeneratedMaterial);
         toast.success('PDF exportado com sucesso!');
       } else if (format === 'word') {
         await exportService.exportToWord(material as GeneratedMaterial);

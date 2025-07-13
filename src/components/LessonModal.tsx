@@ -152,7 +152,7 @@ const LessonModal: React.FC<LessonModalProps> = ({ open, onClose, event, onEdit,
                       <DropdownMenuItem onClick={async () => { await exportService.exportToPDF(mat); }}>
                         <Printer className="w-4 h-4 mr-2" /> Imprimir
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={async () => { await exportService.exportToPDF(mat); }}>
+                      <DropdownMenuItem onClick={async () => { await exportService.exportToPDFDownload(mat); }}>
                         <FileDown className="w-4 h-4 mr-2" /> PDF
                       </DropdownMenuItem>
                       {mat.type === 'slides' ? (

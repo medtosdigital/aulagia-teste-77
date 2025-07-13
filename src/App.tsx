@@ -13,6 +13,11 @@ import AvisoIA from "./pages/AvisoIA";
 import CentralDeAjuda from './pages/CentralDeAjuda';
 import Contato from './pages/Contato';
 import { useEffect } from 'react';
+import { PresentationProvider } from './contexts/PresentationContext';
+import FullScreenSlideShow from './components/FullScreenSlideShow';
+import { usePresentation } from './contexts/PresentationContext';
+import Dashboard from './components/Dashboard';
+import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
 
@@ -26,29 +31,49 @@ function ScrollToTop() {
   return null;
 }
 
+function PresentationPortal() {
+  const { open, material, close } = usePresentation();
+  if (!open || !material) return null;
+  return (
+    <FullScreenSlideShow
+      material={material}
+      onClose={() => {
+        if (document.fullscreenElement) {
+          document.exitFullscreen?.();
+        } else if ((document as any).webkitFullscreenElement) {
+          (document as any).webkitExitFullscreen?.();
+        } else if ((document as any).msFullscreenElement) {
+          (document as any).msExitFullscreen?.();
+        }
+        close();
+      }}
+    />
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <Toaster />
-          <Router>
-            <ScrollToTop />
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/termos-de-servico" element={<TermosDeServico />} />
-              <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
-              <Route path="/termos-de-uso" element={<TermosDeUso />} />
-              <Route path="/aviso-ia" element={<AvisoIA />} />
-              <Route path="/central-de-ajuda" element={<CentralDeAjuda />} />
-              <Route path="/contato" element={<Contato />} />
-              <Route path="/*" element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              } />
-            </Routes>
-          </Router>
+          <PresentationProvider>
+            <Toaster />
+            <PresentationPortal />
+            <Router>
+              <ScrollToTop />
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/termos-de-servico" element={<TermosDeServico />} />
+                <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
+                <Route path="/termos-de-uso" element={<TermosDeUso />} />
+                <Route path="/aviso-ia" element={<AvisoIA />} />
+                <Route path="/central-de-ajuda" element={<CentralDeAjuda />} />
+                <Route path="/contato" element={<Contato />} />
+                <Route path="/*" element={<Index />} />
+                <Route path="/dashboard/*" element={<Dashboard />} />
+              </Routes>
+            </Router>
+          </PresentationProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

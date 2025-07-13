@@ -440,6 +440,44 @@ class MaterialService {
   }
 
   private convertToGeneratedMaterial(userMaterial: UserMaterial, content: any, formData: MaterialFormData): GeneratedMaterial {
+    // Ajuste de recursos didáticos: juntar todos os recursos das etapas do desenvolvimento, sem duplicados
+    let recursos: string[] = [];
+    if (content.desenvolvimento && Array.isArray(content.desenvolvimento)) {
+      const recursosSet = new Set<string>();
+      content.desenvolvimento.forEach((etapa: any) => {
+        if (etapa.recursos) {
+          const recursosEtapa = Array.isArray(etapa.recursos)
+            ? etapa.recursos
+            : etapa.recursos.split(',').map((r: string) => r.trim());
+          recursosEtapa.forEach((r: string) => {
+            if (r && !recursosSet.has(r.toLowerCase())) recursosSet.add(r);
+          });
+        }
+      });
+      recursos = Array.from(recursosSet);
+    }
+    // Ajuste de habilidades: garantir formato 'CÓDIGO - DESCRIÇÃO'
+    let habilidades: string[] = [];
+    let bnccCodigos: string[] = [];
+    if (content.habilidades && Array.isArray(content.habilidades)) {
+      habilidades = content.habilidades.map((h: any) => {
+        if (typeof h === 'object' && h.codigo && h.descricao) {
+          bnccCodigos.push(h.codigo);
+          return `${h.codigo} - ${h.descricao}`;
+        } else if (typeof h === 'string') {
+          // Tenta separar código e descrição por ':' ou '-'
+          const match = h.match(/([A-Z]{2}\d{2}[A-Z]{2}\d{2,})\s*[-:]?\s*(.*)/);
+          if (match) {
+            bnccCodigos.push(match[1]);
+            return `${match[1]} - ${match[2]}`;
+          }
+          return h;
+        }
+        return '';
+      });
+    }
+    // Ajuste do campo BNCC: apenas os códigos
+    const bncc = bnccCodigos.join(', ');
     return {
       id: userMaterial.id,
       title: userMaterial.title,
@@ -447,7 +485,12 @@ class MaterialService {
       subject: userMaterial.subject,
       grade: userMaterial.grade,
       createdAt: userMaterial.createdAt,
-      content,
+      content: {
+        ...content,
+        recursos,
+        habilidades,
+        bncc
+      },
       formData
     };
   }

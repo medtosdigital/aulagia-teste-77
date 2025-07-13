@@ -12,7 +12,26 @@ import { exportService } from '@/services/exportService';
 import MaterialEditModal from './MaterialEditModal';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 import * as Icons from 'react-icons/fa';
-import { GeometryBoard } from 'react-dynamic-geometry';
+
+// Substituir GeometryBoard por SVG puro
+const CircleSVG = ({ radius = 40, size = 100 }) => (
+  <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: 'white' }}>
+    <circle cx={size/2} cy={size/2} r={radius} stroke="#2d7a46" strokeWidth="3" fill="#e6f4ea" />
+  </svg>
+);
+
+const TriangleSVG = ({ size = 100 }) => {
+  const points = [
+    `${size/2},10`, // top
+    `10,${size-10}`,
+    `${size-10},${size-10}`
+  ].join(' ');
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: 'white' }}>
+      <polygon points={points} stroke="#2d7a46" strokeWidth="3" fill="#e6f4ea" />
+    </svg>
+  );
+};
 
 const MaterialViewer = () => {
   const { id } = useParams<{ id: string }>();
@@ -349,22 +368,12 @@ const MaterialViewer = () => {
               {/* Figura geométrica real */}
               {questao.figuraGeometrica && (
                 <div className="flex justify-center mb-2">
-                  <GeometryBoard>
-                    {(build: any) => {
-                      // Exemplo: desenhar círculo, triângulo, etc. com base em figuraGeometrica.tipo
-                      if (questao.figuraGeometrica.tipo === 'circulo') {
-                        return build('Circle', { center: { x: 0, y: 0 }, radius: 3 });
-                      }
-                      if (questao.figuraGeometrica.tipo === 'triangulo') {
-                        const A = build('Point', { x: 0, y: 0 });
-                        const B = build('Point', { x: 3, y: 0 });
-                        const C = build('Point', { x: 1.5, y: 2.5 });
-                        return build('Polygon', { vertices: [A, B, C] });
-                      }
-                      // Adicione outros tipos conforme necessário
-                      return <span className="text-green-600 text-sm">[Figura: {questao.figuraGeometrica.tipo || 'tipo'}]</span>;
-                    }}
-                  </GeometryBoard>
+                  {questao.figuraGeometrica.tipo === 'circulo' && <CircleSVG />}
+                  {questao.figuraGeometrica.tipo === 'triangulo' && <TriangleSVG />}
+                  {/* Adicione outros tipos conforme necessário */}
+                  {!['circulo','triangulo'].includes(questao.figuraGeometrica.tipo) && (
+                    <span className="text-green-600 text-sm">[Figura: {questao.figuraGeometrica.tipo || 'tipo'}]</span>
+                  )}
                 </div>
               )}
 

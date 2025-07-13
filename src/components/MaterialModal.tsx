@@ -90,12 +90,16 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
     }
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     if (!material) return;
 
     try {
       console.log('Iniciando exportação PDF para material:', material.type);
-      await exportService.exportToPDF(material);
+      await exportService.exportToPDFDownload(material);
       toast.success('PDF baixado com sucesso!');
 
       if (material) {

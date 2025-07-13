@@ -212,14 +212,14 @@ export class TemplateService {
                 <td>{serie}</td>
               </tr>
               <tr>
-                <th>Tema</th>
-                <td>{tema}</td>
+                <th>BNCC</th>
+                <td>{bncc}</td>
                 <th>Duração</th>
                 <td>{duracao}</td>
               </tr>
               <tr>
-                <th>BNCC</th>
-                <td colspan="3">{bncc}</td>
+                <th>Tema</th>
+                <td colspan="3">{tema}</td>
               </tr>
             </table>
           </div>
