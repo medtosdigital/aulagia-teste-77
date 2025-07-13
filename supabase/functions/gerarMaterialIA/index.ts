@@ -140,11 +140,14 @@ IMPORTANTE: GERE TODO O CONTEÚDO baseado especificamente no tema "${tema}" para
 INSTRUÇÕES CRÍTICAS PARA O PLANO DE AULA:
 
 1. HABILIDADES BNCC:
-   - Forneça EXATAMENTE 3 habilidades
+   - Forneça EXATAMENTE DE 1 A 4 habilidades que CORRESPONDAM AO ${tema} E O CONTEÚDO GERADO PARA O PLANO DE AULA
    - Cada habilidade deve ter código REAL da BNCC (ex: EF03MA19, EF67LP28)
-   - Os códigos devem ser específicos para a disciplina ${disciplina} e série ${serie}
-   - Formato obrigatório: array de objetos com "codigo" e "descricao"
-   - Descrições devem ser claras e específicas sobre ${tema}
+   - Os códigos devem ser específicos para O ${tema} da ${disciplina} e série ${serie}
+   - Formato obrigatório: array de objetos com 'codigo' e 'descricao'
+   - Descrições devem ser claras e específicas sobre os códigos da BNCC GERADOS
+   - Só utilize códigos e descrições reais da BNCC, consultando obrigatoriamente a base oficial (https://basenacionalcomum.mec.gov.br/)
+   - NÃO invente códigos ou descrições. Relacione o código e a descrição exatamente como consta na BNCC oficial
+   - O código deve ser específico para o tema "${tema}", disciplina "${disciplina}" e série "${serie}"
 
 2. DESENVOLVIMENTO DAS ETAPAS:
    - Cada etapa deve ter recursos ÚNICOS e específicos
