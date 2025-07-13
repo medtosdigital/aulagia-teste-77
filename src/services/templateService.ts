@@ -1,4 +1,5 @@
 
+
 // Função para renderizar questões em templates HTML
 export function renderQuestions(questoes: any[]): string {
   if (!Array.isArray(questoes) || questoes.length === 0) {
@@ -171,3 +172,181 @@ export function normalizeQuestion(questao: any, index: number): any {
 
   return normalized;
 }
+
+// Template básico para renderização de materiais
+const renderTemplate = (templateId: string, content: any): string => {
+  console.log('renderTemplate called with:', { templateId, content });
+  
+  try {
+    switch (templateId) {
+      case '1': // Plano de aula
+        return renderLessonPlan(content);
+      case '2': // Slides
+        return renderSlides(content);
+      case '3': // Atividade
+        return renderActivity(content);
+      case '4': // Avaliação
+        return renderAssessment(content);
+      default:
+        return '<div>Template não encontrado</div>';
+    }
+  } catch (error) {
+    console.error('Erro na renderização do template:', error);
+    return '<div>Erro ao renderizar conteúdo</div>';
+  }
+};
+
+// Função para renderizar plano de aula
+const renderLessonPlan = (content: any): string => {
+  if (!content) return '<div>Conteúdo não disponível</div>';
+  
+  let html = '<div class="lesson-plan">';
+  
+  if (content.titulo) {
+    html += `<h1>${content.titulo}</h1>`;
+  }
+  
+  if (content.objetivos) {
+    html += '<h2>Objetivos</h2>';
+    if (Array.isArray(content.objetivos)) {
+      html += '<ul>';
+      content.objetivos.forEach((objetivo: string) => {
+        html += `<li>${objetivo}</li>`;
+      });
+      html += '</ul>';
+    } else {
+      html += `<p>${content.objetivos}</p>`;
+    }
+  }
+  
+  if (content.desenvolvimento) {
+    html += '<h2>Desenvolvimento</h2>';
+    if (Array.isArray(content.desenvolvimento)) {
+      content.desenvolvimento.forEach((etapa: any) => {
+        if (typeof etapa === 'string') {
+          html += `<p>${etapa}</p>`;
+        } else if (etapa.etapa) {
+          html += `<h3>${etapa.etapa}</h3>`;
+          if (etapa.atividade) html += `<p>${etapa.atividade}</p>`;
+          if (etapa.tempo) html += `<p><strong>Tempo:</strong> ${etapa.tempo}</p>`;
+        }
+      });
+    } else {
+      html += `<p>${content.desenvolvimento}</p>`;
+    }
+  }
+  
+  if (content.recursos) {
+    html += '<h2>Recursos</h2>';
+    if (Array.isArray(content.recursos)) {
+      html += '<ul>';
+      content.recursos.forEach((recurso: string) => {
+        html += `<li>${recurso}</li>`;
+      });
+      html += '</ul>';
+    } else {
+      html += `<p>${content.recursos}</p>`;
+    }
+  }
+  
+  if (content.avaliacao) {
+    html += '<h2>Avaliação</h2>';
+    html += `<p>${content.avaliacao}</p>`;
+  }
+  
+  html += '</div>';
+  return html;
+};
+
+// Função para renderizar slides
+const renderSlides = (content: any): string => {
+  if (!content || !Array.isArray(content)) return '<div>Slides não disponíveis</div>';
+  
+  let html = '<div class="slides">';
+  content.forEach((slide: any, index: number) => {
+    html += `<div class="slide" data-slide="${index + 1}">`;
+    if (slide.titulo) {
+      html += `<h2>${slide.titulo}</h2>`;
+    }
+    if (slide.conteudo) {
+      if (Array.isArray(slide.conteudo)) {
+        html += '<ul>';
+        slide.conteudo.forEach((item: string) => {
+          html += `<li>${item}</li>`;
+        });
+        html += '</ul>';
+      } else {
+        html += `<p>${slide.conteudo}</p>`;
+      }
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+};
+
+// Função para renderizar atividade
+const renderActivity = (content: any): string => {
+  if (!content) return '<div>Atividade não disponível</div>';
+  
+  let html = '<div class="activity">';
+  
+  if (content.titulo) {
+    html += `<h1>${content.titulo}</h1>`;
+  }
+  
+  if (content.instrucoes) {
+    html += `<div class="instructions">${content.instrucoes}</div>`;
+  }
+  
+  if (content.questoes && Array.isArray(content.questoes)) {
+    html += renderQuestions(content.questoes);
+  }
+  
+  html += '</div>';
+  return html;
+};
+
+// Função para renderizar avaliação
+const renderAssessment = (content: any): string => {
+  if (!content) return '<div>Avaliação não disponível</div>';
+  
+  let html = '<div class="assessment">';
+  
+  if (content.titulo) {
+    html += `<h1>${content.titulo}</h1>`;
+  }
+  
+  if (content.instrucoes) {
+    html += `<div class="instructions">${content.instrucoes}</div>`;
+  }
+  
+  if (content.questoes && Array.isArray(content.questoes)) {
+    html += renderQuestions(content.questoes);
+  }
+  
+  html += '</div>';
+  return html;
+};
+
+// Função para obter template
+const getTemplate = (templateId: string): any => {
+  return {
+    id: templateId,
+    name: `Template ${templateId}`,
+    render: (content: any) => renderTemplate(templateId, content)
+  };
+};
+
+// Exportar o objeto templateService
+export const templateService = {
+  renderTemplate,
+  getTemplate,
+  renderQuestions,
+  validateQuestionStructure,
+  normalizeQuestion
+};
+
+// Exportação padrão
+export default templateService;
+
