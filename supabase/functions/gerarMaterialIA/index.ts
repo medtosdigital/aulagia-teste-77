@@ -356,8 +356,19 @@ GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". Adapte à faixa etária de ${
 
     case 'atividade':
       const numQuestoes = formData.numeroQuestoes || formData.quantidadeQuestoes || 10;
-      const tiposQuestoes = formData.tiposQuestoes || (formData.tipoQuestoes ? [formData.tipoQuestoes] : ['multipla-escolha', 'verdadeiro-falso', 'completar-lacunas']);
-      
+      let tiposQuestoes: string[] = [];
+      if (formData.tipoQuestoes === 'aberta') {
+        tiposQuestoes = ['dissertativa', 'completar', 'desenho'];
+      } else if (formData.tipoQuestoes === 'fechada') {
+        tiposQuestoes = ['multipla_escolha', 'verdadeiro_falso', 'ligar'];
+      } else if (formData.tipoQuestoes === 'mista') {
+        tiposQuestoes = ['multipla_escolha', 'verdadeiro_falso', 'ligar', 'completar', 'dissertativa', 'desenho'];
+      } else if (formData.tiposQuestoes && Array.isArray(formData.tiposQuestoes)) {
+        tiposQuestoes = formData.tiposQuestoes;
+      } else {
+        tiposQuestoes = ['multipla_escolha', 'verdadeiro_falso', 'completar'];
+      }
+
       return `
 Você é um professor especialista em criar ATIVIDADES DE APRENDIZAGEM ATIVA seguindo a BNCC.
 
@@ -486,8 +497,19 @@ INSTRUÇÕES FINAIS CRÍTICAS:
 
     case 'avaliacao':
       const numQuestoesAval = formData.numeroQuestoes || formData.quantidadeQuestoes || 10;
-      const tiposQuestoesAval = formData.tiposQuestoes || (formData.tipoQuestoes ? [formData.tipoQuestoes] : ['multipla-escolha', 'verdadeiro-falso', 'dissertativa']);
-      
+      let tiposQuestoesAval: string[] = [];
+      if (formData.tipoQuestoes === 'aberta') {
+        tiposQuestoesAval = ['dissertativa', 'completar', 'desenho'];
+      } else if (formData.tipoQuestoes === 'fechada') {
+        tiposQuestoesAval = ['multipla_escolha', 'verdadeiro_falso', 'ligar'];
+      } else if (formData.tipoQuestoes === 'mista') {
+        tiposQuestoesAval = ['multipla_escolha', 'verdadeiro_falso', 'ligar', 'completar', 'dissertativa', 'desenho'];
+      } else if (formData.tiposQuestoes && Array.isArray(formData.tiposQuestoes)) {
+        tiposQuestoesAval = formData.tiposQuestoes;
+      } else {
+        tiposQuestoesAval = ['multipla_escolha', 'verdadeiro_falso', 'dissertativa'];
+      }
+
       return `
 Você é um professor especialista em criar AVALIAÇÕES FORMAIS seguindo a BNCC.
 
@@ -709,13 +731,13 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         if (parsedContent.questoes && Array.isArray(parsedContent.questoes)) {
           parsedContent.questoes = parsedContent.questoes.map((questao: any, index: number) => {
             // Ensure proper question structure
-            const processedQuestion = {
+            const pergunta = questao.pergunta || questao.enunciado || `Questão ${index + 1}`;
+            const enunciado = questao.enunciado || questao.pergunta || pergunta;
+            let processedQuestion: any = {
               numero: questao.numero || (index + 1),
               tipo: questao.tipo || 'multipla_escolha',
-              enunciado: questao.enunciado || '',
-              opcoes: questao.opcoes || [],
-              coluna_a: questao.coluna_a || [],
-              coluna_b: questao.coluna_b || [],
+              pergunta, // sempre preenchido
+              enunciado, // sempre preenchido
               resposta_correta: questao.resposta_correta || '',
               explicacao: questao.explicacao || '',
               dica_pedagogica: questao.dica_pedagogica || '',
@@ -726,32 +748,72 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
               })
             };
 
-            // Validate question types and structure
             switch (processedQuestion.tipo) {
               case 'multipla_escolha':
-                if (!Array.isArray(processedQuestion.opcoes) || processedQuestion.opcoes.length !== 4) {
-                  processedQuestion.opcoes = [
-                    'Alternativa A - aguardando conteúdo',
-                    'Alternativa B - aguardando conteúdo', 
-                    'Alternativa C - aguardando conteúdo',
-                    'Alternativa D - aguardando conteúdo'
-                  ];
-                }
+                processedQuestion.opcoes = Array.isArray(questao.opcoes) && questao.opcoes.length === 4 ? questao.opcoes : [
+                  'Alternativa A - aguardando conteúdo',
+                  'Alternativa B - aguardando conteúdo',
+                  'Alternativa C - aguardando conteúdo',
+                  'Alternativa D - aguardando conteúdo'
+                ];
+                processedQuestion.coluna_a = [];
+                processedQuestion.coluna_b = [];
+                processedQuestion.colunaA = [];
+                processedQuestion.colunaB = [];
+                processedQuestion.textoComLacunas = '';
+                processedQuestion.linhasResposta = undefined;
                 break;
               case 'ligar':
-                if (!Array.isArray(processedQuestion.coluna_a) || processedQuestion.coluna_a.length !== 4) {
-                  processedQuestion.coluna_a = ['Item A1', 'Item A2', 'Item A3', 'Item A4'];
-                }
-                if (!Array.isArray(processedQuestion.coluna_b) || processedQuestion.coluna_b.length !== 4) {
-                  processedQuestion.coluna_b = ['Item B1', 'Item B2', 'Item B3', 'Item B4'];
-                }
-                processedQuestion.opcoes = []; // Clear opcoes for matching questions
+                processedQuestion.coluna_a = Array.isArray(questao.coluna_a) && questao.coluna_a.length === 4 ? questao.coluna_a : ['Item A1', 'Item A2', 'Item A3', 'Item A4'];
+                processedQuestion.coluna_b = Array.isArray(questao.coluna_b) && questao.coluna_b.length === 4 ? questao.coluna_b : ['Item B1', 'Item B2', 'Item B3', 'Item B4'];
+                processedQuestion.colunaA = processedQuestion.coluna_a;
+                processedQuestion.colunaB = processedQuestion.coluna_b;
+                processedQuestion.opcoes = [];
+                processedQuestion.textoComLacunas = '';
+                processedQuestion.linhasResposta = undefined;
                 break;
-              case 'verdadeiro_falso':
               case 'completar':
+                processedQuestion.textoComLacunas = questao.textoComLacunas || '';
+                processedQuestion.opcoes = [];
+                processedQuestion.coluna_a = [];
+                processedQuestion.coluna_b = [];
+                processedQuestion.colunaA = [];
+                processedQuestion.colunaB = [];
+                processedQuestion.linhasResposta = undefined;
+                break;
               case 'dissertativa':
               case 'desenho':
-                processedQuestion.opcoes = []; // Clear opcoes for these types
+                processedQuestion.linhasResposta = questao.linhasResposta || 5;
+                processedQuestion.opcoes = [];
+                processedQuestion.coluna_a = [];
+                processedQuestion.coluna_b = [];
+                processedQuestion.colunaA = [];
+                processedQuestion.colunaB = [];
+                processedQuestion.textoComLacunas = '';
+                break;
+              case 'verdadeiro_falso':
+                processedQuestion.opcoes = ['Verdadeiro', 'Falso'];
+                processedQuestion.coluna_a = [];
+                processedQuestion.coluna_b = [];
+                processedQuestion.colunaA = [];
+                processedQuestion.colunaB = [];
+                processedQuestion.textoComLacunas = '';
+                processedQuestion.linhasResposta = undefined;
+                break;
+              default:
+                // fallback para múltipla escolha
+                processedQuestion.opcoes = [
+                  'Alternativa A - aguardando conteúdo',
+                  'Alternativa B - aguardando conteúdo',
+                  'Alternativa C - aguardando conteúdo',
+                  'Alternativa D - aguardando conteúdo'
+                ];
+                processedQuestion.coluna_a = [];
+                processedQuestion.coluna_b = [];
+                processedQuestion.colunaA = [];
+                processedQuestion.colunaB = [];
+                processedQuestion.textoComLacunas = '';
+                processedQuestion.linhasResposta = undefined;
                 break;
             }
 

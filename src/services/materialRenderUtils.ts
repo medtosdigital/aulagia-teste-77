@@ -14,10 +14,11 @@ export function splitContentIntoPages(htmlContent: string, material: any): strin
     const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
     const questionsPerPage = 4;
     let questionIndex = 0;
+    let isFirstPage = true;
     while (questionIndex < questions.length) {
-      const isFirstPage = pages.length === 0;
       const questionsForPage = [];
-      for (let i = 0; i < questionsPerPage && questionIndex < questions.length; i++) {
+      let limit = isFirstPage ? 3 : questionsPerPage;
+      for (let i = 0; i < limit && questionIndex < questions.length; i++) {
         questionsForPage.push(questions[questionIndex]);
         questionIndex++;
       }
@@ -57,6 +58,7 @@ export function splitContentIntoPages(htmlContent: string, material: any): strin
         pageContent += question.outerHTML;
       });
       pages.push(wrapPageContentWithTemplate(pageContent, isFirstPage, material));
+      isFirstPage = false;
     }
     return pages.length > 0 ? pages : [htmlContent];
   }
