@@ -33,7 +33,6 @@ export class BNCCValidationService {
       const data = await response.json();
       console.log('📊 Dados recebidos da validação:', data);
 
-      // Verificar se houve erro na resposta
       if (data.error) {
         console.error('❌ Erro retornado pela API:', data.error);
         throw new Error(data.error);
@@ -41,7 +40,7 @@ export class BNCCValidationService {
 
       const result: BNCCValidation = {
         isValid: Boolean(data.alinhado),
-        confidence: data.alinhado ? 0.9 : 0.1, // Alta confiança quando baseado em dados reais
+        confidence: data.alinhado ? 0.95 : 0.1, // Alta confiança quando baseado em dados reais
         suggestions: Array.isArray(data.sugestoes) ? data.sugestoes : [],
         feedback: data.mensagem || 'Validação concluída com base em dados reais da BNCC.',
         relatedSkills: Array.isArray(data.habilidades) ? data.habilidades : []
@@ -58,9 +57,8 @@ export class BNCCValidationService {
     } catch (error) {
       console.error('❌ Erro ao validar tema na BNCC:', error);
       
-      // Retornar um resultado de fallback em caso de erro
       return {
-        isValid: false, // Modificado para ser mais conservador em caso de erro
+        isValid: false,
         confidence: 0,
         suggestions: [
           'Verifique se o tema está adequado para a série selecionada',
