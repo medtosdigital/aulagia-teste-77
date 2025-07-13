@@ -137,18 +137,31 @@ Crie um plano de aula COMPLETO e DETALHADO com base nas seguintes informações:
 
 IMPORTANTE: GERE TODO O CONTEÚDO baseado especificamente no tema "${tema}" para a disciplina de ${disciplina} na série ${serie}. NÃO use conteúdo genérico.
 
-REGRAS CRÍTICAS PARA RECURSOS POR ETAPA:
-1. Cada etapa deve ter APENAS de 1 a 3 recursos específicos e únicos
-2. NÃO repita recursos entre diferentes etapas - cada recurso deve ser usado apenas uma vez
-3. Cada recurso deve ser específico para a atividade daquela etapa
-4. Use vírgulas para separar recursos dentro de cada etapa
-5. Cada recurso deve ser gramaticalmente correto e específico
+INSTRUÇÕES CRÍTICAS PARA O PLANO DE AULA:
 
-EXEMPLO DE RECURSOS CORRETOS:
-- Introdução: "Quadro branco, marcadores coloridos"
-- Desenvolvimento: "Material manipulativo, experimentos práticos"
-- Prática: "Exercícios impressos, jogos educativos"
-- Fechamento: "Fichas de avaliação"
+1. HABILIDADES BNCC:
+   - Forneça EXATAMENTE 3 habilidades
+   - Cada habilidade deve ter código REAL da BNCC (ex: EF03MA19, EF67LP28)
+   - Os códigos devem ser específicos para a disciplina ${disciplina} e série ${serie}
+   - Formato obrigatório: array de objetos com "codigo" e "descricao"
+   - Descrições devem ser claras e específicas sobre ${tema}
+
+2. DESENVOLVIMENTO DAS ETAPAS:
+   - Cada etapa deve ter recursos ÚNICOS e específicos
+   - NÃO repita recursos entre etapas diferentes
+   - Use de 1 a 3 recursos por etapa
+   - Recursos devem ser separados por vírgula na string
+   - Seja específico: "Quadro branco, marcadores coloridos" (não genérico)
+
+3. SEÇÃO RECURSOS:
+   - Esta seção deve consolidar TODOS os recursos das etapas
+   - Extrair automaticamente de cada etapa do desenvolvimento
+   - NÃO duplicar recursos já listados nas etapas
+   - Organizar em lista clara e específica
+
+4. DURAÇÃO:
+   - Calcule duração total baseada nos tempos das etapas
+   - Seja realista para o tema e série
 
 Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPECÍFICO sobre "${tema}":
 
@@ -159,13 +172,13 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
   "disciplina": "${disciplina}",
   "serie": "${serie}",
   "tema": "${tema}",
-  "duracao": "[GERE uma duração adequada baseada no tema, por exemplo: 50 minutos, 100 minutos (2 aulas), etc]",
+  "duracao": "[CALCULE duração total baseada nas etapas - ex: 50 minutos, 100 minutos (2 aulas)]",
   "habilidades": [
-    {"codigo": "[CÓDIGO BNCC 1 EXATO, ex: EF03MA19]", "descricao": "[DESCRIÇÃO DA HABILIDADE 1 sobre ${tema} em ${disciplina} na ${serie}]"},
-    {"codigo": "[CÓDIGO BNCC 2 EXATO]", "descricao": "[DESCRIÇÃO DA HABILIDADE 2]"},
-    {"codigo": "[CÓDIGO BNCC 3 EXATO]", "descricao": "[DESCRIÇÃO DA HABILIDADE 3]"}
+    {"codigo": "[CÓDIGO BNCC REAL 1 - ex: EF03MA19]", "descricao": "[DESCRIÇÃO COMPLETA da habilidade 1 sobre ${tema}]"},
+    {"codigo": "[CÓDIGO BNCC REAL 2 - ex: EF03MA20]", "descricao": "[DESCRIÇÃO COMPLETA da habilidade 2 sobre ${tema}]"},
+    {"codigo": "[CÓDIGO BNCC REAL 3 - ex: EF03MA21]", "descricao": "[DESCRIÇÃO COMPLETA da habilidade 3 sobre ${tema}]"}
   ],
-  "bncc": [CÓDIGOS BNCC das habilidades acima, ex: ["EF03MA19", "EF03MA20"]],
+  "bncc": ["[CÓDIGO 1]", "[CÓDIGO 2]", "[CÓDIGO 3]"],
   "objetivos": [
     "[OBJETIVO ESPECÍFICO 1 sobre ${tema}]",
     "[OBJETIVO ESPECÍFICO 2 sobre ${tema}]",
@@ -174,56 +187,57 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
   "desenvolvimento": [
     { 
       "etapa": "Introdução", 
-      "tempo": "[tempo específico em minutos, ex: 10 minutos]", 
-      "atividade": "[ATIVIDADE ESPECÍFICA de introdução ao tema ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[1-3 RECURSOS ÚNICOS específicos APENAS para introdução, separados por vírgula. Ex: Quadro branco, marcadores coloridos]" 
+      "tempo": "[tempo em minutos - ex: 10 minutos]", 
+      "atividade": "[ATIVIDADE ESPECÍFICA de introdução ao ${tema} - detalhada]", 
+      "recursos": "[1-3 recursos únicos para introdução, separados por vírgula]" 
     },
     { 
       "etapa": "Desenvolvimento", 
-      "tempo": "[tempo específico em minutos, ex: 25 minutos]", 
-      "atividade": "[ATIVIDADE ESPECÍFICA de desenvolvimento do tema ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[1-3 RECURSOS ÚNICOS específicos APENAS para desenvolvimento, separados por vírgula. Ex: Material manipulativo, experimentos práticos]" 
+      "tempo": "[tempo em minutos - ex: 25 minutos]", 
+      "atividade": "[ATIVIDADE ESPECÍFICA de desenvolvimento do ${tema} - detalhada]", 
+      "recursos": "[1-3 recursos únicos para desenvolvimento, separados por vírgula]" 
     },
     { 
       "etapa": "Prática", 
-      "tempo": "[tempo específico em minutos, ex: 10 minutos]", 
-      "atividade": "[ATIVIDADE PRÁTICA ESPECÍFICA sobre ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[1-3 RECURSOS ÚNICOS específicos APENAS para prática, separados por vírgula. Ex: Exercícios impressos, jogos educativos]" 
+      "tempo": "[tempo em minutos - ex: 10 minutos]", 
+      "atividade": "[ATIVIDADE PRÁTICA sobre ${tema} - detalhada]", 
+      "recursos": "[1-3 recursos únicos para prática, separados por vírgula]" 
     },
     { 
       "etapa": "Fechamento", 
-      "tempo": "[tempo específico em minutos, ex: 5 minutos]", 
-      "atividade": "[ATIVIDADE ESPECÍFICA de fechamento sobre ${tema} - descreva detalhadamente o que será feito]", 
-      "recursos": "[1-2 RECURSOS ÚNICOS específicos APENAS para fechamento, separados por vírgula. Ex: Fichas de avaliação]" 
+      "tempo": "[tempo em minutos - ex: 5 minutos]", 
+      "atividade": "[ATIVIDADE de fechamento sobre ${tema} - detalhada]", 
+      "recursos": "[1-2 recursos únicos para fechamento, separados por vírgula]" 
     }
   ],
   "recursos": [
-    "[RECURSO 1 específico para ensinar ${tema}]",
-    "[RECURSO 2 específico para ensinar ${tema}]",
-    "[RECURSO 3 específico para ensinar ${tema}]"
+    "[RECURSO 1 específico para ${tema}]",
+    "[RECURSO 2 específico para ${tema}]",
+    "[RECURSO 3 específico para ${tema}]",
+    "[RECURSO 4 específico para ${tema}]",
+    "[RECURSO 5 específico para ${tema}]"
   ],
   "conteudosProgramaticos": [
-    "[CONTEÚDO ESPECÍFICO 1 sobre ${tema}]",
-    "[CONTEÚDO ESPECÍFICO 2 sobre ${tema}]",
-    "[CONTEÚDO ESPECÍFICO 3 sobre ${tema}]"
+    "[CONTEÚDO 1 sobre ${tema}]",
+    "[CONTEÚDO 2 sobre ${tema}]",
+    "[CONTEÚDO 3 sobre ${tema}]"
   ],
-  "metodologia": "[METODOLOGIA ESPECÍFICA e detalhada para ensinar ${tema} em ${disciplina} para ${serie} - descreva como será conduzida a aula]",
-  "avaliacao": "[MÉTODO DE AVALIAÇÃO específico para verificar aprendizado sobre ${tema} - descreva como será avaliado]",
+  "metodologia": "[METODOLOGIA ESPECÍFICA para ensinar ${tema} em ${disciplina} para ${serie} - detalhada]",
+  "avaliacao": "[MÉTODO DE AVALIAÇÃO específico para ${tema} - como será avaliado]",
   "referencias": [
-    "[REFERÊNCIA BIBLIOGRÁFICA 1 sobre ${tema} em ${disciplina}]",
-    "[REFERÊNCIA BIBLIOGRÁFICA 2 sobre ${tema} em ${disciplina}]"
+    "[REFERÊNCIA 1 sobre ${tema} em ${disciplina}]",
+    "[REFERÊNCIA 2 sobre ${tema} em ${disciplina}]"
   ]
 }
 
-INSTRUÇÕES FINAIS CRÍTICAS:
-1. Cada etapa no "desenvolvimento" deve ter recursos ÚNICOS que não se repetem em outras etapas
-2. Use vírgulas para separar recursos dentro da string de cada etapa
-3. Mantenha de 1 a 3 recursos por etapa (máximo 3)
-4. Os recursos devem ser específicos e apropriados para a atividade daquela etapa
-5. Use português brasileiro correto sem erros gramaticais
-6. NÃO REPITA recursos entre etapas diferentes
-7. As habilidades devem ser sempre um array de objetos com código e descrição, e os códigos devem ser reais e específicos da BNCC para o tema, disciplina e série.
-8. O campo bncc deve ser um array apenas com os códigos das habilidades.
+REGRAS FINAIS OBRIGATÓRIAS:
+1. Habilidades: SEMPRE array de objetos com codigo e descricao
+2. BNCC: SEMPRE array apenas com os códigos das habilidades
+3. Recursos nas etapas: ÚNICOS e específicos, separados por vírgula
+4. Recursos gerais: lista consolidada de TODOS os recursos das etapas
+5. Códigos BNCC devem ser REAIS e específicos para ${disciplina} e ${serie}
+6. NÃO repetir recursos entre etapas
+7. Duração total deve ser soma dos tempos das etapas
 `;
 
     case 'slides':
@@ -626,15 +640,16 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsedContent = JSON.parse(jsonMatch[0]);
-      // --- AJUSTE HABILIDADES E BNCC PARA PLANO DE AULA ---
+      
+      // --- CORREÇÃO ESPECIAL PARA PLANO DE AULA ---
       if (materialType === 'plano-de-aula') {
-        // Garante que habilidades seja array de objetos {codigo, descricao}
+        // 1. Garantir que habilidades seja array de objetos com codigo e descricao
         if (Array.isArray(parsedContent.habilidades)) {
           parsedContent.habilidades = parsedContent.habilidades.map((h: any) => {
             if (typeof h === 'object' && h.codigo && h.descricao) {
               return h;
             } else if (typeof h === 'string') {
-              // Tenta separar código e descrição
+              // Tentar separar código e descrição se estiver em string
               const match = h.match(/([A-Z]{2}\d{2}[A-Z]{2}\d{2,})\s*[-:]?\s*(.*)/);
               if (match) {
                 return { codigo: match[1], descricao: match[2] };
@@ -646,12 +661,49 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         } else {
           parsedContent.habilidades = [];
         }
-        // Garante que bncc seja array apenas com os códigos das habilidades
+
+        // 2. Garantir que bncc seja array apenas com códigos das habilidades
         parsedContent.bncc = Array.isArray(parsedContent.habilidades)
           ? parsedContent.habilidades.map((h: any) => h.codigo).filter((c: string) => !!c)
           : [];
+
+        // 3. Extrair recursos das etapas e consolidar na seção recursos
+        if (parsedContent.desenvolvimento && Array.isArray(parsedContent.desenvolvimento)) {
+          const recursosEtapas = new Set<string>();
+          
+          parsedContent.desenvolvimento.forEach((etapa: any) => {
+            if (etapa.recursos && typeof etapa.recursos === 'string') {
+              // Dividir recursos por vírgula e limpar espaços
+              const recursos = etapa.recursos.split(',').map((r: string) => r.trim()).filter((r: string) => r.length > 0);
+              recursos.forEach((recurso: string) => recursosEtapas.add(recurso));
+            }
+          });
+
+          // Atualizar a seção recursos com todos os recursos das etapas
+          parsedContent.recursos = Array.from(recursosEtapas);
+        }
+
+        // 4. Calcular duração total baseada nas etapas
+        if (parsedContent.desenvolvimento && Array.isArray(parsedContent.desenvolvimento)) {
+          let tempoTotal = 0;
+          parsedContent.desenvolvimento.forEach((etapa: any) => {
+            if (etapa.tempo && typeof etapa.tempo === 'string') {
+              const match = etapa.tempo.match(/(\d+)/);
+              if (match) {
+                tempoTotal += parseInt(match[1]);
+              }
+            }
+          });
+          
+          if (tempoTotal > 0) {
+            parsedContent.duracao = tempoTotal >= 100 
+              ? `${Math.ceil(tempoTotal / 50)} aulas (${tempoTotal} minutos)`
+              : `${tempoTotal} minutos`;
+          }
+        }
       }
-      // --- FIM AJUSTE ---
+      // --- FIM CORREÇÃO PLANO DE AULA ---
+      
       // Enhanced parsing for activities and assessments with better question handling
       if (materialType === 'atividade' || materialType === 'avaliacao') {
         if (parsedContent.questoes && Array.isArray(parsedContent.questoes)) {
