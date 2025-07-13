@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -66,7 +65,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Você é um assistente especializado em criar materiais educacionais seguindo a BNCC. Retorne sempre conteúdo estruturado e pedagógico com base nas diretrizes brasileiras de educação. Seja específico e detalhado em todas as seções, evitando campos vazios ou incompletos. GERE TODO O CONTEÚDO baseado no tema, disciplina e série informados - não use templates genéricos. Use português brasileiro correto, sem erros de gramática ou ortografia.'
+            content: 'Você é um assistente especializado em criar materiais educacionais seguindo a BNCC. Retorne sempre conteúdo estruturado e pedagógico com base nas diretrizes brasileiras de educação. Seja específico e detalhado em todas as seções, evitando campos vazios ou incompletos. GERE TODO O CONTEÚDO baseado no tema, disciplina e série informados - não use templates genéricos. Use português brasileiro correto, sem erros de gramática ou ortografia. PARA QUESTÕES: sempre inclua tanto "enunciado" quanto "pergunta" com o mesmo texto para garantir compatibilidade.'
           },
           {
             role: 'user',
@@ -404,6 +403,7 @@ REGRAS CRÍTICAS PARA GERAÇÃO DAS QUESTÕES:
 - Para questões "verdadeiro_falso": crie afirmações que exijam análise
 - Para questões "dissertativa": faça perguntas que promovam reflexão
 - Para questões "desenho": solicite representações visuais pedagógicas
+- SEMPRE inclua TANTO "enunciado" QUANTO "pergunta" com o MESMO TEXTO em cada questão
 
 Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
 
@@ -439,12 +439,13 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
       return `{
       "numero": ${i + 1},
       "tipo": "${tipoFinal}",
-      "enunciado": "[ENUNCIADO da questão ${i + 1} sobre ${tema} - adaptado para tipo ${tipoFinal}]",
+      "enunciado": "[ENUNCIADO COMPLETO da questão ${i + 1} sobre ${tema} - adaptado para tipo ${tipoFinal}]",
+      "pergunta": "[MESMO TEXTO do enunciado - questão ${i + 1} sobre ${tema}]",
       ${tipoFinal === 'multipla_escolha' ? `"opcoes": [
-        "[ALTERNATIVA A - plausível e relacionada ao tema]",
-        "[ALTERNATIVA B - plausível e relacionada ao tema]", 
-        "[ALTERNATIVA C - plausível e relacionada ao tema]",
-        "[ALTERNATIVA D - plausível e relacionada ao tema]"
+        "[ALTERNATIVA A - plausível e relacionada ao tema ${tema}]",
+        "[ALTERNATIVA B - plausível e relacionada ao tema ${tema}]", 
+        "[ALTERNATIVA C - plausível e relacionada ao tema ${tema}]",
+        "[ALTERNATIVA D - plausível e relacionada ao tema ${tema}]"
       ],` : tipoFinal === 'ligar' ? `"coluna_a": [
         "[ITEM A1 - conceito/termo sobre ${tema}]",
         "[ITEM A2 - conceito/termo sobre ${tema}]",
@@ -456,43 +457,45 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
         "[ITEM B2 - definição/descrição sobre ${tema}]",
         "[ITEM B3 - definição/descrição sobre ${tema}]",
         "[ITEM B4 - definição/descrição sobre ${tema}]"
-      ],` : `"opcoes": [],`}
-      "resposta_correta": "[RESPOSTA CORRETA ou orientação detalhada]",
-      "explicacao": "[EXPLICAÇÃO EDUCATIVA sobre ${tema} - feedback formativo]",
-      "dica_pedagogica": "[DICA para o professor sobre esta questão]"
+      ],` : tipoFinal === 'completar' ? `"textoComLacunas": "[TEXTO com lacunas ______ sobre ${tema}]",` : tipoFinal === 'dissertativa' || tipoFinal === 'desenho' ? `"linhasResposta": 5,` : ``}
+      "resposta_correta": "[RESPOSTA CORRETA específica sobre ${tema}]",
+      "explicacao": "[EXPLICAÇÃO EDUCATIVA sobre a resposta - feedback formativo sobre ${tema}]",
+      "dica_pedagogica": "[DICA para o professor sobre esta questão específica de ${tema}]"
     }`;
     }).join(',\n    ')}
   ],
   "recursos_necessarios": [
-    "[RECURSO 1 para realizar a atividade sobre ${tema}]",
-    "[RECURSO 2 para realizar a atividade sobre ${tema}]",
-    "[RECURSO 3 para realizar a atividade sobre ${tema}]"
+    "[RECURSO 1 específico para realizar a atividade sobre ${tema}]",
+    "[RECURSO 2 específico para realizar a atividade sobre ${tema}]",
+    "[RECURSO 3 específico para realizar a atividade sobre ${tema}]"
   ],
-  "metodologia": "[METODOLOGIA da atividade - como conduzir a prática sobre ${tema}]",
+  "metodologia": "[METODOLOGIA ESPECÍFICA da atividade - como conduzir a prática sobre ${tema}]",
   "criterios_acompanhamento": [
-    "[CRITÉRIO 1 para acompanhar o desenvolvimento dos alunos]",
-    "[CRITÉRIO 2 para acompanhar o desenvolvimento dos alunos]",
-    "[CRITÉRIO 3 para acompanhar o desenvolvimento dos alunos]"
+    "[CRITÉRIO 1 para acompanhar o desenvolvimento dos alunos em ${tema}]",
+    "[CRITÉRIO 2 para acompanhar o desenvolvimento dos alunos em ${tema}]",
+    "[CRITÉRIO 3 para acompanhar o desenvolvimento dos alunos em ${tema}]"
   ],
-  "sugestoes_adaptacao": "[SUGESTÕES para adaptar a atividade a diferentes níveis de aprendizagem]",
-  "extensao_atividade": "[SUGESTÕES para estender ou aprofundar a atividade sobre ${tema}]",
+  "sugestoes_adaptacao": "[SUGESTÕES específicas para adaptar a atividade sobre ${tema} a diferentes níveis]",
+  "extensao_atividade": "[SUGESTÕES específicas para estender a atividade sobre ${tema}]",
   "referencias": [
-    "[REFERÊNCIA 1 sobre ${tema} em ${disciplina}]",
-    "[REFERÊNCIA 2 sobre ${tema} em ${disciplina}]"
+    "[REFERÊNCIA 1 específica sobre ${tema} em ${disciplina}]",
+    "[REFERÊNCIA 2 específica sobre ${tema} em ${disciplina}]"
   ]
 }
 
 INSTRUÇÕES FINAIS CRÍTICAS:
 1. DISTRIBUA os tipos de questões EQUILIBRADAMENTE entre os tipos solicitados
-2. Para "multipla_escolha": sempre 4 alternativas válidas e plausíveis
-3. Para "ligar": exatamente 4 itens em cada coluna com correspondências claras
-4. Para "completar": use lacunas claras marcadas com ______
-5. Para "verdadeiro_falso": crie afirmações que exijam análise crítica
-6. FOQUE em atividades PRÁTICAS e INTERATIVAS
-7. Use linguagem MOTIVADORA e ENVOLVENTE
-8. Promova PARTICIPAÇÃO ATIVA dos estudantes
-9. Adapte à faixa etária de ${serie}
-10. Use português brasileiro correto
+2. Para "multipla_escolha": sempre 4 alternativas válidas e plausíveis sobre ${tema}
+3. Para "ligar": exatamente 4 itens em cada coluna com correspondências claras sobre ${tema}
+4. Para "completar": use lacunas claras marcadas com ______ no texto sobre ${tema}
+5. Para "verdadeiro_falso": crie afirmações específicas sobre ${tema} que exijam análise
+6. SEMPRE inclua "enunciado" E "pergunta" com o MESMO TEXTO em cada questão
+7. FOQUE em atividades PRÁTICAS e INTERATIVAS sobre ${tema}
+8. Use linguagem MOTIVADORA e ENVOLVENTE
+9. Promova PARTICIPAÇÃO ATIVA dos estudantes com ${tema}
+10. Adapte à faixa etária de ${serie}
+11. Use português brasileiro correto
+12. TODO o conteúdo deve ser específico sobre ${tema}
 `;
 
     case 'avaliacao':
@@ -519,12 +522,12 @@ IMPORTANTE: Este é um material de AVALIAÇÃO FORMAL focado na VERIFICAÇÃO DE
 O objetivo é MENSURAR o conhecimento adquirido pelos alunos de forma objetiva e criteriosa.
 
 CARACTERÍSTICAS DE UMA AVALIAÇÃO (não atividade):
-- Foco na VERIFICAÇÃO DO APRENDIZADO
+- Foco na VERIFICAÇÃO DO APRENDIZADO sobre ${tema}
 - Questões OBJETIVAS e MENSURÁVEIS  
 - Critérios CLAROS de correção
 - Ambiente FORMAL de teste
 - Feedback AVALIATIVO e CLASSIFICATÓRIO
-- Verificação do DOMÍNIO dos conteúdos
+- Verificação do DOMÍNIO dos conteúdos sobre ${tema}
 - Instrumentos de MEDIÇÃO do conhecimento
 
 TIPOS DE QUESTÕES SOLICITADOS: ${tiposQuestoesAval.join(', ')}
@@ -540,12 +543,13 @@ OBRIGATÓRIO - TIPOS DE QUESTÕES DISPONÍVEIS:
 
 REGRAS CRÍTICAS PARA GERAÇÃO DAS QUESTÕES:
 - Distribua os tipos de questões de forma EQUILIBRADA conforme solicitado
-- Para questões "multipla_escolha": sempre 4 alternativas válidas e plausíveis
-- Para questões "ligar": forneça exatamente 4 itens na coluna A e 4 na coluna B
-- Para questões "completar": deixe uma lacuna clara marcada com ______
-- Para questões "verdadeiro_falso": crie afirmações que exijam análise
-- Para questões "dissertativa": faça perguntas que promovam análise crítica
-- Para questões "desenho": solicite representações visuais técnicas
+- Para questões "multipla_escolha": sempre 4 alternativas válidas e plausíveis sobre ${tema}
+- Para questões "ligar": forneça exatamente 4 itens na coluna A e 4 na coluna B sobre ${tema}
+- Para questões "completar": deixe uma lacuna clara marcada com ______ sobre ${tema}
+- Para questões "verdadeiro_falso": crie afirmações específicas sobre ${tema} que exijam análise
+- Para questões "dissertativa": faça perguntas que promovam análise crítica sobre ${tema}
+- Para questões "desenho": solicite representações visuais técnicas sobre ${tema}
+- SEMPRE inclua TANTO "enunciado" QUANTO "pergunta" com o MESMO TEXTO em cada questão
 
 Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
 
@@ -560,13 +564,13 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
   "duracao": "[duração adequada para a avaliação sobre ${tema}]",
   "valor_total": "[PONTUAÇÃO TOTAL da avaliação - ex: 10,0 pontos]",
   "bncc": "[códigos BNCC específicos para ${tema} em ${disciplina}]",
-  "objetivo_avaliativo": "[OBJETIVO da avaliação - verificar aprendizagem sobre ${tema}]",
+  "objetivo_avaliativo": "[OBJETIVO específico da avaliação - verificar aprendizagem sobre ${tema}]",
   "competencias_avaliadas": [
-    "[COMPETÊNCIA 1 avaliada sobre ${tema}]",
-    "[COMPETÊNCIA 2 avaliada sobre ${tema}]",
-    "[COMPETÊNCIA 3 avaliada sobre ${tema}]"
+    "[COMPETÊNCIA 1 específica avaliada sobre ${tema}]",
+    "[COMPETÊNCIA 2 específica avaliada sobre ${tema}]",
+    "[COMPETÊNCIA 3 específica avaliada sobre ${tema}]"
   ],
-  "instrucoes_gerais": "[INSTRUÇÕES FORMAIS para realização da avaliação sobre ${tema}]",
+  "instrucoes_gerais": "[INSTRUÇÕES FORMAIS específicas para realização da avaliação sobre ${tema}]",
   "questoes": [
     ${Array.from({length: numQuestoesAval}, (_, i) => {
       const tipoIndex = i % tiposQuestoesAval.length;
@@ -582,77 +586,80 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
       "numero": ${i + 1},
       "tipo": "${tipoFinal}",
       "valor": "[PONTUAÇÃO da questão ${i + 1} - ex: 1,0 ponto]",
-      "enunciado": "[ENUNCIADO da questão ${i + 1} sobre ${tema} - claro e objetivo para tipo ${tipoFinal}]",
+      "enunciado": "[ENUNCIADO COMPLETO da questão ${i + 1} sobre ${tema} - claro e objetivo para tipo ${tipoFinal}]",
+      "pergunta": "[MESMO TEXTO do enunciado - questão ${i + 1} sobre ${tema}]",
       ${tipoFinal === 'multipla_escolha' ? `"opcoes": [
-        "[ALTERNATIVA A - tecnicamente correta ou incorreta]",
-        "[ALTERNATIVA B - tecnicamente correta ou incorreta]", 
-        "[ALTERNATIVA C - tecnicamente correta ou incorreta]",
-        "[ALTERNATIVA D - tecnicamente correta ou incorreta]"
+        "[ALTERNATIVA A - tecnicamente correta ou incorreta sobre ${tema}]",
+        "[ALTERNATIVA B - tecnicamente correta ou incorreta sobre ${tema}]", 
+        "[ALTERNATIVA C - tecnicamente correta ou incorreta sobre ${tema}]",
+        "[ALTERNATIVA D - tecnicamente correta ou incorreta sobre ${tema}]"
       ],` : tipoFinal === 'ligar' ? `"coluna_a": [
-        "[ITEM A1 - conceito/termo sobre ${tema}]",
-        "[ITEM A2 - conceito/termo sobre ${tema}]",
-        "[ITEM A3 - conceito/termo sobre ${tema}]",
-        "[ITEM A4 - conceito/termo sobre ${tema}]"
+        "[ITEM A1 - conceito/termo específico sobre ${tema}]",
+        "[ITEM A2 - conceito/termo específico sobre ${tema}]",
+        "[ITEM A3 - conceito/termo específico sobre ${tema}]",
+        "[ITEM A4 - conceito/termo específico sobre ${tema}]"
       ],
       "coluna_b": [
-        "[ITEM B1 - definição/descrição sobre ${tema}]",
-        "[ITEM B2 - definição/descrição sobre ${tema}]",
-        "[ITEM B3 - definição/descrição sobre ${tema}]",
-        "[ITEM B4 - definição/descrição sobre ${tema}]"
-      ],` : `"opcoes": [],`}
-      "resposta_correta": "[RESPOSTA CORRETA]",
-      "criterios_correcao": "[CRITÉRIOS para correção desta questão]",
-      "habilidade_avaliada": "[HABILIDADE BNCC avaliada nesta questão]"
+        "[ITEM B1 - definição/descrição específica sobre ${tema}]",
+        "[ITEM B2 - definição/descrição específica sobre ${tema}]",
+        "[ITEM B3 - definição/descrição específica sobre ${tema}]",
+        "[ITEM B4 - definição/descrição específica sobre ${tema}]"
+      ],` : tipoFinal === 'completar' ? `"textoComLacunas": "[TEXTO específico com lacunas ______ sobre ${tema}]",` : tipoFinal === 'dissertativa' || tipoFinal === 'desenho' ? `"linhasResposta": 5,` : ``}
+      "resposta_correta": "[RESPOSTA CORRETA específica sobre ${tema}]",
+      "criterios_correcao": "[CRITÉRIOS específicos para correção desta questão sobre ${tema}]",
+      "habilidade_avaliada": "[HABILIDADE BNCC específica avaliada nesta questão sobre ${tema}]"
     }`;
     }).join(',\n    ')}
   ],
   "criterios_avaliacao": {
-    "excelente": "[CRITÉRIO para conceito EXCELENTE (90-100%)]",
-    "bom": "[CRITÉRIO para conceito BOM (70-89%)]",
-    "satisfatorio": "[CRITÉRIO para conceito SATISFATÓRIO (50-69%)]",
-    "insuficiente": "[CRITÉRIO para conceito INSUFICIENTE (0-49%)]"
+    "excelente": "[CRITÉRIO específico para conceito EXCELENTE em ${tema} (90-100%)]",
+    "bom": "[CRITÉRIO específico para conceito BOM em ${tema} (70-89%)]",
+    "satisfatorio": "[CRITÉRIO específico para conceito SATISFATÓRIO em ${tema} (50-69%)]",
+    "insuficiente": "[CRITÉRIO específico para conceito INSUFICIENTE em ${tema} (0-49%)]"
   },
   "rubrica_avaliacao": [
     {
-      "aspecto": "[ASPECTO 1 avaliado sobre ${tema}]",
-      "criterio": "[CRITÉRIO de avaliação para este aspecto]",
-      "pontuacao": "[PONTUAÇÃO para este aspecto]"
+      "aspecto": "[ASPECTO 1 específico avaliado sobre ${tema}]",
+      "criterio": "[CRITÉRIO específico de avaliação para este aspecto de ${tema}]",
+      "pontuacao": "[PONTUAÇÃO específica para este aspecto]"
     },
     {
-      "aspecto": "[ASPECTO 2 avaliado sobre ${tema}]", 
-      "criterio": "[CRITÉRIO de avaliação para este aspecto]",
-      "pontuacao": "[PONTUAÇÃO para este aspecto]"
+      "aspecto": "[ASPECTO 2 específico avaliado sobre ${tema}]", 
+      "criterio": "[CRITÉRIO específico de avaliação para este aspecto de ${tema}]",
+      "pontuacao": "[PONTUAÇÃO específica para este aspecto]"
     },
     {
-      "aspecto": "[ASPECTO 3 avaliado sobre ${tema}]",
-      "criterio": "[CRITÉRIO de avaliação para este aspecto]", 
-      "pontuacao": "[PONTUAÇÃO para este aspecto]"
+      "aspecto": "[ASPECTO 3 específico avaliado sobre ${tema}]",
+      "criterio": "[CRITÉRIO específico de avaliação para este aspecto de ${tema}]", 
+      "pontuacao": "[PONTUAÇÃO específica para este aspecto]"
     }
   ],
-  "observacoes_correcao": "[ORIENTAÇÕES para correção da avaliação sobre ${tema}]",
-  "feedback_pos_avaliacao": "[ORIENTAÇÕES para feedback após correção]",
+  "observacoes_correcao": "[ORIENTAÇÕES específicas para correção da avaliação sobre ${tema}]",
+  "feedback_pos_avaliacao": "[ORIENTAÇÕES específicas para feedback após correção sobre ${tema}]",
   "referencias": [
-    "[REFERÊNCIA 1 sobre ${tema} em ${disciplina}]",
-    "[REFERÊNCIA 2 sobre ${tema} em ${disciplina}]"
+    "[REFERÊNCIA 1 específica sobre ${tema} em ${disciplina}]",
+    "[REFERÊNCIA 2 específica sobre ${tema} em ${disciplina}]"
   ]
 }
 
 INSTRUÇÕES FINAIS CRÍTICAS:
 1. DISTRIBUA os tipos de questões EQUILIBRADAMENTE entre os tipos solicitados
-2. Para "multipla_escolha": sempre 4 alternativas válidas e plausíveis
-3. Para "ligar": exatamente 4 itens em cada coluna com correspondências verificáveis
-4. Para "completar": use lacunas claras marcadas com ______
-5. Para "verdadeiro_falso": crie afirmações que exijam conhecimento específico
-6. FOQUE na VERIFICAÇÃO OBJETIVA do aprendizado
-7. Use linguagem FORMAL e CLARA
-8. Estabeleça CRITÉRIOS MENSURÁVEIS de avaliação
-9. Inclua RUBRICAS E PONTUAÇÕES específicas
-10. Adapte à faixa etária de ${serie}
-11. Use português brasileiro correto
+2. Para "multipla_escolha": sempre 4 alternativas válidas e plausíveis sobre ${tema}
+3. Para "ligar": exatamente 4 itens em cada coluna com correspondências verificáveis sobre ${tema}
+4. Para "completar": use lacunas claras marcadas com ______ em textos sobre ${tema}
+5. Para "verdadeiro_falso": crie afirmações específicas sobre ${tema} que exijam conhecimento específico
+6. SEMPRE inclua "enunciado" E "pergunta" com o MESMO TEXTO em cada questão
+7. FOQUE na VERIFICAÇÃO OBJETIVA do aprendizado sobre ${tema}
+8. Use linguagem FORMAL e CLARA
+9. Estabeleça CRITÉRIOS MENSURÁVEIS de avaliação sobre ${tema}
+10. Inclua RUBRICAS E PONTUAÇÕES específicas
+11. Adapte à faixa etária de ${serie}
+12. Use português brasileiro correto
+13. TODO o conteúdo deve ser específico sobre ${tema}
 `;
 
     default:
-      return `Gere um material educativo sobre ${tema} para ${disciplina} na ${serie}.`;
+      return `Gere um material educativo específico sobre ${tema} para ${disciplina} na ${serie}.`;
   }
 }
 
@@ -726,21 +733,35 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
       }
       // --- FIM CORREÇÃO PLANO DE AULA ---
       
-      // Enhanced parsing for activities and assessments with better question handling
+      // CORREÇÃO APRIMORADA PARA ATIVIDADES E AVALIAÇÕES
       if (materialType === 'atividade' || materialType === 'avaliacao') {
+        console.log('🔧 Processando questões para', materialType);
+        
         if (parsedContent.questoes && Array.isArray(parsedContent.questoes)) {
           parsedContent.questoes = parsedContent.questoes.map((questao: any, index: number) => {
-            // Ensure proper question structure
-            const pergunta = questao.pergunta || questao.enunciado || `Questão ${index + 1}`;
-            const enunciado = questao.enunciado || questao.pergunta || pergunta;
+            // GARANTIR CAMPOS OBRIGATÓRIOS
+            const enunciado = questao.enunciado || questao.pergunta || `Questão ${index + 1} - conteúdo não disponível`;
+            const pergunta = questao.pergunta || questao.enunciado || enunciado;
+            
+            console.log(`📝 Processando questão ${index + 1}:`, {
+              tipo: questao.tipo,
+              enunciado: enunciado.substring(0, 50) + '...',
+              pergunta: pergunta.substring(0, 50) + '...'
+            });
+
+            // ESTRUTURA BASE NORMALIZADA
             let processedQuestion: any = {
               numero: questao.numero || (index + 1),
               tipo: questao.tipo || 'multipla_escolha',
-              pergunta, // sempre preenchido
-              enunciado, // sempre preenchido
+              enunciado: enunciado,
+              pergunta: pergunta,
               resposta_correta: questao.resposta_correta || '',
               explicacao: questao.explicacao || '',
-              dica_pedagogica: questao.dica_pedagogica || '',
+              // Campos específicos para atividades
+              ...(materialType === 'atividade' && {
+                dica_pedagogica: questao.dica_pedagogica || ''
+              }),
+              // Campos específicos para avaliações
               ...(materialType === 'avaliacao' && {
                 valor: questao.valor || '1,0 ponto',
                 criterios_correcao: questao.criterios_correcao || '',
@@ -748,60 +769,71 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
               })
             };
 
+            // CONFIGURAÇÃO ESPECÍFICA POR TIPO DE QUESTÃO
             switch (processedQuestion.tipo) {
               case 'multipla_escolha':
-                processedQuestion.opcoes = Array.isArray(questao.opcoes) && questao.opcoes.length === 4 ? questao.opcoes : [
-                  'Alternativa A - aguardando conteúdo',
-                  'Alternativa B - aguardando conteúdo',
-                  'Alternativa C - aguardando conteúdo',
-                  'Alternativa D - aguardando conteúdo'
-                ];
+                processedQuestion.opcoes = Array.isArray(questao.opcoes) && questao.opcoes.length === 4 
+                  ? questao.opcoes 
+                  : [
+                      'Alternativa A - aguardando conteúdo',
+                      'Alternativa B - aguardando conteúdo',
+                      'Alternativa C - aguardando conteúdo',
+                      'Alternativa D - aguardando conteúdo'
+                    ];
+                // Limpar campos não utilizados
                 processedQuestion.coluna_a = [];
                 processedQuestion.coluna_b = [];
-                processedQuestion.colunaA = [];
-                processedQuestion.colunaB = [];
                 processedQuestion.textoComLacunas = '';
                 processedQuestion.linhasResposta = undefined;
                 break;
+
               case 'ligar':
-                processedQuestion.coluna_a = Array.isArray(questao.coluna_a) && questao.coluna_a.length === 4 ? questao.coluna_a : ['Item A1', 'Item A2', 'Item A3', 'Item A4'];
-                processedQuestion.coluna_b = Array.isArray(questao.coluna_b) && questao.coluna_b.length === 4 ? questao.coluna_b : ['Item B1', 'Item B2', 'Item B3', 'Item B4'];
+                processedQuestion.coluna_a = Array.isArray(questao.coluna_a) && questao.coluna_a.length === 4 
+                  ? questao.coluna_a 
+                  : ['Item A1', 'Item A2', 'Item A3', 'Item A4'];
+                processedQuestion.coluna_b = Array.isArray(questao.coluna_b) && questao.coluna_b.length === 4 
+                  ? questao.coluna_b 
+                  : ['Item B1', 'Item B2', 'Item B3', 'Item B4'];
+                // Adicionar aliases para compatibilidade
                 processedQuestion.colunaA = processedQuestion.coluna_a;
                 processedQuestion.colunaB = processedQuestion.coluna_b;
+                // Limpar campos não utilizados
                 processedQuestion.opcoes = [];
                 processedQuestion.textoComLacunas = '';
                 processedQuestion.linhasResposta = undefined;
                 break;
+
               case 'completar':
-                processedQuestion.textoComLacunas = questao.textoComLacunas || '';
+                processedQuestion.textoComLacunas = questao.textoComLacunas || enunciado || '';
+                // Limpar campos não utilizados
                 processedQuestion.opcoes = [];
                 processedQuestion.coluna_a = [];
                 processedQuestion.coluna_b = [];
-                processedQuestion.colunaA = [];
-                processedQuestion.colunaB = [];
                 processedQuestion.linhasResposta = undefined;
                 break;
+
               case 'dissertativa':
               case 'desenho':
                 processedQuestion.linhasResposta = questao.linhasResposta || 5;
+                // Limpar campos não utilizados
                 processedQuestion.opcoes = [];
                 processedQuestion.coluna_a = [];
                 processedQuestion.coluna_b = [];
-                processedQuestion.colunaA = [];
-                processedQuestion.colunaB = [];
                 processedQuestion.textoComLacunas = '';
                 break;
+
               case 'verdadeiro_falso':
                 processedQuestion.opcoes = ['Verdadeiro', 'Falso'];
+                // Limpar campos não utilizados
                 processedQuestion.coluna_a = [];
                 processedQuestion.coluna_b = [];
-                processedQuestion.colunaA = [];
-                processedQuestion.colunaB = [];
                 processedQuestion.textoComLacunas = '';
                 processedQuestion.linhasResposta = undefined;
                 break;
+
               default:
-                // fallback para múltipla escolha
+                console.warn(`⚠️ Tipo de questão desconhecido: ${processedQuestion.tipo}. Convertendo para múltipla escolha.`);
+                processedQuestion.tipo = 'multipla_escolha';
                 processedQuestion.opcoes = [
                   'Alternativa A - aguardando conteúdo',
                   'Alternativa B - aguardando conteúdo',
@@ -810,15 +842,25 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
                 ];
                 processedQuestion.coluna_a = [];
                 processedQuestion.coluna_b = [];
-                processedQuestion.colunaA = [];
-                processedQuestion.colunaB = [];
                 processedQuestion.textoComLacunas = '';
                 processedQuestion.linhasResposta = undefined;
                 break;
             }
 
+            console.log(`✅ Questão ${index + 1} processada:`, {
+              tipo: processedQuestion.tipo,
+              temEnunciado: !!processedQuestion.enunciado,
+              temPergunta: !!processedQuestion.pergunta,
+              temResposta: !!processedQuestion.resposta_correta
+            });
+
             return processedQuestion;
           });
+
+          console.log(`✅ Total de ${parsedContent.questoes.length} questões processadas para ${materialType}`);
+        } else {
+          console.warn('⚠️ Nenhuma questão encontrada ou questões em formato inválido');
+          parsedContent.questoes = [];
         }
       }
       
@@ -837,7 +879,7 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
       data: formData.data || new Date().toISOString().split('T')[0]
     };
   } catch (error) {
-    console.error('Error parsing generated content:', error);
+    console.error('❌ Error parsing generated content:', error);
     
     // Return basic structure if parsing fails
     return {
