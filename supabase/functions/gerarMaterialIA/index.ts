@@ -662,184 +662,206 @@ INSTRUÇÕES FINAIS CRÍTICAS:
 
 function parseGeneratedContent(materialType: string, content: string, formData: MaterialFormData) {
   try {
-    // Try to parse as JSON first
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsedContent = JSON.parse(jsonMatch[0]);
-      
-      // --- CORREÇÃO ESPECIAL PARA PLANO DE AULA ---
-      if (materialType === 'plano-de-aula') {
-        // 1. Garantir que habilidades seja array de objetos com codigo e descricao
-        if (Array.isArray(parsedContent.habilidades)) {
-          parsedContent.habilidades = parsedContent.habilidades.map((h: any) => {
-            if (typeof h === 'object' && h.codigo && h.descricao) {
-              return h;
-            } else if (typeof h === 'string') {
-              // Tentar separar código e descrição se estiver em string
-              const match = h.match(/([A-Z]{2}\d{2}[A-Z]{2}\d{2,})\s*[-:]?\s*(.*)/);
-              if (match) {
-                return { codigo: match[1], descricao: match[2] };
-              }
-              return { codigo: '', descricao: h };
-            }
-            return { codigo: '', descricao: '' };
-          });
-        } else {
-          parsedContent.habilidades = [];
-        }
-
-        // 2. Garantir que bncc seja array apenas com códigos das habilidades
-        parsedContent.bncc = Array.isArray(parsedContent.habilidades)
-          ? parsedContent.habilidades.map((h: any) => h.codigo).filter((c: string) => !!c)
-          : [];
-
-        // 3. Extrair recursos das etapas e consolidar na seção recursos
-        if (parsedContent.desenvolvimento && Array.isArray(parsedContent.desenvolvimento)) {
-          const recursosEtapas = new Set<string>();
-          
-          parsedContent.desenvolvimento.forEach((etapa: any) => {
-            if (etapa.recursos && typeof etapa.recursos === 'string') {
-              // Dividir recursos por vírgula e limpar espaços
-              const recursos = etapa.recursos.split(',').map((r: string) => r.trim()).filter((r: string) => r.length > 0);
-              recursos.forEach((recurso: string) => recursosEtapas.add(recurso));
-            }
-          });
-
-          // Atualizar a seção recursos com todos os recursos das etapas
-          parsedContent.recursos = Array.from(recursosEtapas);
-        }
-
-        // 4. Calcular duração total baseada nas etapas
-        if (parsedContent.desenvolvimento && Array.isArray(parsedContent.desenvolvimento)) {
-          let tempoTotal = 0;
-          parsedContent.desenvolvimento.forEach((etapa: any) => {
-            if (etapa.tempo && typeof etapa.tempo === 'string') {
-              const match = etapa.tempo.match(/(\d+)/);
-              if (match) {
-                tempoTotal += parseInt(match[1]);
-              }
-            }
-          });
-          
-          if (tempoTotal > 0) {
-            parsedContent.duracao = tempoTotal >= 100 
-              ? `${Math.ceil(tempoTotal / 50)} aulas (${tempoTotal} minutos)`
-              : `${tempoTotal} minutos`;
-          }
+    // Tentar extrair o maior bloco JSON possível
+    let jsonMatch = null;
+    let parsedContent: any = null;
+    // 1. Tentar encontrar o maior bloco JSON válido
+    const allMatches = [...content.matchAll(/\{[\s\S]*?\}/g)];
+    if (allMatches.length > 0) {
+      // Tentar do maior para o menor
+      for (let i = allMatches.length - 1; i >= 0; i--) {
+        try {
+          parsedContent = JSON.parse(allMatches[i][0]);
+          jsonMatch = allMatches[i][0];
+          break;
+        } catch (e) {
+          continue;
         }
       }
-      // --- FIM CORREÇÃO PLANO DE AULA ---
-      
-      // Enhanced parsing for activities and assessments with better question handling
-      if (materialType === 'atividade' || materialType === 'avaliacao') {
-        if (parsedContent.questoes && Array.isArray(parsedContent.questoes)) {
-          parsedContent.questoes = parsedContent.questoes.map((questao: any, index: number) => {
-            // Ensure proper question structure
-            const pergunta = questao.pergunta || questao.enunciado || `Questão ${index + 1}`;
-            const enunciado = questao.enunciado || questao.pergunta || pergunta;
-            let processedQuestion: any = {
-              numero: questao.numero || (index + 1),
-              tipo: questao.tipo || 'multipla_escolha',
-              pergunta, // sempre preenchido
-              enunciado, // sempre preenchido
-              resposta_correta: questao.resposta_correta || '',
-              explicacao: questao.explicacao || '',
-              dica_pedagogica: questao.dica_pedagogica || '',
-              ...(materialType === 'avaliacao' && {
-                valor: questao.valor || '1,0 ponto',
-                criterios_correcao: questao.criterios_correcao || '',
-                habilidade_avaliada: questao.habilidade_avaliada || ''
-              })
-            };
-
-            switch (processedQuestion.tipo) {
-              case 'multipla_escolha':
-                processedQuestion.opcoes = Array.isArray(questao.opcoes) && questao.opcoes.length === 4 ? questao.opcoes : [
-                  'Alternativa A - aguardando conteúdo',
-                  'Alternativa B - aguardando conteúdo',
-                  'Alternativa C - aguardando conteúdo',
-                  'Alternativa D - aguardando conteúdo'
-                ];
-                processedQuestion.coluna_a = [];
-                processedQuestion.coluna_b = [];
-                processedQuestion.colunaA = [];
-                processedQuestion.colunaB = [];
-                processedQuestion.textoComLacunas = '';
-                processedQuestion.linhasResposta = undefined;
-                break;
-              case 'ligar':
-                processedQuestion.coluna_a = Array.isArray(questao.coluna_a) && questao.coluna_a.length === 4 ? questao.coluna_a : ['Item A1', 'Item A2', 'Item A3', 'Item A4'];
-                processedQuestion.coluna_b = Array.isArray(questao.coluna_b) && questao.coluna_b.length === 4 ? questao.coluna_b : ['Item B1', 'Item B2', 'Item B3', 'Item B4'];
-                processedQuestion.colunaA = processedQuestion.coluna_a;
-                processedQuestion.colunaB = processedQuestion.coluna_b;
-                processedQuestion.opcoes = [];
-                processedQuestion.textoComLacunas = '';
-                processedQuestion.linhasResposta = undefined;
-                break;
-              case 'completar':
-                processedQuestion.textoComLacunas = questao.textoComLacunas || '';
-                processedQuestion.opcoes = [];
-                processedQuestion.coluna_a = [];
-                processedQuestion.coluna_b = [];
-                processedQuestion.colunaA = [];
-                processedQuestion.colunaB = [];
-                processedQuestion.linhasResposta = undefined;
-                break;
-              case 'dissertativa':
-              case 'desenho':
-                processedQuestion.linhasResposta = questao.linhasResposta || 5;
-                processedQuestion.opcoes = [];
-                processedQuestion.coluna_a = [];
-                processedQuestion.coluna_b = [];
-                processedQuestion.colunaA = [];
-                processedQuestion.colunaB = [];
-                processedQuestion.textoComLacunas = '';
-                break;
-              case 'verdadeiro_falso':
-                processedQuestion.opcoes = ['Verdadeiro', 'Falso'];
-                processedQuestion.coluna_a = [];
-                processedQuestion.coluna_b = [];
-                processedQuestion.colunaA = [];
-                processedQuestion.colunaB = [];
-                processedQuestion.textoComLacunas = '';
-                processedQuestion.linhasResposta = undefined;
-                break;
-              default:
-                // fallback para múltipla escolha
-                processedQuestion.opcoes = [
-                  'Alternativa A - aguardando conteúdo',
-                  'Alternativa B - aguardando conteúdo',
-                  'Alternativa C - aguardando conteúdo',
-                  'Alternativa D - aguardando conteúdo'
-                ];
-                processedQuestion.coluna_a = [];
-                processedQuestion.coluna_b = [];
-                processedQuestion.colunaA = [];
-                processedQuestion.colunaB = [];
-                processedQuestion.textoComLacunas = '';
-                processedQuestion.linhasResposta = undefined;
-                break;
-            }
-
-            return processedQuestion;
-          });
-        }
+    }
+    // 2. Se não encontrou, tentar JSON.parse direto
+    if (!parsedContent) {
+      try {
+        parsedContent = JSON.parse(content) as any;
+      } catch (e) {
+        parsedContent = null;
       }
-      
-      return parsedContent;
+    }
+    // 3. Se ainda não conseguiu, retornar estrutura mínima
+    if (!parsedContent) {
+      return {
+        titulo: `${materialType.charAt(0).toUpperCase() + materialType.slice(1)} - ${formData.tema || formData.topic || 'Material Educativo'}`,
+        conteudo: content,
+        tipo_material: materialType,
+        disciplina: formData.disciplina || formData.subject,
+        serie: formData.serie || formData.grade,
+        tema: formData.tema || formData.topic,
+        professor: formData.professor || '',
+        data: formData.data || new Date().toISOString().split('T')[0],
+        erro: 'Conteúdo gerado mas não foi possível estruturar completamente (JSON inválido)'
+      };
     }
     
-    // If not JSON, return structured content based on material type
-    return {
-      titulo: `${materialType.charAt(0).toUpperCase() + materialType.slice(1)} - ${formData.tema || formData.topic || 'Material Educativo'}`,
-      conteudo: content,
-      tipo_material: materialType,
-      disciplina: formData.disciplina || formData.subject,
-      serie: formData.serie || formData.grade,
-      tema: formData.tema || formData.topic,
-      professor: formData.professor || '',
-      data: formData.data || new Date().toISOString().split('T')[0]
-    };
+    // --- CORREÇÃO ESPECIAL PARA PLANO DE AULA ---
+    if (materialType === 'plano-de-aula') {
+      // 1. Garantir que habilidades seja array de objetos com codigo e descricao
+      if (Array.isArray(parsedContent.habilidades)) {
+        parsedContent.habilidades = parsedContent.habilidades.map((h: any) => {
+          if (typeof h === 'object' && h.codigo && h.descricao) {
+            return h;
+          } else if (typeof h === 'string') {
+            // Tentar separar código e descrição se estiver em string
+            const match = h.match(/([A-Z]{2}\d{2}[A-Z]{2}\d{2,})\s*[-:]?\s*(.*)/);
+            if (match) {
+              return { codigo: match[1], descricao: match[2] };
+            }
+            return { codigo: '', descricao: h };
+          }
+          return { codigo: '', descricao: '' };
+        });
+      } else {
+        parsedContent.habilidades = [];
+      }
+
+      // 2. Garantir que bncc seja array apenas com códigos das habilidades
+      parsedContent.bncc = Array.isArray(parsedContent.habilidades)
+        ? parsedContent.habilidades.map((h: any) => h.codigo).filter((c: string) => !!c)
+        : [];
+
+      // 3. Extrair recursos das etapas e consolidar na seção recursos
+      if (parsedContent.desenvolvimento && Array.isArray(parsedContent.desenvolvimento)) {
+        const recursosEtapas = new Set<string>();
+        
+        parsedContent.desenvolvimento.forEach((etapa: any) => {
+          if (etapa.recursos && typeof etapa.recursos === 'string') {
+            // Dividir recursos por vírgula e limpar espaços
+            const recursos = etapa.recursos.split(',').map((r: string) => r.trim()).filter((r: string) => r.length > 0);
+            recursos.forEach((recurso: string) => recursosEtapas.add(recurso));
+          }
+        });
+
+        // Atualizar a seção recursos com todos os recursos das etapas
+        parsedContent.recursos = Array.from(recursosEtapas);
+      }
+
+      // 4. Calcular duração total baseada nas etapas
+      if (parsedContent.desenvolvimento && Array.isArray(parsedContent.desenvolvimento)) {
+        let tempoTotal = 0;
+        parsedContent.desenvolvimento.forEach((etapa: any) => {
+          if (etapa.tempo && typeof etapa.tempo === 'string') {
+            const match = etapa.tempo.match(/(\d+)/);
+            if (match) {
+              tempoTotal += parseInt(match[1]);
+            }
+          }
+        });
+        
+        if (tempoTotal > 0) {
+          parsedContent.duracao = tempoTotal >= 100 
+            ? `${Math.ceil(tempoTotal / 50)} aulas (${tempoTotal} minutos)`
+            : `${tempoTotal} minutos`;
+        }
+      }
+    }
+    // --- FIM CORREÇÃO PLANO DE AULA ---
+    
+    // Enhanced parsing for activities and assessments with better question handling
+    if (materialType === 'atividade' || materialType === 'avaliacao') {
+      if (parsedContent.questoes && Array.isArray(parsedContent.questoes)) {
+        parsedContent.questoes = parsedContent.questoes.map((questao: any, index: number) => {
+          // Ensure proper question structure
+          const pergunta = questao.pergunta || questao.enunciado || `Questão ${index + 1}`;
+          const enunciado = questao.enunciado || questao.pergunta || pergunta;
+          let processedQuestion: any = {
+            numero: questao.numero || (index + 1),
+            tipo: questao.tipo || 'multipla_escolha',
+            pergunta, // sempre preenchido
+            enunciado, // sempre preenchido
+            resposta_correta: questao.resposta_correta || '',
+            explicacao: questao.explicacao || '',
+            dica_pedagogica: questao.dica_pedagogica || '',
+            ...(materialType === 'avaliacao' && {
+              valor: questao.valor || '1,0 ponto',
+              criterios_correcao: questao.criterios_correcao || '',
+              habilidade_avaliada: questao.habilidade_avaliada || ''
+            })
+          };
+
+          switch (processedQuestion.tipo) {
+            case 'multipla_escolha':
+              processedQuestion.opcoes = Array.isArray(questao.opcoes) && questao.opcoes.length === 4 ? questao.opcoes : [
+                'Alternativa A - aguardando conteúdo',
+                'Alternativa B - aguardando conteúdo',
+                'Alternativa C - aguardando conteúdo',
+                'Alternativa D - aguardando conteúdo'
+              ];
+              processedQuestion.coluna_a = [];
+              processedQuestion.coluna_b = [];
+              processedQuestion.colunaA = [];
+              processedQuestion.colunaB = [];
+              processedQuestion.textoComLacunas = '';
+              processedQuestion.linhasResposta = undefined;
+              break;
+            case 'ligar':
+              processedQuestion.coluna_a = Array.isArray(questao.coluna_a) && questao.coluna_a.length === 4 ? questao.coluna_a : ['Item A1', 'Item A2', 'Item A3', 'Item A4'];
+              processedQuestion.coluna_b = Array.isArray(questao.coluna_b) && questao.coluna_b.length === 4 ? questao.coluna_b : ['Item B1', 'Item B2', 'Item B3', 'Item B4'];
+              processedQuestion.colunaA = processedQuestion.coluna_a;
+              processedQuestion.colunaB = processedQuestion.coluna_b;
+              processedQuestion.opcoes = [];
+              processedQuestion.textoComLacunas = '';
+              processedQuestion.linhasResposta = undefined;
+              break;
+            case 'completar':
+              processedQuestion.textoComLacunas = questao.textoComLacunas || '';
+              processedQuestion.opcoes = [];
+              processedQuestion.coluna_a = [];
+              processedQuestion.coluna_b = [];
+              processedQuestion.colunaA = [];
+              processedQuestion.colunaB = [];
+              processedQuestion.linhasResposta = undefined;
+              break;
+            case 'dissertativa':
+            case 'desenho':
+              processedQuestion.linhasResposta = questao.linhasResposta || 5;
+              processedQuestion.opcoes = [];
+              processedQuestion.coluna_a = [];
+              processedQuestion.coluna_b = [];
+              processedQuestion.colunaA = [];
+              processedQuestion.colunaB = [];
+              processedQuestion.textoComLacunas = '';
+              break;
+            case 'verdadeiro_falso':
+              processedQuestion.opcoes = ['Verdadeiro', 'Falso'];
+              processedQuestion.coluna_a = [];
+              processedQuestion.coluna_b = [];
+              processedQuestion.colunaA = [];
+              processedQuestion.colunaB = [];
+              processedQuestion.textoComLacunas = '';
+              processedQuestion.linhasResposta = undefined;
+              break;
+            default:
+              // fallback para múltipla escolha
+              processedQuestion.opcoes = [
+                'Alternativa A - aguardando conteúdo',
+                'Alternativa B - aguardando conteúdo',
+                'Alternativa C - aguardando conteúdo',
+                'Alternativa D - aguardando conteúdo'
+              ];
+              processedQuestion.coluna_a = [];
+              processedQuestion.coluna_b = [];
+              processedQuestion.colunaA = [];
+              processedQuestion.colunaB = [];
+              processedQuestion.textoComLacunas = '';
+              processedQuestion.linhasResposta = undefined;
+              break;
+          }
+
+          return processedQuestion;
+        });
+      }
+    }
+    
+    return parsedContent;
   } catch (error) {
     console.error('Error parsing generated content:', error);
     
