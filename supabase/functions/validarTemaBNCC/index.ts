@@ -1,7 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import Replicate from "https://esm.sh/replicate@0.25.2";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const replicateApiKey = Deno.env.get('REPLICATE_API_TOKEN');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,8 +10,8 @@ const corsHeaders = {
 };
 
 async function validarTema(tema: string, disciplina: string, serie: string) {
-  if (!openAIApiKey) {
-    console.error('OpenAI API key não configurada');
+  if (!replicateApiKey) {
+    console.error('Replicate API key não configurada');
     return {
       alinhado: false,
       mensagem: 'Erro ao validar tema na BNCC: API não configurada.',
@@ -18,106 +19,144 @@ async function validarTema(tema: string, disciplina: string, serie: string) {
     };
   }
 
-  const prompt = `Você é um especialista em educação brasileira e conhece profundamente a BNCC (Base Nacional Comum Curricular). 
+  const prompt = `Você é um especialista em educação brasileira com conhecimento PROFUNDO da BNCC (Base Nacional Comum Curricular). Sua função é realizar análises ULTRA-RIGOROSAS do alinhamento de temas educacionais com a BNCC.
 
-ANÁLISE EXTREMAMENTE RIGOROSA: Analise se o tema "${tema}" está EXATAMENTE alinhado com a BNCC para a disciplina "${disciplina}" na série "${serie}".
+ANÁLISE CRÍTICA E RIGOROSA: Avalie se o tema "${tema}" está EXATAMENTE alinhado com a BNCC para a disciplina "${disciplina}" na série "${serie}".
 
-CRITÉRIOS ULTRA-RIGOROSOS:
-1. O tema deve corresponder EXATAMENTE às competências e habilidades específicas da BNCC para essa série e disciplina
-2. Deve estar adequado ao nível de desenvolvimento cognitivo da faixa etária
-3. Deve seguir a progressão curricular definida pela BNCC
-4. O vocabulário, conceitos e complexidade devem ser apropriados para a série
+CONTEXTO EDUCACIONAL BRASILEIRO:
+- BNCC estruturada por competências e habilidades específicas
+- Progressão curricular por ano/série definida
+- Adequação ao desenvolvimento cognitivo da faixa etária
+- Terminologia e conceitos apropriados para cada série
+- Contextualização cultural e social brasileira
 
-INSTRUÇÕES ESPECÍFICAS:
-- Se o tema for muito avançado para a série: NÃO está alinhado
-- Se o tema for muito básico para a série: NÃO está alinhado  
-- Se o tema não aparecer nas competências da BNCC para essa série: NÃO está alinhado
-- Se houver inadequação de terminologia ou conceitos: NÃO está alinhado
-- Se o tema for muito genérico para a série específica: NÃO está alinhado
+CRITÉRIOS ULTRA-RIGOROSOS DE VALIDAÇÃO:
 
-SEJA EXTREMAMENTE CRÍTICO. É melhor reprovar um tema limítrofe do que aprovar incorretamente.
+1. CORRESPONDÊNCIA DIRETA COM BNCC:
+   ✓ O tema deve aparecer EXPLICITAMENTE nas competências/habilidades da BNCC
+   ✓ Deve ser específico para "${disciplina}" na "${serie}"
+   ✓ Códigos de habilidades devem existir e ser aplicáveis
 
-Se NÃO estiver alinhado, forneça 3 sugestões de temas que sejam PERFEITAMENTE adequados para "${disciplina}" no "${serie}" segundo a BNCC.
+2. ADEQUAÇÃO COGNITIVA E ETÁRIA:
+   ✓ Complexidade conceitual apropriada para "${serie}"
+   ✓ Vocabulário e linguagem adequados à faixa etária
+   ✓ Pré-requisitos cognitivos atendidos
 
-IMPORTANTE: A mensagem explicativa deve ter NO MÁXIMO 3-4 LINHAS, sendo objetiva e direta.
+3. PROGRESSÃO CURRICULAR:
+   ✓ Respeita a sequência lógica da BNCC
+   ✓ Não antecipa conteúdos de séries posteriores
+   ✓ Não repete conteúdos já superados em séries anteriores
 
-Responda SEMPRE em JSON no formato:
+4. ESPECIFICIDADE E PRECISÃO:
+   ✓ Tema não pode ser muito genérico ou amplo demais
+   ✓ Deve ter delimitação clara e objetiva
+   ✓ Terminologia técnica precisa e apropriada
+
+INSTRUÇÕES CRÍTICAS:
+- Se o tema for MUITO AVANÇADO para a série: NÃO ALINHADO
+- Se o tema for MUITO BÁSICO para a série: NÃO ALINHADO
+- Se o tema NÃO APARECER nas competências BNCC da série: NÃO ALINHADO
+- Se houver INADEQUAÇÃO de terminologia: NÃO ALINHADO
+- Se o tema for GENÉRICO DEMAIS: NÃO ALINHADO
+- Se não houver CÓDIGOS BNCC aplicáveis: NÃO ALINHADO
+
+POSTURA ULTRA-CRÍTICA: É MELHOR REPROVAR um tema limítrofe do que aprovar incorretamente. A qualidade educacional é prioridade absoluta.
+
+SUGESTÕES (se NÃO alinhado):
+Forneça 3 temas PERFEITAMENTE adequados para "${disciplina}" na "${serie}" que:
+- Estejam EXPLICITAMENTE na BNCC
+- Sejam específicos e bem delimitados
+- Tenham códigos de habilidades claros
+- Sejam culturalmente relevantes para o Brasil
+
+FORMATO DE RESPOSTA (JSON OBRIGATÓRIO):
 {
   "alinhado": true/false,
-  "mensagem": "explicação CONCISA e OBJETIVA (máximo 3-4 linhas) sobre por que está ou não alinhado",
-  "sugestoes": ["sugestão 1 específica", "sugestão 2 específica", "sugestão 3 específica"] (apenas se não alinhado)
-}`;
+  "mensagem": "Análise CONCISA e OBJETIVA (máximo 3-4 linhas) explicando o alinhamento ou desalinhamento com base nos critérios BNCC",
+  "sugestoes": ["Tema específico 1 com contexto BNCC", "Tema específico 2 com contexto BNCC", "Tema específico 3 com contexto BNCC"] (apenas se não alinhado)
+}
+
+IMPORTANTE: Mensagem deve ser EXTREMAMENTE CONCISA (máximo 3-4 linhas) e TÉCNICA, focando nos aspectos específicos da BNCC.
+
+ANÁLISE DO TEMA: "${tema}" - ${disciplina} - ${serie}`;
 
   try {
-    console.log('🔍 Validando tema na BNCC:', { tema, disciplina, serie });
+    console.log('🔍 Validando tema na BNCC com DeepSeek-V3:', { tema, disciplina, serie });
     
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'Você é um especialista em educação brasileira e BNCC. Seja EXTREMAMENTE RIGOROSO na análise. Sempre responda em português do Brasil e seja preciso e CONCISO na análise da adequação dos temas à BNCC. A mensagem explicativa deve ter NO MÁXIMO 3-4 linhas. É melhor reprovar um tema limítrofe do que aprovar incorretamente.' 
-          },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.1,
-        max_tokens: 800
-      })
+    // Initialize Replicate
+    const replicate = new Replicate({
+      auth: replicateApiKey,
     });
 
-    if (!response.ok) {
-      console.error('❌ Erro na requisição OpenAI:', response.status, response.statusText);
+    // Call DeepSeek-V3 for BNCC validation
+    const output = await replicate.run(
+      "deepseek-ai/deepseek-v3",
+      {
+        input: {
+          prompt: prompt,
+          max_tokens: 800,
+          temperature: 0.1, // Very low temperature for consistent, precise analysis
+          top_p: 0.8, // Focused responses
+          frequency_penalty: 0.0, // No penalty - we want precise technical language
+          presence_penalty: 0.0, // No penalty for repetition of important terms
+        }
+      }
+    );
+
+    if (!output || (Array.isArray(output) && output.length === 0)) {
+      console.error('❌ DeepSeek-V3 returned empty response');
       return {
         alinhado: false,
-        mensagem: `Não foi possível validar o tema via OpenAI. Por segurança, não é possível prosseguir sem validação BNCC.`,
+        mensagem: `Não foi possível validar o tema via DeepSeek-V3. Por segurança, não é possível prosseguir sem validação BNCC.`,
         sugestoes: []
       };
     }
 
-    const data = await response.json();
-    console.log('📊 Resposta da OpenAI:', data);
-
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('❌ Resposta inválida da OpenAI:', data);
-      return {
-        alinhado: false,
-        mensagem: 'Erro ao interpretar resposta da validação BNCC. Por segurança, não é possível prosseguir.',
-        sugestoes: []
-      };
-    }
-
-    const content = data.choices[0].message.content;
-    console.log('📝 Conteúdo da resposta:', content);
+    // Extract the content
+    const content = Array.isArray(output) ? output.join('') : output;
+    console.log('📝 Conteúdo da resposta DeepSeek-V3:', content);
 
     try {
-      const result = JSON.parse(content);
-      console.log('✅ Resultado parseado:', result);
-      
-      // Garantir que a resposta tenha a estrutura esperada
-      return {
-        alinhado: Boolean(result.alinhado),
-        mensagem: result.mensagem || 'Análise BNCC concluída.',
-        sugestoes: Array.isArray(result.sugestoes) ? result.sugestoes : []
-      };
+      // Try to extract JSON from the response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const result = JSON.parse(jsonMatch[0]);
+        console.log('✅ Resultado parseado:', result);
+        
+        // Garantir que a resposta tenha a estrutura esperada
+        return {
+          alinhado: Boolean(result.alinhado),
+          mensagem: result.mensagem || 'Análise BNCC concluída com DeepSeek-V3.',
+          sugestoes: Array.isArray(result.sugestoes) ? result.sugestoes : []
+        };
+      } else {
+        // If no JSON found, try to interpret the response
+        console.log('⚠️ Resposta não está em JSON, interpretando...');
+        
+        // Simple interpretation based on keywords
+        const isAligned = content.toLowerCase().includes('alinhado') && 
+                         !content.toLowerCase().includes('não alinhado') && 
+                         !content.toLowerCase().includes('não está alinhado');
+        
+        return {
+          alinhado: isAligned,
+          mensagem: content.substring(0, 200) + '...', // Truncate if too long
+          sugestoes: []
+        };
+      }
     } catch (parseError) {
       console.error('❌ Erro ao fazer parse da resposta JSON:', parseError, 'Conteúdo:', content);
       return {
         alinhado: false,
-        mensagem: 'Erro ao interpretar resposta da validação BNCC. Por segurança, não é possível prosseguir.',
+        mensagem: 'Erro ao interpretar resposta da validação BNCC com DeepSeek-V3. Por segurança, não é possível prosseguir.',
         sugestoes: []
       };
     }
   } catch (error) {
-    console.error('❌ Erro na validação do tema:', error);
+    console.error('❌ Erro na validação do tema com DeepSeek-V3:', error);
     return {
       alinhado: false,
-      mensagem: 'Erro interno ao validar o tema na BNCC. Por segurança, não é possível prosseguir sem validação.',
+      mensagem: 'Erro interno ao validar o tema na BNCC com DeepSeek-V3. Por segurança, não é possível prosseguir sem validação.',
       sugestoes: []
     };
   }
@@ -139,7 +178,7 @@ serve(async (req) => {
   try {
     const { tema, disciplina, serie } = await req.json();
     
-    console.log('📨 Requisição recebida:', { tema, disciplina, serie });
+    console.log('📨 Requisição recebida para validação BNCC:', { tema, disciplina, serie });
     
     if (!tema || !disciplina || !serie) {
       return new Response(
@@ -158,13 +197,13 @@ serve(async (req) => {
 
     const resultado = await validarTema(tema, disciplina, serie);
     
-    console.log('🎯 Resultado final da validação:', resultado);
+    console.log('🎯 Resultado final da validação BNCC:', resultado);
     
     return new Response(JSON.stringify(resultado), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error('❌ Erro ao processar requisição:', error);
+    console.error('❌ Erro ao processar requisição de validação:', error);
     return new Response(
       JSON.stringify({ 
         error: "Erro ao processar requisição", 
