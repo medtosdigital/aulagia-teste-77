@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Replicate from "https://esm.sh/replicate@0.25.2";
@@ -60,17 +59,17 @@ serve(async (req) => {
     const prompt = generatePrompt(materialType, formData);
     console.log('🎯 Generated prompt for', materialType);
 
-    // Call Replicate API with DeepSeek-V3 - OPTIMIZED PARAMETERS
+    // Call Replicate API with DeepSeek-V3
     const output = await replicate.run(
       "deepseek-ai/deepseek-v3",
       {
         input: {
           prompt: prompt,
-          max_tokens: 3000, // Reduced from 4000 for more concise content
-          temperature: 0.1, // Reduced from 0.3 for more precise and assertive content
-          top_p: 0.75, // Reduced from 0.85 for more focused responses
-          frequency_penalty: 0.2, // Increased from 0.1 to reduce repetition
-          presence_penalty: 0.15, // Increased from 0.1 for more diverse vocabulary
+          max_tokens: 4000,
+          temperature: 0.3, // Low temperature for more consistent educational content
+          top_p: 0.85, // Balanced creativity and focus
+          frequency_penalty: 0.1, // Slight penalty to avoid repetition
+          presence_penalty: 0.1, // Encourage diverse content structure
         }
       }
     );
@@ -119,14 +118,14 @@ function generatePrompt(materialType: string, formData: MaterialFormData): strin
   const data = formData.data || '';
   const duracao = formData.duracao || '';
 
-  // Enhanced system context for Brazilian education with stricter content requirements
-  const systemContext = `Você é um especialista em educação brasileira com profundo conhecimento da BNCC (Base Nacional Comum Curricular). Você cria materiais educativos de alta qualidade, pedagogicamente fundamentados e culturalmente relevantes para o contexto brasileiro. Seus materiais são sempre específicos, detalhados, objetivos e adequados à faixa etária. Use português brasileiro correto e linguagem pedagógica apropriada. SEJA CONCISO E ASSERTIVO em todas as seções.`;
+  // Enhanced system context for Brazilian education
+  const systemContext = `Você é um especialista em educação brasileira com profundo conhecimento da BNCC (Base Nacional Comum Curricular). Você cria materiais educativos de alta qualidade, pedagogicamente fundamentados e culturalmente relevantes para o contexto brasileiro. Seus materiais são sempre específicos, detalhados e adequados à faixa etária. Use português brasileiro correto e linguagem pedagógica apropriada.`;
 
   switch (materialType) {
     case 'plano-de-aula':
       return `${systemContext}
 
-TAREFA: Criar um plano de aula COMPLETO, OBJETIVO e ESPECÍFICO sobre "${tema}" para ${disciplina} na ${serie}.
+TAREFA: Criar um plano de aula COMPLETO e ESPECÍFICO sobre "${tema}" para ${disciplina} na ${serie}.
 
 CONTEXTO EDUCACIONAL BRASILEIRO:
 - Foco na BNCC e competências específicas da série
@@ -134,41 +133,24 @@ CONTEXTO EDUCACIONAL BRASILEIRO:
 - Metodologias ativas e participativas
 - Adaptação ao perfil etário de ${serie}
 
-INSTRUÇÕES CRÍTICAS PARA CONTEÚDO ASSERTIVO:
+INSTRUÇÕES CRÍTICAS:
 
 1. HABILIDADES BNCC - EXTREMAMENTE ESPECÍFICAS:
    - Forneça EXATAMENTE 3 habilidades da BNCC
    - Códigos REAIS e ESPECÍFICOS para ${disciplina} em ${serie}
    - Formato: [{"codigo": "EF[ANO][DISCIPLINA][NUMERO]", "descricao": "descrição detalhada"}]
    - Descrições devem relacionar-se DIRETAMENTE com "${tema}"
-   - Use habilidades que realmente existem na BNCC oficial
 
-2. DESENVOLVIMENTO PEDAGÓGICO - CONCISO E OBJETIVO:
-   - 4 etapas: Introdução (10-15 min), Desenvolvimento (20-25 min), Prática (15-20 min), Fechamento (5-10 min)
-   - Cada etapa com tempo específico, atividade CONCRETA e recursos únicos
-   - Máximo 2-3 frases por atividade - seja direto e claro
+2. DESENVOLVIMENTO PEDAGÓGICO:
+   - 4 etapas: Introdução, Desenvolvimento, Prática, Fechamento
+   - Cada etapa com tempo específico, atividade detalhada e recursos únicos
+   - Recursos não podem se repetir entre etapas
    - Atividades devem ser específicas para "${tema}", não genéricas
 
-3. CONTEÚDOS PROGRAMÁTICOS - ESPECÍFICOS E DETALHADOS:
-   - Mínimo 5 conteúdos programáticos específicos do tema
-   - Organize por complexidade crescente
-   - Use terminologia técnica adequada à série
-
-4. METODOLOGIA - DETALHADA E ESPECÍFICA:
-   - Descreva a metodologia pedagógica específica para o tema
-   - Inclua estratégias de ensino, recursos didáticos e formas de interação
-   - Justifique as escolhas metodológicas para o tema específico
-
-5. AVALIAÇÃO - CRITÉRIOS CLAROS E OBJETIVOS:
-   - Descreva instrumentos específicos de avaliação
-   - Inclua critérios claros de avaliação
-   - Especifique como será verificada a aprendizagem do tema
-
-6. REFERÊNCIAS - FORMATO ABNT COMPLETO:
-   - Mínimo 4 referências em formato ABNT
-   - Inclua livros didáticos, artigos acadêmicos e sites oficiais
-   - Para sites: incluir data de acesso (formato: "Acesso em: dd mmm. AAAA")
-   - Priorize fontes brasileiras e oficiais (MEC, BNCC, etc.)
+3. CONTEXTUALIZAÇÃO BRASILEIRA:
+   - Usar exemplos da cultura, geografia e realidade brasileira
+   - Adaptar linguagem e conceitos à série específica
+   - Incluir elementos regionais quando relevante
 
 ESTRUTURA JSON OBRIGATÓRIA:
 {
@@ -180,53 +162,41 @@ ESTRUTURA JSON OBRIGATÓRIA:
   "tema": "${tema}",
   "duracao": "[soma dos tempos das etapas + formato: X minutos (Y aula(s))]",
   "habilidades": [
-    {"codigo": "[CÓDIGO BNCC REAL ESPECÍFICO]", "descricao": "[DESCRIÇÃO ESPECÍFICA DO TEMA - máximo 2 linhas]"},
-    {"codigo": "[CÓDIGO BNCC REAL ESPECÍFICO]", "descricao": "[DESCRIÇÃO ESPECÍFICA DO TEMA - máximo 2 linhas]"},
-    {"codigo": "[CÓDIGO BNCC REAL ESPECÍFICO]", "descricao": "[DESCRIÇÃO ESPECÍFICA DO TEMA - máximo 2 linhas]"}
+    {"codigo": "[CÓDIGO BNCC REAL]", "descricao": "[DESCRIÇÃO ESPECÍFICA DO TEMA]"},
+    {"codigo": "[CÓDIGO BNCC REAL]", "descricao": "[DESCRIÇÃO ESPECÍFICA DO TEMA]"},
+    {"codigo": "[CÓDIGO BNCC REAL]", "descricao": "[DESCRIÇÃO ESPECÍFICA DO TEMA]"}
   ],
   "bncc": ["[CÓDIGO1]", "[CÓDIGO2]", "[CÓDIGO3]"],
   "objetivos": [
-    "[OBJETIVO ESPECÍFICO 1 - verbo de ação + conteúdo específico]",
-    "[OBJETIVO ESPECÍFICO 2 - verbo de ação + conteúdo específico]",
-    "[OBJETIVO ESPECÍFICO 3 - verbo de ação + conteúdo específico]"
+    "[OBJETIVO ESPECÍFICO 1 sobre ${tema}]",
+    "[OBJETIVO ESPECÍFICO 2 sobre ${tema}]",
+    "[OBJETIVO ESPECÍFICO 3 sobre ${tema}]"
   ],
   "desenvolvimento": [
-    {"etapa": "Introdução", "tempo": "[10-15 minutos]", "atividade": "[ATIVIDADE ESPECÍFICA CONCISA - máximo 2 frases]", "recursos": "[recursos únicos, separados por vírgula]"},
-    {"etapa": "Desenvolvimento", "tempo": "[20-25 minutos]", "atividade": "[ATIVIDADE ESPECÍFICA CONCISA - máximo 2 frases]", "recursos": "[recursos únicos, separados por vírgula]"},
-    {"etapa": "Prática", "tempo": "[15-20 minutos]", "atividade": "[ATIVIDADE PRÁTICA ESPECÍFICA CONCISA - máximo 2 frases]", "recursos": "[recursos únicos, separados por vírgula]"},
-    {"etapa": "Fechamento", "tempo": "[5-10 minutos]", "atividade": "[ATIVIDADE DE FECHAMENTO ESPECÍFICA CONCISA - máximo 2 frases]", "recursos": "[recursos únicos, separados por vírgula]"}
+    {"etapa": "Introdução", "tempo": "[X minutos]", "atividade": "[ATIVIDADE ESPECÍFICA DE INTRODUÇÃO AO ${tema}]", "recursos": "[recursos únicos, separados por vírgula]"},
+    {"etapa": "Desenvolvimento", "tempo": "[X minutos]", "atividade": "[ATIVIDADE ESPECÍFICA DE DESENVOLVIMENTO DO ${tema}]", "recursos": "[recursos únicos, separados por vírgula]"},
+    {"etapa": "Prática", "tempo": "[X minutos]", "atividade": "[ATIVIDADE PRÁTICA ESPECÍFICA DO ${tema}]", "recursos": "[recursos únicos, separados por vírgula]"},
+    {"etapa": "Fechamento", "tempo": "[X minutos]", "atividade": "[ATIVIDADE DE FECHAMENTO ESPECÍFICA DO ${tema}]", "recursos": "[recursos únicos, separados por vírgula]"}
   ],
   "recursos": "[TODOS os recursos consolidados das etapas]",
-  "conteudosProgramaticos": [
-    "[CONTEÚDO ESPECÍFICO 1 - terminologia técnica adequada]",
-    "[CONTEÚDO ESPECÍFICO 2 - terminologia técnica adequada]",
-    "[CONTEÚDO ESPECÍFICO 3 - terminologia técnica adequada]",
-    "[CONTEÚDO ESPECÍFICO 4 - terminologia técnica adequada]",
-    "[CONTEÚDO ESPECÍFICO 5 - terminologia técnica adequada]"
-  ],
-  "metodologia": "[METODOLOGIA ESPECÍFICA DETALHADA - estratégias de ensino, recursos didáticos, formas de interação - mínimo 3 frases explicativas]",
-  "avaliacao": "[AVALIAÇÃO ESPECÍFICA DETALHADA - instrumentos, critérios, verificação da aprendizagem - mínimo 3 frases explicativas]",
-  "referencias": [
-    "[REFERÊNCIA 1 - FORMATO ABNT COMPLETO]",
-    "[REFERÊNCIA 2 - FORMATO ABNT COMPLETO]",
-    "[REFERÊNCIA 3 - FORMATO ABNT COMPLETO]",
-    "[REFERÊNCIA 4 - FORMATO ABNT COMPLETO]"
-  ]
+  "conteudosProgramaticos": ["[CONTEÚDO 1]", "[CONTEÚDO 2]", "[CONTEÚDO 3]"],
+  "metodologia": "[METODOLOGIA ESPECÍFICA PARA ${tema}]",
+  "avaliacao": "[MÉTODO DE AVALIAÇÃO ESPECÍFICO]",
+  "referencias": ["[REFERÊNCIA 1]", "[REFERÊNCIA 2]"]
 }
 
-RESPONDA APENAS COM O JSON. Todo conteúdo específico para "${tema}" em contexto brasileiro. SEJA CONCISO E ASSERTIVO.`;
+RESPONDA APENAS COM O JSON. Todo conteúdo específico para "${tema}" em contexto brasileiro.`;
 
     case 'slides':
       return `${systemContext}
 
-TAREFA: Criar slides educativos ULTRA-ESPECÍFICOS e CONCISOS sobre "${tema}" para ${disciplina} na ${serie}.
+TAREFA: Criar slides educativos ULTRA-ESPECÍFICOS sobre "${tema}" para ${disciplina} na ${serie}.
 
 CONTEXTO EDUCACIONAL:
 - Material visual pedagógico brasileiro
 - Adequado à faixa etária de ${serie}
 - Prompts de imagem otimizados para DALL-E/Stable Diffusion
 - Conteúdo culturalmente relevante
-- TEXTOS CONCISOS E OBJETIVOS
 
 INSTRUÇÕES PARA PROMPTS DE IMAGEM:
 - ULTRA-ESPECÍFICOS e DETALHADOS sobre "${tema}"
@@ -235,12 +205,6 @@ INSTRUÇÕES PARA PROMPTS DE IMAGEM:
 - Descrever objetos, cenários, cores, texturas, composições
 - NUNCA mencionar texto, palavras, números - apenas elementos visuais
 - Mínimo 4-5 características visuais específicas por prompt
-
-INSTRUÇÕES PARA CONTEÚDO TEXTUAL:
-- Máximo 2-3 frases por seção de conteúdo
-- Use bullet points quando apropriado
-- Linguagem clara e direta
-- Evite redundâncias
 
 ESTRUTURA OBRIGATÓRIA (12 slides):
 {
@@ -251,33 +215,33 @@ ESTRUTURA OBRIGATÓRIA (12 slides):
   "serie": "${serie}",
   "tema": "${tema}",
   "duracao": "[duração adequada]",
-  "bncc": "[3 códigos BNCC específicos separados por vírgula]",
+  "bncc": "[códigos BNCC específicos]",
   "tema_imagem": "Ultra-detailed Brazilian educational illustration about ${tema} for ${serie} students. [4-5 elementos visuais específicos com cores, texturas, posicionamento detalhados]. Professional Brazilian educational style with vibrant colors and cultural context",
   "slide_1_titulo": "${tema}",
   "slide_1_subtitulo": "${disciplina} - ${serie}",
-  "objetivo_1": "[OBJETIVO ESPECÍFICO 1 - máximo 1 linha]",
-  "objetivo_2": "[OBJETIVO ESPECÍFICO 2 - máximo 1 linha]",
-  "objetivo_3": "[OBJETIVO ESPECÍFICO 3 - máximo 1 linha]",
-  "objetivo_4": "[OBJETIVO ESPECÍFICO 4 - máximo 1 linha]",
-  "introducao_texto": "[INTRODUÇÃO ESPECÍFICA AO ${tema} - máximo 2 frases]",
+  "objetivo_1": "[OBJETIVO ESPECÍFICO 1]",
+  "objetivo_2": "[OBJETIVO ESPECÍFICO 2]",
+  "objetivo_3": "[OBJETIVO ESPECÍFICO 3]",
+  "objetivo_4": "[OBJETIVO ESPECÍFICO 4]",
+  "introducao_texto": "[INTRODUÇÃO ESPECÍFICA AO ${tema}]",
   "introducao_imagem": "Captivating Brazilian educational scene introducing ${tema} for ${serie}. [elementos visuais específicos]. Warm Brazilian educational colors, engaging cultural context",
-  "conceitos_texto": "[CONCEITOS ESPECÍFICOS DO ${tema} - máximo 2 frases]",
-  "conceito_principal": "[CONCEITO CENTRAL DO ${tema} - máximo 1 frase]",
+  "conceitos_texto": "[CONCEITOS ESPECÍFICOS DO ${tema}]",
+  "conceito_principal": "[CONCEITO CENTRAL DO ${tema}]",
   "conceitos_imagem": "Professional Brazilian infographic showing ${tema} concepts for ${serie}. [elementos específicos]. Clean educational design with Brazilian cultural elements",
   "desenvolvimento_1_titulo": "[ASPECTO 1 DO ${tema}]",
-  "desenvolvimento_1_texto": "[EXPLICAÇÃO CONCISA DO ASPECTO 1 - máximo 2 frases]",
+  "desenvolvimento_1_texto": "[EXPLICAÇÃO DETALHADA DO ASPECTO 1]",
   "desenvolvimento_1_imagem": "Detailed Brazilian educational artwork about [aspecto 1] of ${tema}. [4-5 elementos visuais únicos]. High-quality Brazilian educational illustration",
   "desenvolvimento_2_titulo": "[ASPECTO 2 DO ${tema}]",
-  "desenvolvimento_2_texto": "[EXPLICAÇÃO CONCISA DO ASPECTO 2 - máximo 2 frases]",
+  "desenvolvimento_2_texto": "[EXPLICAÇÃO DETALHADA DO ASPECTO 2]",
   "desenvolvimento_2_imagem": "Comprehensive Brazilian visual showing [aspecto 2] of ${tema}. [elementos específicos]. Professional Brazilian educational style",
   "desenvolvimento_3_titulo": "[ASPECTO 3 DO ${tema}]",
-  "desenvolvimento_3_texto": "[EXPLICAÇÃO CONCISA DO ASPECTO 3 - máximo 2 frases]",
+  "desenvolvimento_3_texto": "[EXPLICAÇÃO DETALHADA DO ASPECTO 3]",
   "desenvolvimento_3_imagem": "Masterful Brazilian educational scene depicting [aspecto 3] of ${tema}. [elementos detalhados]. Vibrant Brazilian cultural context",
   "desenvolvimento_4_titulo": "[ASPECTO 4 DO ${tema}]",
-  "desenvolvimento_4_texto": "[EXPLICAÇÃO CONCISA DO ASPECTO 4 - máximo 2 frases]",
+  "desenvolvimento_4_texto": "[EXPLICAÇÃO DETALHADA DO ASPECTO 4]",
   "desenvolvimento_4_imagem": "Ultra-detailed Brazilian educational artwork illustrating [aspecto 4] of ${tema}. [elementos específicos]. Outstanding Brazilian pedagogical design",
   "exemplo_titulo": "[EXEMPLO PRÁTICO DO ${tema}]",
-  "exemplo_conteudo": "[EXEMPLO CONCRETO E BRASILEIRO - máximo 2 frases]",
+  "exemplo_conteudo": "[EXEMPLO CONCRETO E BRASILEIRO]",
   "exemplo_imagem": "Realistic Brazilian scene showing practical application of ${tema}. [cenário completo brasileiro]. Authentic Brazilian educational context",
   "tabela_titulo": "[TÍTULO DA TABELA SOBRE ${tema}]",
   "coluna_1": "[cabeçalho 1]", "coluna_2": "[cabeçalho 2]", "coluna_3": "[cabeçalho 3]",
@@ -286,12 +250,12 @@ ESTRUTURA OBRIGATÓRIA (12 slides):
   "linha_3_col_1": "[dado 1]", "linha_3_col_2": "[dado 2]", "linha_3_col_3": "[dado 3]",
   "atividade_pergunta": "[PERGUNTA ESPECÍFICA SOBRE ${tema}]",
   "opcao_a": "[alternativa A]", "opcao_b": "[alternativa B]", "opcao_c": "[alternativa C]", "opcao_d": "[alternativa D]",
-  "conclusao_texto": "[SÍNTESE DOS PONTOS PRINCIPAIS - máximo 2 frases]",
-  "ponto_chave_1": "[PONTO-CHAVE 1 - máximo 1 linha]", "ponto_chave_2": "[PONTO-CHAVE 2 - máximo 1 linha]",
+  "conclusao_texto": "[SÍNTESE DOS PONTOS PRINCIPAIS]",
+  "ponto_chave_1": "[PONTO-CHAVE 1]", "ponto_chave_2": "[PONTO-CHAVE 2]",
   "proximo_passo_1": "[PRÓXIMO PASSO 1]", "proximo_passo_2": "[PRÓXIMO PASSO 2]", "proximo_passo_3": "[PRÓXIMO PASSO 3]"
 }
 
-RESPONDA APENAS COM O JSON. Todo conteúdo específico para "${tema}" em contexto brasileiro. SEJA CONCISO E DIRETO.`;
+RESPONDA APENAS COM O JSON. Todo conteúdo específico para "${tema}" em contexto brasileiro.`;
 
     case 'atividade':
       const numQuestoes = formData.numeroQuestoes || formData.quantidadeQuestoes || 10;
@@ -310,7 +274,7 @@ RESPONDA APENAS COM O JSON. Todo conteúdo específico para "${tema}" em context
 
       return `${systemContext}
 
-TAREFA: Criar ATIVIDADE PRÁTICA CONCISA e OBJETIVA sobre "${tema}" para ${disciplina} na ${serie}.
+TAREFA: Criar ATIVIDADE PRÁTICA sobre "${tema}" para ${disciplina} na ${serie}.
 
 FOCO: APRENDIZAGEM ATIVA e PARTICIPATIVA (não avaliação formal)
 - Processo de descoberta e construção do conhecimento
@@ -321,12 +285,7 @@ FOCO: APRENDIZAGEM ATIVA e PARTICIPATIVA (não avaliação formal)
 CONFIGURAÇÃO:
 - Tipos de questões: ${tiposQuestoes.join(', ')}
 - Número de questões: ${numQuestoes}
-- Contextualização brasileira e cultural
-
-INSTRUÇÕES PARA CONTEÚDO CONCISO:
-- Enunciados claros e diretos (máximo 2 frases)
-- Instruções simples e objetivas
-- Feedback educativo conciso
+- Contexto brasileiro e cultural
 
 TIPOS DE QUESTÕES DISPONÍVEIS:
 1. "multipla_escolha": 4 alternativas (A,B,C,D) com uma correta
@@ -346,15 +305,11 @@ ESTRUTURA JSON:
   "tema": "${tema}",
   "tipo_material": "atividade",
   "duracao": "[duração adequada]",
-  "bncc": "[3 códigos BNCC específicos separados por vírgula]",
-  "objetivo_geral": "[OBJETIVO DA ATIVIDADE PRÁTICA - máximo 1 frase]",
-  "objetivos_especificos": [
-    "[OBJETIVO ESPECÍFICO 1 - máximo 1 linha]",
-    "[OBJETIVO ESPECÍFICO 2 - máximo 1 linha]",
-    "[OBJETIVO ESPECÍFICO 3 - máximo 1 linha]"
-  ],
-  "introducao": "[INTRODUÇÃO MOTIVADORA - máximo 2 frases]",
-  "instrucoes": "[INSTRUÇÕES PASSO A PASSO - máximo 3 frases objetivas]",
+  "bncc": "[códigos BNCC específicos]",
+  "objetivo_geral": "[OBJETIVO DA ATIVIDADE PRÁTICA]",
+  "objetivos_especificos": ["[OBJ 1]", "[OBJ 2]", "[OBJ 3]"],
+  "introducao": "[INTRODUÇÃO MOTIVADORA]",
+  "instrucoes": "[INSTRUÇÕES PASSO A PASSO]",
   "questoes": [
     ${Array.from({length: numQuestoes}, (_, i) => {
       const tipoIndex = i % tiposQuestoes.length;
@@ -362,33 +317,25 @@ ESTRUTURA JSON:
       return `{
       "numero": ${i + 1},
       "tipo": "${tipo}",
-      "enunciado": "[ENUNCIADO ESPECÍFICO SOBRE ${tema} - máximo 2 frases]",
-      ${tipo === 'multipla_escolha' ? `"opcoes": ["[ALT A - concisa]", "[ALT B - concisa]", "[ALT C - concisa]", "[ALT D - concisa]"],` : 
+      "enunciado": "[ENUNCIADO ESPECÍFICO SOBRE ${tema}]",
+      ${tipo === 'multipla_escolha' ? `"opcoes": ["[ALT A]", "[ALT B]", "[ALT C]", "[ALT D]"],` : 
         tipo === 'ligar' ? `"coluna_a": ["[ITEM A1]", "[ITEM A2]", "[ITEM A3]", "[ITEM A4]"], "coluna_b": ["[ITEM B1]", "[ITEM B2]", "[ITEM B3]", "[ITEM B4]"],` : 
         `"opcoes": [],`}
-      "resposta_correta": "[RESPOSTA OU ORIENTAÇÃO CONCISA]",
-      "explicacao": "[FEEDBACK EDUCATIVO CONCISO - máximo 1 frase]",
-      "dica_pedagogica": "[DICA PARA PROFESSOR - máximo 1 frase]"
+      "resposta_correta": "[RESPOSTA OU ORIENTAÇÃO]",
+      "explicacao": "[FEEDBACK EDUCATIVO]",
+      "dica_pedagogica": "[DICA PARA PROFESSOR]"
     }`;
     }).join(',\n    ')}
   ],
   "recursos_necessarios": ["[RECURSO 1]", "[RECURSO 2]", "[RECURSO 3]"],
-  "metodologia": "[METODOLOGIA DA ATIVIDADE - máximo 2 frases explicativas]",
-  "criterios_acompanhamento": [
-    "[CRITÉRIO 1 - objetivo e claro]",
-    "[CRITÉRIO 2 - objetivo e claro]",
-    "[CRITÉRIO 3 - objetivo e claro]"
-  ],
-  "sugestoes_adaptacao": "[ADAPTAÇÕES PARA DIFERENTES NÍVEIS - máximo 2 frases]",
-  "extensao_atividade": "[SUGESTÕES DE EXTENSÃO - máximo 2 frases]",
-  "referencias": [
-    "[REFERÊNCIA 1 - FORMATO ABNT COMPLETO]",
-    "[REFERÊNCIA 2 - FORMATO ABNT COMPLETO]",
-    "[REFERÊNCIA 3 - FORMATO ABNT COMPLETO]"
-  ]
+  "metodologia": "[METODOLOGIA DA ATIVIDADE]",
+  "criterios_acompanhamento": ["[CRITÉRIO 1]", "[CRITÉRIO 2]", "[CRITÉRIO 3]"],
+  "sugestoes_adaptacao": "[ADAPTAÇÕES PARA DIFERENTES NÍVEIS]",
+  "extensao_atividade": "[SUGESTÕES DE EXTENSÃO]",
+  "referencias": ["[REF 1]", "[REF 2]"]
 }
 
-DISTRIBUA os tipos de questões EQUILIBRADAMENTE. RESPONDA APENAS COM JSON. SEJA CONCISO E OBJETIVO.`;
+DISTRIBUA os tipos de questões EQUILIBRADAMENTE. RESPONDA APENAS COM JSON.`;
 
     case 'avaliacao':
       const numQuestoesAval = formData.numeroQuestoes || formData.quantidadeQuestoes || 10;
@@ -407,7 +354,7 @@ DISTRIBUA os tipos de questões EQUILIBRADAMENTE. RESPONDA APENAS COM JSON. SEJA
 
       return `${systemContext}
 
-TAREFA: Criar AVALIAÇÃO FORMAL CONCISA e OBJETIVA sobre "${tema}" para ${disciplina} na ${serie}.
+TAREFA: Criar AVALIAÇÃO FORMAL sobre "${tema}" para ${disciplina} na ${serie}.
 
 FOCO: VERIFICAÇÃO DE APRENDIZAGEM
 - Mensuração objetiva do conhecimento
@@ -420,11 +367,6 @@ CONFIGURAÇÃO:
 - Número de questões: ${numQuestoesAval}
 - Contexto educacional brasileiro
 
-INSTRUÇÕES PARA CONTEÚDO CONCISO:
-- Enunciados claros e diretos
-- Critérios de correção objetivos
-- Feedback construtivo e específico
-
 ESTRUTURA JSON:
 {
   "titulo": "Avaliação - ${tema}",
@@ -436,14 +378,10 @@ ESTRUTURA JSON:
   "tipo_material": "avaliacao",
   "duracao": "[duração para avaliação]",
   "valor_total": "[PONTUAÇÃO TOTAL]",
-  "bncc": "[3 códigos BNCC específicos separados por vírgula]",
-  "objetivo_avaliativo": "[OBJETIVO DA AVALIAÇÃO - máximo 1 frase]",
-  "competencias_avaliadas": [
-    "[COMPETÊNCIA 1 - específica e clara]",
-    "[COMPETÊNCIA 2 - específica e clara]",
-    "[COMPETÊNCIA 3 - específica e clara]"
-  ],
-  "instrucoes_gerais": "[INSTRUÇÕES FORMAIS - máximo 3 frases objetivas]",
+  "bncc": "[códigos BNCC específicos]",
+  "objetivo_avaliativo": "[OBJETIVO DA AVALIAÇÃO]",
+  "competencias_avaliadas": ["[COMP 1]", "[COMP 2]", "[COMP 3]"],
+  "instrucoes_gerais": "[INSTRUÇÕES FORMAIS]",
   "questoes": [
     ${Array.from({length: numQuestoesAval}, (_, i) => {
       const tipoIndex = i % tiposQuestoesAval.length;
@@ -452,40 +390,36 @@ ESTRUTURA JSON:
       "numero": ${i + 1},
       "tipo": "${tipo}",
       "valor": "[PONTUAÇÃO]",
-      "enunciado": "[ENUNCIADO ESPECÍFICO SOBRE ${tema} - máximo 2 frases]",
-      ${tipo === 'multipla_escolha' ? `"opcoes": ["[ALT A - concisa]", "[ALT B - concisa]", "[ALT C - concisa]", "[ALT D - concisa]"],` : 
+      "enunciado": "[ENUNCIADO ESPECÍFICO SOBRE ${tema}]",
+      ${tipo === 'multipla_escolha' ? `"opcoes": ["[ALT A]", "[ALT B]", "[ALT C]", "[ALT D]"],` : 
         tipo === 'ligar' ? `"coluna_a": ["[ITEM A1]", "[ITEM A2]", "[ITEM A3]", "[ITEM A4]"], "coluna_b": ["[ITEM B1]", "[ITEM B2]", "[ITEM B3]", "[ITEM B4]"],` : 
         `"opcoes": [],`}
-      "resposta_correta": "[RESPOSTA CORRETA ESPECÍFICA]",
-      "criterios_correcao": "[CRITÉRIOS DE CORREÇÃO OBJETIVOS - máximo 2 frases]",
-      "habilidade_avaliada": "[HABILIDADE BNCC ESPECÍFICA]"
+      "resposta_correta": "[RESPOSTA CORRETA]",
+      "criterios_correcao": "[CRITÉRIOS DE CORREÇÃO]",
+      "habilidade_avaliada": "[HABILIDADE BNCC]"
     }`;
     }).join(',\n    ')}
   ],
   "criterios_avaliacao": {
-    "excelente": "[CRITÉRIO 90-100% - específico e claro]",
-    "bom": "[CRITÉRIO 70-89% - específico e claro]",
-    "satisfatorio": "[CRITÉRIO 50-69% - específico e claro]",
-    "insuficiente": "[CRITÉRIO 0-49% - específico e claro]"
+    "excelente": "[CRITÉRIO 90-100%]",
+    "bom": "[CRITÉRIO 70-89%]",
+    "satisfatorio": "[CRITÉRIO 50-69%]",
+    "insuficiente": "[CRITÉRIO 0-49%]"
   },
   "rubrica_avaliacao": [
-    {"aspecto": "[ASPECTO 1 ESPECÍFICO]", "criterio": "[CRITÉRIO OBJETIVO]", "pontuacao": "[PONTOS]"},
-    {"aspecto": "[ASPECTO 2 ESPECÍFICO]", "criterio": "[CRITÉRIO OBJETIVO]", "pontuacao": "[PONTOS]"},
-    {"aspecto": "[ASPECTO 3 ESPECÍFICO]", "criterio": "[CRITÉRIO OBJETIVO]", "pontuacao": "[PONTOS]"}
+    {"aspecto": "[ASPECTO 1]", "criterio": "[CRITÉRIO]", "pontuacao": "[PONTOS]"},
+    {"aspecto": "[ASPECTO 2]", "criterio": "[CRITÉRIO]", "pontuacao": "[PONTOS]"},
+    {"aspecto": "[ASPECTO 3]", "criterio": "[CRITÉRIO]", "pontuacao": "[PONTOS]"}
   ],
-  "observacoes_correcao": "[ORIENTAÇÕES DE CORREÇÃO - máximo 2 frases]",
-  "feedback_pos_avaliacao": "[ORIENTAÇÕES DE FEEDBACK - máximo 2 frases]",
-  "referencias": [
-    "[REFERÊNCIA 1 - FORMATO ABNT COMPLETO]",
-    "[REFERÊNCIA 2 - FORMATO ABNT COMPLETO]",
-    "[REFERÊNCIA 3 - FORMATO ABNT COMPLETO]"
-  ]
+  "observacoes_correcao": "[ORIENTAÇÕES DE CORREÇÃO]",
+  "feedback_pos_avaliacao": "[ORIENTAÇÕES DE FEEDBACK]",
+  "referencias": ["[REF 1]", "[REF 2]"]
 }
 
-DISTRIBUA os tipos EQUILIBRADAMENTE. RESPONDA APENAS COM JSON. SEJA CONCISO E OBJETIVO.`;
+DISTRIBUA os tipos EQUILIBRADAMENTE. RESPONDA APENAS COM JSON.`;
 
     default:
-      return `${systemContext}\n\nCrie um material educativo específico sobre "${tema}" para ${disciplina} na ${serie}, seguindo padrões brasileiros de educação e BNCC. SEJA CONCISO E OBJETIVO.`;
+      return `${systemContext}\n\nCrie um material educativo específico sobre "${tema}" para ${disciplina} na ${serie}, seguindo padrões brasileiros de educação e BNCC.`;
   }
 }
 
@@ -555,20 +489,6 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
               ? `${Math.ceil(tempoTotal / 50)} aulas (${tempoTotal} minutos)`
               : `${tempoTotal} minutos`;
           }
-        }
-
-        // 5. Garantir que referências estejam no formato ABNT
-        if (parsedContent.referencias && Array.isArray(parsedContent.referencias)) {
-          parsedContent.referencias = parsedContent.referencias.map((ref: string) => {
-            // Se não contém data de acesso, adicionar
-            if (ref.includes('http') && !ref.includes('Acesso em:')) {
-              const hoje = new Date();
-              const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-              const dataAcesso = `${hoje.getDate().toString().padStart(2, '0')} ${meses[hoje.getMonth()]}. ${hoje.getFullYear()}`;
-              return `${ref}. Acesso em: ${dataAcesso}.`;
-            }
-            return ref;
-          });
         }
       }
       // --- FIM CORREÇÃO PLANO DE AULA ---
@@ -665,19 +585,6 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
             }
 
             return processedQuestion;
-          });
-        }
-
-        // Ensure references are in ABNT format for activities and assessments too
-        if (parsedContent.referencias && Array.isArray(parsedContent.referencias)) {
-          parsedContent.referencias = parsedContent.referencias.map((ref: string) => {
-            if (ref.includes('http') && !ref.includes('Acesso em:')) {
-              const hoje = new Date();
-              const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-              const dataAcesso = `${hoje.getDate().toString().padStart(2, '0')} ${meses[hoje.getMonth()]}. ${hoje.getFullYear()}`;
-              return `${ref}. Acesso em: ${dataAcesso}.`;
-            }
-            return ref;
           });
         }
       }
