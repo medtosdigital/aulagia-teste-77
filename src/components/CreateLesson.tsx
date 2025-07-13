@@ -196,7 +196,7 @@ const CreateLesson: React.FC = () => {
       {
         id: 'content-generation',
         title: 'Geração de Conteúdo',
-        description: 'Criando conteúdo pedagógico personalizado com IA',
+        description: 'Criando conteúdo pedagógico personalizado',
         estimatedDuration: 25,
         icon: Wand2
       }
@@ -1333,8 +1333,8 @@ const CreateLesson: React.FC = () => {
                 <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                   <p className="text-xs sm:text-sm text-blue-700">
                     {selectedType === 'slides' 
-                      ? '✨ Estamos criando um material incrível com imagens personalizadas! Isso pode levar alguns minutos.'
-                      : '🎯 Nossa IA está trabalhando para criar o melhor material possível para você!'
+                       ? '✨ Estamos criando um material incrível com imagens personalizadas! Isso pode levar alguns minutos.'
+                       : '🎯 Estamos trabalhando para criar o melhor material possível para você!'
                     }
                   </p>
                 </div>
