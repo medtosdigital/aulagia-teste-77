@@ -1,14 +1,50 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, CheckCircle, Users, Clock, Download, Sparkles, Play, ArrowRight, Star, FileText, Presentation } from 'lucide-react';
+import { BookOpen, CheckCircle, Users, Clock, Download, Sparkles, Play, ArrowRight, Star, FileText, Presentation, Menu, X, XCircle, Crown, GraduationCap, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const isMobile = useIsMobile();
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  const animatedTexts = [
+    'Planos de Aula',
+    'Slides',
+    'Atividades',
+    'Avaliações'
+  ];
+  const [currentText, setCurrentText] = useState('');
+  const [textIndex, setTextIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    let typingTimeout: NodeJS.Timeout;
+    if (!isDeleting && charIndex < animatedTexts[textIndex].length) {
+      typingTimeout = setTimeout(() => {
+        setCurrentText(animatedTexts[textIndex].slice(0, charIndex + 1));
+        setCharIndex(charIndex + 1);
+      }, 60);
+    } else if (isDeleting && charIndex > 0) {
+      typingTimeout = setTimeout(() => {
+        setCurrentText(animatedTexts[textIndex].slice(0, charIndex - 1));
+        setCharIndex(charIndex - 1);
+      }, 30);
+    } else if (!isDeleting && charIndex === animatedTexts[textIndex].length) {
+      typingTimeout = setTimeout(() => setIsDeleting(true), 1200);
+    } else if (isDeleting && charIndex === 0) {
+      setIsDeleting(false);
+      setTextIndex((textIndex + 1) % animatedTexts.length);
+    }
+    return () => clearTimeout(typingTimeout);
+  }, [charIndex, isDeleting, textIndex]);
 
   const plans = [
     {
@@ -189,74 +225,99 @@ const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white p-2 rounded-xl">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+          <div className="flex items-center h-16 w-full max-w-7xl">
+            {isMobile ? (
+              <div className="flex items-center w-full justify-between relative">
+                {/* Logo padrão Sidebar no mobile */}
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <div className="bg-primary-500 text-white p-3 rounded-lg">
                 <BookOpen className="w-6 h-6" />
               </div>
-              <div>
-                <span className="logo-text text-xl text-primary-600 font-bold">AulagIA</span>
-                <p className="text-xs text-gray-500 -mt-1 hidden sm:block">Sua aula com toque mágico</p>
+                  <div className="flex flex-col justify-center">
+                    <span className="logo-text text-2xl text-primary-600" style={{fontWeight: 400}}>AulagIA</span>
+                    <span className="text-xs text-gray-500 -mt-1">Sua aula com toque mágico</span>
               </div>
             </div>
-            
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#recursos" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
-                Recursos
-              </a>
-              <a href="#exemplos" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
-                Exemplos
-              </a>
-              <a href="#beneficios" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
-                Benefícios
-              </a>
-              <a href="#planos" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
-                Preços
-              </a>
-              <Button 
-                onClick={() => navigate('/login')}
-                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:scale-105 transition-transform"
-              >
-                Entrar
-              </Button>
+                {/* Botão Entrar à direita */}
+                <Button onClick={() => navigate('/login')} className="ml-auto mr-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold px-5 py-2 text-sm shadow-md">Entrar</Button>
+                {/* Botão de menu suspenso */}
+                <div className="relative">
+                  <Button variant="ghost" size="icon" className="ml-1" onClick={() => setShowMobileMenu(v => !v)}>
+                    {showMobileMenu ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+                  </Button>
+                  {showMobileMenu && (
+                    <div className="fixed left-0 right-0 top-[64px] w-full bg-white shadow-xl rounded-b-2xl border-b border-gray-100 z-50 animate-fade-in flex flex-col items-center px-6 py-6 gap-6" style={{minWidth:220}}>
+                      <nav className="flex flex-col gap-6 w-full max-w-xs mx-auto text-center">
+                        <a href="#recursos" className="text-gray-700 hover:text-primary-600 font-medium text-lg transition-colors flex items-center justify-center gap-2" onClick={()=>setShowMobileMenu(false)}>
+                          Recursos <ArrowRight className="w-5 h-5 inline-block text-primary-400" />
+                        </a>
+                        <a href="#exemplos" className="text-gray-700 hover:text-primary-600 font-medium text-lg transition-colors flex items-center justify-center gap-2" onClick={()=>setShowMobileMenu(false)}>
+                          Exemplos <ArrowRight className="w-5 h-5 inline-block text-primary-400" />
+                        </a>
+                        <a href="#beneficios" className="text-gray-700 hover:text-primary-600 font-medium text-lg transition-colors flex items-center justify-center gap-2" onClick={()=>setShowMobileMenu(false)}>
+                          Benefícios <ArrowRight className="w-5 h-5 inline-block text-primary-400" />
+                        </a>
+                        <a href="#planos" className="text-gray-700 hover:text-primary-600 font-medium text-lg transition-colors flex items-center justify-center gap-2" onClick={()=>setShowMobileMenu(false)}>
+                          Preços <ArrowRight className="w-5 h-5 inline-block text-primary-400" />
+                        </a>
             </nav>
-
-            <Button 
-              variant="ghost" 
-              className="md:hidden"
-              onClick={() => navigate('/login')}
-            >
-              Entrar
-            </Button>
+                      <div className="flex flex-col gap-3 w-full max-w-xs mx-auto mt-6">
+                        <Button size="lg" className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-lg font-semibold shadow-md w-full" onClick={()=>{setShowMobileMenu(false); document.getElementById('planos')?.scrollIntoView({behavior: 'smooth'});}}>Começar Gratuitamente</Button>
+                        <Button size="lg" variant="outline" className="border-primary-500 text-primary-600 text-lg font-semibold w-full" onClick={()=>{setShowMobileMenu(false); navigate('/login');}}>Entrar Agora</Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Logo à esquerda */}
+                <div className="flex items-center space-x-3 flex-shrink-0">
+                  <div className="bg-primary-500 text-white p-3 rounded-lg">
+                    <BookOpen className="w-6 h-6" />
+                  </div>
+                  <div className="flex flex-col justify-center">
+                    <span className="logo-text text-2xl text-primary-600" style={{fontWeight: 400}}>AulagIA</span>
+                    <span className="text-xs text-gray-500 -mt-1">Sua aula com toque mágico</span>
+                  </div>
+                </div>
+                {/* Menu centralizado */}
+                <nav className="flex-1 flex items-center justify-center space-x-8">
+                  <a href="#recursos" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">Recursos</a>
+                  <a href="#exemplos" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">Exemplos</a>
+                  <a href="#beneficios" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">Benefícios</a>
+                  <a href="#planos" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">Preços</a>
+                </nav>
+                {/* Botão Entrar à direita */}
+                <Button onClick={() => navigate('/login')} className="ml-8 bg-gradient-to-r from-primary-500 to-secondary-500 hover:scale-105 transition-transform px-8 py-3 text-base font-semibold shadow-md">Entrar</Button>
+              </>
+            )}
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-12 md:py-20">
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f0f9ff' fill-opacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8 text-center lg:text-left">
           <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="animate-fade-in text-center lg:text-left">
-              <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          <div className="animate-fade-in">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-2 leading-tight">
                 Transforme sua 
-                <span className="bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
-                  {' '}rotina pedagógica
-                </span>
-                {' '}com IA
               </h1>
-              
-              <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
-                Crie planos de aula, slides, atividades e avaliações em minutos. 
-                Tenha acesso a recursos exclusivos com inteligência artificial 
-                personalizada para educadores.
-              </p>
-              
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-500 mb-4 leading-tight">
+              Rotina Pedagógica
+            </h2>
+            <div className="text-2xl md:text-4xl font-extrabold mb-8 h-14 flex items-center justify-center lg:justify-start animate-fade-in drop-shadow-sm">
+              <span className="text-gray-900">Criando&nbsp;</span><span className="bg-gradient-to-r from-primary-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">{currentText}</span>
+              <span className="blinking-cursor ml-1 text-primary-500">|</span>
+            </div>
+            <p className="text-lg md:text-xl text-gray-700 mb-4 font-semibold animate-fade-in">
+              Preparar suas aulas será muito mais fácil. Foque no que importa: <span className="text-primary-600 font-bold">Ensinar</span>.
+            </p>
+            <p className="text-base md:text-lg text-gray-600 mb-8 leading-relaxed max-w-xl">
+              Crie planos de aula, slides, atividades e avaliações em minutos. Tenha acesso a recursos exclusivos com inteligência artificial personalizada para educadores.
+            </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center lg:justify-start">
                 <Button 
                   size="lg"
@@ -266,7 +327,6 @@ const LandingPage: React.FC = () => {
                   Começar Gratuitamente
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-                
                 <Button 
                   variant="outline" 
                   size="lg"
@@ -277,7 +337,6 @@ const LandingPage: React.FC = () => {
                   Ver Exemplos
                 </Button>
               </div>
-
               <div className="flex items-center space-x-6 text-sm text-gray-500 justify-center lg:justify-start">
                 <div className="flex items-center">
                   <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
@@ -289,7 +348,6 @@ const LandingPage: React.FC = () => {
                 </div>
               </div>
             </div>
-
             <div className="animate-fade-in animation-delay-300">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-3xl transform rotate-6 opacity-20"></div>
@@ -304,7 +362,6 @@ const LandingPage: React.FC = () => {
                     </div>
                   </div>
                 </Card>
-              </div>
             </div>
           </div>
         </div>
@@ -324,7 +381,7 @@ const LandingPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {materialTypes.map((type, index) => (
-              <Card key={type.name} className={`group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 ${type.bgColor} border-0 animate-fade-in`} style={{animationDelay: `${index * 100}ms`}}>
+              <Card key={type.name} className={`group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 ${type.bgColor} border-0 animate-fade-in`} style={{animationDelay: `${index * 100}ms`, height: 'auto', maxHeight: 'none', overflow: 'visible'}}>
                 <CardContent className="p-6 md:p-8 text-center">
                   <div className={`inline-flex p-3 md:p-4 rounded-2xl bg-gradient-to-r ${type.color} text-white mb-4 md:mb-6 group-hover:scale-110 transition-transform`}>
                     {type.icon}
@@ -527,57 +584,238 @@ const LandingPage: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
             {plans.map((plan, index) => (
-              <Card 
-                key={plan.name} 
-                className={`relative ${plan.highlight ? 'ring-2 ring-primary-500 transform scale-105' : ''} hover:shadow-xl transition-all duration-300 animate-fade-in`}
-                style={{animationDelay: `${index * 100}ms`}}
+              <Card
+                key={plan.name}
+                className={`relative flex flex-col transition-all duration-300 hover:shadow-xl rounded-xl p-4 md:p-6 ${
+                  plan.highlight ? 'ring-2 ring-blue-500 lg:scale-105 border-2 border-blue-200' :
+                  plan.name === 'Professor' ? 'ring-2 ring-green-500 border-2 border-green-500 bg-green-50' :
+                  'border-2 border-gray-200'
+                }`}
+                style={{animationDelay: `${index * 100}ms`, height: '100%', maxHeight: 'none', overflow: 'visible'}}
               >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      POPULAR
-                    </span>
+                {plan.popular && plan.name !== 'Professor' && typeof plan.name === 'string' && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-blue-500 text-white px-3 md:px-4 py-1 text-xs">POPULAR</Badge>
                   </div>
                 )}
-                
-                <CardContent className="p-6 md:p-8">
-                  <div className="text-center mb-6 md:mb-8">
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                    <p className="text-gray-600 mb-4 text-sm md:text-base">{plan.description}</p>
-                    <div className="mb-4 md:mb-6">
-                      <span className="text-3xl md:text-4xl font-bold text-gray-900">{getCurrentPrice(plan)}</span>
-                      <span className="text-gray-500 text-sm md:text-base">{getCurrentPeriod(plan)}</span>
-                      {billingCycle === 'yearly' && getSavings(plan) && (
-                        <p className="text-green-600 text-xs md:text-sm font-medium mt-1">{getSavings(plan)}</p>
+                {plan.name === 'Professor' && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-green-500 text-white px-3 md:px-4 py-1 text-xs">PLANO RECOMENDADO</Badge>
+                  </div>
+                )}
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold text-gray-800 mb-1">{plan.name}</h3>
+                  <p className="text-gray-600 text-xs md:text-sm">
+                    {plan.name === 'Gratuito' && 'Ideal para quem quer testar a plataforma'}
+                    {plan.name === 'Professor' && 'Para professores que querem mais recursos'}
+                    {plan.name === 'Grupo Escolar' && 'Para grupos de professores e instituições de ensino'}
+                  </p>
+                </div>
+                <div className="mb-6">
+                  <span className="text-2xl md:text-3xl font-bold text-gray-800">{getCurrentPrice(plan)}</span>
+                  <span className="text-gray-500 text-sm">{getCurrentPeriod(plan)}</span>
+                </div>
+                {/* Tipos de Materiais */}
+                <div className="mb-4">
+                  <h4 className="font-semibold text-gray-800 mb-3 flex items-center text-sm">
+                    <Presentation className="w-4 h-4 text-blue-600 mr-2" /> Tipos de Materiais
+                  </h4>
+                  <div className="space-y-2">
+                    {/* Planos de Aula */}
+                    {plan.name === 'Gratuito' ? (
+                      <div className="flex items-start"><GraduationCap className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Planos de Aula básicos</span></div>
+                    ) : (
+                      <div className="flex items-start">
+                        {plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? (
+                          <GraduationCap className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
+                        ) : (
+                          <GraduationCap className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                        )}
+                        <span className={plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>
+                          Planos de Aula completos
+                        </span>
+                      </div>
+                    )}
+                    {/* Slides interativos */}
+                    <div className="flex items-start">
+                      {plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? (
+                        <Presentation className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <Presentation className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
                       )}
+                      <span className={plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>
+                        Slides interativos
+                      </span>
+                    </div>
+                    {/* Atividades diversificadas */}
+                    <div className="flex items-start">
+                      {plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? (
+                        <ClipboardList className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <ClipboardList className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                      )}
+                      <span className={plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>
+                        Atividades diversificadas
+                      </span>
+                    </div>
+                    {/* Avaliações personalizadas */}
+                    <div className="flex items-start">
+                      {plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? (
+                        <FileText className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <FileText className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                      )}
+                      <span className={plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>
+                        Avaliações personalizadas
+                      </span>
+                    </div>
+                    {/* Atividades simples (só gratuito) */}
+                    {plan.name !== 'Gratuito' && (
+                      <div className="flex items-start">
+                        <ClipboardList className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-400 text-xs md:text-sm">Atividades simples</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* Bloco especial Grupo Escolar */}
+                {plan.name === 'Grupo Escolar' && (
+                  <div className="mb-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4">
+                      <h4 className="font-semibold text-blue-800 mb-2 flex items-center text-sm">
+                        <Crown className="w-4 h-4 text-blue-600 mr-2" /> Todos os recursos do plano Professor
+                      </h4>
+                      <p className="text-blue-700 text-xs">
+                        Inclui todos os tipos de materiais e funcionalidades do plano Professor, além dos recursos colaborativos exclusivos para grupos.
+                      </p>
+                      <p className="text-blue-700 text-xs mt-2">
+                        <strong>300 materiais por mês</strong> que podem ser distribuídos flexivelmente entre até 5 professores.
+                      </p>
                     </div>
                   </div>
-
-                  <div className="space-y-3 md:space-y-4 mb-6 md:mb-8 max-h-64 overflow-y-auto">
-                    {plan.features.map((feature) => (
-                      <div key={feature} className="flex items-start">
-                        <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700 text-sm md:text-base">{feature}</span>
-                      </div>
-                    ))}
-                    
-                    {plan.limitations?.map((limitation) => (
-                      <div key={limitation} className="flex items-start opacity-60">
-                        <div className="w-4 h-4 md:w-5 md:h-5 mr-3 mt-0.5 flex-shrink-0">
-                          <div className="w-3 h-3 md:w-4 md:h-4 rounded-full border-2 border-gray-300 mt-0.5"></div>
-                        </div>
-                        <span className="text-gray-500 line-through text-sm md:text-base">{limitation}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Button 
-                    className={`w-full py-3 ${plan.buttonStyle} hover:scale-105 transition-transform text-sm md:text-base`}
-                    onClick={() => navigate('/login')}
-                  >
-                    {plan.buttonText}
-                  </Button>
-                </CardContent>
+                )}
+                {/* Benefícios e Limitações */}
+                <ul className="space-y-2 md:space-y-3 mb-6 flex-1">
+                  {/* 5 materiais por mês */}
+                  <li className="flex items-start">
+                    {plan.name === 'Gratuito' ? (
+                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
+                    )}
+                    <span className={plan.name === 'Gratuito' ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>5 materiais por mês</span>
+                  </li>
+                  {/* Download em PDF */}
+                  <li className="flex items-start">
+                    {(plan.name === 'Gratuito' || plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
+                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
+                    )}
+                    <span className={(plan.name === 'Gratuito' || plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Download em PDF</span>
+                  </li>
+                  {/* Download em Word/PPT */}
+                  <li className="flex items-start">
+                    {(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
+                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
+                    )}
+                    <span className={(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Download em Word/PPT</span>
+                  </li>
+                  {/* Edição completa de materiais */}
+                  <li className="flex items-start">
+                    {(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
+                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
+                    )}
+                    <span className={(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Edição completa de materiais</span>
+                  </li>
+                  {/* Todos os templates disponíveis */}
+                  <li className="flex items-start">
+                    {(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
+                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
+                    )}
+                    <span className={(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Todos os templates disponíveis</span>
+                  </li>
+                  {/* Suporte básico/por e-mail/prioritário */}
+                  <li className="flex items-start">
+                    {plan.name === 'Gratuito' ? (
+                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    ) : plan.name === 'Professor' ? (
+                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    )}
+                    <span className="text-gray-700 text-xs md:text-sm">
+                      {plan.name === 'Gratuito' ? 'Suporte básico' : plan.name === 'Professor' ? 'Suporte por e-mail' : 'Suporte prioritário'}
+                    </span>
+                  </li>
+                  {/* Calendário de aulas */}
+                  <li className="flex items-start">
+                    {(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
+                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
+                    )}
+                    <span className={(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Calendário de aulas</span>
+                  </li>
+                  {/* Histórico completo */}
+                  <li className="flex items-start">
+                    {(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
+                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
+                    )}
+                    <span className={(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Histórico completo</span>
+                  </li>
+                  {/* Itens exclusivos do Grupo Escolar */}
+                  {plan.name !== 'Grupo Escolar' && (
+                    <>
+                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Até 5 professores</span></li>
+                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">300 materiais por mês (total)</span></li>
+                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Todos os recursos do plano Professor</span></li>
+                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Dashboard de gestão colaborativa</span></li>
+                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Compartilhamento de materiais entre professores</span></li>
+                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Relatórios detalhados de uso</span></li>
+                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Suporte prioritário</span></li>
+                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Gestão centralizada de usuários</span></li>
+                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Controle de permissões</span></li>
+                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Distribuição flexível de materiais entre professores</span></li>
+                    </>
+                  )}
+                  {plan.name === 'Grupo Escolar' && (
+                    <>
+                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Até 5 professores</span></li>
+                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">300 materiais por mês (total)</span></li>
+                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Todos os recursos do plano Professor</span></li>
+                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Dashboard de gestão colaborativa</span></li>
+                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Compartilhamento de materiais entre professores</span></li>
+                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Relatórios detalhados de uso</span></li>
+                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Suporte prioritário</span></li>
+                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Gestão centralizada de usuários</span></li>
+                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Controle de permissões</span></li>
+                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Distribuição flexível de materiais entre professores</span></li>
+                    </>
+                  )}
+                </ul>
+                <Button
+                  onClick={() => navigate('/login')}
+                  className={`w-full py-2 md:py-3 text-sm ${
+                    plan.name === 'Professor'
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : plan.popular
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : plan.name === 'Grupo Escolar'
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : 'bg-gray-900 hover:bg-gray-800'
+                  }`}
+                >
+                  Assinar Agora
+                </Button>
               </Card>
             ))}
           </div>
@@ -614,14 +852,6 @@ const LandingPage: React.FC = () => {
               Criar Conta Grátis
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
-            
-            <Button 
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-primary-600 text-lg px-8 py-3"
-            >
-              Agendar Demonstração
-            </Button>
           </div>
         </div>
       </section>
@@ -632,12 +862,12 @@ const LandingPage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white p-2 rounded-xl">
-                  <BookOpen className="w-6 h-6" />
+                <div className="bg-[#19a7f6] text-white p-3 rounded-xl">
+                  <BookOpen className="w-8 h-8" />
                 </div>
-                <div>
-                  <span className="logo-text text-xl font-bold">AulagIA</span>
-                  <p className="text-xs text-gray-400 -mt-1">Sua aula com toque mágico</p>
+                <div className="flex flex-col">
+                  <span className="logo-text text-2xl text-[#19a7f6] leading-tight" style={{fontFamily: 'Fredoka One, cursive', fontWeight: 400}}>AulagIA</span>
+                  <span className="text-sm text-gray-400 -mt-1">Sua aula com toque mágico</span>
                 </div>
               </div>
               <p className="text-gray-400 text-sm">
@@ -682,12 +912,12 @@ const LandingPage: React.FC = () => {
         </div>
       </footer>
 
-      {/* Floating CTA Button - Hidden on mobile */}
-      <div className="fixed bottom-6 right-6 z-50 hidden md:block">
+      {/* Floating CTA Button - Agora visível também no mobile */}
+      <div className="fixed bottom-6 right-6 z-50">
         <Button 
           size="lg"
           onClick={() => navigate('/login')}
-          className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:scale-110 transition-all shadow-lg rounded-full px-6 py-3"
+          className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:scale-110 transition-all shadow-lg rounded-full px-6 py-3 text-base md:text-lg"
         >
           Começar Grátis
           <ArrowRight className="ml-2 w-5 h-5" />
@@ -712,6 +942,15 @@ const LandingPage: React.FC = () => {
         
         html {
           scroll-behavior: smooth;
+        }
+
+        .blinking-cursor {
+          animation: blink 1s steps(2, start) infinite;
+        }
+        @keyframes blink {
+          to {
+            visibility: hidden;
+          }
         }
       `}</style>
     </div>

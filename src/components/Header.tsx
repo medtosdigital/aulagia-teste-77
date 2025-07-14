@@ -97,12 +97,12 @@ const Header: React.FC<HeaderProps> = ({
           {/* Mobile: logo, Desktop: título */}
           <div className="block md:hidden">
             <div className="flex items-center space-x-2">
-              <div className="bg-primary-500 text-white p-2 rounded-lg">
+              <div className="bg-primary-500 text-white p-3 rounded-lg">
                 <BookOpen className="w-6 h-6" />
               </div>
               <div>
-                <span className="logo-text text-xl text-primary-600 font-bold leading-tight">AulagIA</span>
-                <p className="text-xs text-gray-400 -mt-1">Sua aula com toque mágico</p>
+                <span className="logo-text text-2xl text-primary-600 leading-tight" style={{fontWeight: 400}}>AulagIA</span>
+                <p className="text-xs text-gray-500 -mt-1">Sua aula com toque mágico</p>
               </div>
             </div>
           </div>
