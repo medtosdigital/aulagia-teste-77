@@ -11,16 +11,31 @@ interface ProfilePhotoCropModalProps {
   onCropComplete: (croppedDataUrl: string) => void;
 }
 
-// Calcula o maior círculo possível totalmente dentro da imagem
-function getCenteredCircleCrop(width: number, height: number, percent: number = 80): Crop {
-  const minDim = Math.min(width, height);
-  const cropPx = (minDim * percent) / 100;
+// Calcula o maior círculo possível para cobrir adequadamente a imagem
+function getCenteredCircleCrop(imageWidth: number, imageHeight: number, containerSize: number = 300): Crop {
+  // Calcula o tamanho do crop baseado na imagem redimensionada no container
+  const imageAspect = imageWidth / imageHeight;
+  let displayWidth, displayHeight;
+  
+  if (imageAspect > 1) {
+    // Imagem é mais larga que alta
+    displayWidth = containerSize;
+    displayHeight = containerSize / imageAspect;
+  } else {
+    // Imagem é mais alta que larga
+    displayHeight = containerSize;
+    displayWidth = containerSize * imageAspect;
+  }
+  
+  // O crop será 85% do menor lado da imagem exibida
+  const cropSize = Math.min(displayWidth, displayHeight) * 0.85;
+  
   return {
     unit: 'px',
-    x: Math.round((width - cropPx) / 2),
-    y: Math.round((height - cropPx) / 2),
-    width: Math.round(cropPx),
-    height: Math.round(cropPx),
+    x: Math.round((displayWidth - cropSize) / 2),
+    y: Math.round((displayHeight - cropSize) / 2),
+    width: Math.round(cropSize),
+    height: Math.round(cropSize),
   };
 }
 
@@ -38,7 +53,7 @@ export const ProfilePhotoCropModal: React.FC<ProfilePhotoCropModalProps> = ({
   // Centraliza o crop ao carregar a imagem
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const { naturalWidth, naturalHeight } = e.currentTarget;
-    const initialCrop = getCenteredCircleCrop(naturalWidth, naturalHeight, 80);
+    const initialCrop = getCenteredCircleCrop(naturalWidth, naturalHeight);
     setCrop(initialCrop);
     setCompletedCrop(initialCrop as PixelCrop);
   };
@@ -47,7 +62,7 @@ export const ProfilePhotoCropModal: React.FC<ProfilePhotoCropModalProps> = ({
   useEffect(() => {
     if (open && imageSrc && imgRef.current && !crop) {
       const { naturalWidth, naturalHeight } = imgRef.current;
-      const initialCrop = getCenteredCircleCrop(naturalWidth, naturalHeight, 80);
+      const initialCrop = getCenteredCircleCrop(naturalWidth, naturalHeight);
       setCrop(initialCrop);
       setCompletedCrop(initialCrop as PixelCrop);
     }
@@ -90,7 +105,7 @@ export const ProfilePhotoCropModal: React.FC<ProfilePhotoCropModalProps> = ({
     // Se não há crop definido, cria um crop padrão centralizado
     if (!completedCrop && imgRef.current) {
       const { naturalWidth, naturalHeight } = imgRef.current;
-      const defaultCrop = getCenteredCircleCrop(naturalWidth, naturalHeight, 80);
+      const defaultCrop = getCenteredCircleCrop(naturalWidth, naturalHeight);
       setCompletedCrop(defaultCrop as PixelCrop);
       
       // Força a atualização do canvas com o crop padrão
