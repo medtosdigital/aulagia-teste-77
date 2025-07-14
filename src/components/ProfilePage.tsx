@@ -521,7 +521,7 @@ const ProfilePage = () => {
                   <div>
                     <Label htmlFor="celular" className="text-sm font-medium text-gray-700 flex items-center gap-2">
                       <Phone className="w-4 h-4" />
-                      Celular (opcional)
+                      Celular
                     </Label>
                     <Input
                       id="celular"
