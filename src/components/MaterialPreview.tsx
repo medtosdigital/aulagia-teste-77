@@ -213,6 +213,14 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     }
   };
 
+  React.useEffect(() => {
+    // Injeta CSS global para garantir largura da lacuna no preview
+    const style = document.createElement('style');
+    style.innerHTML = `.fill-blank { width: 600px !important; min-width: 180px !important; max-width: 600px !important; display: inline-block !important; border-bottom: 2px solid #4338ca !important; height: 1.2em !important; vertical-align: middle !important; margin: 0 4px !important; background: none !important; }`;
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
+  }, []);
+
   return (
     <div className="material-preview-container w-full h-full overflow-hidden bg-gray-50">
       <div className="w-full h-full">

@@ -62,7 +62,7 @@ export const useFirstAccess = () => {
               teachingLevel: profile.etapas_ensino?.[0] || '',
               grades: profile.anos_serie || [],
               subjects: profile.disciplinas || [],
-              school: '',
+              school: profile.escola || '',
               materialTypes: profile.tipo_material_favorito || [],
               celular: profile.celular || ''
             }
@@ -95,7 +95,8 @@ export const useFirstAccess = () => {
         disciplinas: userInfo.subjects,
         tipo_material_favorito: userInfo.materialTypes,
         preferencia_bncc: false,
-        celular: userInfo.celular
+        celular: userInfo.celular,
+        escola: userInfo.school
       };
 
       const { error } = await supabase

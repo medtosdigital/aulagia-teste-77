@@ -29,6 +29,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel
 } from '@/components/ui/alert-dialog';
+import { normalizeMaterialForPreview } from '@/services/materialService';
 
 // Interface para compatibilidade com GeneratedMaterial
 interface GeneratedMaterialWithOptionalFormData extends Omit<GeneratedMaterial, 'formData'> {
@@ -601,7 +602,7 @@ const MaterialsList: React.FC = () => {
       )}
 
       <MaterialModal 
-        material={selectedMaterial as GeneratedMaterial} 
+        material={normalizeMaterialForPreview(selectedMaterial as GeneratedMaterial)} 
         open={modalOpen} 
         onClose={handleCloseModal} 
         onEdit={() => {
@@ -611,14 +612,14 @@ const MaterialsList: React.FC = () => {
       />
 
       <MaterialEditModal 
-        material={selectedMaterial as GeneratedMaterial} 
+        material={normalizeMaterialForPreview(selectedMaterial as GeneratedMaterial)} 
         open={editModalOpen} 
         onClose={handleCloseEditModal} 
         onSave={handleSaveEdit} 
       />
 
       <MaterialInlineEditModal 
-        material={materialToEdit as GeneratedMaterial} 
+        material={normalizeMaterialForPreview(materialToEdit as GeneratedMaterial)} 
         open={inlineEditModalOpen} 
         onClose={() => {
           setInlineEditModalOpen(false);

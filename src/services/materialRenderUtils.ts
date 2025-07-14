@@ -24,33 +24,71 @@ export function splitContentIntoPages(htmlContent: string, material: any): strin
       }
       let pageContent = '';
       if (isFirstPage) {
+        // Busca o nome do professor em várias fontes e exibe em maiúsculo
+        const nomeProfessor = (material.professor || (material.content && material.content.professor) || (material.formData && material.formData.professor) || '').toString().toUpperCase();
+        // Busca o nome da escola em várias fontes e exibe em maiúsculo
+        const nomeEscola = (material.escola || (material.content && material.content.escola) || (material.formData && material.formData.escola) || '').toString().toUpperCase();
+        // Busca a série e aplica abreviação da turma
+        let turmaAbreviada = '';
+        let serieNumero = '';
+        const serieRaw = (material.grade || (material.content && (material.content.serie || material.content.grade)) || (material.formData && (material.formData.serie || material.formData.grade)) || '').toString().toUpperCase();
+        if (serieRaw) {
+          // Extrai o número da série se houver (aceita formatos como '3º ANO', '3 ANO', '3º', '3', etc)
+          const matchNumero = serieRaw.match(/(\d+)[ºO]?\s*(ANO)?/);
+          if (matchNumero) {
+            serieNumero = `${matchNumero[1]}º ANO`;
+          }
+          if (/INFANTIL|EI|EDUCAÇÃO INFANTIL/.test(serieRaw)) {
+            turmaAbreviada = serieNumero ? `${serieNumero} - EI` : `EI`;
+          } else if (/FUNDAMENTAL\s*I|EF\s*I|FUNDAMENTAL 1|EF1/.test(serieRaw)) {
+            turmaAbreviada = serieNumero ? `${serieNumero} - EF I` : `EF I`;
+          } else if (/FUNDAMENTAL\s*II|EF\s*II|FUNDAMENTAL 2|EF2/.test(serieRaw)) {
+            turmaAbreviada = serieNumero ? `${serieNumero} - EF II` : `EF II`;
+          } else if (/MÉDIO|EM|ENSINO MÉDIO/.test(serieRaw)) {
+            turmaAbreviada = serieNumero ? `${serieNumero} - EM` : `EM`;
+          } else {
+            turmaAbreviada = serieRaw;
+          }
+        }
         pageContent += material.type === 'atividade' ? '<h2>ATIVIDADE</h2>' : '<h2>AVALIAÇÃO</h2>';
         pageContent += `
-          <table>
+          <table style="width:100%; border-collapse:separate; border-spacing:0; font-size:1rem;">
             <tr>
-              <th>Escola:</th>
-              <td>_________________________________</td>
-              <th>Data:</th>
-              <td>${new Date().toLocaleDateString('pt-BR')}</td>
+              <th style="width:18%;text-transform:uppercase;background:#f3f4f6;text-align:left;padding:4px 10px;vertical-align:middle;">ESCOLA:</th>
+              <td style="width:52%;border:1.5px solid #555;height:22px;text-align:left;vertical-align:middle;padding-left:12px;font-size:1rem;font-weight:400;">${nomeEscola || '&nbsp;'}</td>
+              <td rowspan="3" style="width:20%;border:1.5px solid #555;position:relative;vertical-align:bottom;padding:0;border-top-right-radius:12px;border-bottom-right-radius:12px;">
+                <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:100%;text-align:center;font-size:1rem;font-weight:400;">
+                  DATA:__/__/__
+                </div>
+              </td>
             </tr>
             <tr>
-              <th>Disciplina:</th>
-              <td>${material.subject ? material.subject.charAt(0).toUpperCase() + material.subject.slice(1) : '[DISCIPLINA]'}</td>
-              <th>Série/Ano:</th>
-              <td>${material.grade || '[SERIE_ANO]'}</td>
+              <th style="text-transform:uppercase;background:#f3f4f6;text-align:left;padding:4px 10px;vertical-align:middle;">PROFESSOR(A):</th>
+              <td style="border:1.5px solid #555;height:22px;text-align:left;vertical-align:middle;padding-left:12px;font-size:1rem;font-weight:400;">${nomeProfessor || '&nbsp;'}</td>
             </tr>
             <tr>
-              <th>Aluno(a):</th>
-              <td class="student-info-cell">____________________________________________</td>
-              <th>${material.type === 'avaliacao' ? 'NOTA:' : 'BNCC:'}</th>
-              <td class="student-info-cell ${material.type === 'avaliacao' ? 'nota-highlight-cell' : ''}">${material.type === 'avaliacao' ? '' : '{bncc}'}</td>
+              <th style="text-transform:uppercase;background:#f3f4f6;text-align:left;padding:4px 10px;vertical-align:middle;">ALUNO(A):</th>
+              <td style="border:1.5px solid #555;height:22px;position:relative;text-align:center;vertical-align:middle;overflow:hidden;">
+                <span style="display:inline-block;max-width:98%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:absolute;right:12px;top:50%;transform:translateY(-50%);font-weight:400;text-transform:uppercase;font-size:0.92rem;">SÉRIE:${turmaAbreviada ? ' ' + turmaAbreviada : ''}</span>
+              </td>
             </tr>
           </table>
         `;
+        // Monta o tema + disciplina para a introdução
+        const tema = (material.tema || material.topic || (material.content && (material.content.tema || material.content.topic)) || (material.formData && (material.formData.tema || material.formData.topic)) || '').toString();
+        const disciplina = (material.subject || material.disciplina || (material.content && (material.content.subject || material.content.disciplina)) || (material.formData && (material.formData.subject || material.formData.disciplina)) || '').toString();
+        let temaDisciplina = '';
+        if (tema && disciplina) {
+          temaDisciplina = `${tema} - ${disciplina}`;
+        } else if (tema) {
+          temaDisciplina = tema;
+        } else if (disciplina) {
+          temaDisciplina = disciplina;
+        }
         pageContent += `
           <div class="instructions">
-            <strong>${material.title}:</strong><br>
-            ${instructions || (material.type === 'avaliacao' ? 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.' : 'Leia atentamente cada questão e responda de acordo com o solicitado.')}
+            <strong>${temaDisciplina ? temaDisciplina + ':' : ''}</strong><br>
+            <span style="font-size:0.92rem;">${instructions || (material.type === 'avaliacao' ? 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.' : 'Leia atentamente cada questão e responda de acordo com o solicitado.')}</span>
           </div>
         `;
       }
@@ -485,6 +523,7 @@ export function enhanceHtmlWithNewTemplate(htmlContent: string, material: any): 
           .nota-highlight-cell { background-color: #fef3c7 !important; border: 2px solid #f59e0b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
       </style>
+      ${extraMatchingItemStyle}
       <script>
         window.onload = function() {
           // Ajuste do título principal
@@ -554,4 +593,6 @@ export function enhanceHtmlWithNewTemplate(htmlContent: string, material: any): 
     </body>
     </html>
   `;
-} 
+}
+
+export const extraMatchingItemStyle = `<style>.matching-item { background: none !important; font-size: 0.87rem !important; } .matching-column:first-child .matching-item { border: none !important; } .fill-blank { min-width: 600px !important; }</style>`; 

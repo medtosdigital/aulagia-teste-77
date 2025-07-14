@@ -34,6 +34,7 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
     name: 'Professor(a)',
     celular: ''
   });
+  const [cellError, setCellError] = useState<string | null>(null);
   const teachingLevels = ['Educação Infantil', 'Ensino Fundamental I', 'Ensino Fundamental II', 'Ensino Médio', 'Ensino Superior'];
   const gradesByLevel: {
     [key: string]: string[];
@@ -106,12 +107,13 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
         <div>
           <Label htmlFor="celular" className="flex items-center mb-2 text-sm font-medium">
             <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-green-500" />
-            Celular (opcional)
+            Celular <span className="text-red-500 ml-1">*</span>
           </Label>
           <Input id="celular" placeholder="(11) 99999-9999" value={userInfo.celular} onChange={e => setUserInfo(prev => ({
             ...prev,
             celular: e.target.value
-          }))} className="border-2 focus:border-green-500 text-sm h-8 rounded-lg" />
+          }))} className={`border-2 focus:border-green-500 text-sm h-8 rounded-lg ${cellError ? 'border-red-500' : ''}`} />
+          {cellError && <div className="text-xs text-red-500 mt-1">{cellError}</div>}
         </div>
         <div>
           <Label htmlFor="school" className="flex items-center mb-2 text-sm font-medium">
@@ -285,6 +287,16 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
       </div>
   }];
   const handleNext = () => {
+    // Se estiver na etapa do nome/celular/escola (step 1), validar celular
+    if (currentStep === 1) {
+      const cell = userInfo.celular.replace(/\D/g, '');
+      if (!cell || cell.length < 10) {
+        setCellError('Preencha um número de celular válido para continuar.');
+        return;
+      } else {
+        setCellError(null);
+      }
+    }
     if (currentStep < tourSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {

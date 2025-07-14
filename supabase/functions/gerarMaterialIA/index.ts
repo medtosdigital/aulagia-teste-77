@@ -389,6 +389,8 @@ CARACTERÍSTICAS DE UMA ATIVIDADE (não avaliação):
 - Estímulo à PARTICIPAÇÃO ATIVA dos estudantes
 - Desenvolvimento de HABILIDADES através da prática
 
+OBRIGATÓRIO: GERE o campo "habilidades" como array de objetos, cada um com "codigo" (código real da BNCC) e "descricao" (descrição real da habilidade), ambos específicos para o tema, disciplina e série. Os códigos devem ser reais e extraídos da BNCC oficial. O campo "bncc" deve ser um array apenas com os códigos das habilidades acima, na mesma ordem.
+
 TIPOS DE QUESTÕES SOLICITADOS: ${tiposQuestoes.join(', ')}
 NÚMERO DE QUESTÕES: ${numQuestoes}
 
@@ -420,7 +422,12 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
   "tema": "${tema}",
   "tipo_material": "atividade",
   "duracao": "[duração adequada para a atividade prática sobre ${tema}]",
-  "bncc": "[códigos BNCC específicos para ${tema} em ${disciplina}]",
+  "habilidades": [
+    {"codigo": "[CÓDIGO BNCC REAL 1 - ex: EF03MA19]", "descricao": "[DESCRIÇÃO COMPLETA da habilidade 1 sobre ${tema}]"},
+    {"codigo": "[CÓDIGO BNCC REAL 2 - ex: EF03MA20]", "descricao": "[DESCRIÇÃO COMPLETA da habilidade 2 sobre ${tema}]"},
+    {"codigo": "[CÓDIGO BNCC REAL 3 - ex: EF03MA21]", "descricao": "[DESCRIÇÃO COMPLETA da habilidade 3 sobre ${tema}]"}
+  ],
+  "bncc": ["[CÓDIGO 1]", "[CÓDIGO 2]", "[CÓDIGO 3]"],
   "objetivo_geral": "[OBJETIVO EDUCATIVO da atividade prática sobre ${tema} - foco no processo de aprendizagem]",
   "objetivos_especificos": [
     "[OBJETIVO ESPECÍFICO 1 da atividade sobre ${tema}]",
@@ -487,16 +494,18 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
 }
 
 INSTRUÇÕES FINAIS CRÍTICAS:
-1. DISTRIBUA os tipos de questões EQUILIBRADAMENTE entre os tipos solicitados
-2. Para "multipla_escolha": sempre 4 alternativas válidas e plausíveis
-3. Para "ligar": exatamente 4 itens em cada coluna com correspondências claras
-4. Para "completar": use lacunas claras marcadas com ______
-5. Para "verdadeiro_falso": crie afirmações que exijam análise crítica
-6. FOQUE em atividades PRÁTICAS e INTERATIVAS
-7. Use linguagem MOTIVADORA e ENVOLVENTE
-8. Promova PARTICIPAÇÃO ATIVA dos estudantes
-9. Adapte à faixa etária de ${serie}
-10. Use português brasileiro correto
+1. GERE O CAMPO "habilidades" como array de objetos, cada um com "codigo" (código real da BNCC) e "descricao" (descrição real da habilidade), ambos específicos para o tema, disciplina e série. Os códigos devem ser reais e extraídos da BNCC oficial.
+2. O campo "bncc" deve ser um array apenas com os códigos das habilidades acima, na mesma ordem.
+3. DISTRIBUA os tipos de questões EQUILIBRADAMENTE entre os tipos solicitados
+4. Para "multipla_escolha": sempre 4 alternativas válidas e plausíveis
+5. Para "ligar": exatamente 4 itens em cada coluna com correspondências claras
+6. Para "completar": use lacunas claras marcadas com ______
+7. Para "verdadeiro_falso": crie afirmações que exijam análise crítica
+8. FOQUE em atividades PRÁTICAS e INTERATIVAS
+9. Use linguagem MOTIVADORA e ENVOLVENTE
+10. Promova PARTICIPAÇÃO ATIVA dos estudantes
+11. Adapte à faixa etária de ${serie}
+12. Use português brasileiro correto
 `;
 
     case 'avaliacao':
@@ -732,6 +741,22 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
       
       // Enhanced parsing for activities and assessments with better question handling
       if (materialType === 'atividade' || materialType === 'avaliacao') {
+        // NOVA CORREÇÃO: garantir que habilidades e bncc sejam tratados corretamente
+        if (Array.isArray(parsedContent.habilidades) && parsedContent.habilidades.length > 0 && parsedContent.habilidades[0].codigo) {
+          parsedContent.bncc = parsedContent.habilidades.map((h: any) => h.codigo).filter(Boolean).join(', ');
+        } else if (parsedContent.bncc) {
+          if (Array.isArray(parsedContent.bncc)) {
+            if (parsedContent.bncc.length > 0 && typeof parsedContent.bncc[0] === 'object' && parsedContent.bncc[0].codigo) {
+              parsedContent.bncc = parsedContent.bncc.map((b: any) => b.codigo).filter(Boolean).join(', ');
+            } else {
+              parsedContent.bncc = parsedContent.bncc.join(', ');
+            }
+          } else if (typeof parsedContent.bncc === 'object') {
+            parsedContent.bncc = Object.values(parsedContent.bncc).join(', ');
+          } // se for string, mantém
+        } else {
+          parsedContent.bncc = '';
+        }
         if (parsedContent.questoes && Array.isArray(parsedContent.questoes)) {
           parsedContent.questoes = parsedContent.questoes.map((questao: any, index: number) => {
             // Ensure proper question structure

@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { activityService } from '@/services/activityService';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import ProfilePhotoCropModal from './ProfilePhotoCropModal';
 
 // Cache em memória para perfil do usuário
 const profileCache = new Map<string, { data: any, timestamp: number }>();
@@ -89,6 +90,9 @@ const ProfilePage = () => {
     'Projetos'
   ];
 
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [rawPhoto, setRawPhoto] = useState<string | null>(null);
+
   const loadProfile = async () => {
     if (!user?.id) return;
 
@@ -128,7 +132,7 @@ const ProfilePage = () => {
           teachingLevel: profile.etapas_ensino?.[0] || '',
           grades: profile.anos_serie || [],
           subjects: profile.disciplinas || [],
-          school: '',
+          school: profile.escola || '',
           materialTypes: profile.tipo_material_favorito || [],
           celular: profile.celular || ''
         };
@@ -243,13 +247,20 @@ const ProfilePage = () => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const photoUrl = event.target?.result as string;
-        setFormData(prev => ({
-          ...prev,
-          photo: photoUrl
-        }));
+        setRawPhoto(photoUrl);
+        setShowCropModal(true);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleCropComplete = (croppedDataUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      photo: croppedDataUrl
+    }));
+    setShowCropModal(false);
+    setRawPhoto(null);
   };
 
   const handleSave = async () => {
@@ -267,7 +278,8 @@ const ProfilePage = () => {
         disciplinas: formData.subjects,
         tipo_material_favorito: formData.materialTypes,
         preferencia_bncc: false, // valor padrão
-        celular: formData.celular
+        celular: formData.celular,
+        escola: formData.school
       };
 
       // Upsert na tabela perfis
@@ -478,6 +490,12 @@ const ProfilePage = () => {
                       />
                     </label>
                   )}
+                  <ProfilePhotoCropModal
+                    open={showCropModal}
+                    imageSrc={rawPhoto}
+                    onClose={() => setShowCropModal(false)}
+                    onCropComplete={handleCropComplete}
+                  />
                 </div>
                 <div className="flex-1 space-y-4 w-full">
                   <div>

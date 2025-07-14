@@ -1,5 +1,6 @@
 import { userMaterialsService, UserMaterial } from './userMaterialsService';
 import { supabase } from '@/integrations/supabase/client';
+import { QuestionParserService } from './questionParserService';
 
 export interface GeneratedMaterial {
   id: string;
@@ -489,7 +490,14 @@ class MaterialService {
     if (bnccCodigos.length > 0) {
       bncc = bnccCodigos.join(', ');
     } else if (Array.isArray(content.bncc)) {
-      bncc = content.bncc.join(', ');
+      // Se for array de objetos com código
+      if (content.bncc.length > 0 && typeof content.bncc[0] === 'object' && content.bncc[0].codigo) {
+        bncc = content.bncc.map((b: any) => b.codigo).filter(Boolean).join(', ');
+      } else {
+        bncc = content.bncc.join(', ');
+      }
+    } else if (typeof content.bncc === 'object') {
+      bncc = Object.values(content.bncc).join(', ');
     } else if (typeof content.bncc === 'string') {
       bncc = content.bncc;
     } else if (formData && formData.bncc) {
@@ -511,6 +519,25 @@ class MaterialService {
       formData
     };
   }
+}
+
+// Função utilitária para normalizar material para preview/modal
+export function normalizeMaterialForPreview(material: any) {
+  if (!material) return material;
+  // Copia superficial para não mutar o original
+  const normalized = { ...material };
+  // Normaliza questões se for atividade ou avaliação
+  if (normalized.type === 'atividade' || normalized.type === 'avaliacao') {
+    const questoes = (normalized.content?.questoes || normalized.questoes || []).map((q: any, i: number) =>
+      QuestionParserService.validateAndFixQuestion(q, i)
+    );
+    if (normalized.content) {
+      normalized.content = { ...normalized.content, questoes };
+    } else {
+      normalized.questoes = questoes;
+    }
+  }
+  return normalized;
 }
 
 export const materialService = new MaterialService();

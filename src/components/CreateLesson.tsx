@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { materialService, GeneratedMaterial } from '@/services/materialService';
+import { materialService, GeneratedMaterial, normalizeMaterialForPreview } from '@/services/materialService';
 import { QuestionParserService } from '@/services/questionParserService';
 import MaterialModal from './MaterialModal';
 import NextStepsModal from './NextStepsModal';
@@ -897,7 +897,7 @@ const CreateLesson: React.FC = () => {
         
         {/* Modal de visualização do material - aparece primeiro */}
         <MaterialModal 
-          material={generatedMaterial} 
+          material={normalizeMaterialForPreview(generatedMaterial)} 
           open={showMaterialModal || showNextStepsModal} 
           onClose={handleMaterialModalClose} 
         />
@@ -1235,7 +1235,7 @@ const CreateLesson: React.FC = () => {
 
           {/* Modal de visualização do material - aparece primeiro */}
           <MaterialModal 
-            material={generatedMaterial} 
+            material={normalizeMaterialForPreview(generatedMaterial)} 
             open={showMaterialModal || showNextStepsModal} 
             onClose={handleMaterialModalClose} 
           />

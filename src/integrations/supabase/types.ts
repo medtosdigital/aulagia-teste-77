@@ -263,6 +263,7 @@ export type Database = {
           tipo_material_favorito: string[] | null
           updated_at: string | null
           user_id: string
+          escola: string | null
         }
         Insert: {
           anos_serie?: string[] | null
@@ -276,6 +277,7 @@ export type Database = {
           tipo_material_favorito?: string[] | null
           updated_at?: string | null
           user_id: string
+          escola?: string | null
         }
         Update: {
           anos_serie?: string[] | null
@@ -289,6 +291,7 @@ export type Database = {
           tipo_material_favorito?: string[] | null
           updated_at?: string | null
           user_id?: string
+          escola?: string | null
         }
         Relationships: []
       }
