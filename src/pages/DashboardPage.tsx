@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -23,20 +24,21 @@ import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { useFirstAccess } from '@/hooks/useFirstAccess';
 import { useFeedback } from '@/hooks/useFeedback';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
 
 const pageTitles: Record<string, string> = {
-  '/': 'Dashboard',
-  '/materiais': 'Meus Materiais',
-  '/criar': 'Criar Material',
-  '/agenda': 'Calendário',
-  '/escola': 'Escola',
-  '/perfil': 'Perfil',
-  '/assinatura': 'Assinatura',
-  '/configuracoes': 'Configurações',
-  '/api-keys': 'Chaves de API',
+  '/dashboard': 'Dashboard',
+  '/dashboard/materiais': 'Meus Materiais',
+  '/dashboard/criar': 'Criar Material',
+  '/dashboard/agenda': 'Calendário',
+  '/dashboard/escola': 'Escola',
+  '/dashboard/perfil': 'Perfil',
+  '/dashboard/assinatura': 'Assinatura',
+  '/dashboard/configuracoes': 'Configurações',
+  '/dashboard/api-keys': 'Chaves de API',
 };
 
-const Index = () => {
+const DashboardPage = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const { user } = useAuth();
   const location = useLocation();
@@ -77,10 +79,10 @@ const Index = () => {
 
   useEffect(() => {
     const handleNavigateToProfile = () => {
-      navigate('/perfil');
+      navigate('/dashboard/perfil');
     };
     const handleNavigateToSubscription = () => {
-      navigate('/assinatura');
+      navigate('/dashboard/assinatura');
     };
     const handleOpenFeedbackModal = () => {
       if (!isFirstAccess) {
@@ -212,7 +214,7 @@ const Index = () => {
   // Título dinâmico baseado na rota
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path.startsWith('/material/')) return 'Visualizar Material';
+    if (path.startsWith('/dashboard/material/')) return 'Visualizar Material';
     return pageTitles[path] || 'Dashboard';
   };
 
@@ -272,4 +274,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default DashboardPage;

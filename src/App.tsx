@@ -1,10 +1,12 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
+import LandingPage from "./pages/LandingPage";
+import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import TermosDeServico from "./pages/TermosDeServico";
 import PoliticaDePrivacidade from "./pages/PoliticaDePrivacidade";
@@ -16,7 +18,6 @@ import { useEffect } from 'react';
 import { PresentationProvider } from './contexts/PresentationContext';
 import FullScreenSlideShow from './components/FullScreenSlideShow';
 import { usePresentation } from './contexts/PresentationContext';
-import Dashboard from './components/Dashboard';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -62,6 +63,7 @@ function App() {
             <Router>
               <ScrollToTop />
               <Routes>
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/termos-de-servico" element={<TermosDeServico />} />
                 <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
@@ -69,8 +71,12 @@ function App() {
                 <Route path="/aviso-ia" element={<AvisoIA />} />
                 <Route path="/central-de-ajuda" element={<CentralDeAjuda />} />
                 <Route path="/contato" element={<Contato />} />
-                <Route path="/*" element={<Index />} />
-                <Route path="/dashboard/*" element={<Dashboard />} />
+                <Route path="/dashboard/*" element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </Router>
           </PresentationProvider>
