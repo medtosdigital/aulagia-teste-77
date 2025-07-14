@@ -8,7 +8,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 const CentralDeAjuda = () => {
   return (
     <div className="min-h-screen bg-gray-50 w-full flex flex-col">
-      <Sidebar />
+      <Sidebar activeItem="central-de-ajuda" />
       <div className="md:ml-64 min-h-screen flex flex-col">
         <Header title="Central de Ajuda" />
         <main className="flex-1 p-6">
@@ -94,4 +94,4 @@ const CentralDeAjuda = () => {
   );
 };
 
-export default CentralDeAjuda;
+export default CentralDeAjuda; 

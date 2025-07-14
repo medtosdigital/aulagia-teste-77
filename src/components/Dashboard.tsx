@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation, School } from 'lucide-react';
 import { statsService, MaterialStats } from '@/services/statsService';
@@ -139,7 +138,7 @@ const Dashboard: React.FC = () => {
         {canAccessCreateMaterial() && (
           <div 
             className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" 
-            onClick={() => navigate('/dashboard/criar')}
+            onClick={() => navigate('/criar')}
           >
             <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center text-primary-600">
               <Plus size={24} />
@@ -154,7 +153,7 @@ const Dashboard: React.FC = () => {
         {canAccessMaterials() && (
           <div 
             className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" 
-            onClick={() => navigate('/dashboard/materiais')}
+            onClick={() => navigate('/materiais')}
           >
             <div className="w-12 h-12 rounded-lg bg-secondary-100 flex items-center justify-center text-secondary-600">
               <BookOpen size={24} />
@@ -169,7 +168,7 @@ const Dashboard: React.FC = () => {
         {canAccessCalendarPage() && (
           <div 
             className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" 
-            onClick={() => navigate('/dashboard/agenda')}
+            onClick={() => navigate('/agenda')}
           >
             <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
               <Calendar size={24} />
@@ -184,7 +183,7 @@ const Dashboard: React.FC = () => {
         {canAccessSchool() && (
           <div 
             className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" 
-            onClick={() => navigate('/dashboard/escola')}
+            onClick={() => navigate('/escola')}
           >
             <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
               <School size={24} />
@@ -198,7 +197,7 @@ const Dashboard: React.FC = () => {
         
         <div 
           className="bg-white rounded-xl shadow-sm p-5 flex items-center space-x-4 card-hover cursor-pointer" 
-          onClick={() => navigate('/dashboard/assinatura')}
+          onClick={() => navigate('/assinatura')}
         >
           <div className="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600">
             <Crown size={24} />
@@ -419,7 +418,7 @@ const Dashboard: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <button
               className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group"
-              onClick={() => navigate('/dashboard/criar')}
+              onClick={() => navigate('/criar')}
             >
               <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                 <ClipboardList size={24} />
@@ -430,7 +429,7 @@ const Dashboard: React.FC = () => {
             
             <button
               className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group"
-              onClick={() => navigate('/dashboard/criar')}
+              onClick={() => navigate('/criar')}
             >
               <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                 <Users size={24} />
@@ -441,7 +440,7 @@ const Dashboard: React.FC = () => {
             
             <button
               className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group"
-              onClick={() => navigate('/dashboard/criar')}
+              onClick={() => navigate('/criar')}
             >
               <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                 <FileText size={24} />
@@ -452,7 +451,7 @@ const Dashboard: React.FC = () => {
             
             <button
               className="btn-magic p-4 rounded-xl text-white text-center flex flex-col items-center group"
-              onClick={() => navigate('/dashboard/criar')}
+              onClick={() => navigate('/criar')}
             >
               <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                 <FileText size={24} />

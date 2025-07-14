@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -7,7 +6,7 @@ import Footer from '@/components/Footer';
 const TermosDeServico = () => {
   return (
     <div className="min-h-screen bg-gray-50 w-full flex flex-col">
-      <Sidebar />
+      <Sidebar activeItem="termos" />
       
       <div className="md:ml-64 min-h-screen flex flex-col">
         <Header title="Termos de Serviço" />

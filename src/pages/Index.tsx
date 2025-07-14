@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -24,21 +23,20 @@ import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { useFirstAccess } from '@/hooks/useFirstAccess';
 import { useFeedback } from '@/hooks/useFeedback';
 import { supabase } from '@/integrations/supabase/client';
-import { useEffect, useState } from 'react';
 
 const pageTitles: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/dashboard/materiais': 'Meus Materiais',
-  '/dashboard/criar': 'Criar Material',
-  '/dashboard/agenda': 'Calendário',
-  '/dashboard/escola': 'Escola',
-  '/dashboard/perfil': 'Perfil',
-  '/dashboard/assinatura': 'Assinatura',
-  '/dashboard/configuracoes': 'Configurações',
-  '/dashboard/api-keys': 'Chaves de API',
+  '/': 'Dashboard',
+  '/materiais': 'Meus Materiais',
+  '/criar': 'Criar Material',
+  '/agenda': 'Calendário',
+  '/escola': 'Escola',
+  '/perfil': 'Perfil',
+  '/assinatura': 'Assinatura',
+  '/configuracoes': 'Configurações',
+  '/api-keys': 'Chaves de API',
 };
 
-const DashboardPage = () => {
+const Index = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const { user } = useAuth();
   const location = useLocation();
@@ -79,10 +77,10 @@ const DashboardPage = () => {
 
   useEffect(() => {
     const handleNavigateToProfile = () => {
-      navigate('/dashboard/perfil');
+      navigate('/perfil');
     };
     const handleNavigateToSubscription = () => {
-      navigate('/dashboard/assinatura');
+      navigate('/assinatura');
     };
     const handleOpenFeedbackModal = () => {
       if (!isFirstAccess) {
@@ -152,25 +150,24 @@ const DashboardPage = () => {
   };
 
   // Função para proteger rotas que exigem login
-  // (REMOVIDA pois já está protegida pelo ProtectedRoute)
-  // const requireAuth = (element: React.ReactNode) => {
-  //   if (!user) {
-  //     return (
-  //       <PageBlockedOverlay
-  //         title="Acesso Restrito"
-  //         description="Você precisa estar logado para acessar esta página."
-  //         icon="lock"
-  //         onUpgrade={() => {}}
-  //       >
-  //         <div className="p-8 text-center">
-  //           <h2 className="text-2xl font-bold text-gray-800 mb-4">Acesso Restrito</h2>
-  //           <p className="text-gray-600">Faça login para continuar.</p>
-  //         </div>
-  //       </PageBlockedOverlay>
-  //     );
-  //   }
-  //   return element;
-  // };
+  const requireAuth = (element: React.ReactNode) => {
+    if (!user) {
+      return (
+        <PageBlockedOverlay
+          title="Acesso Restrito"
+          description="Você precisa estar logado para acessar esta página."
+          icon="lock"
+          onUpgrade={() => {}}
+        >
+          <div className="p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Acesso Restrito</h2>
+            <p className="text-gray-600">Faça login para continuar.</p>
+          </div>
+        </PageBlockedOverlay>
+      );
+    }
+    return element;
+  };
 
   // Função para proteger rotas administrativas
   const requireAdmin = (element: React.ReactNode) => {
@@ -215,7 +212,7 @@ const DashboardPage = () => {
   // Título dinâmico baseado na rota
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path.startsWith('/dashboard/material/')) return 'Visualizar Material';
+    if (path.startsWith('/material/')) return 'Visualizar Material';
     return pageTitles[path] || 'Dashboard';
   };
 
@@ -227,15 +224,15 @@ const DashboardPage = () => {
         <div className="flex-1">
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/materiais" element={<MaterialsList />} />
-            <Route path="/criar" element={<CreateLesson />} />
-            <Route path="/agenda" element={<CalendarPage />} />
-            <Route path="/escola" element={<SchoolPage />} />
-            <Route path="/perfil" element={<ProfilePage />} />
+            <Route path="/materiais" element={requireAuth(<MaterialsList />)} />
+            <Route path="/criar" element={requireAuth(<CreateLesson />)} />
+            <Route path="/agenda" element={requireAuth(<CalendarPage />)} />
+            <Route path="/escola" element={requireAuth(<SchoolPage />)} />
+            <Route path="/perfil" element={requireAuth(<ProfilePage />)} />
             <Route path="/assinatura" element={<SubscriptionPage />} />
             <Route path="/configuracoes" element={requireAdmin(<div className="p-4"><h2>Configurações - Em desenvolvimento</h2></div>)} />
             <Route path="/api-keys" element={requireAdmin(<div className="p-4"><h2>Chaves de API - Em desenvolvimento</h2></div>)} />
-            <Route path="/material/:id" element={<MaterialViewer />} />
+            <Route path="/material/:id" element={requireAuth(<MaterialViewer />)} />
           </Routes>
         </div>
         <Footer />
@@ -275,4 +272,4 @@ const DashboardPage = () => {
   );
 };
 
-export default DashboardPage;
+export default Index;
