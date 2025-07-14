@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -7,7 +8,7 @@ import { AlertTriangle, Brain, CheckCircle, XCircle } from 'lucide-react';
 const AvisoIA = () => {
   return (
     <div className="min-h-screen bg-gray-50 w-full flex flex-col">
-      <Sidebar activeItem="aviso-ia" />
+      <Sidebar />
       
       <div className="md:ml-64 min-h-screen flex flex-col">
         <Header title="Aviso sobre Inteligência Artificial" />

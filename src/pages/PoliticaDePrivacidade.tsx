@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -6,7 +7,7 @@ import Footer from '@/components/Footer';
 const PoliticaDePrivacidade = () => {
   return (
     <div className="min-h-screen bg-gray-50 w-full flex flex-col">
-      <Sidebar activeItem="politica" />
+      <Sidebar />
       
       <div className="md:ml-64 min-h-screen flex flex-col">
         <Header title="Política de Privacidade" />

@@ -21,7 +21,7 @@ const Contato = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 w-full flex flex-col">
-      <Sidebar activeItem="contato" />
+      <Sidebar />
       <div className="md:ml-64 min-h-screen flex flex-col">
         <Header title="Contato" />
         <main className="flex-1 p-6">
@@ -78,4 +78,4 @@ const Contato = () => {
   );
 };
 
-export default Contato; 
+export default Contato;
