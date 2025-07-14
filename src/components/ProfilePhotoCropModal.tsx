@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Button } from './ui/button';
@@ -21,7 +21,6 @@ function getCenteredCircleCrop(width: number, height: number, percent: number = 
     y: Math.round((height - cropPx) / 2),
     width: Math.round(cropPx),
     height: Math.round(cropPx),
-    aspect: 1,
   };
 }
 
@@ -88,6 +87,22 @@ export const ProfilePhotoCropModal: React.FC<ProfilePhotoCropModalProps> = ({
 
   // Ao clicar em salvar, retorna o DataURL do crop
   const handleSave = () => {
+    // Se não há crop definido, cria um crop padrão centralizado
+    if (!completedCrop && imgRef.current) {
+      const { naturalWidth, naturalHeight } = imgRef.current;
+      const defaultCrop = getCenteredCircleCrop(naturalWidth, naturalHeight, 80);
+      setCompletedCrop(defaultCrop as PixelCrop);
+      
+      // Força a atualização do canvas com o crop padrão
+      setTimeout(() => {
+        if (previewCanvasRef.current) {
+          const dataUrl = previewCanvasRef.current.toDataURL('image/png');
+          onCropComplete(dataUrl);
+        }
+      }, 100);
+      return;
+    }
+    
     if (!previewCanvasRef.current) return;
     const dataUrl = previewCanvasRef.current.toDataURL('image/png');
     onCropComplete(dataUrl);
@@ -104,33 +119,35 @@ export const ProfilePhotoCropModal: React.FC<ProfilePhotoCropModalProps> = ({
         <div className="flex flex-col items-center gap-3 w-full">
           {imageSrc && (
             <div className="w-full flex justify-center">
-              <div style={{ maxWidth: 320, maxHeight: 320, width: '100%' }}>
+              <div className="relative overflow-hidden rounded-lg border" style={{ maxWidth: 300, maxHeight: 300, width: '100%' }}>
                 <ReactCrop
                   crop={crop}
-                  onChange={c => {
-                    if (!c || !crop) return;
-                    setCrop({
-                      ...crop,
-                      x: c.x,
-                      y: c.y,
-                      unit: 'px',
-                      width: crop.width,
-                      height: crop.height
-                    });
+                  onChange={(c, percentCrop) => {
+                    if (!c) return;
+                    setCrop(c);
                   }}
-                  onComplete={c => setCompletedCrop(c as PixelCrop)}
+                  onComplete={(c) => setCompletedCrop(c)}
                   aspect={1}
                   circularCrop
-                  locked
-                  restrictPosition
-                  style={{ width: '100%', maxWidth: 320, maxHeight: 320 }}
+                  style={{ 
+                    width: '100%', 
+                    height: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
                 >
                   <img
                     ref={imgRef}
                     src={imageSrc}
                     alt="Foto para recortar"
                     onLoad={onImageLoad}
-                    style={{ width: '100%', maxWidth: 320, maxHeight: 320, objectFit: 'contain', borderRadius: 12 }}
+                    style={{ 
+                      maxWidth: '100%', 
+                      maxHeight: '100%', 
+                      objectFit: 'contain',
+                      display: 'block'
+                    }}
                   />
                 </ReactCrop>
               </div>
@@ -148,7 +165,7 @@ export const ProfilePhotoCropModal: React.FC<ProfilePhotoCropModalProps> = ({
         </div>
         <DialogFooter className="flex flex-row gap-2 w-full justify-center mt-4">
           <Button variant="outline" onClick={onClose} className="flex-1 py-2 text-base">Cancelar</Button>
-          <Button onClick={handleSave} disabled={!completedCrop} className="flex-1 py-2 text-base">Salvar</Button>
+          <Button onClick={handleSave} className="flex-1 py-2 text-base">Salvar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

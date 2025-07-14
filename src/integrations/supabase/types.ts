@@ -256,6 +256,7 @@ export type Database = {
           celular: string | null
           created_at: string | null
           disciplinas: string[] | null
+          escola: string | null
           etapas_ensino: string[] | null
           id: string
           nome_preferido: string | null
@@ -263,13 +264,13 @@ export type Database = {
           tipo_material_favorito: string[] | null
           updated_at: string | null
           user_id: string
-          escola: string | null
         }
         Insert: {
           anos_serie?: string[] | null
           celular?: string | null
           created_at?: string | null
           disciplinas?: string[] | null
+          escola?: string | null
           etapas_ensino?: string[] | null
           id?: string
           nome_preferido?: string | null
@@ -277,13 +278,13 @@ export type Database = {
           tipo_material_favorito?: string[] | null
           updated_at?: string | null
           user_id: string
-          escola?: string | null
         }
         Update: {
           anos_serie?: string[] | null
           celular?: string | null
           created_at?: string | null
           disciplinas?: string[] | null
+          escola?: string | null
           etapas_ensino?: string[] | null
           id?: string
           nome_preferido?: string | null
@@ -291,7 +292,6 @@ export type Database = {
           tipo_material_favorito?: string[] | null
           updated_at?: string | null
           user_id?: string
-          escola?: string | null
         }
         Relationships: []
       }
