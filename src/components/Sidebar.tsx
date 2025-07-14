@@ -201,30 +201,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   
   const handleItemClick = (itemId: string) => {
     // Navegação direta pelas rotas principais
-    switch (itemId) {
-      case 'dashboard':
-        navigate('/');
-        break;
-      case 'lessons':
-        navigate('/materiais');
-        break;
-      case 'create':
-        navigate('/criar');
-        break;
-      case 'calendar':
-        navigate('/agenda');
-        break;
-      case 'school':
-        navigate('/escola');
-        break;
-      case 'profile':
-        navigate('/perfil');
-        break;
-      case 'subscription':
-        navigate('/assinatura');
-        break;
-      default:
-        break;
+    const path = idToPath[itemId];
+    if (path) {
+      navigate(path);
     }
     if (onItemClick) onItemClick(itemId);
   };

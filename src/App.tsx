@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -18,6 +18,8 @@ import FullScreenSlideShow from './components/FullScreenSlideShow';
 import { usePresentation } from './contexts/PresentationContext';
 import Dashboard from './components/Dashboard';
 import NotFound from './pages/NotFound';
+import LandingPage from './pages/LandingPage';
+import { useAuth } from '@/contexts/AuthContext';
 
 const queryClient = new QueryClient();
 
@@ -51,6 +53,19 @@ function PresentationPortal() {
   );
 }
 
+function NotFoundRedirect() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true });
+    } else {
+      navigate('/landing', { replace: true });
+    }
+  }, [user, navigate]);
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -69,8 +84,9 @@ function App() {
                 <Route path="/aviso-ia" element={<AvisoIA />} />
                 <Route path="/central-de-ajuda" element={<CentralDeAjuda />} />
                 <Route path="/contato" element={<Contato />} />
+                <Route path="/landing" element={<LandingPage />} />
                 <Route path="/*" element={<Index />} />
-                <Route path="/dashboard/*" element={<Dashboard />} />
+                <Route path="*" element={<NotFoundRedirect />} />
               </Routes>
             </Router>
           </PresentationProvider>

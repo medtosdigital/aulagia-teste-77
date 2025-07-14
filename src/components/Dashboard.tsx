@@ -115,7 +115,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <main className="p-4">
+    <main className="p-4 h-full overflow-y-auto">
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl p-6 text-white mb-6">
         <div className="flex flex-col md:flex-row items-center justify-between">

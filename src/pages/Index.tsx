@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import Dashboard from '@/components/Dashboard';
@@ -152,19 +152,7 @@ const Index = () => {
   // Função para proteger rotas que exigem login
   const requireAuth = (element: React.ReactNode) => {
     if (!user) {
-      return (
-        <PageBlockedOverlay
-          title="Acesso Restrito"
-          description="Você precisa estar logado para acessar esta página."
-          icon="lock"
-          onUpgrade={() => {}}
-        >
-          <div className="p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Acesso Restrito</h2>
-            <p className="text-gray-600">Faça login para continuar.</p>
-          </div>
-        </PageBlockedOverlay>
-      );
+      return <Navigate to="/login" replace />;
     }
     return element;
   };
@@ -191,20 +179,11 @@ const Index = () => {
 
   // Função para proteger rota da escola
   const requireSchool = (element: React.ReactNode) => {
+    if (!user) {
+      return <Navigate to="/login" replace />;
+    }
     if (!canAccessSchool()) {
-      return (
-        <PageBlockedOverlay
-          title="Recurso Grupo Escolar"
-          description="A página Escola está disponível apenas para o plano Grupo Escolar. Faça upgrade para gerenciar sua instituição educacional."
-          icon="school"
-          onUpgrade={openUpgradeModal}
-        >
-          <div className="p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Gestão Escolar</h2>
-            <p className="text-gray-600">Recursos administrativos para sua escola</p>
-          </div>
-        </PageBlockedOverlay>
-      );
+      return <Navigate to="/assinatura" replace />;
     }
     return element;
   };
@@ -219,20 +198,21 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50 w-full flex flex-col">
       <Sidebar />
-      <div className="md:ml-64 min-h-screen flex flex-col">
+      <div className="md:ml-64 min-h-screen flex flex-col flex-1 h-full overflow-y-auto">
         <Header title={getPageTitle()} />
         <div className="flex-1">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={requireAuth(<Dashboard />)} />
             <Route path="/materiais" element={requireAuth(<MaterialsList />)} />
             <Route path="/criar" element={requireAuth(<CreateLesson />)} />
             <Route path="/agenda" element={requireAuth(<CalendarPage />)} />
-            <Route path="/escola" element={requireAuth(<SchoolPage />)} />
+            <Route path="/escola" element={requireSchool(<SchoolPage />)} />
             <Route path="/perfil" element={requireAuth(<ProfilePage />)} />
-            <Route path="/assinatura" element={<SubscriptionPage />} />
+            <Route path="/assinatura" element={requireAuth(<SubscriptionPage />)} />
             <Route path="/configuracoes" element={requireAdmin(<div className="p-4"><h2>Configurações - Em desenvolvimento</h2></div>)} />
             <Route path="/api-keys" element={requireAdmin(<div className="p-4"><h2>Chaves de API - Em desenvolvimento</h2></div>)} />
             <Route path="/material/:id" element={requireAuth(<MaterialViewer />)} />
+            <Route path="*" element={<Navigate to={user ? "/" : "/landing"} replace />} />
           </Routes>
         </div>
         <Footer />
@@ -242,6 +222,7 @@ const Index = () => {
         isOpen={showFirstAccessModal}
         onClose={closeFirstAccessModal}
         onComplete={completeFirstAccess}
+        initialName={user?.user_metadata?.full_name || user?.user_metadata?.name || ''}
       />
       <UpgradeModal
         isOpen={isUpgradeModalOpen}

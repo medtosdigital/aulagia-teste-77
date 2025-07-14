@@ -18,11 +18,13 @@ interface FirstAccessModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (userInfo: UserInfo) => void;
+  initialName?: string;
 }
 const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
   isOpen,
   onClose,
-  onComplete
+  onComplete,
+  initialName = ''
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [userInfo, setUserInfo] = useState<UserInfo>({
@@ -31,7 +33,7 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
     subjects: [],
     school: '',
     materialTypes: [],
-    name: 'Professor(a)',
+    name: initialName || 'Professor(a)',
     celular: ''
   });
   const [cellError, setCellError] = useState<string | null>(null);
@@ -319,6 +321,12 @@ const FirstAccessModal: React.FC<FirstAccessModalProps> = ({
     }
   };
   const currentTourStep = tourSteps[currentStep];
+  // Se o initialName mudar (ex: login social), atualizar o campo nome
+  React.useEffect(() => {
+    if (initialName && userInfo.name === 'Professor(a)') {
+      setUserInfo((prev) => ({ ...prev, name: initialName }));
+    }
+  }, [initialName]);
   return <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="w-[90vw] sm:w-full sm:max-w-lg max-h-[85vh] overflow-y-auto p-0 border-0 shadow-2xl rounded-2xl bg-white">
         <DialogHeader>
