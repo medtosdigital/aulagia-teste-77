@@ -34,7 +34,7 @@ const LoginPage = () => {
   // Redirect if user is already logged in
   useEffect(() => {
     if (user) {
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     }
     // Pré-preencher e-mail e plano se vierem na URL
     const params = new URLSearchParams(location.search);
@@ -58,7 +58,7 @@ const LoginPage = () => {
     if (error) {
       setError(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
     } else {
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     }
     
     setLoading(false);

@@ -71,6 +71,7 @@ function App() {
                 <Route path="/aviso-ia" element={<AvisoIA />} />
                 <Route path="/central-de-ajuda" element={<CentralDeAjuda />} />
                 <Route path="/contato" element={<Contato />} />
+                {/* Proteger todas as rotas do dashboard e subpáginas */}
                 <Route path="/dashboard/*" element={
                   <ProtectedRoute>
                     <DashboardPage />

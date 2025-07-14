@@ -152,24 +152,25 @@ const DashboardPage = () => {
   };
 
   // Função para proteger rotas que exigem login
-  const requireAuth = (element: React.ReactNode) => {
-    if (!user) {
-      return (
-        <PageBlockedOverlay
-          title="Acesso Restrito"
-          description="Você precisa estar logado para acessar esta página."
-          icon="lock"
-          onUpgrade={() => {}}
-        >
-          <div className="p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Acesso Restrito</h2>
-            <p className="text-gray-600">Faça login para continuar.</p>
-          </div>
-        </PageBlockedOverlay>
-      );
-    }
-    return element;
-  };
+  // (REMOVIDA pois já está protegida pelo ProtectedRoute)
+  // const requireAuth = (element: React.ReactNode) => {
+  //   if (!user) {
+  //     return (
+  //       <PageBlockedOverlay
+  //         title="Acesso Restrito"
+  //         description="Você precisa estar logado para acessar esta página."
+  //         icon="lock"
+  //         onUpgrade={() => {}}
+  //       >
+  //         <div className="p-8 text-center">
+  //           <h2 className="text-2xl font-bold text-gray-800 mb-4">Acesso Restrito</h2>
+  //           <p className="text-gray-600">Faça login para continuar.</p>
+  //         </div>
+  //       </PageBlockedOverlay>
+  //     );
+  //   }
+  //   return element;
+  // };
 
   // Função para proteger rotas administrativas
   const requireAdmin = (element: React.ReactNode) => {
@@ -226,15 +227,15 @@ const DashboardPage = () => {
         <div className="flex-1">
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/materiais" element={requireAuth(<MaterialsList />)} />
-            <Route path="/criar" element={requireAuth(<CreateLesson />)} />
-            <Route path="/agenda" element={requireAuth(<CalendarPage />)} />
-            <Route path="/escola" element={requireAuth(<SchoolPage />)} />
-            <Route path="/perfil" element={requireAuth(<ProfilePage />)} />
+            <Route path="/materiais" element={<MaterialsList />} />
+            <Route path="/criar" element={<CreateLesson />} />
+            <Route path="/agenda" element={<CalendarPage />} />
+            <Route path="/escola" element={<SchoolPage />} />
+            <Route path="/perfil" element={<ProfilePage />} />
             <Route path="/assinatura" element={<SubscriptionPage />} />
             <Route path="/configuracoes" element={requireAdmin(<div className="p-4"><h2>Configurações - Em desenvolvimento</h2></div>)} />
             <Route path="/api-keys" element={requireAdmin(<div className="p-4"><h2>Chaves de API - Em desenvolvimento</h2></div>)} />
-            <Route path="/material/:id" element={requireAuth(<MaterialViewer />)} />
+            <Route path="/material/:id" element={<MaterialViewer />} />
           </Routes>
         </div>
         <Footer />
