@@ -1,12 +1,27 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, CheckCircle, Users, Clock, Download, Sparkles, Play, ArrowRight, Star, FileText, Presentation, Menu, X, XCircle, Crown, GraduationCap, ClipboardList } from 'lucide-react';
+import { BookOpen, CheckCircle, Users, Clock, Download, Sparkles, Play, ArrowRight, Star, FileText, Presentation, Menu, X, XCircle, Crown, GraduationCap, ClipboardList, NotebookPen, FileCheck2, FileText as FileTextIcon, FileSpreadsheet, FileSignature } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// Definir o tipo Plan igual à SubscriptionPage
+interface Plan {
+  name: string;
+  id: string;
+  price: { monthly: number; yearly: number };
+  description: string;
+  features: string[];
+  materialTypes: string[];
+  limitations: string[];
+  highlight: boolean;
+  buttonText: string;
+  buttonStyle: string;
+  popular?: boolean;
+}
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -46,24 +61,30 @@ const LandingPage: React.FC = () => {
     return () => clearTimeout(typingTimeout);
   }, [charIndex, isDeleting, textIndex]);
 
-  const plans = [
+  // Substituir o bloco de definição dos planos para usar a mesma estrutura da SubscriptionPage
+  const plans: Plan[] = [
     {
       name: 'Gratuito',
-      price: 'R$ 0',
-      yearlyPrice: 'R$ 0',
-      period: '/mês',
+      id: 'gratuito',
+      price: { monthly: 0, yearly: 0 },
       description: 'Ideal para quem quer testar a plataforma',
       features: [
         '5 materiais por mês',
-        'Planos de Aula básicos',
-        'Atividades simples',
+        'Download em PDF',
         'Suporte básico',
         'Acesso aos templates básicos'
       ],
+      materialTypes: [
+        'Planos de Aula básicos',
+        'Atividades simples'
+      ],
       limitations: [
         'Sem download em Word/PPT',
+        '5 materiais por mês',
+        'Sem edição avançada',
         'Sem Slides Interativos',
-        'Sem Avaliações Personalizadas'
+        'Sem Avaliações Personalizadas',
+        'Sem acesso ao Calendário de aulas'
       ],
       highlight: false,
       buttonText: 'Começar Grátis',
@@ -71,18 +92,11 @@ const LandingPage: React.FC = () => {
     },
     {
       name: 'Professor',
-      price: 'R$ 29,90',
-      yearlyPrice: 'R$ 299,00',
-      period: '/mês',
-      yearlyPeriod: '/ano',
+      id: 'professor',
+      price: { monthly: 29.90, yearly: 299 },
       description: 'Para professores que querem mais recursos',
-      popular: true,
       features: [
         '50 materiais por mês',
-        'Planos de Aula completos',
-        'Slides interativos',
-        'Atividades diversificadas',
-        'Avaliações personalizadas',
         'Download em PDF, Word e PPT',
         'Edição completa de materiais',
         'Todos os templates disponíveis',
@@ -90,21 +104,27 @@ const LandingPage: React.FC = () => {
         'Calendário de aulas',
         'Histórico completo'
       ],
+      materialTypes: [
+        'Planos de Aula completos',
+        'Slides interativos',
+        'Atividades diversificadas',
+        'Avaliações personalizadas'
+      ],
+      limitations: [],
       highlight: true,
       buttonText: 'Assinar Agora',
-      buttonStyle: 'bg-blue-500 hover:bg-blue-600 text-white'
+      buttonStyle: 'bg-blue-500 hover:bg-blue-600 text-white',
+      popular: true
     },
     {
       name: 'Grupo Escolar',
-      price: 'R$ 89,90',
-      yearlyPrice: 'R$ 899,00',
-      period: '/mês',
-      yearlyPeriod: '/ano',
+      id: 'grupo-escolar',
+      price: { monthly: 89.90, yearly: 849 },
       description: 'Para grupos de professores e instituições de ensino',
       features: [
-        'Todos os recursos do plano Professor',
         'Até 5 professores',
         '300 materiais por mês (total)',
+        'Todos os recursos do plano Professor',
         'Dashboard de gestão colaborativa',
         'Compartilhamento de materiais entre professores',
         'Relatórios detalhados de uso',
@@ -113,37 +133,39 @@ const LandingPage: React.FC = () => {
         'Controle de permissões',
         'Distribuição flexível de materiais entre professores'
       ],
+      materialTypes: [],
+      limitations: [],
       highlight: false,
       buttonText: 'Assinar Agora',
       buttonStyle: 'bg-green-500 hover:bg-green-600 text-white'
-    },
+    }
   ];
 
   const materialTypes = [
     {
       name: 'Planos de Aula',
-      icon: <BookOpen className="w-8 h-8 md:w-12 md:h-12" />,
+      icon: <NotebookPen className="w-8 h-8 md:w-12 md:h-12" />, // Livro com caneta
       description: 'Estruture aulas completas alinhadas à BNCC, com objetivos, conteúdos e metodologias detalhadas.',
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50'
     },
     {
       name: 'Slides Interativos',
-      icon: <Sparkles className="w-8 h-8 md:w-12 md:h-12" />,
+      icon: <Presentation className="w-8 h-8 md:w-12 md:h-12" />, // Ícone de apresentação
       description: 'Apresentações visuais e interativas com design profissional e recursos pedagógicos avançados.',
       color: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50'
     },
     {
       name: 'Atividades Práticas',
-      icon: <Users className="w-8 h-8 md:w-12 md:h-12" />,
+      icon: <FileSignature className="w-8 h-8 md:w-12 md:h-12" />, // Livro com caneta/atividade
       description: 'Exercícios diversificados para praticar, revisar e fixar conteúdos com sua turma de forma eficaz.',
       color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50'
     },
     {
       name: 'Avaliações',
-      icon: <CheckCircle className="w-8 h-8 md:w-12 md:h-12" />,
+      icon: <FileCheck2 className="w-8 h-8 md:w-12 md:h-12" />, // Checklist/prova
       description: 'Crie provas, simulados e avaliações diagnósticas personalizadas de forma rápida e segura.',
       color: 'from-red-500 to-red-600',
       bgColor: 'bg-red-50'
@@ -204,20 +226,20 @@ const LandingPage: React.FC = () => {
     }
   ];
 
-  const getCurrentPrice = (plan: any) => {
-    if (plan.name === 'Gratuito') return plan.price;
-    return billingCycle === 'monthly' ? plan.price : plan.yearlyPrice;
+  // Corrigir tipos das funções:
+  const getCurrentPrice = (plan: Plan) => {
+    if (plan.id === 'gratuito') return 'R$ 0';
+    return billingCycle === 'monthly'
+      ? `R$ ${plan.price.monthly.toFixed(2).replace('.', ',')}`
+      : `R$ ${plan.price.yearly.toFixed(2).replace('.', ',')}`;
   };
-
-  const getCurrentPeriod = (plan: any) => {
-    if (plan.name === 'Gratuito') return plan.period;
-    return billingCycle === 'monthly' ? plan.period : plan.yearlyPeriod;
+  const getCurrentPeriod = (plan: Plan) => {
+    return '/mês';
   };
-
-  const getSavings = (plan: any) => {
-    if (plan.name === 'Gratuito' || !plan.yearlyPrice) return null;
-    const monthlyTotal = parseFloat(plan.price.replace('R$ ', '').replace(',', '.')) * 12;
-    const yearlyPrice = parseFloat(plan.yearlyPrice.replace('R$ ', '').replace(',', '.'));
+  const getSavings = (plan: Plan) => {
+    if (plan.id === 'gratuito' || !plan.price.yearly) return null;
+    const monthlyTotal = plan.price.monthly * 12;
+    const yearlyPrice = plan.price.yearly;
     const savings = monthlyTotal - yearlyPrice;
     return savings > 0 ? `Economize R$ ${savings.toFixed(2).replace('.', ',')} por ano` : null;
   };
@@ -614,72 +636,38 @@ const LandingPage: React.FC = () => {
                 <div className="mb-6">
                   <span className="text-2xl md:text-3xl font-bold text-gray-800">{getCurrentPrice(plan)}</span>
                   <span className="text-gray-500 text-sm">{getCurrentPeriod(plan)}</span>
+                  {/* Exibir valor mensal equivalente e meses grátis no anual */}
+                  {billingCycle === 'yearly' && (plan.id === 'professor' || plan.id === 'grupo-escolar') && (
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="block text-xs md:text-sm text-gray-500">
+                        ou R$ {(plan.price.yearly / 12).toFixed(2).replace('.', ',')}/mês
+                      </span>
+                      <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full font-medium">2 meses grátis</span>
+                    </div>
+                  )}
                 </div>
                 {/* Tipos de Materiais */}
+                {plan.materialTypes.length > 0 && (
                 <div className="mb-4">
                   <h4 className="font-semibold text-gray-800 mb-3 flex items-center text-sm">
                     <Presentation className="w-4 h-4 text-blue-600 mr-2" /> Tipos de Materiais
                   </h4>
                   <div className="space-y-2">
-                    {/* Planos de Aula */}
-                    {plan.name === 'Gratuito' ? (
-                      <div className="flex items-start"><GraduationCap className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Planos de Aula básicos</span></div>
-                    ) : (
-                      <div className="flex items-start">
-                        {plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? (
-                          <GraduationCap className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                        ) : (
-                          <GraduationCap className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                        )}
-                        <span className={plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>
-                          Planos de Aula completos
-                        </span>
+                      {plan.materialTypes.map((type, idx) => (
+                        <div key={idx} className="flex items-start">
+                          {/* Ícone por tipo, igual assinatura */}
+                          {type.includes('Plano') && <GraduationCap className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />}
+                          {type.includes('Slides') && <Presentation className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />}
+                          {type.includes('Atividades') && <ClipboardList className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />}
+                          {type.includes('Avalia') && <FileText className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />}
+                          <span className="text-gray-700 text-xs md:text-sm">{type}</span>
                       </div>
-                    )}
-                    {/* Slides interativos */}
-                    <div className="flex items-start">
-                      {plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? (
-                        <Presentation className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <Presentation className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                      )}
-                      <span className={plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>
-                        Slides interativos
-                      </span>
+                      ))}
                     </div>
-                    {/* Atividades diversificadas */}
-                    <div className="flex items-start">
-                      {plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? (
-                        <ClipboardList className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <ClipboardList className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                      )}
-                      <span className={plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>
-                        Atividades diversificadas
-                      </span>
                     </div>
-                    {/* Avaliações personalizadas */}
-                    <div className="flex items-start">
-                      {plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? (
-                        <FileText className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <FileText className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                      )}
-                      <span className={plan.name === 'Professor' || plan.name === 'Grupo Escolar' ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>
-                        Avaliações personalizadas
-                      </span>
-                    </div>
-                    {/* Atividades simples (só gratuito) */}
-                    {plan.name !== 'Gratuito' && (
-                      <div className="flex items-start">
-                        <ClipboardList className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-400 text-xs md:text-sm">Atividades simples</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {/* Bloco especial Grupo Escolar */}
-                {plan.name === 'Grupo Escolar' && (
+                )}
+                {/* Box azul especial para Grupo Escolar */}
+                {plan.id === 'grupo-escolar' && (
                   <div className="mb-4">
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4">
                       <h4 className="font-semibold text-blue-800 mb-2 flex items-center text-sm">
@@ -694,113 +682,20 @@ const LandingPage: React.FC = () => {
                     </div>
                   </div>
                 )}
-                {/* Benefícios e Limitações */}
+                {/* Lista de benefícios */}
                 <ul className="space-y-2 md:space-y-3 mb-6 flex-1">
-                  {/* 5 materiais por mês */}
-                  <li className="flex items-start">
-                    {plan.name === 'Gratuito' ? (
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start">
                       <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : (
+                      <span className="text-gray-700 text-xs md:text-sm">{feature}</span>
+                  </li>
+                  ))}
+                  {plan.limitations && plan.limitations.map((limitation, idx) => (
+                    <li key={idx} className="flex items-start">
                       <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
-                    )}
-                    <span className={plan.name === 'Gratuito' ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>5 materiais por mês</span>
+                      <span className="text-gray-400 text-xs md:text-sm">{limitation}</span>
                   </li>
-                  {/* Download em PDF */}
-                  <li className="flex items-start">
-                    {(plan.name === 'Gratuito' || plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
-                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
-                    )}
-                    <span className={(plan.name === 'Gratuito' || plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Download em PDF</span>
-                  </li>
-                  {/* Download em Word/PPT */}
-                  <li className="flex items-start">
-                    {(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
-                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
-                    )}
-                    <span className={(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Download em Word/PPT</span>
-                  </li>
-                  {/* Edição completa de materiais */}
-                  <li className="flex items-start">
-                    {(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
-                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
-                    )}
-                    <span className={(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Edição completa de materiais</span>
-                  </li>
-                  {/* Todos os templates disponíveis */}
-                  <li className="flex items-start">
-                    {(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
-                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
-                    )}
-                    <span className={(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Todos os templates disponíveis</span>
-                  </li>
-                  {/* Suporte básico/por e-mail/prioritário */}
-                  <li className="flex items-start">
-                    {plan.name === 'Gratuito' ? (
-                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : plan.name === 'Professor' ? (
-                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    )}
-                    <span className="text-gray-700 text-xs md:text-sm">
-                      {plan.name === 'Gratuito' ? 'Suporte básico' : plan.name === 'Professor' ? 'Suporte por e-mail' : 'Suporte prioritário'}
-                    </span>
-                  </li>
-                  {/* Calendário de aulas */}
-                  <li className="flex items-start">
-                    {(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
-                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
-                    )}
-                    <span className={(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Calendário de aulas</span>
-                  </li>
-                  {/* Histórico completo */}
-                  <li className="flex items-start">
-                    {(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? (
-                      <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span>
-                    )}
-                    <span className={(plan.name === 'Professor' || plan.name === 'Grupo Escolar') ? "text-gray-700 text-xs md:text-sm" : "text-gray-400 text-xs md:text-sm"}>Histórico completo</span>
-                  </li>
-                  {/* Itens exclusivos do Grupo Escolar */}
-                  {plan.name !== 'Grupo Escolar' && (
-                    <>
-                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Até 5 professores</span></li>
-                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">300 materiais por mês (total)</span></li>
-                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Todos os recursos do plano Professor</span></li>
-                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Dashboard de gestão colaborativa</span></li>
-                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Compartilhamento de materiais entre professores</span></li>
-                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Relatórios detalhados de uso</span></li>
-                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Suporte prioritário</span></li>
-                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Gestão centralizada de usuários</span></li>
-                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Controle de permissões</span></li>
-                      <li className="flex items-start"><span className="w-4 md:w-5 h-4 md:h-5 text-red-400 mr-2 mt-0.5 flex-shrink-0">×</span><span className="text-gray-400 text-xs md:text-sm">Distribuição flexível de materiais entre professores</span></li>
-                    </>
-                  )}
-                  {plan.name === 'Grupo Escolar' && (
-                    <>
-                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Até 5 professores</span></li>
-                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">300 materiais por mês (total)</span></li>
-                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Todos os recursos do plano Professor</span></li>
-                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Dashboard de gestão colaborativa</span></li>
-                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Compartilhamento de materiais entre professores</span></li>
-                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Relatórios detalhados de uso</span></li>
-                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Suporte prioritário</span></li>
-                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Gestão centralizada de usuários</span></li>
-                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Controle de permissões</span></li>
-                      <li className="flex items-start"><CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span className="text-gray-700 text-xs md:text-sm">Distribuição flexível de materiais entre professores</span></li>
-                    </>
-                  )}
+                  ))}
                 </ul>
                 <Button
                   onClick={() => navigate('/login')}
@@ -874,7 +769,6 @@ const LandingPage: React.FC = () => {
                 Transformando a educação com tecnologia e criatividade.
               </p>
             </div>
-            
             <div>
               <h4 className="font-semibold mb-4 text-sm md:text-base">Recursos</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
@@ -884,7 +778,6 @@ const LandingPage: React.FC = () => {
                 <li><a href="#" className="hover:text-white transition-colors">Avaliações</a></li>
               </ul>
             </div>
-            
             <div>
               <h4 className="font-semibold mb-4 text-sm md:text-base">Suporte</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
@@ -894,7 +787,6 @@ const LandingPage: React.FC = () => {
                 <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
               </ul>
             </div>
-            
             <div>
               <h4 className="font-semibold mb-4 text-sm md:text-base">Empresa</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
@@ -905,7 +797,6 @@ const LandingPage: React.FC = () => {
               </ul>
             </div>
           </div>
-          
           <div className="border-t border-gray-800 mt-6 md:mt-8 pt-6 md:pt-8 text-center text-gray-400">
             <p className="text-xs md:text-sm">&copy; 2025 AulagIA. Todos os direitos reservados.</p>
           </div>
@@ -930,20 +821,16 @@ const LandingPage: React.FC = () => {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        
         .animate-fade-in {
           animation: fade-in 0.8s ease-out forwards;
           opacity: 0;
         }
-        
         .animation-delay-300 {
           animation-delay: 300ms;
         }
-        
         html {
           scroll-behavior: smooth;
         }
-
         .blinking-cursor {
           animation: blink 1s steps(2, start) infinite;
         }

@@ -115,9 +115,6 @@ const Header: React.FC<HeaderProps> = ({
             <Bell className="w-5 h-5" />
           </Button>
           {/* Botão de feedback */}
-          <Button variant="ghost" size="icon" aria-label="Enviar feedback" onClick={() => window.dispatchEvent(new CustomEvent('openFeedbackModal'))}>
-            <HelpCircle className="w-5 h-5 text-primary-500" />
-          </Button>
           {/* User Menu - só mobile, apenas avatar */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders } from 'lucide-react';
+import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useFeedback } from '@/hooks/useFeedback';
 
 interface SidebarProps {
   activeItem?: string;
@@ -115,6 +117,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       window.removeEventListener('planChanged', handlePlanChanged);
     };
   }, []);
+
+  const isMobile = useIsMobile();
+  const { openFeedbackModal, showFeedbackModal } = useFeedback(currentPlan?.plano_ativo || 'gratuito', false);
 
   // Simplificados - apenas verificar se usuário está logado
   const mobileMenuItems = [{
@@ -321,6 +326,17 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>}
         </nav>
         
+        {/* Botão de Feedback chamativo (desktop) */}
+        <div className="px-4 pb-2">
+          <button
+            onClick={() => window.dispatchEvent(new Event('openFeedbackModal'))}
+            className="w-full flex items-center justify-center space-x-2 p-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold shadow-md hover:scale-105 transition-all mb-2"
+            style={{ fontSize: 16 }}
+          >
+            <MessageCircle size={20} className="mr-2" />
+            <span>Deixe sua opinião</span>
+          </button>
+        </div>
         {/* Footer */}
         <div className="p-4 border-t border-gray-200">
           <button onClick={handleLogout} className="w-full flex items-center justify-center space-x-2 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
@@ -366,6 +382,17 @@ const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
       </div>
+      {/* Botão flutuante de feedback no mobile */}
+      {isMobile && !showFeedbackModal && (
+        <button
+          onClick={() => window.dispatchEvent(new Event('openFeedbackModal'))}
+          className="fixed z-[999] right-4 bottom-20 md:hidden flex items-center px-4 py-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold shadow-lg hover:scale-105 transition-all"
+          style={{ fontSize: 16 }}
+        >
+          <MessageCircle size={22} className="mr-2" />
+          <span>Opinião</span>
+        </button>
+      )}
     </>;
 };
 
