@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -70,15 +69,15 @@ function NotFoundRedirect() {
 
 function App() {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
         <AuthProvider>
           <PresentationProvider>
-            <TooltipProvider>
-              <Toaster />
-              <PresentationPortal />
-              <Router>
-                <ScrollToTop />
+            <Toaster />
+            <PresentationPortal />
+            <Router>
+              <ScrollToTop />
+              <ErrorBoundary>
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/termos-de-servico" element={<TermosDeServico />} />
@@ -91,12 +90,12 @@ function App() {
                   <Route path="/*" element={<Index />} />
                   <Route path="*" element={<NotFoundRedirect />} />
                 </Routes>
-              </Router>
-            </TooltipProvider>
+              </ErrorBoundary>
+            </Router>
           </PresentationProvider>
         </AuthProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
