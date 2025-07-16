@@ -55,6 +55,27 @@ class UserMaterialsService {
     };
   }
 
+  async getMaterialPrincipalInfo(materialId: string): Promise<{ tipo: string, titulo: string } | null> {
+    try {
+      // Search in all material tables
+      for (const [tipo, tableName] of Object.entries(TABLE_MAPPING)) {
+        const { data, error } = await supabase
+          .from(tableName)
+          .select('titulo')
+          .eq('id', materialId)
+          .single();
+        
+        if (data && !error) {
+          return { tipo, titulo: data.titulo };
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting material principal info:', error);
+      return null;
+    }
+  }
+
   async getMaterialsByUser(userId?: string): Promise<UserMaterial[]> {
     try {
       // Always get current authenticated user - ignore passed userId for security
@@ -424,3 +445,8 @@ class UserMaterialsService {
 }
 
 export const userMaterialsService = new UserMaterialsService();
+
+// Helper function to get material principal info
+export const getMaterialPrincipalInfo = async (materialId: string): Promise<{ tipo: string, titulo: string } | null> => {
+  return userMaterialsService.getMaterialPrincipalInfo(materialId);
+};

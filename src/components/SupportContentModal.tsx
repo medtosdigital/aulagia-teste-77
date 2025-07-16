@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, FileText, Download, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,12 +16,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { GeneratedMaterial } from '@/services/materialService';
 import { toast } from 'sonner';
-import jsPDF from 'jspdf';
 import { supabasePlanService } from '@/services/supabasePlanService';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { templateService } from '@/services/templateService';
-import { marked } from 'marked';
 
 interface SupportContentModalProps {
   material: GeneratedMaterial | null;
@@ -78,9 +76,9 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
       const tema = material.content.tema || material.content.topic || material.title || '';
       const disciplina = material.content.disciplina || material.content.subject || material.subject || '';
       const turma = material.content.serie || material.content.grade || material.grade || '';
-      const prompt = undefined; // prompt agora é gerado no edge function
       const titulo = material.content.titulo || material.title || '';
       const objetivos = material.content.objetivos || '';
+      
       // Definir tipo do material principal de forma robusta
       let tipo_material_principal = 'plano_aula';
       if (material.content && typeof material.content === 'object') {
@@ -88,6 +86,7 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
       } else if (material.type) {
         tipo_material_principal = material.type;
       }
+      
       const { data, error } = await supabase.functions.invoke('gerarMaterialIA', {
         body: {
           materialType: 'apoio',
@@ -102,6 +101,7 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
           }
         }
       });
+      
       if (error || !data || !data.success) {
         console.error('Erro na função gerarMaterialIA:', error, data);
         toast.error('Erro ao gerar conteúdo de apoio');
@@ -109,11 +109,14 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
         setIsGenerating(false);
         return;
       }
+      
       const conteudoApoio = data.content && typeof data.content === 'string' ? data.content : JSON.stringify(data.content, null, 2);
+      
       // Salvar no Supabase
       const disciplinaApoio = material.content.disciplina || material.content.subject || material.subject || '';
       const temaApoio = material.content.tema || material.content.topic || material.title || '';
       const turmaApoio = material.content.serie || material.content.grade || material.grade || '';
+      
       const { error: insertError } = await supabase.from('materiais_apoio').insert([
         {
           titulo: titulo || `Apoio - ${tema}`,
@@ -125,6 +128,7 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
           turma: turmaApoio
         }
       ]);
+      
       if (insertError) {
         console.error('Erro ao inserir no Supabase:', insertError);
         toast.error('Erro ao salvar conteúdo de apoio no banco de dados');
@@ -132,6 +136,7 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
         setIsGenerating(false);
         return;
       }
+      
       setSupportContent(conteudoApoio);
       toast.success('Conteúdo de apoio gerado e salvo com sucesso!');
       // Atualizar lista de apoios
@@ -145,55 +150,66 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
     }
   };
 
-  const renderSupportHtml = () => {
-    if (!supportContent || !material) return '';
-    const tema = material.content.tema || material.content.topic || material.title || '';
-    const disciplina = material.content.disciplina || material.content.subject || material.subject || '';
-    const serie = material.content.serie || material.content.grade || material.grade || '';
-    const data = new Date().toLocaleDateString('pt-BR');
-    // Converter markdown para HTML
-    let conteudoHtml = supportContent;
-    try {
-      const parsed = marked.parse(supportContent);
-      if (typeof parsed === 'string') conteudoHtml = parsed;
-    } catch {}
-    return String(templateService.renderTemplate('5', {
-      titulo: 'Conteúdo de Apoio ao Professor',
-      tema,
-      disciplina,
-      serie,
-      conteudo: conteudoHtml,
-      data
-    }) || '');
+  // Função para visualizar apoio existente
+  const handleViewApoio = (apoio: any) => {
+    setSupportContent(apoio.conteudo);
   };
 
-  const generateSupportContentPDF = () => {
+  // Função para baixar PDF usando html2pdf
+  const handleDownloadPDF = () => {
     if (!supportContent || !material) return;
-    const html = renderSupportHtml();
-    // Usar html2pdf.js para exportar o HTML fiel ao template
+    
+    // Create a simple HTML structure for the PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Conteúdo de Apoio - ${material.title}</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+          h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
+          h2 { color: #555; }
+          p { margin-bottom: 12px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .content { margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Conteúdo de Apoio ao Professor</h1>
+          <p><strong>Material:</strong> ${material.title}</p>
+          <p><strong>Disciplina:</strong> ${material.subject} | <strong>Série:</strong> ${material.grade}</p>
+          <p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+        </div>
+        <div class="content">
+          ${supportContent.replace(/\n/g, '<br/>')}
+        </div>
+      </body>
+      </html>
+    `;
+    
+    // Use html2pdf to generate and download the PDF
     import('html2pdf.js').then(html2pdf => {
-      html2pdf.default().from(html).set({
-        margin: 0,
-        filename: 'conteudo-apoio.pdf',
-        html2canvas: { scale: 2 },
+      const element = document.createElement('div');
+      element.innerHTML = htmlContent;
+      
+      html2pdf.default().from(element).set({
+        margin: [15, 15, 15, 15],
+        filename: `conteudo-apoio-${material.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).save();
+      }).save().then(() => {
+        toast.success('PDF baixado com sucesso!');
+      }).catch((error: any) => {
+        console.error('Error generating PDF:', error);
+        toast.error('Erro ao gerar PDF');
+      });
+    }).catch((error) => {
+      console.error('Error loading html2pdf:', error);
+      toast.error('Erro ao carregar biblioteca de PDF');
     });
-    toast.success('PDF do conteúdo de apoio baixado com sucesso!');
-  };
-
-  const handlePrint = () => {
-    if (!supportContent || !material) return;
-    const html = renderSupportHtml();
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(html);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => {
-        printWindow.print();
-      }, 500);
-    }
   };
 
   // Função para excluir apoio
@@ -220,63 +236,125 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Conteúdo de Apoio</DialogTitle>
-          <button className="absolute right-4 top-4" onClick={onClose}><X size={20} /></button>
-        </DialogHeader>
-        <div className="mb-3 text-sm text-gray-700">
-          Gere um conteúdo de apoio didático para o tema deste material, explicando e ensinando o assunto de forma clara e acessível para o aluno.
-        </div>
-        <Button onClick={generateSupportContent} disabled={isGenerating || !!supportContent} className="w-full mb-2" variant="outline">
-          {isGenerating ? 'Gerando...' : 'Gerar Conteúdo de Apoio'}
-          <span className="ml-2 text-xs text-red-500 font-semibold">-1 Crédito</span>
-        </Button>
-        {/* Lista de apoios já criados */}
-        <div className="font-semibold text-gray-700 mb-1">Materiais de Apoio já criados:</div>
-        {loadingApoios ? (
-          <span className="text-xs text-gray-500">Carregando...</span>
-        ) : apoios.length === 0 ? (
-          <span className="text-xs text-gray-400">Nenhum material de apoio criado ainda.</span>
-        ) : (
-          <ul className="space-y-2">
-            {apoios.map(apoio => (
-              <li key={apoio.id} className="bg-gray-50 border border-gray-200 rounded px-3 py-2 flex flex-col">
+    <>
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Conteúdo de Apoio</span>
+              <button className="p-1 hover:bg-gray-100 rounded" onClick={onClose}>
+                <X className="w-4 h-4" />
+              </button>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto space-y-4">
+            <div className="text-sm text-gray-700 bg-blue-50 p-3 rounded-lg">
+              Gere um conteúdo de apoio didático para o tema deste material, explicando e ensinando o assunto de forma clara e acessível para o aluno.
+            </div>
+            
+            <Button 
+              onClick={generateSupportContent} 
+              disabled={isGenerating} 
+              className="w-full" 
+              variant="outline"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Gerando...
+                </>
+              ) : (
+                'Gerar Novo Conteúdo de Apoio'
+              )}
+              <span className="ml-2 text-xs text-red-500 font-semibold">-1 Crédito</span>
+            </Button>
+            
+            {/* Lista de apoios já criados */}
+            <div className="space-y-2">
+              <div className="font-semibold text-gray-700">Materiais de Apoio já criados:</div>
+              {loadingApoios ? (
+                <span className="text-xs text-gray-500">Carregando...</span>
+              ) : apoios.length === 0 ? (
+                <span className="text-xs text-gray-400">Nenhum material de apoio criado ainda.</span>
+              ) : (
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {apoios.map(apoio => (
+                    <div key={apoio.id} className="bg-gray-50 border border-gray-200 rounded px-3 py-2 flex flex-col">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm text-gray-800 flex items-center gap-2">
+                          <span className="inline-block bg-orange-200 text-orange-700 rounded px-2 py-0.5 text-xs font-semibold">Conteúdo de Apoio</span>
+                          <span className="text-xs text-gray-400 ml-2">
+                            {apoio.created_at ? new Date(apoio.created_at).toLocaleDateString('pt-BR') : ''}
+                          </span>
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => handleViewApoio(apoio)}>
+                            <FileText className="w-4 h-4 mr-1" /> Visualizar
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => handleDeleteApoio(apoio)} 
+                            title="Excluir" 
+                            className="text-red-500 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-500 mt-1">Vinculado a este material</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Conteúdo de apoio gerado/visualizado */}
+            {supportContent && (
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm text-gray-800 flex items-center gap-2">
-                    <span className="inline-block bg-gray-300 text-gray-700 rounded px-2 py-0.5 text-xs font-semibold">Conteúdo de Apoio</span>
-                    <span className="text-xs text-gray-400 ml-2">{apoio.created_at ? new Date(apoio.created_at).toLocaleDateString('pt-BR') : ''}</span>
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => setSupportContent(apoio.conteudo)}>
-                      <FileText className="w-4 h-4 mr-1" /> Visualizar
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleDeleteApoio(apoio)} title="Excluir" className="text-red-500 hover:bg-red-50">
-                      <span className="sr-only">Excluir</span>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                  <h3 className="font-semibold text-gray-800">Conteúdo de Apoio</h3>
+                  <Button 
+                    onClick={handleDownloadPDF} 
+                    size="sm" 
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Baixar PDF
+                  </Button>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto">
+                  <div 
+                    className="prose prose-sm max-w-none"
+                    style={{ whiteSpace: 'pre-wrap' }}
+                  >
+                    {supportContent}
                   </div>
                 </div>
-                <span className="text-xs text-gray-500 mt-1">Vinculado a este material</span>
-              </li>
-            ))}
-          </ul>
-        )}
-        {isGenerating && (
-          <div className="flex flex-col items-center justify-center py-6">
-            <Loader2 className="animate-spin text-blue-500 mb-2" size={32} />
-            <span className="text-sm text-gray-600">Aguarde, gerando conteúdo de apoio...</span>
+              </div>
+            )}
           </div>
-        )}
-        {supportContent && (
-          <Button onClick={handlePrint} className="w-full mt-3" variant="secondary">
-            <Download size={16} className="mr-2" /> Baixar PDF
-          </Button>
-        )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este material de apoio? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteApoio}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
-export default SupportContentModal; 
+export default SupportContentModal;
