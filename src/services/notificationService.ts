@@ -18,6 +18,28 @@ export interface Notification {
 }
 
 class NotificationService {
+  async uploadImage(file: File): Promise<string> {
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}-${file.name}`;
+    
+    const { data, error } = await supabase.storage
+      .from('notificacoes')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+    
+    if (error) {
+      console.error('Erro no upload da imagem:', error);
+      throw new Error('Falha ao fazer upload da imagem');
+    }
+    
+    const { data: publicUrlData } = supabase.storage
+      .from('notificacoes')
+      .getPublicUrl(fileName);
+    
+    return publicUrlData.publicUrl;
+  }
+
   async createNotification(titulo: string, mensagem: string, criada_por: string, icon?: string, image_url?: string) {
     const { data, error } = await supabase.from('notificacoes').insert([
       { titulo, mensagem, criada_por, icon, image_url } 
@@ -77,4 +99,4 @@ class NotificationService {
   }
 }
 
-export const notificationService = new NotificationService(); 
+export const notificationService = new NotificationService();

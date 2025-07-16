@@ -9,11 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Save, Users, UserCheck, UserX, MessageSquare, Calendar, Edit3, X, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
+import { notificationService } from '@/services/notificationService';
 
 interface NotificationDetailsModalProps {
   open: boolean;
@@ -68,20 +67,8 @@ export default function NotificationDetailsModal({
     
     setUploading(true);
     try {
-      const fileName = `${Date.now()}-${file.name}`;
-      const { data, error } = await supabase.storage
-        .from('notificacoes')
-        .upload(fileName, file, { upsert: true });
-      
-      if (error) throw error;
-      
-      const { data: publicUrlData } = supabase.storage
-        .from('notificacoes')
-        .getPublicUrl(fileName);
-      
-      if (publicUrlData?.publicUrl) {
-        setImageUrl(publicUrlData.publicUrl);
-      }
+      const uploadedUrl = await notificationService.uploadImage(file);
+      setImageUrl(uploadedUrl);
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
     } finally {

@@ -8,7 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Bell, Save, Upload, X, Image as ImageIcon, Smile } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { notificationService } from '@/services/notificationService';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface CreateNotificationModalProps {
@@ -53,22 +53,11 @@ export default function CreateNotificationModal({
     
     setUploading(true);
     try {
-      const fileName = `${Date.now()}-${file.name}`;
-      const { data, error } = await supabase.storage
-        .from('notificacoes')
-        .upload(fileName, file, { upsert: true });
-      
-      if (error) throw error;
-      
-      const { data: publicUrlData } = supabase.storage
-        .from('notificacoes')
-        .getPublicUrl(fileName);
-      
-      if (publicUrlData?.publicUrl) {
-        setImageUrl(publicUrlData.publicUrl);
-      }
+      const uploadedUrl = await notificationService.uploadImage(file);
+      setImageUrl(uploadedUrl);
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
+      // Você pode adicionar um toast de erro aqui
     } finally {
       setUploading(false);
     }
@@ -254,13 +243,13 @@ export default function CreateNotificationModal({
               type="button"
               variant="outline"
               onClick={handleClose}
-              disabled={saving}
+              disabled={saving || uploading}
             >
               Cancelar
             </Button>
             <Button
               onClick={handleSave}
-              disabled={!title.trim() || !message.trim() || saving}
+              disabled={!title.trim() || !message.trim() || saving || uploading}
               className="min-w-[120px]"
             >
               {saving ? (
