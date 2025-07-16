@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
@@ -67,7 +66,8 @@ serve(async (req) => {
     const prompt = generatePrompt(materialType, formData);
     console.log('🎯 Generated prompt for', materialType);
 
-    // Call OpenAI API
+    // Call OpenAI API with increased token limit for support materials
+    const maxTokens = materialType === 'apoio' ? 6000 : 4000;
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -87,7 +87,7 @@ serve(async (req) => {
           }
         ],
         temperature: 0.7,
-        max_tokens: 4000,
+        max_tokens: maxTokens,
       }),
     });
 
@@ -119,6 +119,7 @@ serve(async (req) => {
       const turma = formData.serie || formData.grade || '';
       const titulo = structuredContent.titulo || `Material de Apoio - ${tema}`;
       const materialPrincipalId = formData.material_principal_id || null;
+      
       const { data: insertData, error: insertError } = await supabase
         .from('materiais_apoio')
         .insert([{
@@ -126,16 +127,18 @@ serve(async (req) => {
           tema,
           disciplina,
           turma,
-          conteudo: JSON.stringify(structuredContent),
+          conteudo: structuredContent.conteudo_completo || JSON.stringify(structuredContent),
           titulo,
           material_principal_id: materialPrincipalId
         }])
         .select('id')
         .single();
+        
       if (insertError) {
         console.error('Erro ao salvar material de apoio:', insertError);
       } else {
         apoioId = insertData?.id;
+        console.log('✅ Material de apoio salvo com ID:', apoioId);
       }
     }
 
@@ -174,43 +177,100 @@ function generatePrompt(materialType: string, formData: MaterialFormData): strin
 
   if (materialType === 'apoio') {
     return `
-Crie um Material de Apoio ao Professor RELACIONADO ao material principal de título: ${tituloMaterialPrincipal}, tema: ${tema}, disciplina: ${disciplina}, turma: ${serie}.
+Você é um especialista em pedagogia e formação de professores. Crie um Material de Apoio COMPLETO e DETALHADO para professores, relacionado ao material principal de título: "${tituloMaterialPrincipal}", tema: "${tema}", disciplina: "${disciplina}", turma: "${serie}".
 
-Este material de apoio deve complementar e aprofundar o conteúdo do material principal, servindo como uma base teórica e prática para que o professor compreenda melhor o conteúdo antes de ministrar a aula.
+OBJETIVO: Este material de apoio deve servir como uma base teórica e prática ABRANGENTE para que o professor compreenda melhor o conteúdo antes de ministrar a aula, fornecendo fundamentos pedagógicos, estratégias didáticas e recursos complementares.
 
-No texto introdutório, cite explicitamente que este material de apoio foi gerado para complementar o material principal de título "${tituloMaterialPrincipal}", tema "${tema}", disciplina "${disciplina}", turma "${serie}".
+INSTRUÇÕES ESPECÍFICAS:
+- No texto introdutório, cite EXPLICITAMENTE que este material de apoio foi gerado para complementar o material principal de título "${tituloMaterialPrincipal}", tema "${tema}", disciplina "${disciplina}", turma "${serie}".
+- Se disponível, utilize os objetivos do material principal: ${objetivosMaterialPrincipal}
+- Seja DETALHADO e ESPECÍFICO em cada seção
+- Use linguagem técnica mas acessível ao professor
+- Inclua exemplos práticos e situações reais de sala de aula
+- Forneça referências em formato ABNT
 
-Se possível, utilize também os objetivos do material principal: ${objetivosMaterialPrincipal}.
+🧩 ESTRUTURA OBRIGATÓRIA DO MATERIAL DE APOIO:
 
-Estruture o material com os seguintes tópicos:
+## 1. Introdução ao ${tema}
+- Contextualização do tema "${tema}" no currículo de ${disciplina} para ${serie}
+- Importância e relevância do conteúdo para o desenvolvimento dos alunos
+- Conexão com conhecimentos prévios e próximos passos curriculares
+- Relação com o material principal "${tituloMaterialPrincipal}"
 
-Tópicos do Material de Apoio
-1. Introdução ao ${tema}
-- Breve explicação sobre o tema da aula.
-- Relevância do conteúdo para o desenvolvimento dos alunos.
+## 2. Objetivos de Aprendizagem
+- Objetivos específicos para o tema "${tema}"
+- Competências e habilidades da BNCC relacionadas
+- Resultados esperados ao final da abordagem do tema
 
-2. Contextualização Teórica
-- Conceitos-chave explicados de forma clara.
-- Exemplos práticos do tema na vida cotidiana ou no contexto escolar.
+## 3. Contextualização Teórica
+- Fundamentos teóricos do tema "${tema}"
+- Conceitos-chave explicados de forma clara e didática
+- Teorias pedagógicas aplicáveis ao ensino do tema
+- Exemplos práticos do tema na vida cotidiana dos alunos
 
-3. Dicas Pedagógicas para Abordar o Tema em Sala
-- Sugestões de estratégias, metodologias e abordagens didáticas.
-- Cuidados importantes ou dificuldades comuns dos alunos ao aprender esse conteúdo.
+## 4. Dicas Pedagógicas para Abordar o Tema em Sala
+- Estratégias metodológicas específicas para o tema
+- Sequências didáticas sugeridas
+- Formas de despertar o interesse dos alunos
+- Técnicas para verificar a compreensão
+- Cuidados importantes e dificuldades comuns dos alunos
+- Adaptações para diferentes ritmos de aprendizagem
 
-4. Sugestões de Recursos Complementares
-- Indicação de vídeos, artigos, sites, jogos, textos ou imagens que podem ser utilizados na aula.
+## 5. Sugestões de Recursos Complementares
+- Vídeos educativos (com links ou títulos específicos)
+- Artigos e textos de apoio
+- Sites educacionais confiáveis
+- Jogos e atividades lúdicas
+- Materiais manipuláveis e recursos visuais
+- Aplicativos ou ferramentas digitais
 
-5. Sugestões de Atividades
-- Ideias de atividades práticas, dinâmicas ou exercícios que o professor pode aplicar.
-- Indique o tipo de atividade (exploratória, avaliativa, colaborativa, etc.).
+## 6. Sugestões de Atividades Práticas
+- Atividades exploratórias para introdução do tema
+- Exercícios de fixação e aprofundamento
+- Atividades colaborativas e em grupo
+- Propostas de avaliação formativa
+- Projetos interdisciplinares relacionados ao tema
+- Atividades para casa que reforcem o aprendizado
 
-6. Possíveis Perguntas para Discussão
-- Sugestões de perguntas para estimular a reflexão e o debate entre os alunos.
+## 7. Possíveis Perguntas para Discussão
+- Questões para estimular reflexão crítica
+- Perguntas que conectam o tema com a realidade dos alunos
+- Questionamentos para debate em sala de aula
+- Perguntas que desenvolvem o pensamento científico/analítico
 
-7. Referências Utilizadas
-- Lista de fontes usadas para construir o material (artigos, sites, livros, BNCC, etc.). Faça em formato ABNT
+## 8. Avaliação e Acompanhamento
+- Critérios para avaliar a compreensão do tema
+- Indicadores de aprendizagem a observar
+- Estratégias de recuperação para alunos com dificuldades
+- Formas de feedback construtivo
 
-Retorne APENAS o JSON estruturado com os tópicos acima, preenchido com conteúdo REAL e ESPECÍFICO sobre o tema "${tema}" e sempre referenciando o material principal.
+## 9. Referências Utilizadas
+- Bibliografia em formato ABNT
+- Fontes digitais confiáveis
+- Documentos oficiais (BNCC, PCNs, etc.)
+- Artigos científicos na área educacional
+
+IMPORTANTE: Retorne APENAS um JSON estruturado no seguinte formato:
+
+{
+  "titulo": "Material de Apoio - ${tema}",
+  "tema": "${tema}",
+  "disciplina": "${disciplina}",
+  "serie": "${serie}",
+  "material_principal": "${tituloMaterialPrincipal}",
+  "introducao": "[TEXTO COMPLETO da introdução ao tema]",
+  "objetivos_aprendizagem": "[TEXTO COMPLETO dos objetivos de aprendizagem]",
+  "contextualizacao_teorica": "[TEXTO COMPLETO da contextualização teórica]",
+  "dicas_pedagogicas": "[TEXTO COMPLETO das dicas pedagógicas]",
+  "recursos_complementares": "[TEXTO COMPLETO dos recursos complementares]",
+  "atividades_praticas": "[TEXTO COMPLETO das atividades práticas]",
+  "perguntas_discussao": "[TEXTO COMPLETO das perguntas para discussão]",
+  "avaliacao_acompanhamento": "[TEXTO COMPLETO da avaliação e acompanhamento]",
+  "referencias": "[TEXTO COMPLETO das referências em formato ABNT]",
+  "conteudo_completo": "[HTML FORMATADO com todo o conteúdo estruturado para visualização]"
+}
+
+GERE conteúdo REAL, ESPECÍFICO e DETALHADO sobre "${tema}" para ${disciplina} na ${serie}. NÃO use placeholders ou conteúdo genérico.
 `;
   }
 
@@ -788,6 +848,92 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsedContent = JSON.parse(jsonMatch[0]);
+      
+      // Processamento específico para Material de Apoio
+      if (materialType === 'apoio') {
+        // Garantir que todos os campos estejam preenchidos
+        const defaultContent = {
+          titulo: parsedContent.titulo || `Material de Apoio - ${formData.tema || formData.topic || 'Tema'}`,
+          tema: parsedContent.tema || formData.tema || formData.topic || '',
+          disciplina: parsedContent.disciplina || formData.disciplina || formData.subject || '',
+          serie: parsedContent.serie || formData.serie || formData.grade || '',
+          material_principal: parsedContent.material_principal || formData.titulo_material_principal || '',
+          introducao: parsedContent.introducao || '',
+          objetivos_aprendizagem: parsedContent.objetivos_aprendizagem || '',
+          contextualizacao_teorica: parsedContent.contextualizacao_teorica || '',
+          dicas_pedagogicas: parsedContent.dicas_pedagogicas || '',
+          recursos_complementares: parsedContent.recursos_complementares || '',
+          atividades_praticas: parsedContent.atividades_praticas || '',
+          perguntas_discussao: parsedContent.perguntas_discussao || '',
+          avaliacao_acompanhamento: parsedContent.avaliacao_acompanhamento || '',
+          referencias: parsedContent.referencias || ''
+        };
+
+        // Gerar HTML formatado para visualização
+        const htmlContent = `
+          <div class="material-apoio-content">
+            <div class="mb-6">
+              <h1 class="text-2xl font-bold text-blue-800 mb-2">${defaultContent.titulo}</h1>
+              <div class="text-sm text-gray-600 mb-4">
+                <strong>Tema:</strong> ${defaultContent.tema} | 
+                <strong>Disciplina:</strong> ${defaultContent.disciplina} | 
+                <strong>Série:</strong> ${defaultContent.serie}
+              </div>
+              ${defaultContent.material_principal ? `<div class="text-sm text-blue-600 mb-4"><strong>Material Principal:</strong> ${defaultContent.material_principal}</div>` : ''}
+            </div>
+
+            <div class="space-y-6">
+              <section>
+                <h2 class="text-lg font-semibold text-blue-700 mb-3 border-b border-blue-200 pb-1">🎯 Introdução ao Tema</h2>
+                <div class="prose text-gray-700">${defaultContent.introducao.replace(/\n/g, '<br>')}</div>
+              </section>
+
+              <section>
+                <h2 class="text-lg font-semibold text-blue-700 mb-3 border-b border-blue-200 pb-1">📚 Objetivos de Aprendizagem</h2>
+                <div class="prose text-gray-700">${defaultContent.objetivos_aprendizagem.replace(/\n/g, '<br>')}</div>
+              </section>
+
+              <section>
+                <h2 class="text-lg font-semibold text-blue-700 mb-3 border-b border-blue-200 pb-1">🧠 Contextualização Teórica</h2>
+                <div class="prose text-gray-700">${defaultContent.contextualizacao_teorica.replace(/\n/g, '<br>')}</div>
+              </section>
+
+              <section>
+                <h2 class="text-lg font-semibold text-blue-700 mb-3 border-b border-blue-200 pb-1">🎓 Dicas Pedagógicas para Sala de Aula</h2>
+                <div class="prose text-gray-700">${defaultContent.dicas_pedagogicas.replace(/\n/g, '<br>')}</div>
+              </section>
+
+              <section>
+                <h2 class="text-lg font-semibold text-blue-700 mb-3 border-b border-blue-200 pb-1">🛠️ Recursos Complementares</h2>
+                <div class="prose text-gray-700">${defaultContent.recursos_complementares.replace(/\n/g, '<br>')}</div>
+              </section>
+
+              <section>
+                <h2 class="text-lg font-semibold text-blue-700 mb-3 border-b border-blue-200 pb-1">⚡ Atividades Práticas</h2>
+                <div class="prose text-gray-700">${defaultContent.atividades_praticas.replace(/\n/g, '<br>')}</div>
+              </section>
+
+              <section>
+                <h2 class="text-lg font-semibold text-blue-700 mb-3 border-b border-blue-200 pb-1">💭 Perguntas para Discussão</h2>
+                <div class="prose text-gray-700">${defaultContent.perguntas_discussao.replace(/\n/g, '<br>')}</div>
+              </section>
+
+              <section>
+                <h2 class="text-lg font-semibold text-blue-700 mb-3 border-b border-blue-200 pb-1">📊 Avaliação e Acompanhamento</h2>
+                <div class="prose text-gray-700">${defaultContent.avaliacao_acompanhamento.replace(/\n/g, '<br>')}</div>
+              </section>
+
+              <section>
+                <h2 class="text-lg font-semibold text-blue-700 mb-3 border-b border-blue-200 pb-1">📖 Referências</h2>
+                <div class="prose text-gray-700">${defaultContent.referencias.replace(/\n/g, '<br>')}</div>
+              </section>
+            </div>
+          </div>
+        `;
+
+        defaultContent.conteudo_completo = htmlContent;
+        return defaultContent;
+      }
       
       // --- CORREÇÃO ESPECIAL PARA PLANO DE AULA ---
       if (materialType === 'plano-de-aula') {

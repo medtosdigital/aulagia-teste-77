@@ -1,3 +1,4 @@
+
 import { userMaterialsService, UserMaterial } from './userMaterialsService';
 import { supabase } from '@/integrations/supabase/client';
 import { QuestionParserService } from './questionParserService';
@@ -162,6 +163,56 @@ class MaterialService {
     } catch (error) {
       console.error('❌ Error in generateMaterial:', error);
       throw error;
+    }
+  }
+
+  // Função para gerar Material de Apoio
+  async generateSupportMaterial(materialPrincipalId: string, materialPrincipalData: any): Promise<{ success: boolean; apoioId?: string; error?: string }> {
+    console.log('🚀 Starting support material generation...');
+    
+    try {
+      // Obter dados do usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Preparar dados para o prompt
+      const formData = {
+        tema: materialPrincipalData.tema || '',
+        disciplina: materialPrincipalData.disciplina || '',
+        serie: materialPrincipalData.serie || '',
+        titulo_material_principal: materialPrincipalData.titulo || '',
+        objetivos_material_principal: Array.isArray(materialPrincipalData.objetivos) 
+          ? materialPrincipalData.objetivos.join(', ') 
+          : materialPrincipalData.objetivos || '',
+        user_id: user.id,
+        material_principal_id: materialPrincipalId
+      };
+
+      console.log('📞 Calling gerarMaterialIA Edge Function for support material...');
+      const { data, error } = await supabase.functions.invoke('gerarMaterialIA', {
+        body: {
+          materialType: 'apoio',
+          formData
+        }
+      });
+
+      if (error) {
+        console.error('❌ Edge Function error:', error);
+        return { success: false, error: `Erro ao gerar conteúdo: ${error.message}` };
+      }
+
+      if (!data || !data.success) {
+        console.error('❌ Invalid response from Edge Function:', data);
+        return { success: false, error: 'Resposta inválida do serviço de geração' };
+      }
+
+      console.log('✅ Support material generated successfully with ID:', data.apoioId);
+      return { success: true, apoioId: data.apoioId };
+    } catch (error) {
+      console.error('❌ Error in generateSupportMaterial:', error);
+      return { success: false, error: error.message };
     }
   }
 

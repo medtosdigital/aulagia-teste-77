@@ -87,17 +87,32 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
   const renderSupportHtml = () => {
     const data = new Date().toLocaleDateString('pt-BR');
     
-    // Convert markdown to HTML
+    // Processar conteúdo estruturado ou HTML
     let conteudoHtml = material.conteudo;
+    
     try {
-      const parsed = marked.parse(material.conteudo);
-      if (typeof parsed === 'string') conteudoHtml = parsed;
+      // Tentar parsear como JSON estruturado primeiro
+      const parsedContent = JSON.parse(material.conteudo);
+      if (parsedContent.conteudo_completo) {
+        conteudoHtml = parsedContent.conteudo_completo;
+      } else {
+        // Se não tem conteudo_completo, usar o conteúdo como está
+        conteudoHtml = material.conteudo;
+      }
     } catch (error) {
-      console.error('Error parsing markdown:', error);
+      // Se não for JSON, tratar como markdown/texto
+      try {
+        const parsed = marked.parse(material.conteudo);
+        if (typeof parsed === 'string') conteudoHtml = parsed;
+      } catch (markdownError) {
+        console.error('Error parsing markdown:', markdownError);
+        // Se falhar, usar o conteúdo original com quebras de linha
+        conteudoHtml = material.conteudo.replace(/\n/g, '<br/>');
+      }
     }
 
     return String(templateService.renderTemplate('5', {
-      titulo: material.titulo || 'Conteúdo de Apoio ao Professor',
+      titulo: material.titulo || 'Material de Apoio ao Professor',
       tema: material.tema,
       disciplina: material.disciplina,
       serie: material.turma,
@@ -119,7 +134,7 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
       import('html2pdf.js').then(html2pdf => {
         html2pdf.default().from(html).set({
           margin: 0,
-          filename: `${material.titulo || 'conteudo-apoio'}.pdf`,
+          filename: `${material.titulo || 'material-apoio'}.pdf`,
           html2canvas: { scale: 2 },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         }).save();
@@ -131,7 +146,7 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${material.titulo || 'conteudo-apoio'}.doc`;
+      a.download = `${material.titulo || 'material-apoio'}.doc`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success('Documento Word baixado com sucesso!');
@@ -148,6 +163,103 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
     }
     
     setExportDropdownOpen(false);
+  };
+
+  const renderContent = () => {
+    try {
+      // Tentar parsear como JSON estruturado
+      const parsedContent = JSON.parse(material.conteudo);
+      
+      if (parsedContent.conteudo_completo) {
+        // Se tem conteudo_completo formatado, usar diretamente
+        return (
+          <div 
+            className="prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: parsedContent.conteudo_completo }}
+          />
+        );
+      } else {
+        // Se é JSON mas sem conteudo_completo, renderizar as seções individualmente
+        return (
+          <div className="space-y-6">
+            {parsedContent.introducao && (
+              <section>
+                <h3 className="text-lg font-semibold text-blue-700 mb-2">🎯 Introdução ao Tema</h3>
+                <div className="text-gray-700">{parsedContent.introducao}</div>
+              </section>
+            )}
+            
+            {parsedContent.objetivos_aprendizagem && (
+              <section>
+                <h3 className="text-lg font-semibold text-blue-700 mb-2">📚 Objetivos de Aprendizagem</h3>
+                <div className="text-gray-700">{parsedContent.objetivos_aprendizagem}</div>
+              </section>
+            )}
+            
+            {parsedContent.contextualizacao_teorica && (
+              <section>
+                <h3 className="text-lg font-semibold text-blue-700 mb-2">🧠 Contextualização Teórica</h3>
+                <div className="text-gray-700">{parsedContent.contextualizacao_teorica}</div>
+              </section>
+            )}
+            
+            {parsedContent.dicas_pedagogicas && (
+              <section>
+                <h3 className="text-lg font-semibold text-blue-700 mb-2">🎓 Dicas Pedagógicas</h3>
+                <div className="text-gray-700">{parsedContent.dicas_pedagogicas}</div>
+              </section>
+            )}
+            
+            {parsedContent.recursos_complementares && (
+              <section>
+                <h3 className="text-lg font-semibold text-blue-700 mb-2">🛠️ Recursos Complementares</h3>
+                <div className="text-gray-700">{parsedContent.recursos_complementares}</div>
+              </section>
+            )}
+            
+            {parsedContent.atividades_praticas && (
+              <section>
+                <h3 className="text-lg font-semibold text-blue-700 mb-2">⚡ Atividades Práticas</h3>
+                <div className="text-gray-700">{parsedContent.atividades_praticas}</div>
+              </section>
+            )}
+            
+            {parsedContent.perguntas_discussao && (
+              <section>
+                <h3 className="text-lg font-semibold text-blue-700 mb-2">💭 Perguntas para Discussão</h3>
+                <div className="text-gray-700">{parsedContent.perguntas_discussao}</div>
+              </section>
+            )}
+            
+            {parsedContent.avaliacao_acompanhamento && (
+              <section>
+                <h3 className="text-lg font-semibold text-blue-700 mb-2">📊 Avaliação e Acompanhamento</h3>
+                <div className="text-gray-700">{parsedContent.avaliacao_acompanhamento}</div>
+              </section>
+            )}
+            
+            {parsedContent.referencias && (
+              <section>
+                <h3 className="text-lg font-semibold text-blue-700 mb-2">📖 Referências</h3>
+                <div className="text-gray-700">{parsedContent.referencias}</div>
+              </section>
+            )}
+          </div>
+        );
+      }
+    } catch (error) {
+      // Se não for JSON válido, tratar como markdown/texto simples
+      return (
+        <div 
+          className="prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ 
+            __html: material.conteudo.includes('#') || material.conteudo.includes('**') 
+              ? marked.parse(material.conteudo) 
+              : material.conteudo.replace(/\n/g, '<br/>') 
+          }}
+        />
+      );
+    }
   };
 
   return (
@@ -235,14 +347,7 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
                 <strong> Turma:</strong> {material.turma}
               </div>
               
-              <div 
-                className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ 
-                  __html: material.conteudo.includes('#') || material.conteudo.includes('**') 
-                    ? marked.parse(material.conteudo) 
-                    : material.conteudo.replace(/\n/g, '<br/>') 
-                }}
-              />
+              {renderContent()}
             </div>
           </div>
         </DialogContent>
