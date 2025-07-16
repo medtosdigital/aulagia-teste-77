@@ -230,6 +230,53 @@ export type Database = {
         }
         Relationships: []
       }
+      materiais_apoio: {
+        Row: {
+          conteudo: string
+          created_at: string | null
+          disciplina: string
+          id: string
+          material_principal_id: string | null
+          status: string | null
+          tema: string
+          titulo: string | null
+          turma: string | null
+          user_id: string | null
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string | null
+          disciplina: string
+          id?: string
+          material_principal_id?: string | null
+          status?: string | null
+          tema: string
+          titulo?: string | null
+          turma?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string | null
+          disciplina?: string
+          id?: string
+          material_principal_id?: string | null
+          status?: string | null
+          tema?: string
+          titulo?: string | null
+          turma?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materiais_apoio_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       membros_grupo_escolar: {
         Row: {
           aceito_em: string | null
@@ -600,33 +647,6 @@ export type Database = {
           mes?: number
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      },
-      materiais_apoio: {
-        Row: {
-          id: string;
-          titulo: string;
-          conteudo: string;
-          created_at: string;
-          material_principal_id: string;
-          user_id: string;
-        }
-        Insert: {
-          id?: string;
-          titulo: string;
-          conteudo: string;
-          created_at?: string;
-          material_principal_id: string;
-          user_id: string;
-        }
-        Update: {
-          id?: string;
-          titulo?: string;
-          conteudo?: string;
-          created_at?: string;
-          material_principal_id?: string;
-          user_id?: string;
         }
         Relationships: []
       }

@@ -25,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { BNCCValidationService } from '@/services/bnccValidationService';
 import { EnhancedBNCCValidationService } from '@/services/enhancedBNCCValidationService';
+import AudioTranscriptionButton from './AudioTranscriptionButton';
 
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
 
@@ -781,6 +782,50 @@ const CreateLesson: React.FC = () => {
     }`;
   };
 
+  const handleTranscriptionComplete = (result: {
+    text: string;
+    tema: string;
+    disciplina: string | null;
+    turma: string | null;
+  }) => {
+    console.log('Transcrição recebida:', result);
+    
+    // Atualizar o tema da aula
+    setFormData(prev => ({
+      ...prev,
+      topic: result.tema
+    }));
+
+    // Se disciplina foi identificada, selecionar automaticamente
+    if (result.disciplina && subjects.includes(result.disciplina)) {
+      setFormData(prev => ({
+        ...prev,
+        subject: result.disciplina!
+      }));
+    }
+
+    // Se turma foi identificada, selecionar automaticamente
+    if (result.turma) {
+      // Procurar a turma nas categorias
+      for (const category of grades) {
+        if (category.options.includes(result.turma)) {
+          const gradeValue = `${category.category}-${result.turma}`;
+          setFormData(prev => ({
+            ...prev,
+            grade: gradeValue
+          }));
+          break;
+        }
+      }
+    }
+
+    toast.success(
+      `Transcrição: "${result.text}"` + 
+      (result.disciplina ? ` | Disciplina: ${result.disciplina}` : '') +
+      (result.turma ? ` | Turma: ${result.turma}` : '')
+    );
+  };
+
   if (step === 'selection') {
     return (
       <>
@@ -981,9 +1026,7 @@ const CreateLesson: React.FC = () => {
                           })} 
                           className="pr-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
                         />
-                        <button className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-2 hover:bg-blue-50 rounded-lg transition-colors">
-                          <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-                        </button>
+                        <AudioTranscriptionButton onTranscriptionComplete={handleTranscriptionComplete} />
                       </div>
                     </div>
                   )}
