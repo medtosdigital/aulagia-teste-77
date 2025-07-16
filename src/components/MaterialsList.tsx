@@ -75,6 +75,9 @@ const MaterialsList: React.FC = () => {
   const [supportMaterials, setSupportMaterials] = useState<SupportMaterial[]>([]);
   const [selectedSupportMaterial, setSelectedSupportMaterial] = useState<SupportMaterial | null>(null);
   const [supportMaterialModalOpen, setSupportMaterialModalOpen] = useState(false);
+  // Estado para modal de edição de apoio
+  const [supportMaterialEditModalOpen, setSupportMaterialEditModalOpen] = useState(false);
+  const [supportMaterialToEdit, setSupportMaterialToEdit] = useState<SupportMaterial | null>(null);
 
   // Hooks para gerenciamento de planos
   const { canEditMaterials, canDownloadWord, canDownloadPPT } = usePlanPermissions();
@@ -180,27 +183,14 @@ const MaterialsList: React.FC = () => {
   const filterMaterials = () => {
     let filtered = [...materials];
 
-    // Add support materials as special entries
-    const supportMaterialEntries = supportMaterials.map(support => ({
-      id: support.id,
-      title: support.titulo,
-      type: 'apoio' as const,
-      subject: support.disciplina,
-      grade: support.turma || 'N/A',
-      createdAt: support.created_at,
-      content: support.conteudo,
-      formData: { supportMaterial: support }
-    }));
-
-    const allMaterials = [...filtered, ...supportMaterialEntries];
+    // NÃO misture supportMaterialEntries (type 'apoio') no array principal
+    // Renderize os cards de apoio separadamente
 
     if (searchTerm) {
-      filtered = allMaterials.filter(material => 
+      filtered = filtered.filter(material => 
         material.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
         material.subject.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    } else {
-      filtered = allMaterials;
     }
 
     if (filterType !== 'all') {
@@ -215,7 +205,7 @@ const MaterialsList: React.FC = () => {
   };
 
   const handleViewMaterial = (material: GeneratedMaterialWithOptionalFormData) => {
-    if (material.type === 'apoio' && material.formData?.supportMaterial) {
+    if (material.formData?.supportMaterial) {
       setSelectedSupportMaterial(material.formData.supportMaterial);
       setSupportMaterialModalOpen(true);
     } else {
@@ -230,12 +220,6 @@ const MaterialsList: React.FC = () => {
       openUpgradeModal();
       return;
     }
-    
-    if (material.type === 'apoio') {
-      toast.info('Edição de materiais de apoio em desenvolvimento');
-      return;
-    }
-    
     setMaterialToEdit(material);
     setInlineEditModalOpen(true);
   };
@@ -285,7 +269,7 @@ const MaterialsList: React.FC = () => {
     try {
       let success = false;
       
-      if (materialToDelete.type === 'apoio' && materialToDelete.formData?.supportMaterial) {
+      if (materialToDelete.formData?.supportMaterial) {
         // Delete support material
         const { error } = await supabase
           .from('materiais_apoio')
@@ -343,7 +327,7 @@ const MaterialsList: React.FC = () => {
     }
 
     try {
-      if (material.type === 'apoio' && material.formData?.supportMaterial) {
+      if (material.formData?.supportMaterial) {
         // Handle support material export through the modal
         setSelectedSupportMaterial(material.formData.supportMaterial);
         setSupportMaterialModalOpen(true);
@@ -443,6 +427,93 @@ const MaterialsList: React.FC = () => {
     );
   }
 
+  const handleViewSupportMaterial = (material: SupportMaterial) => {
+    setSelectedSupportMaterial(material);
+    setSupportMaterialModalOpen(true);
+  };
+
+  const handleEditSupportMaterial = (material: SupportMaterial) => {
+    if (!canEditMaterials()) {
+      toast.error('Edição de materiais de apoio disponível apenas em planos pagos');
+      openUpgradeModal();
+      return;
+    }
+    setSupportMaterialToEdit(material);
+    setSupportMaterialEditModalOpen(true);
+  };
+
+  const handleExportSupportMaterial = async (material: SupportMaterial, format: 'pdf' | 'word' | 'ppt' | 'print') => {
+    if (format === 'word' && !canDownloadWord()) {
+      toast.error('Download em Word disponível apenas em planos pagos');
+      openUpgradeModal();
+      return;
+    }
+
+    if (format === 'ppt' && !canDownloadPPT()) {
+      toast.error('Download em PowerPoint disponível apenas em planos pagos');
+      openUpgradeModal();
+      return;
+    }
+
+    try {
+      // Use exportService com um objeto customizado, mas sem forçar o tipo
+      const exportObj = {
+        id: material.id,
+        title: material.titulo,
+        type: 'atividade', // Use um tipo permitido apenas para exportação
+        subject: material.disciplina,
+        grade: 'Apoio',
+        createdAt: material.created_at,
+        content: material.conteudo,
+        formData: { supportMaterial: material }
+      };
+      if (format === 'pdf') {
+        await exportService.exportToPDFDownload(exportObj);
+        toast.success('PDF exportado com sucesso!');
+      } else if (format === 'word') {
+        await exportService.exportToWord(exportObj);
+        toast.success('Documento Word exportado com sucesso!');
+      } else if (format === 'ppt') {
+        await exportService.exportToPPT(exportObj);
+        toast.success('PowerPoint exportado com sucesso!');
+      } else if (format === 'print') {
+        await exportService.exportToPDF(exportObj);
+        toast.success('Material enviado para impressão!');
+      }
+      activityService.addActivity({
+        type: 'exported',
+        title: material.titulo,
+        description: `Material de apoio exportado (${format.toUpperCase()}): ${material.titulo}`,
+        materialType: 'atividade', // Use um tipo permitido
+        materialId: material.id,
+        subject: material.disciplina,
+        grade: 'Apoio'
+      });
+    } catch (error) {
+      toast.error('Erro ao exportar material de apoio');
+      console.error('Export error:', error);
+    }
+    setExportDropdownOpen(null);
+  };
+
+  const handleDeleteSupportMaterial = async (material: SupportMaterial) => {
+    setMaterialToDelete(null); // Não use o modal de confirmação global para apoio, ou crie um modal próprio se necessário
+    try {
+      const { error } = await supabase
+        .from('materiais_apoio')
+        .delete()
+        .eq('id', material.id);
+      if (!error) {
+        toast.success('Material de apoio excluído com sucesso!');
+        loadSupportMaterials();
+      } else {
+        toast.error('Erro ao excluir material de apoio');
+      }
+    } catch (error) {
+      toast.error('Erro ao excluir material de apoio');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <div className="max-w-7xl mx-auto p-4 md:p-6">
@@ -521,27 +592,25 @@ const MaterialsList: React.FC = () => {
         </Card>
 
         {/* Lista de Materiais */}
-        {filteredMaterials.length === 0 ? (
+        {filteredMaterials.length === 0 && supportMaterials.length === 0 ? (
           <Card className="shadow-lg bg-white/90 backdrop-blur-sm">
             <CardContent className="p-8 md:p-12 text-center">
               <div className="text-gray-400 mb-4">
                 <FileText className="w-12 h-12 md:w-16 md:h-16 mx-auto" />
               </div>
               <h3 className="text-lg md:text-xl font-semibold text-gray-600 mb-2">
-                {materials.length === 0 && supportMaterials.length === 0 ? 'Nenhum material criado ainda' : 'Nenhum material encontrado'}
+                Nenhum material encontrado
               </h3>
               <p className="text-gray-500 mb-6">
-                {materials.length === 0 && supportMaterials.length === 0 ? 'Comece criando seu primeiro material pedagógico!' : 'Tente ajustar os filtros para encontrar o que procura.'}
+                Tente ajustar os filtros para encontrar o que procura.
               </p>
-              {materials.length === 0 && supportMaterials.length === 0 && (
-                <Button 
-                  onClick={() => navigate('/')} 
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Criar Primeiro Material
-                </Button>
-              )}
+              <Button 
+                onClick={() => navigate('/')} 
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Criar Primeiro Material
+              </Button>
             </CardContent>
           </Card>
         ) : (
@@ -600,7 +669,7 @@ const MaterialsList: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleEdit(material)} 
+                        onClick={() => handleEditMaterial(material)} 
                         className={`h-8 w-8 p-0 ${canEditMaterials() 
                           ? 'hover:bg-blue-50 hover:text-blue-600' 
                           : 'opacity-50 cursor-not-allowed hover:bg-gray-50'
@@ -693,6 +762,142 @@ const MaterialsList: React.FC = () => {
                 </Card>
               );
             })}
+            {supportMaterials.map(material => {
+              const typeConfig = getTypeConfig('apoio');
+              const IconComponent = typeConfig.icon;
+              
+              return (
+                <Card key={material.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-white hover:scale-[1.02] overflow-hidden relative">
+                  {/* Cabeçalho colorido por tipo */}
+                  <div className={`${typeConfig.bgGradient} p-4 text-white relative`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                          <IconComponent className="w-4 h-4" />
+                        </div>
+                        <span className="font-semibold text-sm">{typeConfig.label}</span>
+                      </div>
+                      <Badge className={`${typeConfig.badgeColor} border-0 text-xs font-medium`}>
+                        {material.disciplina}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {/* Título */}
+                      <div>
+                        <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-1">
+                          {material.titulo}
+                        </h3>
+                        <p className="text-sm text-gray-500">Apoio</p>
+                      </div>
+                      {/* Data de criação */}
+                      <div className="flex items-center text-xs text-gray-400 border-t pt-3">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        Criado em {new Date(material.created_at).toLocaleDateString('pt-BR')}
+                      </div>
+                    </div>
+                    {/* Botões de ação */}
+                    <div className="flex items-center justify-between space-x-2 mt-4 pt-3 border-t">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleViewSupportMaterial(material)} 
+                        className="flex-1 text-xs h-8 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        Visualizar
+                      </Button>
+                      {/* Botão de edição com verificação de permissão */}
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleEditSupportMaterial(material)} 
+                        className={`h-8 w-8 p-0 ${canEditMaterials() 
+                          ? 'hover:bg-blue-50 hover:text-blue-600' 
+                          : 'opacity-50 cursor-not-allowed hover:bg-gray-50'
+                        }`}
+                        title={canEditMaterials() ? "Editar" : "Edição disponível apenas em planos pagos"}
+                      >
+                        {canEditMaterials() ? (
+                          <Edit3 className="w-3 h-3" />
+                        ) : (
+                          <Lock className="w-3 h-3" />
+                        )}
+                      </Button>
+                      {/* Dropdown de exportação */}
+                      <div className="relative">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => toggleExportDropdown(material.id)} 
+                          className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600" 
+                          title="Exportar"
+                        >
+                          <Download className="w-3 h-3" />
+                        </Button>
+                        {exportDropdownOpen === material.id && (
+                          <div className="absolute bottom-full mb-1 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]">
+                            <button 
+                              onClick={() => handleExportSupportMaterial(material, 'print')} 
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                            >
+                              <Printer className="w-3 h-3 mr-2" />
+                              Imprimir
+                            </button>
+                            <button 
+                              onClick={() => handleExportSupportMaterial(material, 'pdf')} 
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                            >
+                              <FileDown className="w-3 h-3 mr-2" />
+                              PDF
+                            </button>
+                            <button 
+                              onClick={() => handleExportSupportMaterial(material, 'ppt')} 
+                              className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center ${
+                                canDownloadPPT() ? '' : 'opacity-50 cursor-not-allowed'
+                              }`}
+                              disabled={!canDownloadPPT()}
+                            >
+                              {canDownloadPPT() ? (
+                                <FileDown className="w-3 h-3 mr-2" />
+                              ) : (
+                                <Lock className="w-3 h-3 mr-2" />
+                              )}
+                              PPT {!canDownloadPPT() && '(Premium)'}
+                            </button>
+                            <button 
+                              onClick={() => handleExportSupportMaterial(material, 'word')} 
+                              className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center ${
+                                canDownloadWord() ? '' : 'opacity-50 cursor-not-allowed'
+                              }`}
+                              disabled={!canDownloadWord()}
+                            >
+                              {canDownloadWord() ? (
+                                <FileDown className="w-3 h-3 mr-2" />
+                              ) : (
+                                <Lock className="w-3 h-3 mr-2" />
+                              )}
+                              Word {!canDownloadWord() && '(Premium)'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleDeleteSupportMaterial(material)} 
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-200 h-8 w-8 p-0" 
+                        title="Excluir"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
@@ -708,7 +913,7 @@ const MaterialsList: React.FC = () => {
         onClose={handleCloseModal} 
         onEdit={() => {
           setModalOpen(false);
-          setEditModalOpen(true);
+          setTimeout(() => setEditModalOpen(true), 100);
         }}
       />
 
@@ -741,6 +946,24 @@ const MaterialsList: React.FC = () => {
           loadSupportMaterials();
         }}
       />
+
+      {/* Modal de edição de apoio */}
+      {supportMaterialToEdit && (
+        <SupportMaterialModal
+          material={supportMaterialToEdit}
+          open={supportMaterialEditModalOpen}
+          onClose={() => {
+            setSupportMaterialEditModalOpen(false);
+            setSupportMaterialToEdit(null);
+          }}
+          onDelete={() => {
+            loadSupportMaterials();
+            setSupportMaterialEditModalOpen(false);
+            setSupportMaterialToEdit(null);
+          }}
+          isEditMode={true}
+        />
+      )}
 
       {/* Modal de upgrade */}
       <UpgradeModal
