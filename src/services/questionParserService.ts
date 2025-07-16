@@ -51,6 +51,8 @@ export class QuestionParserService {
         break;
         
       case 'verdadeiro_falso':
+        parsedQuestion.opcoes = Array.isArray(question.opcoes) ? question.opcoes : ['Verdadeiro', 'Falso'];
+        break;
       case 'completar':
       case 'dissertativa':
       case 'desenho':
@@ -72,21 +74,17 @@ export class QuestionParserService {
   static validateMultipleChoice(opcoes: any): string[] {
     if (!Array.isArray(opcoes) || opcoes.length !== 4) {
       return [
-        'a) Opção A - aguardando conteúdo',
-        'b) Opção B - aguardando conteúdo',
-        'c) Opção C - aguardando conteúdo',
-        'd) Opção D - aguardando conteúdo'
+        'Opção A - aguardando conteúdo',
+        'Opção B - aguardando conteúdo',
+        'Opção C - aguardando conteúdo',
+        'Opção D - aguardando conteúdo'
       ];
     }
     
-    return opcoes.map((opcao, index) => {
-      const letter = String.fromCharCode(97 + index); // a, b, c, d
-      const text = opcao?.toString().trim() || `Opção ${letter.toUpperCase()} - aguardando conteúdo`;
-      
-      // Ensure proper formatting
-      if (!text.startsWith(`${letter})`)) {
-        return `${letter}) ${text}`;
-      }
+    return opcoes.map((opcao) => {
+      // Remove prefixos como 'a)', 'b)', 'A)', 'B)', etc.
+      let text = opcao?.toString().trim() || '';
+      text = text.replace(/^([a-dA-D][\)\.\-])\s*/, '');
       return text;
     });
   }

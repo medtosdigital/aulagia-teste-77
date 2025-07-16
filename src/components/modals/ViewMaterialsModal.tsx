@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, FileText, Users } from 'lucide-react';
 import { userMaterialsService, UserMaterial } from '@/services/userMaterialsService';
+import MaterialModal from '../MaterialModal';
+import { normalizeMaterialForPreview } from '@/services/materialService';
 
 interface Teacher {
   id: string;
@@ -32,6 +34,8 @@ const ViewMaterialsModal: React.FC<ViewMaterialsModalProps> = ({
 }) => {
   const [materials, setMaterials] = useState<UserMaterial[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<UserMaterial | null>(null);
+  const [materialModalOpen, setMaterialModalOpen] = useState(false);
 
   useEffect(() => {
     if (teacher && isOpen) {
@@ -119,7 +123,7 @@ const ViewMaterialsModal: React.FC<ViewMaterialsModalProps> = ({
               </div>
             ) : materials.length > 0 ? (
               materials.map((material) => (
-                <div key={material.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={material.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => { setSelectedMaterial(material); setMaterialModalOpen(true); }}>
                   <div className="mt-1">
                     <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                       {getTypeIcon(material.type)}
@@ -150,6 +154,11 @@ const ViewMaterialsModal: React.FC<ViewMaterialsModalProps> = ({
           </div>
         </div>
       </DialogContent>
+      <MaterialModal
+        material={selectedMaterial ? normalizeMaterialForPreview(selectedMaterial) : null}
+        open={materialModalOpen}
+        onClose={() => setMaterialModalOpen(false)}
+      />
     </Dialog>
   );
 };

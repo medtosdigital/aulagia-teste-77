@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Download, Printer, FileCheck, Lock } from 'lucide-react';
+import { X, Download, Printer, FileCheck, Lock, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -14,6 +14,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { activityService } from '@/services/activityService';
+import SupportContentModal from './SupportContentModal';
 
 interface MaterialModalProps {
   material: GeneratedMaterial | null;
@@ -33,6 +34,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
   const isMobile = useIsMobile();
   const [answerKeyModalOpen, setAnswerKeyModalOpen] = useState(false);
   const [nextStepsModalOpen, setNextStepsModalOpen] = useState(false);
+  const [supportContentModalOpen, setSupportContentModalOpen] = useState(false);
 
   // Hooks para gerenciamento de planos
   const { canDownloadWord, canDownloadPPT, canEditMaterials } = usePlanPermissions();
@@ -288,6 +290,18 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                     Gerar Gabarito
                   </Button>
                 )}
+                {/* Support Content Button */}
+                <Button
+                  variant="outline"
+                  onClick={() => setSupportContentModalOpen(true)}
+                  className="w-full text-blue-700 border-blue-200 hover:bg-blue-50 rounded-xl"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Conteúdo de Apoio
+                </Button>
+                <div className="text-xs text-gray-500 mb-2 mt-1">
+                  Gere um conteúdo de apoio didático para o tema deste material, explicando e ensinando o assunto de forma clara e acessível para o aluno.
+                </div>
                 
                 {/* Edit Button */}
                 <Button
@@ -328,6 +342,11 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
           material={material}
           open={answerKeyModalOpen}
           onClose={() => setAnswerKeyModalOpen(false)}
+        />
+        <SupportContentModal
+          material={material}
+          open={supportContentModalOpen}
+          onClose={() => setSupportContentModalOpen(false)}
         />
       </>
     );
@@ -431,6 +450,19 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                   Gerar Gabarito
                 </Button>
               )}
+              {/* Support Content Button */}
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => setSupportContentModalOpen(true)}
+                className="w-full justify-start text-blue-700 border-blue-200 hover:bg-blue-50 rounded-lg"
+              >
+                <FileText className="h-4 w-4 mr-3" />
+                Conteúdo de Apoio
+              </Button>
+              <div className="text-xs text-gray-500 mb-2 mt-1">
+                Gere um conteúdo de apoio didático para o tema deste material, explicando e ensinando o assunto de forma clara e acessível para o aluno.
+              </div>
 
               {/* Edit Button */}
               <Button
@@ -488,6 +520,11 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
         material={material}
         open={answerKeyModalOpen}
         onClose={() => setAnswerKeyModalOpen(false)}
+      />
+      <SupportContentModal
+        material={material}
+        open={supportContentModalOpen}
+        onClose={() => setSupportContentModalOpen(false)}
       />
     </>
   );

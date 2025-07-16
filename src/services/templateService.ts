@@ -1291,10 +1291,8 @@ export class TemplateService {
           }
           
           .opcao-letra {
-            font-weight: bold;
-            margin-right: 15px;
-            color: inherit;
-            min-width: 30px;
+            color: black !important;
+            text-shadow: none !important;
             background: none;
             padding: 0;
             border-radius: 0;
@@ -1454,26 +1452,32 @@ export class TemplateService {
             
             <table class="info-table">
               <tr>
-                <th>Professor(a)</th>
-                <td>{professor}</td>
-                <th>Data</th>
-                <td>{data}</td>
+                <th style="background:#f3f4f6;text-align:left;padding:8px 12px;">ESCOLA:</th>
+                <td style="border:1.5px solid #555;height:28px;text-align:left;padding-left:12px;font-size:1rem;font-weight:400;"> </td>
+                <th style="background:#f3f4f6;text-align:left;padding:8px 12px;">PROFESSOR(A):</th>
+                <td style="border:1.5px solid #555;height:28px;text-align:left;padding-left:12px;font-size:1rem;font-weight:400;">{professor}</td>
+                <td rowspan="3" style="width:22%;border:1.5px solid #555;position:relative;vertical-align:top;padding:0;border-top-right-radius:12px;border-bottom-right-radius:12px;">
+                  <div style="display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-end;height:100%;padding:10px 12px 0 0;">
+                    <div style="font-weight:700;font-size:1.1rem;color:#222;margin-bottom:8px;">NOTA:</div>
+                    <div style="font-size:1rem;font-weight:400;margin-top:24px;">DATA:__/__/__</div>
+                  </div>
+                </td>
               </tr>
               <tr>
-                <th>Disciplina</th>
-                <td>{disciplina}</td>
-                <th>Série/Ano</th>
-                <td>{serie}</td>
+                <th style="background:#f3f4f6;text-align:left;padding:8px 12px;">ALUNO(A):</th>
+                <td style="border:1.5px solid #555;height:28px;text-align:left;padding-left:12px;font-size:1rem;font-weight:400;"> </td>
+                <th style="background:#f3f4f6;text-align:left;padding:8px 12px;">SÉRIE/ANO:</th>
+                <td style="border:1.5px solid #555;height:28px;text-align:left;padding-left:12px;font-size:1rem;font-weight:400;">{serie}</td>
               </tr>
               <tr>
-                <th>Tema</th>
-                <td>{tema}</td>
-                <th>Duração</th>
-                <td>{duracao}</td>
+                <th style="background:#f3f4f6;text-align:left;padding:8px 12px;">TEMA:</th>
+                <td style="border:1.5px solid #555;height:28px;text-align:left;padding-left:12px;font-size:1rem;font-weight:400;">{tema}</td>
+                <th style="background:#f3f4f6;text-align:left;padding:8px 12px;">DURAÇÃO:</th>
+                <td style="border:1.5px solid #555;height:28px;text-align:left;padding-left:12px;font-size:1rem;font-weight:400;">{duracao}</td>
               </tr>
               <tr>
-                <th>BNCC</th>
-                <td colspan="3">{bncc}</td>
+                <th style="background:#f3f4f6;text-align:left;padding:8px 12px;">BNCC:</th>
+                <td colspan="4" style="border:1.5px solid #555;height:28px;text-align:left;padding-left:12px;font-size:1rem;font-weight:400;">{bncc}</td>
               </tr>
             </table>
           </div>
@@ -1490,6 +1494,141 @@ export class TemplateService {
             <ul>
               {criterios_avaliacao}
             </ul>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+    '5': `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{titulo}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+          body {
+            margin: 0;
+            padding: 0;
+            background: #f0f4f8;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            color: #222;
+          }
+          .page {
+            max-width: 900px;
+            margin: 32px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 0 0 32px 0;
+            position: relative;
+          }
+          .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 32px 40px 0 40px;
+          }
+          .logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .logo svg {
+            width: 28px;
+            height: 28px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2;
+          }
+          .brand-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+          }
+          .brand-text h1 {
+            font-size: 1.5rem;
+            color: #0ea5e9;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+          }
+          .brand-text p {
+            font-size: 0.95rem;
+            color: #6b7280;
+            margin: 0;
+            font-weight: 400;
+          }
+          .support-title {
+            font-size: 2rem;
+            color: #4338ca;
+            font-weight: 800;
+            text-align: center;
+            margin: 32px 0 8px 0;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+          }
+          .support-meta {
+            font-size: 1.1rem;
+            color: #555;
+            text-align: center;
+            margin-bottom: 24px;
+          }
+          .support-content {
+            font-size: 1.13rem;
+            color: #222;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 32px 40px;
+            margin: 0 40px 24px 40px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            text-align: justify;
+            line-height: 1.7;
+            min-height: 300px;
+            word-break: break-word;
+          }
+          .footer {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 32px;
+            padding-bottom: 8px;
+          }
+          @media (max-width: 700px) {
+            .page { padding: 0 0 24px 0; }
+            .header, .support-content { padding: 16px 12px; margin: 0 0 16px 0; }
+            .support-title { font-size: 1.2rem; margin: 18px 0 8px 0; }
+            .support-content { font-size: 1rem; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="page">
+          <div class="header">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+            </div>
+            <div class="brand-text">
+              <h1>AulagIA</h1>
+              <p>Sua aula com toque mágico</p>
+            </div>
+          </div>
+          <div class="support-title">Conteúdo de Apoio ao Professor</div>
+          <div class="support-meta">
+            <b>Tema:</b> {tema} &nbsp;|&nbsp; <b>Disciplina:</b> {disciplina} &nbsp;|&nbsp; <b>Série:</b> {serie} &nbsp;|&nbsp; <b>Data:</b> {data}
+          </div>
+          <div class="support-content">{conteudo}</div>
+          <div class="footer">
+            Conteúdo de Apoio gerado pela AulagIA - Sua aula com toque mágico • aulagia.com.br
           </div>
         </div>
       </body>
@@ -1593,10 +1732,13 @@ export class TemplateService {
       switch (questao.tipo) {
         case 'multipla_escolha':
           if (questao.opcoes && questao.opcoes.length > 0) {
-            questionHtml += '<div>';
-            questao.opcoes.forEach((opcao: string) => {
+            questionHtml += '<div class="questao-opcoes">';
+            questao.opcoes.forEach((opcao: string, i: number) => {
+              const letra = String.fromCharCode(65 + i); // A, B, C, D
               questionHtml += `
-                <div class="questao-enunciado" style="margin-bottom:0;">${opcao}</div>
+                <div class="opcao">
+                  <span class="opcao-letra" style="color:black !important;">${letra})</span>&nbsp;<span class="opcao-texto">${opcao}</span>
+                </div>
               `;
             });
             questionHtml += '</div>';
@@ -1609,7 +1751,7 @@ export class TemplateService {
             questao.opcoes.forEach((opcao: string, i: number) => {
               questionHtml += `
                 <div class="opcao">
-                  <span class="opcao-letra">( )</span>
+                  <span class="opcao-letra" style="color:black !important;">( )</span>
                   <span class="opcao-texto">${opcao}</span>
                 </div>
               `;
@@ -1619,7 +1761,10 @@ export class TemplateService {
           break;
 
         case 'ligar':
-          if (questao.colunaA && questao.colunaB) {
+          if ((questao.colunaA || questao.coluna_a) && (questao.colunaB || questao.coluna_b)) {
+            // Suporte a ambos formatos de campo
+            const colunaA = questao.colunaA || questao.coluna_a;
+            const colunaB = questao.colunaB || questao.coluna_b;
             // Função para remover prefixos como 'A1)', 'B1)', '(1)', '(A)', etc.
             function limparPrefixo(texto) {
               return texto.replace(/^\(?[A-Za-z0-9]+\)?\s*\)?\s*/, '').trim();
@@ -1628,15 +1773,11 @@ export class TemplateService {
               <div class="matching-section">
                 <div class="matching-column">
                   <h4>Coluna A</h4>
-                  ${questao.colunaA.map((item: string, i: number) => 
-                    `<div class="matching-item">(${i + 1}) ${limparPrefixo(item)}</div>`
-                  ).join('')}
+                  ${colunaA.map((item, i) => `<div class="matching-item">(${i + 1}) ${limparPrefixo(item)}</div>`).join('')}
                 </div>
                 <div class="matching-column">
                   <h4>Coluna B</h4>
-                  ${questao.colunaB.map((item: string, i: number) => 
-                    `<div class="matching-item">(${String.fromCharCode(65 + i)}) ${limparPrefixo(item)}</div>`
-                  ).join('')}
+                  ${colunaB.map((item, i) => `<div class="matching-item">(${String.fromCharCode(65 + i)}) ${limparPrefixo(item)}</div>`).join('')}
                 </div>
               </div>
             `;
@@ -1645,8 +1786,8 @@ export class TemplateService {
 
         case 'completar':
           if (questao.textoComLacunas) {
-            // Substitui todos os grupos de underlines por uma lacuna grande, com style inline para garantir largura
-            const textoComEspacos = (questao.textoComLacunas || '').replace(/_+/g, '<span class="fill-blank" style="width:600px !important;display:inline-block !important;"></span>');
+            // Substitui todos os grupos de underlines por uma lacuna bem grande
+            const textoComEspacos = (questao.textoComLacunas || '').replace(/_+/g, '<span class="fill-blank" style="width:500px !important;display:inline-block !important;border-bottom:2px solid #222 !important;min-width:300px !important;max-width:700px !important;height:1.2em !important;vertical-align:middle !important;margin:0 4px !important;background:none !important;"></span>');
             questionHtml += `<div class="questao-opcoes">${textoComEspacos}</div>`;
           }
           break;

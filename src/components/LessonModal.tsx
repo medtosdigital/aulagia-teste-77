@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CalendarEvent } from '@/services/supabaseScheduleService';
-import { materialService, GeneratedMaterial } from '@/services/materialService';
+import { materialService, GeneratedMaterial, normalizeMaterialForPreview } from '@/services/materialService';
 import { BookOpen, FileText, Users, Sliders, FileText as AtividadeIcon, FileText as AvaliacaoIcon, Calendar as CalendarIcon, Clock, Eye, Download, Edit3, Trash2, Printer, FileDown } from 'lucide-react';
 import MaterialModal from './MaterialModal';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -185,8 +185,15 @@ const LessonModal: React.FC<LessonModalProps> = ({ open, onClose, event, onEdit,
             </Button>
           </div>
         </div>
-        {/* Modal de material */}
-        <MaterialModal material={selectedMaterial} open={materialModalOpen} onClose={() => setMaterialModalOpen(false)} />
+        {/* Modal de visualização de material unificado */}
+        <MaterialModal
+          material={normalizeMaterialForPreview(selectedMaterial)}
+          open={materialModalOpen}
+          onClose={() => {
+            setMaterialModalOpen(false);
+            setSelectedMaterial(null);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

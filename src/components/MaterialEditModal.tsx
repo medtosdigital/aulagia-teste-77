@@ -11,6 +11,8 @@ import { Save, X, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { materialService, type GeneratedMaterial, type LessonPlan, type Activity, type Assessment } from '@/services/materialService';
 import { activityService } from '@/services/activityService';
+import MaterialModal from './MaterialModal';
+import { normalizeMaterialForPreview } from '@/services/materialService';
 
 interface MaterialEditModalProps {
   material: GeneratedMaterial | null;
@@ -27,6 +29,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 }) => {
   const [editedMaterial, setEditedMaterial] = useState<GeneratedMaterial | null>(null);
   const [loading, setLoading] = useState(false);
+  const [materialModalOpen, setMaterialModalOpen] = useState(false);
 
   useEffect(() => {
     if (material && open) {
@@ -35,6 +38,12 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
       setEditedMaterial(deepCopy);
     }
   }, [material, open]);
+
+  useEffect(() => {
+    if (editedMaterial && open) {
+      setMaterialModalOpen(true);
+    }
+  }, [editedMaterial, open]);
 
   const handleSave = async () => {
     if (!editedMaterial) return;
@@ -828,74 +837,11 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   if (!editedMaterial) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            Editar Material
-            <Badge variant="secondary">{editedMaterial.type}</Badge>
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="flex-1 overflow-y-auto pr-2">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Informações Básicas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Título</Label>
-                  <Input
-                    id="title"
-                    value={editedMaterial.title}
-                    onChange={(e) => updateBasicInfo('title', e.target.value)}
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="subject">Disciplina</Label>
-                    <Input
-                      id="subject"
-                      value={editedMaterial.subject}
-                      onChange={(e) => updateBasicInfo('subject', e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="grade">Série</Label>
-                    <Input
-                      id="grade"
-                      value={editedMaterial.grade}
-                      onChange={(e) => updateBasicInfo('grade', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Conteúdo do Material</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {renderContentEditor()}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={onClose} disabled={loading}>
-            <X className="w-4 h-4 mr-2" />
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={loading}>
-            <Save className="w-4 h-4 mr-2" />
-            {loading ? 'Salvando...' : 'Salvar'}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <MaterialModal
+      material={editedMaterial ? normalizeMaterialForPreview(editedMaterial) : null}
+      open={materialModalOpen}
+      onClose={() => { setMaterialModalOpen(false); onClose(); }}
+    />
   );
 };
 

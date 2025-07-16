@@ -602,6 +602,33 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      },
+      materiais_apoio: {
+        Row: {
+          id: string;
+          titulo: string;
+          conteudo: string;
+          created_at: string;
+          material_principal_id: string;
+          user_id: string;
+        }
+        Insert: {
+          id?: string;
+          titulo: string;
+          conteudo: string;
+          created_at?: string;
+          material_principal_id: string;
+          user_id: string;
+        }
+        Update: {
+          id?: string;
+          titulo?: string;
+          conteudo?: string;
+          created_at?: string;
+          material_principal_id?: string;
+          user_id?: string;
+        }
+        Relationships: []
       }
     }
     Views: {

@@ -1,6 +1,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -26,7 +27,19 @@ interface MaterialFormData {
   data?: string;
   duracao?: string;
   bncc?: string;
+  escola?: string;
+  school?: string;
+  user_id?: string; // Adicionado para salvar material de apoio
+  material_principal_id?: string; // Adicionado para salvar material de apoio
+  titulo?: string; // Adicionado para salvar material de apoio
+  titulo_material_principal?: string; // Adicionado para salvar material de apoio
+  objetivos?: string; // Adicionado para salvar material de apoio
+  objetivos_material_principal?: string; // Adicionado para salvar material de apoio
 }
+
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -36,7 +49,7 @@ serve(async (req) => {
 
   try {
     const { materialType, formData } = await req.json() as {
-      materialType: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
+      materialType: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' | 'apoio';
       formData: MaterialFormData;
     };
 
@@ -96,11 +109,42 @@ serve(async (req) => {
     // Parse the generated content and structure it appropriately
     const structuredContent = parseGeneratedContent(materialType, generatedContent, formData);
 
+    // Se for material de apoio, salvar na tabela materiais_apoio
+    let apoioId = null;
+    if (materialType === 'apoio') {
+      // Buscar user_id do formData (deve ser enviado pelo frontend)
+      const userId = formData.user_id;
+      const tema = formData.tema || formData.topic || '';
+      const disciplina = formData.disciplina || formData.subject || '';
+      const turma = formData.serie || formData.grade || '';
+      const titulo = structuredContent.titulo || `Material de Apoio - ${tema}`;
+      const materialPrincipalId = formData.material_principal_id || null;
+      const { data: insertData, error: insertError } = await supabase
+        .from('materiais_apoio')
+        .insert([{
+          user_id: userId,
+          tema,
+          disciplina,
+          turma,
+          conteudo: JSON.stringify(structuredContent),
+          titulo,
+          material_principal_id: materialPrincipalId
+        }])
+        .select('id')
+        .single();
+      if (insertError) {
+        console.error('Erro ao salvar material de apoio:', insertError);
+      } else {
+        apoioId = insertData?.id;
+      }
+    }
+
     return new Response(JSON.stringify({
       success: true,
       content: structuredContent,
       materialType,
-      formData
+      formData,
+      apoioId
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -124,6 +168,51 @@ function generatePrompt(materialType: string, formData: MaterialFormData): strin
   const professor = formData.professor || '';
   const data = formData.data || '';
   const duracao = formData.duracao || '';
+  const escola = formData.escola || formData.school || '';
+  const tituloMaterialPrincipal = formData.titulo || formData.titulo_material_principal || '';
+  const objetivosMaterialPrincipal = formData.objetivos || formData.objetivos_material_principal || '';
+
+  if (materialType === 'apoio') {
+    return `
+Crie um Material de Apoio ao Professor RELACIONADO ao material principal de título: ${tituloMaterialPrincipal}, tema: ${tema}, disciplina: ${disciplina}, turma: ${serie}.
+
+Este material de apoio deve complementar e aprofundar o conteúdo do material principal, servindo como uma base teórica e prática para que o professor compreenda melhor o conteúdo antes de ministrar a aula.
+
+No texto introdutório, cite explicitamente que este material de apoio foi gerado para complementar o material principal de título "${tituloMaterialPrincipal}", tema "${tema}", disciplina "${disciplina}", turma "${serie}".
+
+Se possível, utilize também os objetivos do material principal: ${objetivosMaterialPrincipal}.
+
+Estruture o material com os seguintes tópicos:
+
+Tópicos do Material de Apoio
+1. Introdução ao ${tema}
+- Breve explicação sobre o tema da aula.
+- Relevância do conteúdo para o desenvolvimento dos alunos.
+
+2. Contextualização Teórica
+- Conceitos-chave explicados de forma clara.
+- Exemplos práticos do tema na vida cotidiana ou no contexto escolar.
+
+3. Dicas Pedagógicas para Abordar o Tema em Sala
+- Sugestões de estratégias, metodologias e abordagens didáticas.
+- Cuidados importantes ou dificuldades comuns dos alunos ao aprender esse conteúdo.
+
+4. Sugestões de Recursos Complementares
+- Indicação de vídeos, artigos, sites, jogos, textos ou imagens que podem ser utilizados na aula.
+
+5. Sugestões de Atividades
+- Ideias de atividades práticas, dinâmicas ou exercícios que o professor pode aplicar.
+- Indique o tipo de atividade (exploratória, avaliativa, colaborativa, etc.).
+
+6. Possíveis Perguntas para Discussão
+- Sugestões de perguntas para estimular a reflexão e o debate entre os alunos.
+
+7. Referências Utilizadas
+- Lista de fontes usadas para construir o material (artigos, sites, livros, BNCC, etc.). Faça em formato ABNT
+
+Retorne APENAS o JSON estruturado com os tópicos acima, preenchido com conteúdo REAL e ESPECÍFICO sobre o tema "${tema}" e sempre referenciando o material principal.
+`;
+  }
 
   switch (materialType) {
     case 'plano-de-aula':
@@ -134,6 +223,7 @@ Crie um plano de aula COMPLETO e DETALHADO com base nas seguintes informações:
 - TEMA DA AULA: ${tema}
 - DISCIPLINA: ${disciplina}
 - SÉRIE/ANO: ${serie}
+- ESCOLA: ${escola}
 
 IMPORTANTE: GERE TODO O CONTEÚDO baseado especificamente no tema "${tema}" para a disciplina de ${disciplina} na série ${serie}. NÃO use conteúdo genérico.
 
@@ -172,6 +262,7 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
 {
   "titulo": "Plano de Aula - ${tema}",
   "professor": "${professor}",
+  "escola": "${escola}",
   "data": "${data}",
   "disciplina": "${disciplina}",
   "serie": "${serie}",
@@ -284,6 +375,7 @@ Retorne APENAS o JSON estruturado com todas as variáveis preenchidas especifica
 {
   "titulo": "${tema} - ${disciplina}",
   "professor": "${professor}",
+  "escola": "${escola}",
   "data": "${data}",
   "disciplina": "${disciplina}",
   "serie": "${serie}",
@@ -374,9 +466,15 @@ GERE conteúdo REAL e ESPECÍFICO sobre "${tema}". Adapte à faixa etária de ${
       }
 
       return `
+QUESTÕES DE COMPLETAR:
+- Crie tanto frases curtas quanto textos maiores (até 4 linhas), podendo ter uma ou várias lacunas longas (mínimo 10 underlines: ____________) para preencher, conforme o nível da série.
+- Permita múltiplas lacunas em uma mesma frase ou texto.
+- NÃO use apenas um underline curto, sempre use lacunas visíveis e longas.
+
 Você é um professor especialista em criar ATIVIDADES DE APRENDIZAGEM ATIVA seguindo a BNCC.
 
 Crie uma ATIVIDADE EDUCATIVA INTERATIVA sobre "${tema}" para ${disciplina} na ${serie}.
+- ESCOLA: ${escola}
 
 IMPORTANTE: Este é um material de ATIVIDADE PRÁTICA focado em APRENDIZAGEM ATIVA, não uma avaliação formal. 
 O objetivo é ENVOLVER os alunos em práticas educativas dinâmicas e participativas sobre "${tema}".
@@ -416,6 +514,7 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
 {
   "titulo": "Atividade Prática - ${tema}",
   "professor": "${professor}",
+  "escola": "${escola}",
   "data": "${data}",
   "disciplina": "${disciplina}",
   "serie": "${serie}",
@@ -524,9 +623,15 @@ INSTRUÇÕES FINAIS CRÍTICAS:
       }
 
       return `
+QUESTÕES DE COMPLETAR:
+- Crie tanto frases curtas quanto textos maiores (até 4 linhas), podendo ter uma ou várias lacunas longas (mínimo 10 underlines: ____________) para preencher, conforme o nível da série.
+- Permita múltiplas lacunas em uma mesma frase ou texto.
+- NÃO use apenas um underline curto, sempre use lacunas visíveis e longas.
+
 Você é um professor especialista em criar AVALIAÇÕES FORMAIS seguindo a BNCC.
 
 Crie uma AVALIAÇÃO ESTRUTURADA sobre "${tema}" para ${disciplina} na ${serie}.
+- ESCOLA: ${escola}
 
 IMPORTANTE: Este é um material de AVALIAÇÃO FORMAL focado na VERIFICAÇÃO DE APRENDIZAGEM sobre "${tema}".
 O objetivo é MENSURAR o conhecimento adquirido pelos alunos de forma objetiva e criteriosa.
@@ -565,6 +670,7 @@ Retorne APENAS o JSON estruturado com conteúdo ESPECÍFICO sobre "${tema}":
 {
   "titulo": "Avaliação - ${tema}",
   "professor": "${professor}",
+  "escola": "${escola}",
   "data": "${data}",
   "disciplina": "${disciplina}",
   "serie": "${serie}",
@@ -669,6 +775,13 @@ INSTRUÇÕES FINAIS CRÍTICAS:
   }
 }
 
+function cleanPrefix(text: string) {
+  // Remove prefixos do tipo "A) ", "1) ", "(A) ", "(1) ", "A. ", "1. ", etc, incluindo ponto e espaço após o prefixo
+  return typeof text === 'string'
+    ? text.replace(/^\(?[A-Za-z0-9]+\)?[\).]?\s*/, '').trim()
+    : text;
+}
+
 function parseGeneratedContent(materialType: string, content: string, formData: MaterialFormData) {
   try {
     // Try to parse as JSON first
@@ -705,17 +818,30 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
         // 3. Extrair recursos das etapas e consolidar na seção recursos
         if (parsedContent.desenvolvimento && Array.isArray(parsedContent.desenvolvimento)) {
           const recursosEtapas = new Set<string>();
-          
           parsedContent.desenvolvimento.forEach((etapa: any) => {
             if (etapa.recursos && typeof etapa.recursos === 'string') {
-              // Dividir recursos por vírgula e limpar espaços
-              const recursos = etapa.recursos.split(',').map((r: string) => r.trim()).filter((r: string) => r.length > 0);
-              recursos.forEach((recurso: string) => recursosEtapas.add(recurso));
+              // Agrupar recursos compostos (com parênteses) como um único item
+              // Exemplo: "Objetos do cotidiano (tampa de pote, caixa, régua)" deve ser 1 item
+              // Split só em vírgulas que não estão dentro de parênteses
+              const recursos = etapa.recursos.match(/([^,]+\([^\)]*\))|([^,]+)/g) || [];
+              recursos.map((r: string) => r.trim()).filter((r: string) => r.length > 0).forEach((recurso: string) => recursosEtapas.add(recurso));
             }
           });
-
-          // Atualizar a seção recursos com todos os recursos das etapas
-          parsedContent.recursos = Array.from(recursosEtapas);
+          // Capitalizar, remover duplicatas ignorando maiúsculas/minúsculas e espaços
+          const recursosUnicos: string[] = [];
+          const recursosSet = new Set<string>();
+          Array.from(recursosEtapas).forEach((recurso: string) => {
+            let rec = recurso.trim();
+            // Capitalizar primeira letra
+            rec = rec.charAt(0).toUpperCase() + rec.slice(1);
+            // Remover duplicatas ignorando case e espaços
+            const recKey = rec.normalize('NFD').replace(/\s+/g, '').toLowerCase();
+            if (!recursosSet.has(recKey)) {
+              recursosSet.add(recKey);
+              recursosUnicos.push(rec);
+            }
+          });
+          parsedContent.recursos = recursosUnicos;
         }
 
         // 4. Calcular duração total baseada nas etapas
@@ -793,8 +919,12 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
                 processedQuestion.linhasResposta = undefined;
                 break;
               case 'ligar':
-                processedQuestion.coluna_a = Array.isArray(questao.coluna_a) && questao.coluna_a.length === 4 ? questao.coluna_a : ['Item A1', 'Item A2', 'Item A3', 'Item A4'];
-                processedQuestion.coluna_b = Array.isArray(questao.coluna_b) && questao.coluna_b.length === 4 ? questao.coluna_b : ['Item B1', 'Item B2', 'Item B3', 'Item B4'];
+                processedQuestion.coluna_a = Array.isArray(questao.coluna_a) && questao.coluna_a.length === 4
+                  ? questao.coluna_a.map(cleanPrefix)
+                  : ['Item A1', 'Item A2', 'Item A3', 'Item A4'];
+                processedQuestion.coluna_b = Array.isArray(questao.coluna_b) && questao.coluna_b.length === 4
+                  ? questao.coluna_b.map(cleanPrefix)
+                  : ['Item B1', 'Item B2', 'Item B3', 'Item B4'];
                 processedQuestion.colunaA = processedQuestion.coluna_a;
                 processedQuestion.colunaB = processedQuestion.coluna_b;
                 processedQuestion.opcoes = [];

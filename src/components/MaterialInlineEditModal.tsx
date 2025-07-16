@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
-import { materialService, type GeneratedMaterial } from '@/services/materialService';
+import { materialService, type GeneratedMaterial, normalizeMaterialForPreview } from '@/services/materialService';
 import { templateService } from '@/services/templateService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SlideViewer from './SlideViewer';
 import { activityService } from '@/services/activityService';
+import MaterialModal from './MaterialModal';
 
 interface MaterialInlineEditModalProps {
   material: GeneratedMaterial | null;
@@ -30,12 +31,14 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   const [currentPage, setCurrentPage] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [currentHtmlContent, setCurrentHtmlContent] = useState<string>('');
+  const [materialModalOpen, setMaterialModalOpen] = useState(false);
 
   useEffect(() => {
     if (material && open) {
       setEditedMaterial(JSON.parse(JSON.stringify(material)));
       setCurrentPage(0);
       setCurrentHtmlContent('');
+      setMaterialModalOpen(true);
     }
   }, [material, open]);
 
@@ -1329,82 +1332,11 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex rounded-2xl">
-        <div className="flex-1 overflow-hidden rounded-l-2xl">
-          {renderMaterialWithSameSystem()}
-        </div>
-        
-        <div className="w-80 bg-gray-50 border-l flex flex-col rounded-r-2xl">
-          <DialogHeader className="p-6 pb-4 border-b bg-white rounded-tr-2xl">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg font-bold flex items-center gap-2">
-                <Edit3 className="h-5 w-5" />
-                Editar Material
-              </DialogTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-                className="rounded-lg"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </DialogHeader>
-          
-          <div className="p-6 space-y-4">
-            <div className="text-sm text-gray-600 space-y-2">
-              <h3 className="font-semibold">Material</h3>
-              <div>
-                <span className="font-medium">Título:</span>
-                <Input
-                  value={editedMaterial.title}
-                  onChange={(e) => setEditedMaterial({ ...editedMaterial, title: e.target.value })}
-                  className="mt-1 border-dashed border-2 border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white transition-colors"
-                />
-              </div>
-              <div>
-                <span className="font-medium">Disciplina:</span>
-                <Input
-                  value={editedMaterial.subject}
-                  onChange={(e) => setEditedMaterial({ ...editedMaterial, subject: e.target.value })}
-                  className="mt-1 border-dashed border-2 border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white transition-colors"
-                />
-              </div>
-              <div>
-                <span className="font-medium">Turma:</span>
-                <Input
-                  value={editedMaterial.grade}
-                  onChange={(e) => setEditedMaterial({ ...editedMaterial, grade: e.target.value })}
-                  className="mt-1 border-dashed border-2 border-blue-300 hover:border-blue-500 focus:border-blue-600 bg-blue-50 hover:bg-blue-100 focus:bg-white transition-colors"
-                />
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-6 border-t mt-auto rounded-br-2xl space-y-3">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              disabled={loading}
-              className="w-full rounded-lg"
-            >
-              <X className="h-4 w-4 mr-2" />
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 rounded-lg"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {loading ? 'Salvando...' : 'Salvar Alterações'}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <MaterialModal
+      material={editedMaterial ? normalizeMaterialForPreview(editedMaterial) : null}
+      open={materialModalOpen}
+      onClose={() => { setMaterialModalOpen(false); onClose(); }}
+    />
   );
 };
 

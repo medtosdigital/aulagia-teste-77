@@ -521,6 +521,18 @@ class MaterialService {
   }
 }
 
+// Função utilitária para normalizar campos das questões
+function normalizeQuestionFields(q) {
+  // Converte colunaA/colunaB para coluna_a/coluna_b se necessário
+  const newQ = { ...q };
+  if (q.colunaA && !q.coluna_a) newQ.coluna_a = q.colunaA;
+  if (q.colunaB && !q.coluna_b) newQ.coluna_b = q.colunaB;
+  // Remove os campos antigos para evitar duplicidade
+  delete newQ.colunaA;
+  delete newQ.colunaB;
+  return newQ;
+}
+
 // Função utilitária para normalizar material para preview/modal
 export function normalizeMaterialForPreview(material: any) {
   if (!material) return material;
@@ -529,7 +541,7 @@ export function normalizeMaterialForPreview(material: any) {
   // Normaliza questões se for atividade ou avaliação
   if (normalized.type === 'atividade' || normalized.type === 'avaliacao') {
     const questoes = (normalized.content?.questoes || normalized.questoes || []).map((q: any, i: number) =>
-      QuestionParserService.validateAndFixQuestion(q, i)
+      QuestionParserService.validateAndFixQuestion(normalizeQuestionFields(q), i)
     );
     if (normalized.content) {
       normalized.content = { ...normalized.content, questoes };

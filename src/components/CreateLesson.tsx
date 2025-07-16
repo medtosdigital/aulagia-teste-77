@@ -550,9 +550,11 @@ const CreateLesson: React.FC = () => {
       
       // Buscar nome do professor (perfil)
       let professor = '';
+      let escola = '';
       if (user?.id) {
-        const { data: profile } = await supabase.from('perfis').select('nome_preferido').eq('user_id', user.id).single();
+        const { data: profile } = await supabase.from('perfis').select('nome_preferido, escola').eq('user_id', user.id).single();
         professor = profile?.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Professor';
+        escola = profile?.escola || formData.school || '';
       }
 
       // Data atual formato brasileiro
@@ -578,6 +580,7 @@ const CreateLesson: React.FC = () => {
         disciplina,
         serie,
         professor,
+        escola, // <-- Adiciona o campo escola
         data: dataAtual,
         duracao: '50 minutos',
         bncc: 'Habilidade(s) da BNCC relacionada(s) ao tema',
@@ -691,7 +694,8 @@ const CreateLesson: React.FC = () => {
 
       setTimeout(() => {
         setIsGenerating(false);
-        setGeneratedMaterial(material);
+        // Normaliza o material antes de abrir o modal
+        setGeneratedMaterial(normalizeMaterialForPreview(material));
         setShowNextStepsModal(true);
         setStep('selection');
         toast.success(`${getCurrentTypeInfo()?.title} criado e salvo com sucesso!`);

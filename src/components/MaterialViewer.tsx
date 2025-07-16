@@ -12,6 +12,9 @@ import { exportService } from '@/services/exportService';
 import MaterialEditModal from './MaterialEditModal';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 import * as Icons from 'react-icons/fa';
+import MaterialModal from './MaterialModal';
+import { normalizeMaterialForPreview } from '@/services/materialService';
+import { templateService } from '@/services/templateService';
 
 // Substituir GeometryBoard por SVG puro
 const CircleSVG = ({ radius = 40, size = 100 }) => (
@@ -39,6 +42,7 @@ const MaterialViewer = () => {
   const [material, setMaterial] = React.useState<GeneratedMaterial | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [materialModalOpen, setMaterialModalOpen] = React.useState(false);
 
   const loadMaterial = React.useCallback(async () => {
     if (id) {
@@ -53,6 +57,10 @@ const MaterialViewer = () => {
   React.useEffect(() => {
     loadMaterial();
   }, [loadMaterial]);
+
+  React.useEffect(() => {
+    if (material) setMaterialModalOpen(true);
+  }, [material]);
 
   const handleExport = async (format: 'pdf' | 'word' | 'ppt') => {
     if (!material) return;
@@ -387,121 +395,40 @@ const MaterialViewer = () => {
     </div>
   );
 
-  const renderAssessment = (assessment: Assessment) => {
-    // Se a avaliação tem HTML content, renderizar o HTML completo
-    if (assessment.htmlContent) {
-      return (
-        <div className="w-full">
-          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h4 className="font-semibold text-yellow-800 mb-2">Preview da Avaliação</h4>
-            <p className="text-sm text-yellow-700">
-              Esta é uma prévia da avaliação. Use o botão "PDF" para exportar a versão completa formatada para impressão.
-            </p>
-          </div>
-          <div 
-            className="assessment-preview border rounded-lg p-4 bg-white"
-            dangerouslySetInnerHTML={{ __html: assessment.htmlContent }}
-            style={{ 
-              maxHeight: '80vh', 
-              overflow: 'auto',
-              fontSize: '0.85rem'
-            }}
-          />
-        </div>
-      );
-    }
+  const renderAssessment = (assessment: Assessment, material) => {
+    // Buscar nome da escola de várias fontes
+    const escola =
+      material.escola ||
+      (material.content && material.content.escola) ||
+      (material.formData && material.formData.escola) ||
+      '';
 
-    // Fallback para o formato antigo
+    const html = templateService.renderTemplate('4', {
+      ...material.content,
+      ...assessment,
+      professor: material.professor || '',
+      serie: material.grade || '',
+      escola, // Garante que o campo escola é passado
+      // outros campos...
+    });
+
     return (
-      <div className="space-y-6">
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h4 className="font-semibold text-purple-800">Instruções da Avaliação</h4>
-            <Badge variant="outline" className="text-purple-600 border-purple-300">
-              {assessment.tempoLimite}
-            </Badge>
-          </div>
-          <p className="text-sm text-purple-700">{assessment.instrucoes}</p>
+      <div className="w-full">
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h4 className="font-semibold text-yellow-800 mb-2">Preview da Avaliação</h4>
+          <p className="text-sm text-yellow-700">
+            Esta é uma prévia da avaliação. Use o botão "PDF" para exportar a versão completa formatada para impressão.
+          </p>
         </div>
-
-        <div className="space-y-6">
-          {assessment.questoes.map((questao, index) => (
-            <Card key={index} className="border-l-4 border-l-purple-500">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-base">Questão {questao.numero}</CardTitle>
-                  <Badge variant="secondary">{questao.pontuacao} pontos</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm mb-4">{questao.pergunta}</p>
-                
-                {/* Múltipla escolha e verdadeiro/falso */}
-                {questao.opcoes && Array.isArray(questao.opcoes) && questao.opcoes.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">Opções:</p>
-                    <ul className="space-y-1">
-                      {questao.opcoes.map((opcao, opcaoIndex) => (
-                        <li key={opcaoIndex} className="flex items-center">
-                          <span className="text-purple-500 font-bold mr-2">
-                            {String.fromCharCode(65 + opcaoIndex)})
-                          </span>
-                          <span className="text-sm">{opcao}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Questão de ligar */}
-                {questao.tipo === 'ligar' && questao.colunaA && questao.colunaB && (
-                  <div className="flex gap-8 mt-2">
-                    <div>
-                      <p className="font-semibold text-xs mb-1">Coluna A</p>
-                      {questao.colunaA.map((item, idx) => (
-                        <div key={idx} className="border rounded px-2 py-1 mb-1 bg-gray-50">{idx + 1}) {item}</div>
-                      ))}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-xs mb-1">Coluna B</p>
-                      {questao.colunaB.map((item, idx) => (
-                        <div key={idx} className="border rounded px-2 py-1 mb-1 bg-gray-50">{String.fromCharCode(65 + idx)}) {item}</div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Questão de completar */}
-                {questao.tipo === 'completar' && questao.textoComLacunas && (
-                  <div className="mt-2 p-2 bg-yellow-50 border rounded">
-                    <span className="font-mono">{questao.textoComLacunas}</span>
-                  </div>
-                )}
-
-                {/* Questão dissertativa */}
-                {questao.tipo === 'dissertativa' && (
-                  <div className="mt-2">
-                    {[...Array(questao.linhasResposta || 5)].map((_, i) => (
-                      <div key={i} className="border-b border-gray-300 my-2" style={{height: 24}} />
-                    ))}
-                  </div>
-                )}
-
-                {/* Questão de verdadeiro/falso */}
-                {questao.tipo === 'verdadeiro_falso' && (
-                  <div className="mt-2 flex gap-4">
-                    <div className="flex items-center"><span className="font-bold mr-1">( )</span> Verdadeiro</div>
-                    <div className="flex items-center"><span className="font-bold mr-1">( )</span> Falso</div>
-                  </div>
-                )}
-
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <Badge variant="secondary">{questao.tipo.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <div 
+          className="assessment-preview border rounded-lg p-4 bg-white"
+          dangerouslySetInnerHTML={{ __html: html }}
+          style={{ 
+            maxHeight: '80vh', 
+            overflow: 'auto',
+            fontSize: '0.85rem'
+          }}
+        />
       </div>
     );
   };
@@ -517,7 +444,7 @@ const MaterialViewer = () => {
       case 'atividade':
         return renderActivity(material.content as Activity);
       case 'avaliacao':
-        return renderAssessment(material.content as Assessment);
+        return renderAssessment(material.content as Assessment, material);
       default:
         return <div>Tipo de material não suportado</div>;
     }
@@ -550,108 +477,13 @@ const MaterialViewer = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <Button onClick={() => navigate('/')} variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-          
-          <div className="flex items-center space-x-2">
-            <Button
-              onClick={() => setEditModalOpen(true)}
-              variant="outline"
-              size="sm"
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Editar
-            </Button>
-            <Button
-              onClick={() => handleExport('pdf')}
-              variant="outline"
-              size="sm"
-              disabled={loading}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              PDF
-            </Button>
-            <Button
-              onClick={() => handleExport('word')}
-              variant="outline"
-              size="sm"
-              disabled={loading}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Word
-            </Button>
-            {material.type === 'slides' && (
-              <Button
-                onClick={() => handleExport('ppt')}
-                variant="outline"
-                size="sm"
-                disabled={loading}
-              >
-                <Presentation className="h-4 w-4 mr-2" />
-                PPT
-              </Button>
-            )}
-            <Button
-              onClick={handleDelete}
-              variant="outline"
-              size="sm"
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Excluir
-            </Button>
-          </div>
-        </div>
-
-        {/* Material Info */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex items-start space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  {getTypeIcon(material.type)}
-                </div>
-                <div>
-                  <CardTitle className="text-xl">{material.title}</CardTitle>
-                  <div className="flex items-center space-x-4 mt-2">
-                    <Badge variant="secondary">{getTypeLabel(material.type)}</Badge>
-                    <span className="text-sm text-gray-600">{material.subject}</span>
-                    <span className="text-sm text-gray-600">{material.grade}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Criado em</p>
-                <p className="text-sm font-medium">
-                  {new Date(material.createdAt).toLocaleDateString('pt-BR')}
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Material Content */}
-        <Card>
-          <CardContent className="p-6">
-            {renderContent()}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Edit Modal */}
-      <MaterialEditModal
-        material={material}
-        open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        onSave={handleEditSave}
+    <>
+      <MaterialModal
+        material={material ? normalizeMaterialForPreview(material) : null}
+        open={materialModalOpen}
+        onClose={() => { setMaterialModalOpen(false); navigate('/'); }}
       />
-    </div>
+    </>
   );
 };
 
