@@ -12,13 +12,12 @@ import { Plus, Edit, Bell, Link2, FileText, Users, BarChart2, X, Trash2, Setting
 import { supabase } from '@/integrations/supabase/client';
 import { templateService } from '@/services/templateService';
 import MaterialPreview from './MaterialPreview';
-import { notificationService } from '@/services/notificationService';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import AdminDashboardStats from './admin/AdminDashboardStats';
 import AdminActivityFeed from './admin/AdminActivityFeed';
 import AdminQuickActions from './admin/AdminQuickActions';
 import AdminFinanceStats from './admin/AdminFinanceStats';
+import NotificationsSection from './admin/NotificationsSection';
 
 export default function AdminConfigPage() {
   const [tab, setTab] = useState('dashboard');
@@ -37,8 +36,6 @@ export default function AdminConfigPage() {
   const [loading, setLoading] = useState(true);
 
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
-  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
-  const [integrationModalOpen, setIntegrationModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
 
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
@@ -52,49 +49,6 @@ export default function AdminConfigPage() {
   const [savingViewingTemplate, setSavingViewingTemplate] = useState(false);
 
   const { user } = useAuth();
-
-  const [notifTitle, setNotifTitle] = useState('');
-  const [notifMessage, setNotifMessage] = useState('');
-  const [savingNotif, setSavingNotif] = useState(false);
-  const [notificationsList, setNotificationsList] = useState<any[]>([]);
-  const [notifIcon, setNotifIcon] = useState('');
-  const [notifImageUrl, setNotifImageUrl] = useState('');
-
-  const [userProfiles, setUserProfiles] = useState<Record<string, string>>({});
-
-  const [viewNotifModal, setViewNotifModal] = useState(false);
-  const [selectedNotif, setSelectedNotif] = useState<any>(null);
-  const [selectedNotifLidas, setSelectedNotifLidas] = useState<string[]>([]);
-  const [selectedNotifNaoLidas, setSelectedNotifNaoLidas] = useState<string[]>([]);
-
-  const exampleData = {
-    titulo: 'Exemplo de Título',
-    professor: 'Prof. João',
-    data: '01/01/2024',
-    disciplina: 'Matemática',
-    serie: '6º Ano',
-    bncc: 'EF06MA01',
-    duracao: '50 min',
-    tema: 'Frações',
-    objetivos: ['Compreender frações', 'Resolver problemas com frações'],
-    habilidades: ['EF06MA01', 'EF06MA02'],
-    desenvolvimento: [
-      { etapa: 'Início', tempo: '10 min', atividade: 'Apresentação do tema', recursos: 'Quadro' },
-      { etapa: 'Desenvolvimento', tempo: '30 min', atividade: 'Exercícios em grupo', recursos: 'Folhas' },
-      { etapa: 'Encerramento', tempo: '10 min', atividade: 'Discussão', recursos: 'Quadro' }
-    ],
-    recursos: ['Quadro', 'Folhas'],
-    conteudosProgramaticos: ['Frações', 'Números racionais'],
-    metodologia: 'Aulas expositivas e práticas.',
-    avaliacao: 'Avaliação contínua.',
-    referencias: ['Livro didático', 'BNCC'],
-    instrucoes: 'Leia atentamente as questões.',
-    questoes: [
-      { numero: 1, tipo: 'multipla_escolha', pergunta: 'Quanto é 1/2 + 1/4?', opcoes: ['3/4', '2/4', '1/4'], pontuacao: 1 },
-      { numero: 2, tipo: 'dissertativa', pergunta: 'Explique o conceito de fração.', linhasResposta: 3 }
-    ],
-    criterios_avaliacao: ['Clareza', 'Correção']
-  };
 
   const handleEditTemplateHtml = (templateId: string) => {
     setEditingTemplateId(templateId);
@@ -216,73 +170,6 @@ export default function AdminConfigPage() {
     }
   }
 
-  const handleViewNotif = async (notif: any) => {
-    setSelectedNotif(notif);
-    setViewNotifModal(true);
-    if (user && !(notif.lida_por || []).includes(user.id)) {
-      await notificationService.markAsRead(notif.id, user.id);
-      const notifs = await notificationService.getActiveNotifications();
-      setNotificationsList(notifs);
-      notif.lida_por = [...(notif.lida_por || []), user.id];
-    }
-  };
-
-  useEffect(() => {
-    if (!selectedNotif) return;
-    const lidas = (selectedNotif.lida_por || []).map((id: string) => userProfiles[id] || id);
-    const allUserIds = Object.keys(userProfiles).filter(id => id !== user?.id);
-    const naoLidas = allUserIds.filter(id => !(selectedNotif.lida_por || []).includes(id)).map(id => userProfiles[id] || id);
-    setSelectedNotifLidas(lidas);
-    setSelectedNotifNaoLidas(naoLidas);
-  }, [selectedNotif, userProfiles, user]);
-
-  function formatDate(dateStr: string) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    const dia = String(d.getDate()).padStart(2, '0');
-    const mes = String(d.getMonth() + 1).padStart(2, '0');
-    const ano = d.getFullYear();
-    const hora = String(d.getHours()).padStart(2, '0');
-    const min = String(d.getMinutes()).padStart(2, '0');
-    return `${dia}/${mes}/${ano} - ${hora}:${min}`;
-  }
-
-  useEffect(() => {
-    async function fetchNotifs() {
-      const notifs = await notificationService.getActiveNotifications();
-      setNotificationsList(notifs);
-    }
-    fetchNotifs();
-  }, []);
-
-  const handleSaveNotification = async (icon?: string, image_url?: string) => {
-    if (!notifTitle.trim() || !notifMessage.trim() || !user?.id) return;
-    setSavingNotif(true);
-    await notificationService.createNotification(notifTitle, notifMessage, user.id, icon, image_url);
-    setSavingNotif(false);
-    setNotificationModalOpen(false);
-    setNotifTitle('');
-    setNotifMessage('');
-    setNotifIcon('');
-    setNotifImageUrl('');
-    const notifs = await notificationService.getActiveNotifications();
-    setNotificationsList(notifs);
-  };
-
-  useEffect(() => {
-    async function fetchProfiles() {
-      const { data: profiles } = await supabase.from('profiles').select('id, full_name, email');
-      if (profiles) {
-        const map: Record<string, string> = {};
-        profiles.forEach((p: any) => {
-          map[p.id] = p.full_name || p.email || p.id;
-        });
-        setUserProfiles(map);
-      }
-    }
-    fetchProfiles();
-  }, []);
-
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
@@ -385,23 +272,6 @@ export default function AdminConfigPage() {
     fetchDashboardData();
   }, []);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const fileName = `${Date.now()}-${file.name}`;
-    const { data, error } = await supabase.storage.from('notificacoes').upload(fileName, file, { upsert: true });
-    if (error) {
-      alert('Erro ao fazer upload da imagem: ' + error.message);
-      return;
-    }
-    const { data: publicUrlData } = supabase.storage.from('notificacoes').getPublicUrl(fileName);
-    if (publicUrlData?.publicUrl) {
-      setNotifImageUrl(publicUrlData.publicUrl);
-    }
-  };
-
-  const iconGallery = ['🔔', '❗'];
-
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -458,7 +328,7 @@ export default function AdminConfigPage() {
               {/* Quick Actions - Takes 1/3 of the space */}
               <div>
                 <AdminQuickActions
-                  onCreateNotification={() => setNotificationModalOpen(true)}
+                  onCreateNotification={() => setTab('notificacoes')}
                   onManageTemplates={() => setTab('templates')}
                   onViewUsers={() => {/* Implement user management */}}
                 />
@@ -524,118 +394,8 @@ export default function AdminConfigPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="notificacoes" className="space-y-6 mt-8">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">Notificações</h2>
-                <p className="text-muted-foreground">Crie e gerencie notificações para todos os usuários da plataforma.</p>
-              </div>
-              <Button
-                onClick={() => { setEditItem(null); setNotificationModalOpen(true); }}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm hover:shadow-md transition-all duration-200"
-              >
-                <Plus size={20} className="mr-2" />
-                Nova Notificação
-              </Button>
-            </div>
-
-            <Card className="border-0 shadow-sm overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50 border-b">
-                    <TableHead className="font-semibold text-foreground">Título</TableHead>
-                    <TableHead className="font-semibold text-foreground">Mensagem</TableHead>
-                    <TableHead className="font-semibold text-foreground">Data</TableHead>
-                    <TableHead className="font-semibold text-foreground">Lidas</TableHead>
-                    <TableHead className="font-semibold text-foreground">Não lidas</TableHead>
-                    <TableHead className="font-semibold text-foreground">Status</TableHead>
-                    <TableHead className="font-semibold text-foreground text-center">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {notificationsList.map((n, idx) => {
-                    const lidas = (n.lida_por || []).map((id: string) => userProfiles[id] || id);
-                    const allUserIds = Object.keys(userProfiles).filter(id => id !== user?.id);
-                    const naoLidas = allUserIds.filter(id => !(n.lida_por || []).includes(id)).map(id => userProfiles[id] || id);
-                    return (
-                      <TableRow key={n.id} className={`hover:bg-muted/30 transition-colors ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2 cursor-pointer hover:text-primary" onClick={() => handleViewNotif(n)}>
-                            {n.icon && <span className="text-lg">{n.icon}</span>}
-                            {n.image_url && <Avatar className="w-6 h-6"><AvatarImage src={n.image_url} /><AvatarFallback>IMG</AvatarFallback></Avatar>}
-                            <span className="text-primary underline">{n.titulo || n.title}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground max-w-xs truncate">{n.mensagem || n.message}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{formatDate(n.data_envio || n.created_at)}</TableCell>
-                        <TableCell>
-                          <Badge className="bg-green-100 text-green-800 border-green-200 font-semibold">
-                            {lidas.length}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className="bg-red-100 text-red-800 border-red-200 font-semibold">
-                            {naoLidas.length}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {n.ativa || n.active ? (
-                            <Badge className="bg-green-100 text-green-800 border-green-200 font-semibold">Ativa</Badge>
-                          ) : (
-                            <Badge className="bg-gray-100 text-gray-700 border-gray-200 font-semibold">Inativa</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex gap-2 justify-center">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/30 font-semibold"
-                              onClick={() => handleViewNotif(n)}
-                            >
-                              <Eye size={14} className="mr-1" />
-                              Abrir
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-                                >
-                                  <Trash2 size={14} />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent className="rounded-2xl border-0 shadow-2xl">
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle className="text-lg font-bold">Excluir Notificação</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Tem certeza que deseja excluir esta notificação? Esta ação não pode ser desfeita.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel className="border-2">Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={async () => {
-                                      await notificationService.deleteNotification(n.id);
-                                      const notifs = await notificationService.getActiveNotifications();
-                                      setNotificationsList(notifs);
-                                    }}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Excluir
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </Card>
+          <TabsContent value="notificacoes" className="mt-8">
+            <NotificationsSection />
           </TabsContent>
         </Tabs>
 
@@ -724,199 +484,6 @@ export default function AdminConfigPage() {
                       Salvar Alterações
                     </>
                   )}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Notification Modal */}
-        <Dialog open={notificationModalOpen} onOpenChange={setNotificationModalOpen}>
-          <DialogContent className="sm:max-w-lg rounded-2xl border-0 shadow-2xl overflow-hidden">
-            <DialogHeader className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6 -m-6 mb-6 rounded-t-2xl">
-              <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                {editItem ? 'Editar Notificação' : 'Nova Notificação'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="p-2 space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Título</label>
-                <Input
-                  placeholder="Título da notificação"
-                  value={notifTitle}
-                  onChange={e => setNotifTitle(e.target.value)}
-                  className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Ícone</label>
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-sm text-gray-600">Atual:</span>
-                  <span className="text-2xl">{notifIcon}</span>
-                  <div className="flex gap-1">
-                    {iconGallery.map((icon, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        className={`p-2 hover:bg-blue-100 rounded-lg transition-colors ${notifIcon === icon ? 'ring-2 ring-blue-400 bg-blue-50' : 'bg-gray-50'}`}
-                        onClick={() => setNotifIcon(icon)}
-                      >
-                        <span className="text-2xl">{icon}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <Input
-                  placeholder="Ícone personalizado (emoji ou nome)"
-                  value={notifIcon}
-                  onChange={e => setNotifIcon(e.target.value)}
-                  className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Imagem (opcional)</label>
-                <div className="flex items-center gap-3 mb-2">
-                  {notifImageUrl && (
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage src={notifImageUrl} />
-                      <AvatarFallback>IMG</AvatarFallback>
-                    </Avatar>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Mensagem</label>
-                <Textarea
-                  placeholder="Conteúdo da notificação"
-                  value={notifMessage}
-                  onChange={e => setNotifMessage(e.target.value)}
-                  className="min-h-[100px] border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                />
-              </div>
-              <Button
-                className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold shadow-lg"
-                onClick={async () => { await handleSaveNotification(notifIcon, notifImageUrl); }}
-                disabled={savingNotif}
-              >
-                {savingNotif ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Save size={16} className="mr-2" />
-                    Salvar Notificação
-                  </>
-                )}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Notification Details Modal */}
-        <Dialog open={viewNotifModal} onOpenChange={setViewNotifModal}>
-          <DialogContent className="max-w-3xl w-full rounded-2xl border-0 shadow-2xl overflow-hidden max-h-[90vh]">
-            <DialogHeader className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6 -m-6 mb-6 rounded-t-2xl">
-              <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Detalhes da Notificação
-              </DialogTitle>
-            </DialogHeader>
-            <div className="flex flex-col gap-6 p-2 overflow-auto max-h-[calc(90vh-120px)]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700">Título</label>
-                  <Input
-                    className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                    value={selectedNotif?.titulo || ''}
-                    onChange={e => setSelectedNotif({ ...selectedNotif, titulo: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700">Ícone</label>
-                  <Input
-                    className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                    value={selectedNotif?.icon || ''}
-                    onChange={e => setSelectedNotif({ ...selectedNotif, icon: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Mensagem</label>
-                <Textarea
-                  className="min-h-[100px] border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                  value={selectedNotif?.mensagem || ''}
-                  onChange={e => setSelectedNotif({ ...selectedNotif, mensagem: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">URL da imagem (opcional)</label>
-                <Input
-                  className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                  value={selectedNotif?.image_url || ''}
-                  onChange={e => setSelectedNotif({ ...selectedNotif, image_url: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="border-2 border-green-200 bg-green-50/50">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-green-700 text-lg">Lidas ({selectedNotifLidas.length})</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {selectedNotifLidas.map(uid => (
-                        <div key={uid} className="text-sm text-green-600 bg-white px-2 py-1 rounded">{uid}</div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-2 border-red-200 bg-red-50/50">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-red-700 text-lg">Não lidas ({selectedNotifNaoLidas.length})</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {selectedNotifNaoLidas.map(uid => (
-                        <div key={uid} className="text-sm text-red-600 bg-white px-2 py-1 rounded">{uid}</div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setViewNotifModal(false)}
-                  className="h-12 px-6 border-2"
-                >
-                  Fechar
-                </Button>
-                <Button
-                  onClick={async () => {
-                    if (selectedNotif && selectedNotif.id) {
-                      await notificationService.updateNotification(selectedNotif.id, {
-                        titulo: selectedNotif.titulo,
-                        mensagem: selectedNotif.mensagem,
-                        icon: selectedNotif.icon,
-                        image_url: selectedNotif.image_url,
-                      });
-                      setViewNotifModal(false);
-                      const notifs = await notificationService.getActiveNotifications();
-                      setNotificationsList(notifs);
-                    }
-                  }}
-                  className="h-12 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                >
-                  <Save size={16} className="mr-2" />
-                  Salvar Alterações
                 </Button>
               </div>
             </div>
