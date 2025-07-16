@@ -455,11 +455,11 @@ const MaterialsList: React.FC = () => {
     }
 
     try {
-      // Use exportService com um objeto customizado, mas sem forçar o tipo
+      // Use exportService com um objeto customizado, mas com type permitido
       const exportObj = {
         id: material.id,
         title: material.titulo,
-        type: 'atividade', // Use um tipo permitido apenas para exportação
+        type: 'atividade' as 'atividade', // Use um tipo permitido explicitamente
         subject: material.disciplina,
         grade: 'Apoio',
         createdAt: material.created_at,
@@ -467,16 +467,16 @@ const MaterialsList: React.FC = () => {
         formData: { supportMaterial: material }
       };
       if (format === 'pdf') {
-        await exportService.exportToPDFDownload(exportObj);
+        await exportService.exportToPDFDownload(exportObj as GeneratedMaterial);
         toast.success('PDF exportado com sucesso!');
       } else if (format === 'word') {
-        await exportService.exportToWord(exportObj);
+        await exportService.exportToWord(exportObj as GeneratedMaterial);
         toast.success('Documento Word exportado com sucesso!');
       } else if (format === 'ppt') {
-        await exportService.exportToPPT(exportObj);
+        await exportService.exportToPPT(exportObj as GeneratedMaterial);
         toast.success('PowerPoint exportado com sucesso!');
       } else if (format === 'print') {
-        await exportService.exportToPDF(exportObj);
+        await exportService.exportToPDF(exportObj as GeneratedMaterial);
         toast.success('Material enviado para impressão!');
       }
       activityService.addActivity({
@@ -727,7 +727,7 @@ const MaterialsList: React.FC = () => {
                                 )}
                                 PPT {!canDownloadPPT() && '(Premium)'}
                               </button>
-                            ) : material.type !== 'apoio' ? (
+                            ) : (
                               <button 
                                 onClick={() => handleExport(material, 'word')} 
                                 className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center ${
@@ -742,7 +742,7 @@ const MaterialsList: React.FC = () => {
                                 )}
                                 Word {!canDownloadWord() && '(Premium)'}
                               </button>
-                            ) : null}
+                            )}
                           </div>
                         )}
                       </div>
