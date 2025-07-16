@@ -555,7 +555,7 @@ const CreateLesson: React.FC = () => {
       if (user?.id) {
         const { data: profile } = await supabase.from('perfis').select('nome_preferido, escola').eq('user_id', user.id).single();
         professor = profile?.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Professor';
-        escola = profile?.escola || formData.school || '';
+        escola = profile?.escola || '';
       }
 
       // Data atual formato brasileiro
