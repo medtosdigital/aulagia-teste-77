@@ -18,6 +18,7 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import AdminDashboardStats from './admin/AdminDashboardStats';
 import AdminActivityFeed from './admin/AdminActivityFeed';
 import AdminQuickActions from './admin/AdminQuickActions';
+import AdminFinanceStats from './admin/AdminFinanceStats';
 
 export default function AdminConfigPage() {
   const [tab, setTab] = useState('dashboard');
@@ -27,6 +28,12 @@ export default function AdminConfigPage() {
     { label: 'Materiais Criados', value: 0, icon: FileText, color: 'from-purple-500 to-purple-600' },
   ]);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [financeData, setFinanceData] = useState({
+    monthlyRevenue: 0,
+    annualRevenue: 0,
+    averageRevenuePerUser: 0,
+    totalPaidUsers: 0
+  });
   const [loading, setLoading] = useState(true);
 
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
@@ -279,55 +286,101 @@ export default function AdminConfigPage() {
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
-      const { count: userCount } = await supabase
-        .from('profiles')
-        .select('id', { count: 'exact', head: true });
-      const { count: paidCount } = await supabase
-        .from('planos_usuarios')
-        .select('user_id', { count: 'exact', head: true })
-        .in('plano_ativo', ['professor', 'grupo_escolar']);
-      const { count: planosCount } = await supabase
-        .from('planos_de_aula')
-        .select('id', { count: 'exact', head: true });
-      const { count: atividadesCount } = await supabase
-        .from('atividades')
-        .select('id', { count: 'exact', head: true });
-      const { count: slidesCount } = await supabase
-        .from('slides')
-        .select('id', { count: 'exact', head: true });
-      const { count: avaliacoesCount } = await supabase
-        .from('avaliacoes')
-        .select('id', { count: 'exact', head: true });
-      setMetrics([
-        { label: 'Usuários Totais', value: userCount || 0, icon: Users, color: 'from-blue-500 to-blue-600' },
-        { label: 'Usuários Pagos', value: paidCount || 0, icon: Badge, color: 'from-green-500 to-green-600' },
-        { label: 'Materiais Criados', value: (planosCount || 0) + (atividadesCount || 0) + (slidesCount || 0) + (avaliacoesCount || 0), icon: FileText, color: 'from-purple-500 to-purple-600' },
-      ]);
-      const { data: activities } = await supabase
-        .from('user_activities')
-        .select('id, user_id, title, type, created_at')
-        .order('created_at', { ascending: false })
-        .limit(10);
-      let userMap: Record<string, string> = {};
-      if (activities && activities.length > 0) {
-        const userIds = Array.from(new Set(activities.map(a => a.user_id)));
-        const { data: users } = await supabase
+      try {
+        // Fetch basic metrics
+        const { count: userCount } = await supabase
           .from('profiles')
-          .select('id, full_name, email')
-          .in('id', userIds);
-        if (users) {
-          users.forEach(u => {
-            userMap[u.id] = u.full_name || u.email || u.id;
+          .select('id', { count: 'exact', head: true });
+        
+        const { count: paidCount } = await supabase
+          .from('planos_usuarios')
+          .select('user_id', { count: 'exact', head: true })
+          .in('plano_ativo', ['professor', 'grupo_escolar']);
+        
+        const { count: planosCount } = await supabase
+          .from('planos_de_aula')
+          .select('id', { count: 'exact', head: true });
+        
+        const { count: atividadesCount } = await supabase
+          .from('atividades')
+          .select('id', { count: 'exact', head: true });
+        
+        const { count: slidesCount } = await supabase
+          .from('slides')
+          .select('id', { count: 'exact', head: true });
+        
+        const { count: avaliacoesCount } = await supabase
+          .from('avaliacoes')
+          .select('id', { count: 'exact', head: true });
+
+        // Calculate finance data
+        const { data: planCounts } = await supabase
+          .from('planos_usuarios')
+          .select('plano_ativo')
+          .in('plano_ativo', ['professor', 'grupo_escolar']);
+
+        let monthlyRevenue = 0;
+        let annualRevenue = 0;
+
+        if (planCounts) {
+          planCounts.forEach(plan => {
+            if (plan.plano_ativo === 'professor') {
+              monthlyRevenue += 29.90;
+              annualRevenue += 299;
+            } else if (plan.plano_ativo === 'grupo_escolar') {
+              monthlyRevenue += 89.90;
+              annualRevenue += 849;
+            }
           });
         }
+
+        const averageRevenuePerUser = paidCount && paidCount > 0 ? monthlyRevenue / paidCount : 0;
+
+        setMetrics([
+          { label: 'Usuários Totais', value: userCount || 0, icon: Users, color: 'from-blue-500 to-blue-600' },
+          { label: 'Usuários Pagos', value: paidCount || 0, icon: Badge, color: 'from-green-500 to-green-600' },
+          { label: 'Materiais Criados', value: (planosCount || 0) + (atividadesCount || 0) + (slidesCount || 0) + (avaliacoesCount || 0), icon: FileText, color: 'from-purple-500 to-purple-600' },
+        ]);
+
+        setFinanceData({
+          monthlyRevenue,
+          annualRevenue,
+          averageRevenuePerUser,
+          totalPaidUsers: paidCount || 0
+        });
+
+        // Fetch activities
+        const { data: activities } = await supabase
+          .from('user_activities')
+          .select('id, user_id, title, type, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        let userMap: Record<string, string> = {};
+        if (activities && activities.length > 0) {
+          const userIds = Array.from(new Set(activities.map(a => a.user_id)));
+          const { data: users } = await supabase
+            .from('profiles')
+            .select('id, full_name, email')
+            .in('id', userIds);
+          if (users) {
+            users.forEach(u => {
+              userMap[u.id] = u.full_name || u.email || u.id;
+            });
+          }
+        }
+
+        setRecentActivities(
+          (activities || []).map(a => ({
+            ...a,
+            userName: userMap[a.user_id] || a.user_id,
+          }))
+        );
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
       }
-      setRecentActivities(
-        (activities || []).map(a => ({
-          ...a,
-          userName: userMap[a.user_id] || a.user_id,
-        }))
-      );
-      setLoading(false);
     }
     fetchDashboardData();
   }, []);
@@ -391,6 +444,9 @@ export default function AdminConfigPage() {
           <TabsContent value="dashboard" className="space-y-8 mt-8">
             {/* Stats Cards */}
             <AdminDashboardStats metrics={metrics} loading={loading} />
+
+            {/* Finance Stats */}
+            <AdminFinanceStats financeData={financeData} loading={loading} />
 
             {/* Dashboard Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
