@@ -24,20 +24,23 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
   const [apoios, setApoios] = useState<any[]>([]);
   const [loadingApoios, setLoadingApoios] = useState(false);
 
+  // Função para buscar apoios vinculados ao material principal
+  const fetchApoios = async () => {
+    if (!material?.id) return;
+    setLoadingApoios(true);
+    const { data, error } = await supabase
+      .from('materiais_apoio')
+      .select('id, titulo, created_at, conteudo')
+      .eq('material_principal_id', material.id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if (!error && data) setApoios(data);
+    setLoadingApoios(false);
+  };
+
   useEffect(() => {
-    const fetchApoios = async () => {
-      if (!material?.id) return;
-      setLoadingApoios(true);
-      const { data, error } = await supabase
-        .from('materiais_apoio')
-        .select('id, titulo, created_at, conteudo')
-        .eq('material_principal_id', material.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      if (!error && data) setApoios(data);
-      setLoadingApoios(false);
-    };
     if (open && material?.id) fetchApoios();
+    // eslint-disable-next-line
   }, [open, material?.id]);
 
   const generateSupportContent = async () => {
@@ -65,6 +68,13 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
       const prompt = undefined; // prompt agora é gerado no edge function
       const titulo = material.content.titulo || material.title || '';
       const objetivos = material.content.objetivos || '';
+      // Definir tipo do material principal de forma robusta
+      let tipo_material_principal = 'plano_aula';
+      if (material.content && typeof material.content === 'object') {
+        tipo_material_principal = material.content.tipo_material_principal || material.content.tipo_material || material.content.tipo || material.type || 'plano_aula';
+      } else if (material.type) {
+        tipo_material_principal = material.type;
+      }
       const { data, error } = await supabase.functions.invoke('gerarMaterialIA', {
         body: {
           materialType: 'apoio',
@@ -80,14 +90,36 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
         }
       });
       if (error || !data || !data.success) {
+        console.error('Erro na função gerarMaterialIA:', error, data);
         toast.error('Erro ao gerar conteúdo de apoio');
         setSupportContent(null);
         setIsGenerating(false);
         return;
       }
-      setSupportContent(data.content && typeof data.content === 'string' ? data.content : JSON.stringify(data.content, null, 2));
-      toast.success('Conteúdo de apoio gerado com sucesso!');
+      const conteudoApoio = data.content && typeof data.content === 'string' ? data.content : JSON.stringify(data.content, null, 2);
+      // Salvar no Supabase
+      const { error: insertError } = await supabase.from('materiais_apoio').insert([
+        {
+          titulo: titulo || `Apoio - ${tema}`,
+          conteudo: conteudoApoio,
+          material_principal_id: material.id,
+          user_id: user.id,
+          tipo_material_principal
+        }
+      ]);
+      if (insertError) {
+        console.error('Erro ao inserir no Supabase:', insertError);
+        toast.error('Erro ao salvar conteúdo de apoio no banco de dados');
+        setSupportContent(null);
+        setIsGenerating(false);
+        return;
+      }
+      setSupportContent(conteudoApoio);
+      toast.success('Conteúdo de apoio gerado e salvo com sucesso!');
+      // Atualizar lista de apoios
+      fetchApoios();
     } catch (error) {
+      console.error('Erro inesperado ao gerar material de apoio:', error);
       toast.error('Erro ao gerar conteúdo de apoio');
       setSupportContent(null);
     } finally {
@@ -104,16 +136,17 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
     // Converter markdown para HTML
     let conteudoHtml = supportContent;
     try {
-      conteudoHtml = marked.parse(supportContent);
+      const parsed = marked.parse(supportContent);
+      if (typeof parsed === 'string') conteudoHtml = parsed;
     } catch {}
-    return templateService.renderTemplate('5', {
+    return String(templateService.renderTemplate('5', {
       titulo: 'Conteúdo de Apoio ao Professor',
       tema,
       disciplina,
       serie,
       conteudo: conteudoHtml,
       data
-    });
+    }) || '');
   };
 
   const generateSupportContentPDF = () => {
