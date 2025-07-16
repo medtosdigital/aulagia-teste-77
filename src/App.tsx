@@ -20,6 +20,7 @@ import Dashboard from './components/Dashboard';
 import NotFound from './pages/NotFound';
 import LandingPage from './pages/LandingPage';
 import { useAuth } from '@/contexts/AuthContext';
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -76,18 +77,20 @@ function App() {
             <PresentationPortal />
             <Router>
               <ScrollToTop />
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/termos-de-servico" element={<TermosDeServico />} />
-                <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
-                <Route path="/termos-de-uso" element={<TermosDeUso />} />
-                <Route path="/aviso-ia" element={<AvisoIA />} />
-                <Route path="/central-de-ajuda" element={<CentralDeAjuda />} />
-                <Route path="/contato" element={<Contato />} />
-                <Route path="/landing" element={<LandingPage />} />
-                <Route path="/*" element={<Index />} />
-                <Route path="*" element={<NotFoundRedirect />} />
-              </Routes>
+              <ErrorBoundary>
+                <Routes>
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/termos-de-servico" element={<TermosDeServico />} />
+                  <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
+                  <Route path="/termos-de-uso" element={<TermosDeUso />} />
+                  <Route path="/aviso-ia" element={<AvisoIA />} />
+                  <Route path="/central-de-ajuda" element={<CentralDeAjuda />} />
+                  <Route path="/contato" element={<Contato />} />
+                  <Route path="/landing" element={<LandingPage />} />
+                  <Route path="/*" element={<Index />} />
+                  <Route path="*" element={<NotFoundRedirect />} />
+                </Routes>
+              </ErrorBoundary>
             </Router>
           </PresentationProvider>
         </AuthProvider>
