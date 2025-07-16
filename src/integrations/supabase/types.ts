@@ -158,6 +158,30 @@ export type Database = {
         }
         Relationships: []
       }
+      feedbacks: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       grupos_escolares: {
         Row: {
           created_at: string
@@ -246,6 +270,56 @@ export type Database = {
             columns: ["grupo_id"]
             isOneToOne: false
             referencedRelation: "grupos_escolares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notificacoes: {
+        Row: {
+          ativa: boolean | null
+          created_at: string | null
+          criada_por: string | null
+          data_envio: string | null
+          icon: string | null
+          id: string
+          image_url: string | null
+          lida_por: string[] | null
+          mensagem: string
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativa?: boolean | null
+          created_at?: string | null
+          criada_por?: string | null
+          data_envio?: string | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          lida_por?: string[] | null
+          mensagem: string
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativa?: boolean | null
+          created_at?: string | null
+          criada_por?: string | null
+          data_envio?: string | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          lida_por?: string[] | null
+          mensagem?: string
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_criada_por_fkey"
+            columns: ["criada_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -396,6 +470,7 @@ export type Database = {
           full_name: string | null
           id: string
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -404,6 +479,7 @@ export type Database = {
           full_name?: string | null
           id: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -412,6 +488,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -526,72 +603,6 @@ export type Database = {
         }
         Relationships: []
       }
-      notificacoes: {
-        Row: {
-          id: string;
-          titulo: string;
-          mensagem: string;
-          data_envio: string | null;
-          ativa: boolean | null;
-          criada_por: string | null;
-          lida_por: string[] | null;
-          created_at: string | null;
-          updated_at: string | null;
-          icon?: string | null;
-          image_url?: string | null;
-        };
-        Insert: {
-          id?: string;
-          titulo: string;
-          mensagem: string;
-          data_envio?: string | null;
-          ativa?: boolean | null;
-          criada_por?: string | null;
-          lida_por?: string[] | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-          icon?: string | null;
-          image_url?: string | null;
-        };
-        Update: {
-          id?: string;
-          titulo?: string;
-          mensagem?: string;
-          data_envio?: string | null;
-          ativa?: boolean | null;
-          criada_por?: string | null;
-          lida_por?: string[] | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-          icon?: string | null;
-          image_url?: string | null;
-        };
-        Relationships: [];
-      };
-      feedbacks: {
-        Row: {
-          id: string;
-          user_id: string;
-          type: string;
-          message: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          type: string;
-          message: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          type?: string;
-          message?: string;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
     }
     Views: {
       [_ in never]: never
@@ -613,9 +624,13 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      mark_notification_as_read: {
+        Args: { notification_id: string; user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      tipo_plano: "gratuito" | "professor" | "grupo_escolar"
+      tipo_plano: "gratuito" | "professor" | "grupo_escolar" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -743,7 +758,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      tipo_plano: ["gratuito", "professor", "grupo_escolar"],
+      tipo_plano: ["gratuito", "professor", "grupo_escolar", "admin"],
     },
   },
 } as const
