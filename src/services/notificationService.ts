@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
@@ -37,29 +36,11 @@ class NotificationService {
   }
 
   async markAsRead(notificationId: string, userId: string) {
-    // Get current notification
-    const { data: notification, error: fetchError } = await supabase
-      .from('notificacoes')
-      .select('lida_por')
-      .eq('id', notificationId)
-      .single();
-    
-    if (fetchError) throw fetchError;
-    
-    // Check if user already read it
-    const currentReadBy = notification?.lida_por || [];
-    if (currentReadBy.includes(userId)) {
-      return true; // Already marked as read
-    }
-    
-    // Add user to lida_por array
-    const updatedReadBy = [...currentReadBy, userId];
-    
-    const { error } = await supabase
-      .from('notificacoes')
-      .update({ lida_por: updatedReadBy })
-      .eq('id', notificationId);
-    
+    // Adiciona userId ao array lida_por se ainda não estiver
+    const { error } = await supabase.rpc('mark_notification_as_read', {
+      notification_id: notificationId,
+      user_id: userId
+    });
     if (error) throw error;
     return true;
   }
