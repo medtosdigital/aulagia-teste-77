@@ -33,10 +33,14 @@ const AudioTranscriptionButton: React.FC<AudioTranscriptionButtonProps> = ({
     }
   };
 
-  const getButtonColor = () => {
-    if (isRecording) return 'hover:bg-red-50 text-red-500';
-    if (isTranscribing) return 'hover:bg-blue-50 text-blue-500';
-    return 'hover:bg-blue-50 text-blue-500';
+  const getButtonStyle = () => {
+    if (isRecording) {
+      return 'border-2 border-red-400 bg-red-50 text-red-600 shadow-md ring-2 ring-red-200 animate-pulse';
+    }
+    if (isTranscribing) {
+      return 'border-2 border-blue-400 bg-blue-50 text-blue-600 shadow-md ring-2 ring-blue-200';
+    }
+    return 'border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 hover:shadow-md transition-all duration-200';
   };
 
   const getIcon = () => {
@@ -45,24 +49,32 @@ const AudioTranscriptionButton: React.FC<AudioTranscriptionButtonProps> = ({
     return <Mic className="w-4 h-4 sm:w-5 sm:h-5" />;
   };
 
+  const getTooltipMessage = () => {
+    if (isRecording) return 'Escutando... Clique para parar';
+    if (isTranscribing) return 'Processando áudio...';
+    return 'Clique para gravar áudio';
+  };
+
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      onClick={handleMicClick}
-      disabled={isTranscribing}
-      className={`absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-lg transition-colors ${getButtonColor()}`}
-      title={
-        isRecording 
-          ? 'Clique para parar a gravação' 
-          : isTranscribing 
-            ? 'Processando áudio...' 
-            : 'Clique para gravar áudio'
-      }
-    >
-      {getIcon()}
-    </Button>
+    <div className="relative">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={handleMicClick}
+        disabled={isTranscribing}
+        className={`absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all duration-200 ${getButtonStyle()}`}
+        title={getTooltipMessage()}
+      >
+        {getIcon()}
+      </Button>
+      
+      {isRecording && (
+        <div className="absolute right-16 sm:right-20 top-1/2 transform -translate-y-1/2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-medium border border-red-200 shadow-sm animate-fade-in">
+          Escutando...
+        </div>
+      )}
+    </div>
   );
 };
 
