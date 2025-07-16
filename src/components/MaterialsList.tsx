@@ -75,7 +75,6 @@ const MaterialsList: React.FC = () => {
   const [supportMaterials, setSupportMaterials] = useState<SupportMaterial[]>([]);
   const [selectedSupportMaterial, setSelectedSupportMaterial] = useState<SupportMaterial | null>(null);
   const [supportMaterialModalOpen, setSupportMaterialModalOpen] = useState(false);
-  // Estado para modal de edição de apoio
   const [supportMaterialEditModalOpen, setSupportMaterialEditModalOpen] = useState(false);
   const [supportMaterialToEdit, setSupportMaterialToEdit] = useState<SupportMaterial | null>(null);
 
@@ -934,7 +933,7 @@ const MaterialsList: React.FC = () => {
         onSave={handleInlineEditSave} 
       />
 
-      {/* Support Material Modal */}
+      {/* Support Material View Modal */}
       <SupportMaterialModal 
         material={selectedSupportMaterial}
         open={supportMaterialModalOpen}
@@ -947,23 +946,21 @@ const MaterialsList: React.FC = () => {
         }}
       />
 
-      {/* Modal de edição de apoio */}
-      {supportMaterialToEdit && (
-        <SupportMaterialModal
-          material={supportMaterialToEdit}
-          open={supportMaterialEditModalOpen}
-          onClose={() => {
-            setSupportMaterialEditModalOpen(false);
-            setSupportMaterialToEdit(null);
-          }}
-          onDelete={() => {
-            loadSupportMaterials();
-            setSupportMaterialEditModalOpen(false);
-            setSupportMaterialToEdit(null);
-          }}
-          isEditMode={true}
-        />
-      )}
+      {/* Support Material Edit Modal */}
+      <SupportMaterialModal
+        material={supportMaterialToEdit}
+        open={supportMaterialEditModalOpen}
+        onClose={() => {
+          setSupportMaterialEditModalOpen(false);
+          setSupportMaterialToEdit(null);
+        }}
+        onDelete={() => {
+          loadSupportMaterials();
+          setSupportMaterialEditModalOpen(false);
+          setSupportMaterialToEdit(null);
+        }}
+        isEditMode={true}
+      />
 
       {/* Modal de upgrade */}
       <UpgradeModal

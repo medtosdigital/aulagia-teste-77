@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
-import { X, Download, Edit3, Trash2, Printer, FileDown } from 'lucide-react';
+import { X, Download, Edit3, Trash2, Printer, FileDown, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -37,18 +39,41 @@ interface SupportMaterialModalProps {
   open: boolean;
   onClose: () => void;
   onDelete?: () => void;
+  isEditMode?: boolean;
 }
 
 const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({ 
   material, 
   open, 
   onClose, 
-  onDelete 
+  onDelete,
+  isEditMode = false
 }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [editMode, setEditMode] = useState(isEditMode);
+  
+  // Edit form states
+  const [editTitulo, setEditTitulo] = useState(material?.titulo || '');
+  const [editConteudo, setEditConteudo] = useState(material?.conteudo || '');
+  const [editDisciplina, setEditDisciplina] = useState(material?.disciplina || '');
+  const [editTema, setEditTema] = useState(material?.tema || '');
+  const [editTurma, setEditTurma] = useState(material?.turma || '');
+  const [saving, setSaving] = useState(false);
+
   const { canEditMaterials, canDownloadWord } = usePlanPermissions();
   const { openModal: openUpgradeModal } = useUpgradeModal();
+
+  React.useEffect(() => {
+    if (material) {
+      setEditTitulo(material.titulo);
+      setEditConteudo(material.conteudo);
+      setEditDisciplina(material.disciplina);
+      setEditTema(material.tema);
+      setEditTurma(material.turma || '');
+    }
+    setEditMode(isEditMode);
+  }, [material, isEditMode]);
 
   if (!material) return null;
 
@@ -58,8 +83,52 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
       openUpgradeModal();
       return;
     }
-    // TODO: Implement edit functionality
-    toast.info('Funcionalidade de edição em desenvolvimento');
+    setEditMode(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!canEditMaterials()) {
+      toast.error('Edição de materiais disponível apenas em planos pagos');
+      openUpgradeModal();
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('materiais_apoio')
+        .update({
+          titulo: editTitulo,
+          conteudo: editConteudo,
+          disciplina: editDisciplina,
+          tema: editTema,
+          turma: editTurma
+        })
+        .eq('id', material.id);
+
+      if (error) {
+        toast.error('Erro ao salvar alterações');
+        return;
+      }
+
+      toast.success('Material de apoio atualizado com sucesso!');
+      setEditMode(false);
+      onClose();
+    } catch (error) {
+      console.error('Error updating support material:', error);
+      toast.error('Erro ao salvar alterações');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditTitulo(material.titulo);
+    setEditConteudo(material.conteudo);
+    setEditDisciplina(material.disciplina);
+    setEditTema(material.tema);
+    setEditTurma(material.turma || '');
+    setEditMode(false);
   };
 
   const handleDelete = async () => {
@@ -166,6 +235,59 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
   };
 
   const renderContent = () => {
+    if (editMode) {
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Título</label>
+            <Input
+              value={editTitulo}
+              onChange={(e) => setEditTitulo(e.target.value)}
+              placeholder="Título do material de apoio"
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Disciplina</label>
+              <Input
+                value={editDisciplina}
+                onChange={(e) => setEditDisciplina(e.target.value)}
+                placeholder="Disciplina"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tema</label>
+              <Input
+                value={editTema}
+                onChange={(e) => setEditTema(e.target.value)}
+                placeholder="Tema"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Turma</label>
+              <Input
+                value={editTurma}
+                onChange={(e) => setEditTurma(e.target.value)}
+                placeholder="Turma"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Conteúdo</label>
+            <Textarea
+              value={editConteudo}
+              onChange={(e) => setEditConteudo(e.target.value)}
+              placeholder="Conteúdo do material de apoio"
+              rows={15}
+              className="min-h-[400px]"
+            />
+          </div>
+        </div>
+      );
+    }
+
     try {
       // Tentar parsear como JSON estruturado
       const parsedContent = JSON.parse(material.conteudo);
@@ -268,69 +390,95 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span>{material.titulo}</span>
+              <span>{editMode ? 'Editando: ' + material.titulo : material.titulo}</span>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEdit}
-                  className={canEditMaterials() ? 'hover:bg-blue-50' : 'opacity-50 cursor-not-allowed'}
-                  title={canEditMaterials() ? "Editar" : "Edição disponível apenas em planos pagos"}
-                >
-                  <Edit3 className="w-4 h-4 mr-1" />
-                  Editar
-                </Button>
-                
-                <div className="relative">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
-                    className="hover:bg-green-50"
-                  >
-                    <Download className="w-4 h-4 mr-1" />
-                    Exportar
-                  </Button>
-                  
-                  {exportDropdownOpen && (
-                    <div className="absolute top-full mt-1 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]">
-                      <button
-                        onClick={() => handleExport('print')}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                {editMode ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCancelEdit}
+                      disabled={saving}
+                      className="hover:bg-gray-50"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSaveEdit}
+                      disabled={saving}
+                      className="hover:bg-green-50 text-green-600"
+                    >
+                      <Save className="w-4 h-4 mr-1" />
+                      {saving ? 'Salvando...' : 'Salvar'}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEdit}
+                      className={canEditMaterials() ? 'hover:bg-blue-50' : 'opacity-50 cursor-not-allowed'}
+                      title={canEditMaterials() ? "Editar" : "Edição disponível apenas em planos pagos"}
+                    >
+                      <Edit3 className="w-4 h-4 mr-1" />
+                      Editar
+                    </Button>
+                    
+                    <div className="relative">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+                        className="hover:bg-green-50"
                       >
-                        <Printer className="w-3 h-3 mr-2" />
-                        Imprimir
-                      </button>
-                      <button
-                        onClick={() => handleExport('pdf')}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
-                      >
-                        <FileDown className="w-3 h-3 mr-2" />
-                        PDF
-                      </button>
-                      <button
-                        onClick={() => handleExport('word')}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center ${
-                          canDownloadWord() ? '' : 'opacity-50 cursor-not-allowed'
-                        }`}
-                        disabled={!canDownloadWord()}
-                      >
-                        <FileDown className="w-3 h-3 mr-2" />
-                        Word {!canDownloadWord() && '(Premium)'}
-                      </button>
+                        <Download className="w-4 h-4 mr-1" />
+                        Exportar
+                      </Button>
+                      
+                      {exportDropdownOpen && (
+                        <div className="absolute top-full mt-1 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]">
+                          <button
+                            onClick={() => handleExport('print')}
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                          >
+                            <Printer className="w-3 h-3 mr-2" />
+                            Imprimir
+                          </button>
+                          <button
+                            onClick={() => handleExport('pdf')}
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                          >
+                            <FileDown className="w-3 h-3 mr-2" />
+                            PDF
+                          </button>
+                          <button
+                            onClick={() => handleExport('word')}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center ${
+                              canDownloadWord() ? '' : 'opacity-50 cursor-not-allowed'
+                            }`}
+                            disabled={!canDownloadWord()}
+                          >
+                            <FileDown className="w-3 h-3 mr-2" />
+                            Word {!canDownloadWord() && '(Premium)'}
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDeleteDialogOpen(true)}
-                  className="text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Excluir
-                </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDeleteDialogOpen(true)}
+                      className="text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Excluir
+                    </Button>
+                  </>
+                )}
                 
                 <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
                   <X className="w-4 h-4" />
@@ -341,11 +489,13 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
           
           <div className="flex-1 overflow-auto p-4 border rounded-lg bg-gray-50">
             <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="mb-4 text-sm text-gray-600">
-                <strong>Disciplina:</strong> {material.disciplina} | 
-                <strong> Tema:</strong> {material.tema} | 
-                <strong> Turma:</strong> {material.turma}
-              </div>
+              {!editMode && (
+                <div className="mb-4 text-sm text-gray-600">
+                  <strong>Disciplina:</strong> {material.disciplina} | 
+                  <strong> Tema:</strong> {material.tema} | 
+                  <strong> Turma:</strong> {material.turma}
+                </div>
+              )}
               
               {renderContent()}
             </div>
