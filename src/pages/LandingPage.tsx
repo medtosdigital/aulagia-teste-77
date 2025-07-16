@@ -189,8 +189,8 @@ const LandingPage: React.FC = () => {
   return <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm w-full">
-        <div className="w-full px-4 sm:px-6 flex items-center justify-center lg:px-[2px] py-[8px]">
-          <div className="flex items-center h-16 w-full max-w-7xl">
+        <div className="w-full px-4 sm:px-6 flex items-center justify-center py-[12px] mx-0 lg:px-0">
+          <div className="flex items-center h-16 w-full max-w-7xl px-0">
             {isMobile ? <div className="flex items-center w-full justify-between relative">
                 {/* Logo padrão Sidebar no mobile */}
                 <div className="flex items-center space-x-2 flex-shrink-0">
