@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Download, Edit3, Trash2, Printer, FileDown, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -542,7 +541,7 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
-          </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
