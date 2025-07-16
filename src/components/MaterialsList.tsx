@@ -207,6 +207,8 @@ const MaterialsList: React.FC = () => {
     // Garantir que outros modais estão fechados
     setEditModalOpen(false);
     setInlineEditModalOpen(false);
+    setSupportMaterialModalOpen(false);
+    setSupportMaterialEditModalOpen(false);
   };
 
   const handleEditMaterial = (material: GeneratedMaterialWithOptionalFormData) => {
@@ -218,10 +220,13 @@ const MaterialsList: React.FC = () => {
     
     console.log('Opening edit modal for material:', material.title);
     setSelectedMaterial(material);
-    setEditModalOpen(true);
-    // Garantir que outros modais estão fechados
+    // Fechar todos os outros modais primeiro
     setModalOpen(false);
     setInlineEditModalOpen(false);
+    setSupportMaterialModalOpen(false);
+    setSupportMaterialEditModalOpen(false);
+    // Abrir o modal de edição
+    setEditModalOpen(true);
   };
 
   const handleEdit = (material: GeneratedMaterialWithOptionalFormData) => {
@@ -233,10 +238,13 @@ const MaterialsList: React.FC = () => {
     
     console.log('Opening inline edit modal for material:', material.title);
     setMaterialToEdit(material);
-    setInlineEditModalOpen(true);
-    // Garantir que outros modais estão fechados
+    // Fechar todos os outros modais primeiro
     setModalOpen(false);
     setEditModalOpen(false);
+    setSupportMaterialModalOpen(false);
+    setSupportMaterialEditModalOpen(false);
+    // Abrir o modal de edição inline
+    setInlineEditModalOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -675,7 +683,7 @@ const MaterialsList: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleEditMaterial(material)} 
+                        onClick={() => handleEdit(material)} 
                         className={`h-8 w-8 p-0 ${canEditMaterials() 
                           ? 'hover:bg-blue-50 hover:text-blue-600' 
                           : 'opacity-50 cursor-not-allowed hover:bg-gray-50'
@@ -921,7 +929,10 @@ const MaterialsList: React.FC = () => {
         onEdit={() => {
           console.log('Edit button clicked from MaterialModal');
           setModalOpen(false);
-          setTimeout(() => setEditModalOpen(true), 100);
+          setTimeout(() => {
+            setSelectedMaterial(selectedMaterial);
+            setEditModalOpen(true);
+          }, 100);
         }}
       />
 
