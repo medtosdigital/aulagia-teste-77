@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
@@ -7,14 +7,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
 import { Plus, Edit, Bell, Link2, FileText, Users, BarChart2, X, Trash2, Settings, Code, MessageSquare, Save, Eye, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { templateService } from '@/services/templateService';
-import { Textarea } from './ui/textarea';
 import MaterialPreview from './MaterialPreview';
 import { notificationService } from '@/services/notificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import AdminDashboardStats from './admin/AdminDashboardStats';
+import AdminActivityFeed from './admin/AdminActivityFeed';
+import AdminQuickActions from './admin/AdminQuickActions';
 
 export default function AdminConfigPage() {
   const [tab, setTab] = useState('dashboard');
@@ -40,6 +43,22 @@ export default function AdminConfigPage() {
   const [viewingTemplateEdit, setViewingTemplateEdit] = useState<string>('');
   const [viewingModalOpen, setViewingModalOpen] = useState(false);
   const [savingViewingTemplate, setSavingViewingTemplate] = useState(false);
+
+  const { user } = useAuth();
+
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [savingNotif, setSavingNotif] = useState(false);
+  const [notificationsList, setNotificationsList] = useState<any[]>([]);
+  const [notifIcon, setNotifIcon] = useState('');
+  const [notifImageUrl, setNotifImageUrl] = useState('');
+
+  const [userProfiles, setUserProfiles] = useState<Record<string, string>>({});
+
+  const [viewNotifModal, setViewNotifModal] = useState(false);
+  const [selectedNotif, setSelectedNotif] = useState<any>(null);
+  const [selectedNotifLidas, setSelectedNotifLidas] = useState<string[]>([]);
+  const [selectedNotifNaoLidas, setSelectedNotifNaoLidas] = useState<string[]>([]);
 
   const exampleData = {
     titulo: 'Exemplo de Título',
@@ -190,22 +209,6 @@ export default function AdminConfigPage() {
     }
   }
 
-  const { user } = useAuth();
-
-  const [notifTitle, setNotifTitle] = useState('');
-  const [notifMessage, setNotifMessage] = useState('');
-  const [savingNotif, setSavingNotif] = useState(false);
-  const [notificationsList, setNotificationsList] = useState<any[]>([]);
-  const [notifIcon, setNotifIcon] = useState('');
-  const [notifImageUrl, setNotifImageUrl] = useState('');
-
-  const [userProfiles, setUserProfiles] = useState<Record<string, string>>({});
-
-  const [viewNotifModal, setViewNotifModal] = useState(false);
-  const [selectedNotif, setSelectedNotif] = useState<any>(null);
-  const [selectedNotifLidas, setSelectedNotifLidas] = useState<string[]>([]);
-  const [selectedNotifNaoLidas, setSelectedNotifNaoLidas] = useState<string[]>([]);
-
   const handleViewNotif = async (notif: any) => {
     setSelectedNotif(notif);
     setViewNotifModal(true);
@@ -347,285 +350,238 @@ export default function AdminConfigPage() {
   const iconGallery = ['🔔', '❗'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl mb-4">
-            <Settings className="w-8 h-8 text-white" />
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Administração</h1>
+            <p className="text-muted-foreground">Painel de controle e monitoramento da plataforma</p>
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-            Administração & Configurações
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Gerencie templates, notificações e monitore o desempenho da plataforma com ferramentas administrativas avançadas.
-          </p>
+          <div className="flex items-center gap-2">
+            <Settings className="w-6 h-6 text-primary" />
+          </div>
         </div>
 
-        <Card className="shadow-xl border-0 bg-white/70 backdrop-blur-sm">
-          <Tabs value={tab} onValueChange={setTab} className="w-full">
-            <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-1 rounded-t-xl">
-              <TabsList className="grid w-full grid-cols-3 bg-white/50 backdrop-blur-sm border border-gray-200">
-                <TabsTrigger value="dashboard" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white font-semibold">
-                  <BarChart2 className="w-4 h-4 mr-2" />
-                  Dashboard
-                </TabsTrigger>
-                <TabsTrigger value="templates" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white font-semibold">
-                  <Code className="w-4 h-4 mr-2" />
-                  Templates
-                </TabsTrigger>
-                <TabsTrigger value="notificacoes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white font-semibold">
-                  <Bell className="w-4 h-4 mr-2" />
-                  Notificações
-                </TabsTrigger>
-              </TabsList>
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-lg">
+            <TabsTrigger 
+              value="dashboard" 
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
+              <BarChart2 className="w-4 h-4 mr-2" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger 
+              value="templates"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
+              <Code className="w-4 h-4 mr-2" />
+              Templates
+            </TabsTrigger>
+            <TabsTrigger 
+              value="notificacoes"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              Notificações
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-8 mt-8">
+            {/* Stats Cards */}
+            <AdminDashboardStats metrics={metrics} loading={loading} />
+
+            {/* Dashboard Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Activity Feed - Takes 2/3 of the space */}
+              <div className="lg:col-span-2">
+                <AdminActivityFeed activities={recentActivities} loading={loading} />
+              </div>
+
+              {/* Quick Actions - Takes 1/3 of the space */}
+              <div>
+                <AdminQuickActions
+                  onCreateNotification={() => setNotificationModalOpen(true)}
+                  onManageTemplates={() => setTab('templates')}
+                  onViewUsers={() => {/* Implement user management */}}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-6 mt-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">Templates de Materiais</h2>
+                <p className="text-muted-foreground">Gerencie e customize os templates utilizados na criação de materiais educacionais.</p>
+              </div>
+              <Button
+                onClick={() => { setEditItem(null); setTemplateModalOpen(true); }}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                <Plus size={20} className="mr-2" />
+                Novo Template
+              </Button>
             </div>
 
-            <TabsContent value="dashboard" className="p-6 space-y-8">
-              {/* Metrics Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {metrics.map((m, i) => (
-                  <Card key={m.label} className="group hover:shadow-2xl transition-all duration-300 border-0 bg-white hover:scale-[1.02] overflow-hidden">
-                    <div className={`p-6 text-white bg-gradient-to-r ${m.color} rounded-t-xl flex flex-col items-center justify-center space-y-3`}>
-                      <m.icon size={40} className="drop-shadow-lg" />
-                      <div className="text-4xl font-extrabold drop-shadow-lg">{m.value}</div>
-                    </div>
-                    <CardContent className="text-center py-6">
-                      <div className="text-gray-700 text-lg font-semibold">{m.label}</div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Recent Activities */}
-              <Card className="shadow-xl border-0 bg-white/70 backdrop-blur-sm">
-                <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-t-xl">
-                  <div className="flex items-center gap-3">
-                    <BarChart2 className="w-6 h-6" />
-                    <div>
-                      <CardTitle className="text-xl">Atividades Recentes</CardTitle>
-                      <CardDescription className="text-blue-100">
-                        Últimas ações realizadas na plataforma
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gradient-to-r from-slate-50 to-gray-50 border-b-2">
-                          <TableHead className="font-bold text-gray-700">Usuário</TableHead>
-                          <TableHead className="font-bold text-gray-700">Ação</TableHead>
-                          <TableHead className="font-bold text-gray-700">Data</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {loading ? (
-                          <TableRow>
-                            <TableCell colSpan={3} className="text-center py-12">
-                              <div className="flex items-center justify-center space-x-2">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                                <span className="text-gray-500">Carregando atividades...</span>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ) : recentActivities.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={3} className="text-center py-12">
-                              <BarChart2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                              <p className="text-gray-500">Nenhuma atividade encontrada.</p>
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          recentActivities.map((a) => (
-                            <TableRow key={a.id} className="hover:bg-blue-50/50 transition-colors">
-                              <TableCell className="font-medium text-blue-700">{a.userName}</TableCell>
-                              <TableCell className="text-gray-600">{a.type} - {a.title}</TableCell>
-                              <TableCell className="text-gray-500">{new Date(a.created_at).toLocaleString('pt-BR')}</TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="templates" className="p-6 space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Templates de Materiais</h2>
-                  <p className="text-gray-600">Gerencie e customize os templates utilizados na criação de materiais educacionais.</p>
-                </div>
-                <Button
-                  onClick={() => { setEditItem(null); setTemplateModalOpen(true); }}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-200 h-12 px-6"
-                >
-                  <Plus size={20} className="mr-2" />
-                  Novo Template
-                </Button>
-              </div>
-
-              <Card className="shadow-xl border-0 bg-white/70 backdrop-blur-sm overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-purple-50 to-pink-50 border-b-2">
-                      <TableHead className="font-bold text-gray-700">Nome</TableHead>
-                      <TableHead className="font-bold text-gray-700">Descrição</TableHead>
-                      <TableHead className="font-bold text-gray-700 text-center">Ações</TableHead>
+            <Card className="border-0 shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 border-b">
+                    <TableHead className="font-semibold text-foreground">Nome</TableHead>
+                    <TableHead className="font-semibold text-foreground">Descrição</TableHead>
+                    <TableHead className="font-semibold text-foreground text-center">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {templateList.map((tpl, idx) => (
+                    <TableRow key={tpl.id} className={`hover:bg-muted/30 transition-colors ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
+                      <TableCell className="font-medium text-foreground">{tpl.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{tpl.description}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/30 font-semibold"
+                            onClick={() => handleEditTemplateHtml(tpl.id)}
+                          >
+                            <Code size={14} className="mr-1" />
+                            Editar HTML
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/30 font-semibold"
+                            onClick={() => handleViewTemplate(tpl.id)}
+                          >
+                            <Eye size={14} className="mr-1" />
+                            Visualizar
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {templateList.map((tpl, idx) => (
-                      <TableRow key={tpl.id} className={`hover:bg-purple-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white/50' : 'bg-slate-50/30'}`}>
-                        <TableCell className="font-medium text-purple-700">{tpl.name}</TableCell>
-                        <TableCell className="text-gray-600">{tpl.description}</TableCell>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="notificacoes" className="space-y-6 mt-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">Notificações</h2>
+                <p className="text-muted-foreground">Crie e gerencie notificações para todos os usuários da plataforma.</p>
+              </div>
+              <Button
+                onClick={() => { setEditItem(null); setNotificationModalOpen(true); }}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                <Plus size={20} className="mr-2" />
+                Nova Notificação
+              </Button>
+            </div>
+
+            <Card className="border-0 shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 border-b">
+                    <TableHead className="font-semibold text-foreground">Título</TableHead>
+                    <TableHead className="font-semibold text-foreground">Mensagem</TableHead>
+                    <TableHead className="font-semibold text-foreground">Data</TableHead>
+                    <TableHead className="font-semibold text-foreground">Lidas</TableHead>
+                    <TableHead className="font-semibold text-foreground">Não lidas</TableHead>
+                    <TableHead className="font-semibold text-foreground">Status</TableHead>
+                    <TableHead className="font-semibold text-foreground text-center">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {notificationsList.map((n, idx) => {
+                    const lidas = (n.lida_por || []).map((id: string) => userProfiles[id] || id);
+                    const allUserIds = Object.keys(userProfiles).filter(id => id !== user?.id);
+                    const naoLidas = allUserIds.filter(id => !(n.lida_por || []).includes(id)).map(id => userProfiles[id] || id);
+                    return (
+                      <TableRow key={n.id} className={`hover:bg-muted/30 transition-colors ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2 cursor-pointer hover:text-primary" onClick={() => handleViewNotif(n)}>
+                            {n.icon && <span className="text-lg">{n.icon}</span>}
+                            {n.image_url && <Avatar className="w-6 h-6"><AvatarImage src={n.image_url} /><AvatarFallback>IMG</AvatarFallback></Avatar>}
+                            <span className="text-primary underline">{n.titulo || n.title}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground max-w-xs truncate">{n.mensagem || n.message}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{formatDate(n.data_envio || n.created_at)}</TableCell>
+                        <TableCell>
+                          <Badge className="bg-green-100 text-green-800 border-green-200 font-semibold">
+                            {lidas.length}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className="bg-red-100 text-red-800 border-red-200 font-semibold">
+                            {naoLidas.length}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {n.ativa || n.active ? (
+                            <Badge className="bg-green-100 text-green-800 border-green-200 font-semibold">Ativa</Badge>
+                          ) : (
+                            <Badge className="bg-gray-100 text-gray-700 border-gray-200 font-semibold">Inativa</Badge>
+                          )}
+                        </TableCell>
                         <TableCell className="text-center">
                           <div className="flex gap-2 justify-center">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="border-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 font-semibold"
-                              onClick={() => handleEditTemplateHtml(tpl.id)}
-                            >
-                              <Code size={14} className="mr-1" />
-                              Editar HTML
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 font-semibold"
-                              onClick={() => handleViewTemplate(tpl.id)}
+                              className="border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/30 font-semibold"
+                              onClick={() => handleViewNotif(n)}
                             >
                               <Eye size={14} className="mr-1" />
-                              Visualizar
+                              Abrir
                             </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                                >
+                                  <Trash2 size={14} />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-2xl border-0 shadow-2xl">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-lg font-bold">Excluir Notificação</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Tem certeza que deseja excluir esta notificação? Esta ação não pode ser desfeita.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="border-2">Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={async () => {
+                                      await notificationService.deleteNotification(n.id);
+                                      const notifs = await notificationService.getActiveNotifications();
+                                      setNotificationsList(notifs);
+                                    }}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="notificacoes" className="p-6 space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Notificações</h2>
-                  <p className="text-gray-600">Crie e gerencie notificações para todos os usuários da plataforma.</p>
-                </div>
-                <Button
-                  onClick={() => { setEditItem(null); setNotificationModalOpen(true); }}
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-200 h-12 px-6"
-                >
-                  <Plus size={20} className="mr-2" />
-                  Nova Notificação
-                </Button>
-              </div>
-
-              <Card className="shadow-xl border-0 bg-white/70 backdrop-blur-sm overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-blue-50 to-purple-50 border-b-2">
-                      <TableHead className="font-bold text-gray-700">Título</TableHead>
-                      <TableHead className="font-bold text-gray-700">Mensagem</TableHead>
-                      <TableHead className="font-bold text-gray-700">Data</TableHead>
-                      <TableHead className="font-bold text-gray-700">Lidas</TableHead>
-                      <TableHead className="font-bold text-gray-700">Não lidas</TableHead>
-                      <TableHead className="font-bold text-gray-700">Status</TableHead>
-                      <TableHead className="font-bold text-gray-700 text-center">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {notificationsList.map((n, idx) => {
-                      const lidas = (n.lida_por || []).map((id: string) => userProfiles[id] || id);
-                      const allUserIds = Object.keys(userProfiles).filter(id => id !== user?.id);
-                      const naoLidas = allUserIds.filter(id => !(n.lida_por || []).includes(id)).map(id => userProfiles[id] || id);
-                      return (
-                        <TableRow key={n.id} className={`hover:bg-blue-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white/50' : 'bg-slate-50/30'}`}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2 cursor-pointer hover:text-blue-600" onClick={() => handleViewNotif(n)}>
-                              {n.icon && <span className="text-lg">{n.icon}</span>}
-                              {n.image_url && <Avatar className="w-6 h-6"><AvatarImage src={n.image_url} /><AvatarFallback>IMG</AvatarFallback></Avatar>}
-                              <span className="text-blue-700 underline">{n.titulo || n.title}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-gray-600 max-w-xs truncate">{n.mensagem || n.message}</TableCell>
-                          <TableCell className="text-gray-500 text-sm">{formatDate(n.data_envio || n.created_at)}</TableCell>
-                          <TableCell>
-                            <Badge className="bg-green-100 text-green-800 border-green-200 font-semibold">
-                              {lidas.length}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className="bg-red-100 text-red-800 border-red-200 font-semibold">
-                              {naoLidas.length}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {n.ativa || n.active ? (
-                              <Badge className="bg-green-100 text-green-800 border-green-200 font-semibold">Ativa</Badge>
-                            ) : (
-                              <Badge className="bg-gray-100 text-gray-700 border-gray-200 font-semibold">Inativa</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex gap-2 justify-center">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="border-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 font-semibold"
-                                onClick={() => handleViewNotif(n)}
-                              >
-                                <Eye size={14} className="mr-1" />
-                                Abrir
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-                                  >
-                                    <Trash2 size={14} />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent className="rounded-2xl border-0 shadow-2xl">
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle className="text-lg font-bold">Excluir Notificação</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Tem certeza que deseja excluir esta notificação? Esta ação não pode ser desfeita.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel className="border-2">Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={async () => {
-                                        await notificationService.deleteNotification(n.id);
-                                        const notifs = await notificationService.getActiveNotifications();
-                                        setNotificationsList(notifs);
-                                      }}
-                                      className="bg-red-600 hover:bg-red-700"
-                                    >
-                                      Excluir
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </Card>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Template Modal */}
         <Dialog open={templateModalOpen} onOpenChange={setTemplateModalOpen}>
