@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Plus, Edit, Bell, Link2, FileText, Users, BarChart2, X, Trash2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { Plus, Edit, Bell, Link2, FileText, Users, BarChart2, X, Trash2, Settings, Code, MessageSquare, Save, Eye, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { templateService } from '@/services/templateService';
 import { Textarea } from './ui/textarea';
 import MaterialPreview from './MaterialPreview';
 import { notificationService } from '@/services/notificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
-import { Smile, Bell as LucideBell, Star, Heart } from 'lucide-react';
 
 export default function AdminConfigPage() {
   const [tab, setTab] = useState('dashboard');
@@ -24,25 +25,21 @@ export default function AdminConfigPage() {
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Modals state
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [integrationModalOpen, setIntegrationModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
 
-  // Novo estado para edição de template HTML
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [editingTemplateHtml, setEditingTemplateHtml] = useState<string>('');
   const [savingTemplate, setSavingTemplate] = useState(false);
 
-  // Novo estado para visualização/edição
   const [viewingTemplateId, setViewingTemplateId] = useState<string | null>(null);
   const [viewingTemplateHtml, setViewingTemplateHtml] = useState<string>('');
   const [viewingTemplateEdit, setViewingTemplateEdit] = useState<string>('');
   const [viewingModalOpen, setViewingModalOpen] = useState(false);
   const [savingViewingTemplate, setSavingViewingTemplate] = useState(false);
 
-  // Exemplo de dados para placeholders
   const exampleData = {
     titulo: 'Exemplo de Título',
     professor: 'Prof. João',
@@ -72,14 +69,12 @@ export default function AdminConfigPage() {
     criterios_avaliacao: ['Clareza', 'Correção']
   };
 
-  // Função para abrir modal de edição de template
   const handleEditTemplateHtml = (templateId: string) => {
     setEditingTemplateId(templateId);
     setEditingTemplateHtml(templateService.getTemplate(templateId));
     setTemplateModalOpen(true);
   };
 
-  // Função para salvar template editado
   const handleSaveTemplateHtml = () => {
     if (!editingTemplateId) return;
     setSavingTemplate(true);
@@ -88,7 +83,6 @@ export default function AdminConfigPage() {
     setTemplateModalOpen(false);
   };
 
-  // Função para abrir modal de visualização/edição
   const handleViewTemplate = (templateId: string) => {
     setViewingTemplateId(templateId);
     const html = templateService.getTemplate(templateId);
@@ -97,7 +91,6 @@ export default function AdminConfigPage() {
     setViewingModalOpen(true);
   };
 
-  // Função para salvar edição no modal visual
   const handleSaveViewingTemplate = () => {
     if (!viewingTemplateId) return;
     setSavingViewingTemplate(true);
@@ -106,13 +99,11 @@ export default function AdminConfigPage() {
     setSavingViewingTemplate(false);
   };
 
-  // Lista de templates disponíveis
   const templateList = templateService.getAvailableTemplates();
 
-  // Função utilitária para gerar um material de exemplo para cada template
   function getMockMaterialForTemplate(templateId: string): any {
     switch (templateId) {
-      case '1': // Plano de Aula
+      case '1':
         return {
           id: 'mock1',
           title: 'Exemplo de Plano de Aula',
@@ -143,7 +134,7 @@ export default function AdminConfigPage() {
             referencias: ['Livro didático', 'BNCC']
           }
         };
-      case '2': // Slides
+      case '2':
         return {
           id: 'mock2',
           title: 'Exemplo de Slides',
@@ -159,7 +150,7 @@ export default function AdminConfigPage() {
             ]
           }
         };
-      case '3': // Atividade
+      case '3':
         return {
           id: 'mock3',
           title: 'Exemplo de Atividade',
@@ -176,7 +167,7 @@ export default function AdminConfigPage() {
             ]
           }
         };
-      case '4': // Avaliação
+      case '4':
         return {
           id: 'mock4',
           title: 'Exemplo de Avaliação',
@@ -200,7 +191,6 @@ export default function AdminConfigPage() {
 
   const { user } = useAuth();
 
-  // Estado para campos do modal de notificação
   const [notifTitle, setNotifTitle] = useState('');
   const [notifMessage, setNotifMessage] = useState('');
   const [savingNotif, setSavingNotif] = useState(false);
@@ -208,30 +198,24 @@ export default function AdminConfigPage() {
   const [notifIcon, setNotifIcon] = useState('');
   const [notifImageUrl, setNotifImageUrl] = useState('');
 
-  // Adicionar busca de perfis para mapear ids para nomes/emails
   const [userProfiles, setUserProfiles] = useState<Record<string, string>>({});
 
-  // Novo estado para detalhes da notificação
   const [viewNotifModal, setViewNotifModal] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<any>(null);
   const [selectedNotifLidas, setSelectedNotifLidas] = useState<string[]>([]);
   const [selectedNotifNaoLidas, setSelectedNotifNaoLidas] = useState<string[]>([]);
 
-  // Função para abrir modal de detalhes da notificação
   const handleViewNotif = async (notif: any) => {
     setSelectedNotif(notif);
     setViewNotifModal(true);
-    // Marcar como lida se ainda não leu
     if (user && !(notif.lida_por || []).includes(user.id)) {
       await notificationService.markAsRead(notif.id, user.id);
-      // Atualizar lista
       const notifs = await notificationService.getActiveNotifications();
       setNotificationsList(notifs);
       notif.lida_por = [...(notif.lida_por || []), user.id];
     }
   };
 
-  // Atualizar listas de lidas/não lidas sempre que selectedNotif ou userProfiles mudar
   useEffect(() => {
     if (!selectedNotif) return;
     const lidas = (selectedNotif.lida_por || []).map((id: string) => userProfiles[id] || id);
@@ -241,7 +225,6 @@ export default function AdminConfigPage() {
     setSelectedNotifNaoLidas(naoLidas);
   }, [selectedNotif, userProfiles, user]);
 
-  // Função utilitária para formatar data
   function formatDate(dateStr: string) {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -253,7 +236,6 @@ export default function AdminConfigPage() {
     return `${dia}/${mes}/${ano} - ${hora}:${min}`;
   }
 
-  // Buscar notificações reais do Supabase
   useEffect(() => {
     async function fetchNotifs() {
       const notifs = await notificationService.getActiveNotifications();
@@ -262,7 +244,6 @@ export default function AdminConfigPage() {
     fetchNotifs();
   }, []);
 
-  // Função para salvar notificação
   const handleSaveNotification = async (icon?: string, image_url?: string) => {
     if (!notifTitle.trim() || !notifMessage.trim() || !user?.id) return;
     setSavingNotif(true);
@@ -273,14 +254,12 @@ export default function AdminConfigPage() {
     setNotifMessage('');
     setNotifIcon('');
     setNotifImageUrl('');
-    // Atualizar lista
     const notifs = await notificationService.getActiveNotifications();
     setNotificationsList(notifs);
   };
 
   useEffect(() => {
     async function fetchProfiles() {
-      // Buscar todos os perfis
       const { data: profiles } = await supabase.from('profiles').select('id, full_name, email');
       if (profiles) {
         const map: Record<string, string> = {};
@@ -296,16 +275,13 @@ export default function AdminConfigPage() {
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
-      // Total de usuários
       const { count: userCount } = await supabase
         .from('profiles')
         .select('id', { count: 'exact', head: true });
-      // Usuários pagos (professor ou grupo_escolar)
       const { count: paidCount } = await supabase
         .from('planos_usuarios')
         .select('user_id', { count: 'exact', head: true })
         .in('plano_ativo', ['professor', 'grupo_escolar']);
-      // Materiais criados (planos de aula + atividades + slides + avaliacoes)
       const { count: planosCount } = await supabase
         .from('planos_de_aula')
         .select('id', { count: 'exact', head: true });
@@ -323,13 +299,11 @@ export default function AdminConfigPage() {
         { label: 'Usuários Pagos', value: paidCount || 0, icon: Badge, color: 'from-green-500 to-green-600' },
         { label: 'Materiais Criados', value: (planosCount || 0) + (atividadesCount || 0) + (slidesCount || 0) + (avaliacoesCount || 0), icon: FileText, color: 'from-purple-500 to-purple-600' },
       ]);
-      // Últimas atividades reais
       const { data: activities } = await supabase
         .from('user_activities')
         .select('id, user_id, title, type, created_at')
         .order('created_at', { ascending: false })
         .limit(10);
-      // Buscar nomes dos usuários
       let userMap: Record<string, string> = {};
       if (activities && activities.length > 0) {
         const userIds = Array.from(new Set(activities.map(a => a.user_id)));
@@ -354,395 +328,588 @@ export default function AdminConfigPage() {
     fetchDashboardData();
   }, []);
 
-  // Mock para as outras abas
-  const templates = [
-    { id: 1, name: 'Plano de Aula Básico', type: 'plano-aula', updatedAt: '2024-07-01' },
-    { id: 2, name: 'Atividade Simples', type: 'atividade', updatedAt: '2024-06-28' },
-  ];
-  const notifications = [
-    { id: 1, title: 'Nova funcionalidade!', message: 'Agora você pode editar templates!', date: '2024-07-02', active: true },
-  ];
-  const integrations = [
-    { id: 1, name: 'Webhook Zapier', type: 'webhook', status: 'ativo' },
-  ];
-
-  // Função para lidar com upload de imagem para Supabase Storage
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const fileName = `${Date.now()}-${file.name}`;
-    // Upload para o bucket 'notificacoes'
     const { data, error } = await supabase.storage.from('notificacoes').upload(fileName, file, { upsert: true });
     if (error) {
       alert('Erro ao fazer upload da imagem: ' + error.message);
       return;
     }
-    // Gerar URL pública
     const { data: publicUrlData } = supabase.storage.from('notificacoes').getPublicUrl(fileName);
     if (publicUrlData?.publicUrl) {
       setNotifImageUrl(publicUrlData.publicUrl);
     }
   };
 
-  // Galeria de ícones simplificada
-  const iconGallery = [
-    '🔔', '❗'
-  ];
+  const iconGallery = ['🔔', '❗'];
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Administração & Configurações</h1>
-      <Tabs value={tab} onValueChange={setTab} className="mb-6">
-        <TabsList>
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
-        </TabsList>
-        <TabsContent value="dashboard">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {metrics.map((m, i) => (
-              <Card key={m.label} className="group hover:shadow-2xl transition-all duration-300 border-0 bg-white hover:scale-[1.03] overflow-hidden relative">
-                <div className={`p-5 text-white bg-gradient-to-r ${m.color} rounded-t-lg flex flex-col items-center justify-center`}>
-                  <m.icon size={36} className="mb-2 drop-shadow-lg" />
-                  <div className="text-3xl font-extrabold drop-shadow-lg">{m.value}</div>
-                </div>
-                <CardContent className="text-center py-4">
-                  <div className="text-gray-700 text-base font-semibold">{m.label}</div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl mb-4">
+            <Settings className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            Administração & Configurações
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Gerencie templates, notificações e monitore o desempenho da plataforma com ferramentas administrativas avançadas.
+          </p>
+        </div>
+
+        <Card className="shadow-xl border-0 bg-white/70 backdrop-blur-sm">
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
+            <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-1 rounded-t-xl">
+              <TabsList className="grid w-full grid-cols-3 bg-white/50 backdrop-blur-sm border border-gray-200">
+                <TabsTrigger value="dashboard" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white font-semibold">
+                  <BarChart2 className="w-4 h-4 mr-2" />
+                  Dashboard
+                </TabsTrigger>
+                <TabsTrigger value="templates" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white font-semibold">
+                  <Code className="w-4 h-4 mr-2" />
+                  Templates
+                </TabsTrigger>
+                <TabsTrigger value="notificacoes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white font-semibold">
+                  <Bell className="w-4 h-4 mr-2" />
+                  Notificações
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="dashboard" className="p-6 space-y-8">
+              {/* Metrics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {metrics.map((m, i) => (
+                  <Card key={m.label} className="group hover:shadow-2xl transition-all duration-300 border-0 bg-white hover:scale-[1.02] overflow-hidden">
+                    <div className={`p-6 text-white bg-gradient-to-r ${m.color} rounded-t-xl flex flex-col items-center justify-center space-y-3`}>
+                      <m.icon size={40} className="drop-shadow-lg" />
+                      <div className="text-4xl font-extrabold drop-shadow-lg">{m.value}</div>
+                    </div>
+                    <CardContent className="text-center py-6">
+                      <div className="text-gray-700 text-lg font-semibold">{m.label}</div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Recent Activities */}
+              <Card className="shadow-xl border-0 bg-white/70 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-t-xl">
+                  <div className="flex items-center gap-3">
+                    <BarChart2 className="w-6 h-6" />
+                    <div>
+                      <CardTitle className="text-xl">Atividades Recentes</CardTitle>
+                      <CardDescription className="text-blue-100">
+                        Últimas ações realizadas na plataforma
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gradient-to-r from-slate-50 to-gray-50 border-b-2">
+                          <TableHead className="font-bold text-gray-700">Usuário</TableHead>
+                          <TableHead className="font-bold text-gray-700">Ação</TableHead>
+                          <TableHead className="font-bold text-gray-700">Data</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {loading ? (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center py-12">
+                              <div className="flex items-center justify-center space-x-2">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                <span className="text-gray-500">Carregando atividades...</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : recentActivities.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center py-12">
+                              <BarChart2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                              <p className="text-gray-500">Nenhuma atividade encontrada.</p>
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          recentActivities.map((a) => (
+                            <TableRow key={a.id} className="hover:bg-blue-50/50 transition-colors">
+                              <TableCell className="font-medium text-blue-700">{a.userName}</TableCell>
+                              <TableCell className="text-gray-600">{a.type} - {a.title}</TableCell>
+                              <TableCell className="text-gray-500">{new Date(a.created_at).toLocaleString('pt-BR')}</TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-          <Card className="shadow-lg rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold text-blue-700">Tabela de Uso Recente</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-blue-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left">Usuário</th>
-                      <th className="px-4 py-2 text-left">Ação</th>
-                      <th className="px-4 py-2 text-left">Data</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr><td colSpan={3} className="text-center py-8">Carregando...</td></tr>
-                    ) : recentActivities.length === 0 ? (
-                      <tr><td colSpan={3} className="text-center py-8">Nenhuma atividade encontrada.</td></tr>
-                    ) : recentActivities.map((a) => (
-                      <tr key={a.id} className="hover:bg-blue-50 transition-colors">
-                        <td className="px-4 py-2 font-medium text-blue-700">{a.userName}</td>
-                        <td className="px-4 py-2">{a.type} - {a.title}</td>
-                        <td className="px-4 py-2">{new Date(a.created_at).toLocaleString('pt-BR')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        {/* Templates Tab */}
-        <TabsContent value="templates">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-purple-700">Templates de Materiais</h2>
-            <Button onClick={() => { setEditItem(null); setTemplateModalOpen(true); }} className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-md hover:scale-105 transition-transform"><Plus size={16} className="mr-1" />Novo Template</Button>
-          </div>
-          <Card className="shadow-lg rounded-2xl">
-            <CardContent>
-              <table className="min-w-full text-sm">
-                <thead className="bg-purple-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Nome</th>
-                    <th className="px-4 py-2 text-left">Descrição</th>
-                    <th className="px-4 py-2 text-center">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {templateList.map((tpl) => (
-                    <tr key={tpl.id} className="hover:bg-purple-50 transition-colors">
-                      <td className="px-4 py-2 font-medium text-purple-700">{tpl.name}</td>
-                      <td className="px-4 py-2 text-gray-600">{tpl.description}</td>
-                      <td className="px-4 py-2 text-center flex gap-2 justify-center">
-                        <Button size="sm" variant="outline" className="text-purple-700 border-purple-200 hover:bg-purple-100" onClick={() => handleEditTemplateHtml(tpl.id)}>
-                          Editar HTML
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-100" onClick={() => handleViewTemplate(tpl.id)}>
-                          Visualizar
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-          {/* Modal de visualização/edição de template HTML */}
-          <Dialog open={viewingModalOpen} onOpenChange={setViewingModalOpen}>
-            <DialogContent className="max-w-5xl w-full rounded-2xl p-0 overflow-hidden">
-              <DialogHeader className="bg-gradient-to-r from-blue-500 to-purple-500 p-6">
-                <DialogTitle className="text-white text-xl font-bold flex items-center gap-2">
-                  Visualizar & Editar Template
-                </DialogTitle>
-                <Button size="icon" variant="ghost" className="absolute top-4 right-4 text-white hover:bg-purple-600" onClick={() => setViewingModalOpen(false)}><X /></Button>
-              </DialogHeader>
-              <div className="flex flex-col md:flex-row gap-6 p-6">
-                {/* Preview do material renderizado com o template */}
-                <div className="flex-1 min-w-[350px] max-w-[50%] border rounded-xl overflow-hidden shadow bg-white">
-                  {viewingTemplateId ? (
-                    <MaterialPreview material={getMockMaterialForTemplate(viewingTemplateId)} templateId={viewingTemplateId} />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">Selecione um template para visualizar</div>
-                  )}
+            </TabsContent>
+
+            <TabsContent value="templates" className="p-6 space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Templates de Materiais</h2>
+                  <p className="text-gray-600">Gerencie e customize os templates utilizados na criação de materiais educacionais.</p>
                 </div>
-                {/* Editor de código HTML */}
-                <div className="flex-1 min-w-[350px] max-w-[50%] flex flex-col">
-                  <Textarea
-                    className="w-full h-full min-h-[400px] font-mono text-xs border-2 border-purple-200 rounded-lg p-2 bg-gray-50 flex-1"
-                    value={viewingTemplateEdit}
-                    onChange={e => setViewingTemplateEdit(e.target.value)}
-                    spellCheck={false}
-                  />
-                  <Button className="w-full mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-md hover:scale-105 transition-transform" onClick={handleSaveViewingTemplate} disabled={savingViewingTemplate}>
-                    {savingViewingTemplate ? 'Salvando...' : 'Salvar Alterações'}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-          {/* Modal de edição de template HTML (simples) */}
-          <Dialog open={templateModalOpen} onOpenChange={setTemplateModalOpen}>
-            <DialogContent className="max-w-2xl rounded-2xl p-0 overflow-hidden">
-              <DialogHeader className="bg-gradient-to-r from-purple-500 to-pink-500 p-6">
-                <DialogTitle className="text-white text-xl font-bold flex items-center gap-2">
-                  Editar Template HTML
-                </DialogTitle>
-                <Button size="icon" variant="ghost" className="absolute top-4 right-4 text-white hover:bg-pink-600" onClick={() => setTemplateModalOpen(false)}><X /></Button>
-              </DialogHeader>
-              <div className="p-6 space-y-4">
-                <div className="font-semibold text-purple-700 mb-2">
-                  {editingTemplateId && templateList.find(t => t.id === editingTemplateId)?.name}
-                </div>
-                <Textarea
-                  className="w-full h-96 border-2 border-purple-200 rounded-lg p-2 font-mono text-xs focus:border-purple-400 outline-none bg-gray-50"
-                  value={editingTemplateHtml}
-                  onChange={e => setEditingTemplateHtml(e.target.value)}
-                  spellCheck={false}
-                />
-                <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-md hover:scale-105 transition-transform" onClick={handleSaveTemplateHtml} disabled={savingTemplate}>
-                  {savingTemplate ? 'Salvando...' : 'Salvar Template'}
+                <Button
+                  onClick={() => { setEditItem(null); setTemplateModalOpen(true); }}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-200 h-12 px-6"
+                >
+                  <Plus size={20} className="mr-2" />
+                  Novo Template
                 </Button>
               </div>
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
-        {/* Notificações Tab */}
-        <TabsContent value="notificacoes">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-blue-700">Notificações</h2>
-            <Button onClick={() => { setEditItem(null); setNotificationModalOpen(true); }} className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold shadow-md hover:scale-105 transition-transform"><Plus size={16} className="mr-1" />Nova Notificação</Button>
-          </div>
-          <Card className="shadow-lg rounded-2xl">
-            <CardContent>
-              <table className="min-w-full text-sm">
-                <thead className="bg-blue-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Título</th>
-                    <th className="px-4 py-2 text-left">Mensagem</th>
-                    <th className="px-4 py-2 text-left">Data</th>
-                    <th className="px-4 py-2 text-left">Lidas</th>
-                    <th className="px-4 py-2 text-left">Não lidas</th>
-                    <th className="px-4 py-2 text-left">Status</th>
-                    <th className="px-4 py-2 text-center">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {notificationsList.map((n) => {
-                    const lidas = (n.lida_por || []).map((id: string) => userProfiles[id] || id);
-                    // Todos os usuários exceto admin
-                    const allUserIds = Object.keys(userProfiles).filter(id => id !== user?.id);
-                    const naoLidas = allUserIds.filter(id => !(n.lida_por || []).includes(id)).map(id => userProfiles[id] || id);
-                    return (
-                      <tr key={n.id} className="hover:bg-blue-50 transition-colors">
-                        <td className="px-4 py-2 font-medium text-blue-700 cursor-pointer underline" onClick={() => handleViewNotif(n)}>
-                          {n.icon && <span className="text-2xl mr-2 align-middle">{n.icon}</span>}
-                          {n.image_url && <Avatar className="inline-block w-8 h-8 rounded-full"><AvatarImage src={n.image_url} /><AvatarFallback>IMG</AvatarFallback></Avatar>}
-                          {n.titulo || n.title}
-                        </td>
-                        <td className="px-4 py-2">{n.mensagem || n.message}</td>
-                        <td className="px-4 py-2">{formatDate(n.data_envio || n.created_at)}</td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block bg-green-100 text-green-800 rounded px-2 text-xs font-bold mr-1">{lidas.length}</span>
-                          {lidas.length > 0 && (
-                            <span className="text-xs text-gray-600">{lidas.join(', ')}</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block bg-red-100 text-red-800 rounded px-2 text-xs font-bold mr-1">{naoLidas.length}</span>
-                          {naoLidas.length > 0 && (
-                            <span className="text-xs text-gray-600">{naoLidas.join(', ')}</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2">{n.ativa || n.active ? <Badge className="bg-green-100 text-green-800">Ativa</Badge> : <Badge className="bg-gray-100 text-gray-700">Inativa</Badge>}</td>
-                        <td className="px-4 py-2 text-center flex gap-2 justify-center items-center">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-blue-600 border-blue-300 hover:bg-blue-50"
-                            onClick={() => handleViewNotif(n)}
-                          >
-                            Abrir
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="text-red-500 hover:bg-red-100"
-                            title="Excluir"
-                            onClick={async () => {
-                              if (window.confirm('Tem certeza que deseja excluir esta notificação?')) {
-                                await notificationService.deleteNotification(n.id);
-                                const notifs = await notificationService.getActiveNotifications();
-                                setNotificationsList(notifs);
-                              }
-                            }}
-                          >
-                            <Trash2 size={18} />
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-          {/* Modal de Notificação */}
-          <Dialog open={notificationModalOpen} onOpenChange={setNotificationModalOpen}>
-            <DialogContent className="max-w-md rounded-2xl p-0 overflow-hidden">
-              <DialogHeader className="bg-gradient-to-r from-blue-500 to-purple-500 p-6">
-                <DialogTitle className="text-white text-xl font-bold flex items-center gap-2">
-                  <Bell className="w-5 h-5" /> {editItem ? 'Editar Notificação' : 'Nova Notificação'}
-                </DialogTitle>
-                <Button size="icon" variant="ghost" className="absolute top-4 right-4 text-white hover:bg-purple-600" onClick={() => setNotificationModalOpen(false)}><X /></Button>
-              </DialogHeader>
-              <div className="p-6 space-y-4">
-                {/* Campos da notificação */}
-                <input className="w-full border-2 border-blue-200 rounded-lg p-2 focus:border-blue-400 outline-none" placeholder="Título" value={notifTitle} onChange={e => setNotifTitle(e.target.value)} />
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="font-semibold">Ícone:</span>
+
+              <Card className="shadow-xl border-0 bg-white/70 backdrop-blur-sm overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-purple-50 to-pink-50 border-b-2">
+                      <TableHead className="font-bold text-gray-700">Nome</TableHead>
+                      <TableHead className="font-bold text-gray-700">Descrição</TableHead>
+                      <TableHead className="font-bold text-gray-700 text-center">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {templateList.map((tpl, idx) => (
+                      <TableRow key={tpl.id} className={`hover:bg-purple-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white/50' : 'bg-slate-50/30'}`}>
+                        <TableCell className="font-medium text-purple-700">{tpl.name}</TableCell>
+                        <TableCell className="text-gray-600">{tpl.description}</TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 font-semibold"
+                              onClick={() => handleEditTemplateHtml(tpl.id)}
+                            >
+                              <Code size={14} className="mr-1" />
+                              Editar HTML
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 font-semibold"
+                              onClick={() => handleViewTemplate(tpl.id)}
+                            >
+                              <Eye size={14} className="mr-1" />
+                              Visualizar
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="notificacoes" className="p-6 space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Notificações</h2>
+                  <p className="text-gray-600">Crie e gerencie notificações para todos os usuários da plataforma.</p>
+                </div>
+                <Button
+                  onClick={() => { setEditItem(null); setNotificationModalOpen(true); }}
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-200 h-12 px-6"
+                >
+                  <Plus size={20} className="mr-2" />
+                  Nova Notificação
+                </Button>
+              </div>
+
+              <Card className="shadow-xl border-0 bg-white/70 backdrop-blur-sm overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-blue-50 to-purple-50 border-b-2">
+                      <TableHead className="font-bold text-gray-700">Título</TableHead>
+                      <TableHead className="font-bold text-gray-700">Mensagem</TableHead>
+                      <TableHead className="font-bold text-gray-700">Data</TableHead>
+                      <TableHead className="font-bold text-gray-700">Lidas</TableHead>
+                      <TableHead className="font-bold text-gray-700">Não lidas</TableHead>
+                      <TableHead className="font-bold text-gray-700">Status</TableHead>
+                      <TableHead className="font-bold text-gray-700 text-center">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {notificationsList.map((n, idx) => {
+                      const lidas = (n.lida_por || []).map((id: string) => userProfiles[id] || id);
+                      const allUserIds = Object.keys(userProfiles).filter(id => id !== user?.id);
+                      const naoLidas = allUserIds.filter(id => !(n.lida_por || []).includes(id)).map(id => userProfiles[id] || id);
+                      return (
+                        <TableRow key={n.id} className={`hover:bg-blue-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white/50' : 'bg-slate-50/30'}`}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2 cursor-pointer hover:text-blue-600" onClick={() => handleViewNotif(n)}>
+                              {n.icon && <span className="text-lg">{n.icon}</span>}
+                              {n.image_url && <Avatar className="w-6 h-6"><AvatarImage src={n.image_url} /><AvatarFallback>IMG</AvatarFallback></Avatar>}
+                              <span className="text-blue-700 underline">{n.titulo || n.title}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-gray-600 max-w-xs truncate">{n.mensagem || n.message}</TableCell>
+                          <TableCell className="text-gray-500 text-sm">{formatDate(n.data_envio || n.created_at)}</TableCell>
+                          <TableCell>
+                            <Badge className="bg-green-100 text-green-800 border-green-200 font-semibold">
+                              {lidas.length}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className="bg-red-100 text-red-800 border-red-200 font-semibold">
+                              {naoLidas.length}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {n.ativa || n.active ? (
+                              <Badge className="bg-green-100 text-green-800 border-green-200 font-semibold">Ativa</Badge>
+                            ) : (
+                              <Badge className="bg-gray-100 text-gray-700 border-gray-200 font-semibold">Inativa</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex gap-2 justify-center">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 font-semibold"
+                                onClick={() => handleViewNotif(n)}
+                              >
+                                <Eye size={14} className="mr-1" />
+                                Abrir
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                                  >
+                                    <Trash2 size={14} />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="rounded-2xl border-0 shadow-2xl">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-lg font-bold">Excluir Notificação</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir esta notificação? Esta ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="border-2">Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={async () => {
+                                        await notificationService.deleteNotification(n.id);
+                                        const notifs = await notificationService.getActiveNotifications();
+                                        setNotificationsList(notifs);
+                                      }}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </Card>
+
+        {/* Template Modal */}
+        <Dialog open={templateModalOpen} onOpenChange={setTemplateModalOpen}>
+          <DialogContent className="max-w-2xl rounded-2xl border-0 shadow-2xl overflow-hidden">
+            <DialogHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 -m-6 mb-6 rounded-t-2xl">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <Code className="w-5 h-5" />
+                Editar Template HTML
+              </DialogTitle>
+            </DialogHeader>
+            <div className="p-2 space-y-4">
+              <div className="font-semibold text-purple-700 mb-2">
+                {editingTemplateId && templateList.find(t => t.id === editingTemplateId)?.name}
+              </div>
+              <Textarea
+                className="w-full h-96 border-2 border-purple-200 rounded-xl p-4 font-mono text-xs focus:border-purple-400 outline-none bg-gray-50"
+                value={editingTemplateHtml}
+                onChange={e => setEditingTemplateHtml(e.target.value)}
+                spellCheck={false}
+              />
+              <Button
+                className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold shadow-lg"
+                onClick={handleSaveTemplateHtml}
+                disabled={savingTemplate}
+              >
+                {savingTemplate ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} className="mr-2" />
+                    Salvar Template
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Template Preview Modal */}
+        <Dialog open={viewingModalOpen} onOpenChange={setViewingModalOpen}>
+          <DialogContent className="max-w-7xl w-full rounded-2xl border-0 shadow-2xl overflow-hidden max-h-[95vh]">
+            <DialogHeader className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6 -m-6 mb-6 rounded-t-2xl">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <Sparkles className="w-5 h-5" />
+                Visualizar & Editar Template
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col lg:flex-row gap-6 p-2 overflow-auto max-h-[calc(95vh-120px)]">
+              <div className="flex-1 min-w-[350px] border-2 border-gray-200 rounded-xl overflow-hidden shadow-lg bg-white">
+                {viewingTemplateId ? (
+                  <MaterialPreview material={getMockMaterialForTemplate(viewingTemplateId)} templateId={viewingTemplateId} />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400 p-8">
+                    <div className="text-center">
+                      <Eye className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <p>Selecione um template para visualizar</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-[350px] flex flex-col space-y-4">
+                <Textarea
+                  className="flex-1 min-h-[400px] font-mono text-xs border-2 border-purple-200 rounded-xl p-4 bg-gray-50 focus:border-purple-400"
+                  value={viewingTemplateEdit}
+                  onChange={e => setViewingTemplateEdit(e.target.value)}
+                  spellCheck={false}
+                />
+                <Button
+                  className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold shadow-lg"
+                  onClick={handleSaveViewingTemplate}
+                  disabled={savingViewingTemplate}
+                >
+                  {savingViewingTemplate ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} className="mr-2" />
+                      Salvar Alterações
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Notification Modal */}
+        <Dialog open={notificationModalOpen} onOpenChange={setNotificationModalOpen}>
+          <DialogContent className="sm:max-w-lg rounded-2xl border-0 shadow-2xl overflow-hidden">
+            <DialogHeader className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6 -m-6 mb-6 rounded-t-2xl">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <Bell className="w-5 h-5" />
+                {editItem ? 'Editar Notificação' : 'Nova Notificação'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="p-2 space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">Título</label>
+                <Input
+                  placeholder="Título da notificação"
+                  value={notifTitle}
+                  onChange={e => setNotifTitle(e.target.value)}
+                  className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">Ícone</label>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-sm text-gray-600">Atual:</span>
                   <span className="text-2xl">{notifIcon}</span>
                   <div className="flex gap-1">
                     {iconGallery.map((icon, i) => (
-                      <button key={i} type="button" className={`p-1 hover:bg-blue-100 rounded ${notifIcon === icon ? 'ring-2 ring-blue-400' : ''}`} onClick={() => setNotifIcon(icon)}>
+                      <button
+                        key={i}
+                        type="button"
+                        className={`p-2 hover:bg-blue-100 rounded-lg transition-colors ${notifIcon === icon ? 'ring-2 ring-blue-400 bg-blue-50' : 'bg-gray-50'}`}
+                        onClick={() => setNotifIcon(icon)}
+                      >
                         <span className="text-2xl">{icon}</span>
                       </button>
                     ))}
                   </div>
                 </div>
-                <input className="w-full border-2 border-blue-200 rounded-lg p-2 focus:border-blue-400 outline-none" placeholder="Ícone (emoji ou nome de ícone)" value={notifIcon} onChange={e => setNotifIcon(e.target.value)} />
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="font-semibold">Imagem:</span>
-                  {notifImageUrl && <Avatar className="w-10 h-10"><AvatarImage src={notifImageUrl} /><AvatarFallback>IMG</AvatarFallback></Avatar>}
-                  <input type="file" accept="image/*" onChange={handleImageUpload} />
-                </div>
-                <textarea className="w-full border-2 border-blue-200 rounded-lg p-2 focus:border-blue-400 outline-none" placeholder="Mensagem" value={notifMessage} onChange={e => setNotifMessage(e.target.value)} />
-                <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold shadow-md hover:scale-105 transition-transform" onClick={async () => { await handleSaveNotification(notifIcon, notifImageUrl); }} disabled={savingNotif}>
-                  {savingNotif ? 'Salvando...' : 'Salvar'}
-                </Button>
+                <Input
+                  placeholder="Ícone personalizado (emoji ou nome)"
+                  value={notifIcon}
+                  onChange={e => setNotifIcon(e.target.value)}
+                  className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                />
               </div>
-            </DialogContent>
-          </Dialog>
-          {/* Modal de detalhes da notificação */}
-          <Dialog open={viewNotifModal} onOpenChange={setViewNotifModal}>
-            <DialogContent className="max-w-2xl w-full rounded-2xl p-0 overflow-hidden">
-              <DialogHeader className="bg-gradient-to-r from-blue-500 to-purple-500 p-6">
-                <DialogTitle className="text-white text-xl font-bold flex items-center gap-2">
-                  Detalhes da Notificação
-                </DialogTitle>
-                <Button size="icon" variant="ghost" className="absolute top-4 right-4 text-white hover:bg-purple-600" onClick={() => setViewNotifModal(false)}><X /></Button>
-              </DialogHeader>
-              <div className="flex flex-col gap-6 p-6">
-                <div className="flex flex-col gap-2">
-                  <label className="font-semibold">Título</label>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">Imagem (opcional)</label>
+                <div className="flex items-center gap-3 mb-2">
+                  {notifImageUrl && (
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={notifImageUrl} />
+                      <AvatarFallback>IMG</AvatarFallback>
+                    </Avatar>
+                  )}
                   <input
-                    className="border rounded px-3 py-2"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">Mensagem</label>
+                <Textarea
+                  placeholder="Conteúdo da notificação"
+                  value={notifMessage}
+                  onChange={e => setNotifMessage(e.target.value)}
+                  className="min-h-[100px] border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                />
+              </div>
+              <Button
+                className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold shadow-lg"
+                onClick={async () => { await handleSaveNotification(notifIcon, notifImageUrl); }}
+                disabled={savingNotif}
+              >
+                {savingNotif ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} className="mr-2" />
+                    Salvar Notificação
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Notification Details Modal */}
+        <Dialog open={viewNotifModal} onOpenChange={setViewNotifModal}>
+          <DialogContent className="max-w-3xl w-full rounded-2xl border-0 shadow-2xl overflow-hidden max-h-[90vh]">
+            <DialogHeader className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6 -m-6 mb-6 rounded-t-2xl">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Detalhes da Notificação
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-6 p-2 overflow-auto max-h-[calc(90vh-120px)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">Título</label>
+                  <Input
+                    className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
                     value={selectedNotif?.titulo || ''}
                     onChange={e => setSelectedNotif({ ...selectedNotif, titulo: e.target.value })}
                   />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="font-semibold">Mensagem</label>
-                  <textarea
-                    className="border rounded px-3 py-2 min-h-[80px]"
-                    value={selectedNotif?.mensagem || ''}
-                    onChange={e => setSelectedNotif({ ...selectedNotif, mensagem: e.target.value })}
-                  />
-                </div>
-                {selectedNotif?.icon && <span className="text-3xl mb-2">{selectedNotif.icon}</span>}
-                {selectedNotif?.image_url && <Avatar className="w-24 h-24 mb-2"><AvatarImage src={selectedNotif.image_url} /><AvatarFallback>IMG</AvatarFallback></Avatar>}
-                <div className="flex flex-col gap-2">
-                  <label className="font-semibold">Ícone (emoji ou nome de ícone)</label>
-                  <input
-                    className="border rounded px-3 py-2"
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">Ícone</label>
+                  <Input
+                    className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
                     value={selectedNotif?.icon || ''}
                     onChange={e => setSelectedNotif({ ...selectedNotif, icon: e.target.value })}
                   />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="font-semibold">URL da imagem (opcional)</label>
-                  <input
-                    className="border rounded px-3 py-2"
-                    value={selectedNotif?.image_url || ''}
-                    onChange={e => setSelectedNotif({ ...selectedNotif, image_url: e.target.value })}
-                  />
-                </div>
-                <div className="flex gap-8">
-                  <div className="flex-1">
-                    <div className="font-semibold mb-1">Lidas ({selectedNotifLidas.length})</div>
-                    <ul className="text-green-700 text-sm">
-                      {selectedNotifLidas.map(uid => (
-                        <li key={uid}>{userProfiles[uid] || uid}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold mb-1">Não lidas ({selectedNotifNaoLidas.length})</div>
-                    <ul className="text-red-700 text-sm">
-                      {selectedNotifNaoLidas.map(uid => (
-                        <li key={uid}>{userProfiles[uid] || uid}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    variant="default"
-                    onClick={async () => {
-                      if (selectedNotif && selectedNotif.id) {
-                        await notificationService.updateNotification(selectedNotif.id, {
-                          titulo: selectedNotif.titulo,
-                          mensagem: selectedNotif.mensagem,
-                          icon: selectedNotif.icon,
-                          image_url: selectedNotif.image_url,
-                        });
-                        setViewNotifModal(false);
-                        // Atualizar lista após edição
-                        const notifs = await notificationService.getActiveNotifications();
-                        setNotificationsList(notifs);
-                      }
-                    }}
-                  >
-                    Salvar Alterações
-                  </Button>
-                  <Button variant="outline" onClick={() => setViewNotifModal(false)}>Fechar</Button>
-                </div>
               </div>
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
-      </Tabs>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">Mensagem</label>
+                <Textarea
+                  className="min-h-[100px] border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                  value={selectedNotif?.mensagem || ''}
+                  onChange={e => setSelectedNotif({ ...selectedNotif, mensagem: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">URL da imagem (opcional)</label>
+                <Input
+                  className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                  value={selectedNotif?.image_url || ''}
+                  onChange={e => setSelectedNotif({ ...selectedNotif, image_url: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="border-2 border-green-200 bg-green-50/50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-green-700 text-lg">Lidas ({selectedNotifLidas.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {selectedNotifLidas.map(uid => (
+                        <div key={uid} className="text-sm text-green-600 bg-white px-2 py-1 rounded">{uid}</div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-2 border-red-200 bg-red-50/50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-red-700 text-lg">Não lidas ({selectedNotifNaoLidas.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {selectedNotifNaoLidas.map(uid => (
+                        <div key={uid} className="text-sm text-red-600 bg-white px-2 py-1 rounded">{uid}</div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setViewNotifModal(false)}
+                  className="h-12 px-6 border-2"
+                >
+                  Fechar
+                </Button>
+                <Button
+                  onClick={async () => {
+                    if (selectedNotif && selectedNotif.id) {
+                      await notificationService.updateNotification(selectedNotif.id, {
+                        titulo: selectedNotif.titulo,
+                        mensagem: selectedNotif.mensagem,
+                        icon: selectedNotif.icon,
+                        image_url: selectedNotif.image_url,
+                      });
+                      setViewNotifModal(false);
+                      const notifs = await notificationService.getActiveNotifications();
+                      setNotificationsList(notifs);
+                    }
+                  }}
+                  className="h-12 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                >
+                  <Save size={16} className="mr-2" />
+                  Salvar Alterações
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
-} 
+}
