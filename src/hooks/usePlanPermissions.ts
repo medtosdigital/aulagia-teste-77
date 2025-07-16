@@ -45,26 +45,44 @@ export const usePlanPermissions = () => {
     }
 
     // Mapear dados do Supabase para o formato esperado
-    const planId = supabasePermissions.currentPlan?.plano_ativo || 'gratuito';
-    const planLimits = {
-      materialsPerMonth: planId === 'gratuito' ? 5 : planId === 'professor' ? 50 : 300,
-      canDownloadWord: supabasePermissions.canDownloadWord(),
-      canDownloadPPT: supabasePermissions.canDownloadPPT(),
-      canEditMaterials: supabasePermissions.canEditMaterials(),
-      canCreateSlides: supabasePermissions.canCreateSlides(),
-      canCreateAssessments: supabasePermissions.canCreateAssessments(),
-      hasCalendar: supabasePermissions.hasCalendar(),
-      hasHistory: planId !== 'gratuito'
-    };
-
+    let planId = supabasePermissions.currentPlan?.plano_ativo;
+    // Forçar admin para o usuário correto
+    if (user && user.email === 'medtosdigital@gmail.com') {
+      planId = 'admin';
+    } else if (!planId) {
+      planId = 'gratuito';
+    }
+    const planLimits = planId === 'admin'
+      ? {
+          materialsPerMonth: Infinity,
+          canDownloadWord: true,
+          canDownloadPPT: true,
+          canEditMaterials: true,
+          canCreateSlides: true,
+          canCreateAssessments: true,
+          hasCalendar: true,
+          hasHistory: true
+        }
+      : {
+          materialsPerMonth: planId === 'gratuito' ? 5 : planId === 'professor' ? 50 : 300,
+          canDownloadWord: supabasePermissions.canDownloadWord(),
+          canDownloadPPT: supabasePermissions.canDownloadPPT(),
+          canEditMaterials: supabasePermissions.canEditMaterials(),
+          canCreateSlides: supabasePermissions.canCreateSlides(),
+          canCreateAssessments: supabasePermissions.canCreateAssessments(),
+          hasCalendar: supabasePermissions.hasCalendar(),
+          hasHistory: planId !== 'gratuito'
+        };
     return {
       id: planId,
-      name: supabasePermissions.getPlanDisplayName(),
+      name: planId === 'admin' ? 'Plano Administrador' : supabasePermissions.getPlanDisplayName(),
       limits: planLimits,
-      price: {
-        monthly: planId === 'gratuito' ? 0 : planId === 'professor' ? 29.90 : 89.90,
-        yearly: planId === 'gratuito' ? 0 : planId === 'professor' ? 299 : 849
-      }
+      price: planId === 'admin'
+        ? { monthly: 0, yearly: 0 }
+        : {
+            monthly: planId === 'gratuito' ? 0 : planId === 'professor' ? 29.90 : 89.90,
+            yearly: planId === 'gratuito' ? 0 : planId === 'professor' ? 299 : 849
+          }
     };
   }, [user, supabasePermissions.loading, supabasePermissions.currentPlan, supabasePermissions.getPlanDisplayName, supabasePermissions.canDownloadWord, supabasePermissions.canDownloadPPT, supabasePermissions.canEditMaterials, supabasePermissions.canCreateSlides, supabasePermissions.canCreateAssessments, supabasePermissions.hasCalendar]);
 
@@ -185,7 +203,7 @@ export const usePlanPermissions = () => {
     canCreateAssessments: supabasePermissions.canCreateAssessments,
     hasCalendar: supabasePermissions.hasCalendar,
     canAccessCalendarPage: () => true,
-    canAccessSchool: supabasePermissions.canAccessSchool,
+    canAccessSchool: () => memoizedPlan.id === 'grupo_escolar' || memoizedPlan.id === 'grupo-escolar' || memoizedPlan.id === 'admin',
     canAccessCreateMaterial: () => true,
     canAccessMaterials: () => true,
     

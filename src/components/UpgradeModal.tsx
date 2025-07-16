@@ -240,10 +240,15 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                       <span className="text-gray-500 text-sm">
                         {billingType === 'monthly' ? '/mês' : '/ano'}
                       </span>
-                      {billingType === 'yearly' && yearlyDiscount > 0 && (
-                        <span className="block text-sm text-gray-500">
-                          ou {formatPrice(plan.price.monthly)}/mês ({yearlyDiscount}% off)
-                        </span>
+                      {billingType === 'yearly' && (
+                        <>
+                          <span className="block text-sm text-gray-500">
+                            ou {formatPrice(plan.price.yearly / 12)}/mês
+                          </span>
+                          <span className="inline-block ml-2 align-middle">
+                            <Badge className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full">2 meses grátis</Badge>
+                          </span>
+                        </>
                       )}
                     </div>
 

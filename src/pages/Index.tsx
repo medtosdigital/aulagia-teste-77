@@ -23,6 +23,8 @@ import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { useFirstAccess } from '@/hooks/useFirstAccess';
 import { useFeedback } from '@/hooks/useFeedback';
 import { supabase } from '@/integrations/supabase/client';
+import AdminUsersPage from '@/components/AdminUsersPage';
+import AdminConfigPage from '@/components/AdminConfigPage';
 
 const pageTitles: Record<string, string> = {
   '/': 'Dashboard',
@@ -209,7 +211,8 @@ const Index = () => {
             <Route path="/escola" element={requireSchool(<SchoolPage />)} />
             <Route path="/perfil" element={requireAuth(<ProfilePage />)} />
             <Route path="/assinatura" element={requireAuth(<SubscriptionPage />)} />
-            <Route path="/configuracoes" element={requireAdmin(<div className="p-4"><h2>Configurações - Em desenvolvimento</h2></div>)} />
+            <Route path="/configuracoes" element={requireAdmin(<AdminConfigPage />)} />
+            <Route path="/admin/usuarios" element={requireAdmin(<AdminUsersPage />)} />
             <Route path="/api-keys" element={requireAdmin(<div className="p-4"><h2>Chaves de API - Em desenvolvimento</h2></div>)} />
             <Route path="/material/:id" element={requireAuth(<MaterialViewer />)} />
             <Route path="*" element={<Navigate to={user ? "/" : "/landing"} replace />} />

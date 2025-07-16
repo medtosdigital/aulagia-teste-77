@@ -69,7 +69,7 @@ const SubscriptionPage = () => {
   // Mapear o ID do plano atual para comparação
   const getCurrentPlanId = () => {
     if (!currentPlan || loading) return 'gratuito';
-    
+    if (currentPlan.id === 'admin') return 'admin';
     // Mapear os IDs do sistema para os IDs da interface
     switch (currentPlan.id) {
       case 'gratuito':
@@ -213,9 +213,11 @@ const SubscriptionPage = () => {
   };
 
   // Calculate usage percentage with real-time data from the hook
-  const usagePercentage = currentPlan.limits.materialsPerMonth > 0 
-    ? Math.min((usage.materialsThisMonth / currentPlan.limits.materialsPerMonth) * 100, 100)
-    : 0;
+  const usagePercentage = currentPlan.id === 'admin'
+    ? 0
+    : currentPlan.limits.materialsPerMonth > 0 
+      ? Math.min((usage.materialsThisMonth / currentPlan.limits.materialsPerMonth) * 100, 100)
+      : 0;
 
   // Format next reset date using real data
   const nextResetDate = getNextResetDate();
@@ -224,25 +226,42 @@ const SubscriptionPage = () => {
   };
 
   // Get remaining materials using real data
-  const remainingMaterials = getRemainingMaterials();
+  const remainingMaterials = currentPlan.id === 'admin' ? 'Ilimitado' : getRemainingMaterials();
 
   // Function to get all resources for current plan
   const getAllResourcesForCurrentPlan = () => {
     const resources = [];
     
     // Basic resources
-    if (currentPlan.id === 'grupo_escolar' || currentPlan.id === 'grupo-escolar') {
+    if (currentPlan.id === 'admin') {
       resources.push({
-        name: `${currentPlan.limits.materialsPerMonth} materiais por mês (total)`,
+        name: `Materiais ilimitados`,
         icon: FileText,
         available: true
       });
-    } else {
-      resources.push({
-        name: `${currentPlan.limits.materialsPerMonth} materiais por mês`,
-        icon: FileText,
-        available: true
-      });
+      resources.push(
+        { name: 'Planos de Aula (ilimitado)', icon: GraduationCap, available: true },
+        { name: 'Slides (ilimitado)', icon: Presentation, available: true },
+        { name: 'Atividades (ilimitado)', icon: ClipboardList, available: true },
+        { name: 'Avaliações (ilimitado)', icon: FileText, available: true },
+        { name: 'Download em PDF', icon: Download, available: true },
+        { name: 'Download em Word', icon: Download, available: true },
+        { name: 'Download em PowerPoint', icon: Download, available: true },
+        { name: 'Edição completa de materiais', icon: Brain, available: true },
+        { name: 'Calendário de aulas', icon: Calendar, available: true },
+        { name: 'Histórico completo', icon: FileText, available: true },
+        // Recursos do grupo escolar:
+        { name: 'Dashboard colaborativo', icon: Users, available: true },
+        { name: 'Compartilhamento entre professores', icon: Users, available: true },
+        { name: 'Gestão de usuários', icon: Users, available: true },
+        { name: 'Distribuição de materiais entre professores', icon: Users, available: true },
+        // Recursos administrativos:
+        { name: 'Acesso total a todos os recursos', icon: Crown, available: true },
+        { name: 'Controle de usuários, planos e histórico', icon: Crown, available: true },
+        { name: 'Permissão exclusiva para administração', icon: Crown, available: true },
+        { name: 'Visualização e gestão de todos os usuários e materiais', icon: Crown, available: true }
+      );
+      return resources;
     }
 
     // Material types based on plan
@@ -257,6 +276,14 @@ const SubscriptionPage = () => {
         { name: 'Slides interativos', icon: Presentation, available: true },
         { name: 'Atividades diversificadas', icon: ClipboardList, available: true },
         { name: 'Avaliações personalizadas', icon: FileText, available: true }
+      );
+    }
+    if (currentPlan.id === 'admin') {
+      resources.push(
+        { name: 'Planos de Aula (ilimitado)', icon: GraduationCap, available: true },
+        { name: 'Slides (ilimitado)', icon: Presentation, available: true },
+        { name: 'Atividades (ilimitado)', icon: ClipboardList, available: true },
+        { name: 'Avaliações (ilimitado)', icon: FileText, available: true }
       );
     }
 
@@ -310,6 +337,12 @@ const SubscriptionPage = () => {
         { name: 'Compartilhamento entre professores', icon: Users, available: false }
       );
     }
+    if (currentPlan.id === 'admin') {
+      resources.push({ name: 'Acesso total a todos os recursos', icon: Crown, available: true });
+      resources.push({ name: 'Controle de usuários, planos e histórico', icon: Crown, available: true });
+      resources.push({ name: 'Permissão exclusiva para administração', icon: Crown, available: true });
+      resources.push({ name: 'Visualização e gestão de todos os usuários e materiais', icon: Crown, available: true });
+    }
 
     return resources;
   };
@@ -344,7 +377,17 @@ const SubscriptionPage = () => {
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold mb-1">Seu Plano Atual</h1>
                 <p className="opacity-90 text-sm sm:text-base">
-                  {currentPlan.name} - {isSubscriptionActive ? 'Mensal' : 'Gratuito'}
+                  {(() => {
+                    if (currentPlan.id === 'admin') {
+                      return 'Plano Administrador - Administrador';
+                    } else if (currentPlan.id === 'grupo_escolar' || currentPlan.id === 'grupo-escolar') {
+                      return `Plano Grupo Escolar - ${isSubscriptionActive ? (billingType === 'yearly' ? 'Anual' : 'Mensal') : 'Gratuito'}`;
+                    } else if (currentPlan.id === 'professor') {
+                      return `Plano Professor - ${isSubscriptionActive ? (billingType === 'yearly' ? 'Anual' : 'Mensal') : 'Gratuito'}`;
+                    } else {
+                      return 'Plano Gratuito';
+                    }
+                  })()}
                 </p>
               </div>
               <div className={`rounded-full px-3 sm:px-4 py-1 flex items-center self-start ${
@@ -368,7 +411,7 @@ const SubscriptionPage = () => {
                     Materiais gerados
                   </h3>
                   <span className="text-blue-600 font-bold text-sm sm:text-base">
-                    {usage.materialsThisMonth}/{currentPlan.limits.materialsPerMonth}
+                    {currentPlan.id === 'admin' ? 'Ilimitado/Ilimitado' : `${usage.materialsThisMonth}/${currentPlan.limits.materialsPerMonth}`}
                   </span>
                 </div>
                 
@@ -380,7 +423,7 @@ const SubscriptionPage = () => {
                 
                 <div className="flex justify-between mt-2 text-xs sm:text-sm text-gray-500">
                   <span>0</span>
-                  <span>{currentPlan.limits.materialsPerMonth}</span>
+                  <span>{currentPlan.id === 'admin' ? 'Ilimitado' : currentPlan.limits.materialsPerMonth}</span>
                 </div>
                 
                 <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -389,7 +432,7 @@ const SubscriptionPage = () => {
                     Renova em {formatDate(nextResetDate)}
                   </p>
                   <p className="text-xs text-blue-600 font-medium">
-                    {remainingMaterials} restantes
+                    {currentPlan.id === 'admin' ? 'Ilimitado' : remainingMaterials} restantes
                   </p>
                 </div>
                 
@@ -401,7 +444,7 @@ const SubscriptionPage = () => {
                 )}
                 
                 {/* Warning messages based on real usage */}
-                {usagePercentage >= 80 && remainingMaterials > 0 && (
+                {usagePercentage >= 80 && typeof remainingMaterials === 'number' && remainingMaterials > 0 && (
                   <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700">
                     <span className="font-medium">Atenção:</span> Você já usou {Math.round(usagePercentage)}% dos seus materiais este mês
                   </div>
@@ -556,39 +599,33 @@ const SubscriptionPage = () => {
               <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1">Atualize seu Plano</h1>
               <p className="text-gray-600 text-sm sm:text-base">Escolha o plano que melhor atende às suas necessidades</p>
             </div>
-            
             {/* Billing Toggle */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-8">
               <span className="text-sm font-medium text-gray-500">Faturamento:</span>
-              <div className="flex items-center gap-2">
-                <div className="bg-white rounded-full p-1 shadow-sm border">
-                  <button
-                    onClick={() => setBillingType('monthly')}
-                    className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                      billingType === 'monthly'
-                        ? 'bg-blue-500 text-white shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Mensal
-                  </button>
-                  <button
-                    onClick={() => setBillingType('yearly')}
-                    className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                      billingType === 'yearly'
-                        ? 'bg-blue-500 text-white shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Anual
-                  </button>
-                </div>
-                {billingType === 'yearly' && (
-                  <Badge className="bg-green-100 text-green-800 text-xs">
-                    <Star className="w-3 h-3 mr-1" />
-                    20% off
-                  </Badge>
-                )}
+              <div className="inline-flex items-center bg-white rounded-full p-1 shadow-md gap-1">
+                <button
+                  onClick={() => setBillingType('monthly')}
+                  className={`px-4 sm:px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                    billingType === 'monthly'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Mensal
+                </button>
+                <button
+                  onClick={() => setBillingType('yearly')}
+                  className={`flex flex-row items-center gap-2 px-4 sm:px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                    billingType === 'yearly'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Anual
+                </button>
+                <span className="ml-1">
+                  <Badge className="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full shadow-sm">2 meses grátis</Badge>
+                </span>
               </div>
             </div>
           </div>
@@ -597,7 +634,8 @@ const SubscriptionPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {plans.map((plan) => {
               const Icon = plan.icon;
-              const isCurrentPlan = currentPlanId === plan.id;
+              // O admin nunca tem plano atual público
+              const isCurrentPlan = currentPlanId === plan.id && currentPlanId !== 'admin';
               const price = billingType === 'monthly' ? plan.price.monthly : plan.price.yearly;
               const yearlyDiscount = getYearlyDiscount(plan);
 
@@ -644,10 +682,25 @@ const SubscriptionPage = () => {
                     <span className="text-gray-500 text-sm">
                       {billingType === 'monthly' ? '/mês' : '/ano'}
                     </span>
-                    {price > 0 && billingType === 'yearly' && yearlyDiscount > 0 && (
-                      <span className="block text-xs sm:text-sm text-gray-500">
-                        ou {formatPrice(plan.price.monthly)}/mês ({yearlyDiscount}% off)
-                      </span>
+                    {price > 0 && billingType === 'yearly' && (
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="block text-xs sm:text-sm text-gray-500">
+                          {(() => {
+                            // Cálculo correto do valor mensal proporcional com 2 meses grátis
+                            const monthly = plan.price.monthly;
+                            const yearly = plan.price.yearly;
+                            const expectedYearly = monthly * 12;
+                            // Se o desconto for exatamente 2 meses grátis
+                            if (yearly === monthly * 10) {
+                              return `ou R$ ${monthly.toFixed(2).replace('.', ',')}/mês`;
+                            } else {
+                              // Valor proporcional real
+                              return `ou R$ ${(yearly / 12).toFixed(2).replace('.', ',')}/mês`;
+                            }
+                          })()}
+                        </span>
+                        <Badge className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full">2 meses grátis</Badge>
+                      </div>
                     )}
                   </div>
 
@@ -837,3 +890,4 @@ const SubscriptionPage = () => {
 };
 
 export default SubscriptionPage;
+

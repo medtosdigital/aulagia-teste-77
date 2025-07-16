@@ -1696,6 +1696,16 @@ export class TemplateService {
       }
     ];
   }
+
+  // Permite atualizar dinamicamente o HTML do template em tempo real
+  setTemplate(templateId: string, html: string) {
+    this.templates[templateId] = html;
+  }
+
+  // Permite acessar o HTML do template de forma segura
+  getTemplate(templateId: string): string {
+    return this.templates[templateId] || '';
+  }
 }
 
 export const templateService = new TemplateService();

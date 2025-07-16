@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { notificationService, Notification } from '@/services/notificationService';
 interface HeaderProps {
   title: string;
 }
@@ -22,6 +23,10 @@ const Header: React.FC<HeaderProps> = ({
   } = usePlanPermissions();
   const [userName, setUserName] = useState('');
   const [userPhoto, setUserPhoto] = useState('');
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
   const loadUserData = async () => {
     if (!user?.id) return;
     try {
@@ -64,6 +69,36 @@ const Header: React.FC<HeaderProps> = ({
       window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
   }, [user]);
+
+  // Buscar notificações ativas e calcular não lidas
+  useEffect(() => {
+    async function fetchNotifications() {
+      if (!user?.id) return;
+      const notifs = await notificationService.getActiveNotifications();
+      setNotifications(notifs);
+      const unread = notifs.filter(n => !(n.lida_por || []).includes(user.id)).length;
+      setUnreadCount(unread);
+    }
+    fetchNotifications();
+  }, [user]);
+
+  // Remover marcação em massa ao abrir o sino
+  const handleDropdownOpenChange = (open: boolean) => {
+    setDropdownOpen(open);
+  };
+
+  // Handler para marcar notificação como lida ao clicar
+  const handleNotificationClick = async (notif: Notification) => {
+    if (!user?.id) return;
+    if (!(notif.lida_por || []).includes(user.id)) {
+      await notificationService.markAsRead(notif.id, user.id);
+      // Atualizar lista
+      const notifs = await notificationService.getActiveNotifications();
+      setNotifications(notifs);
+      setUnreadCount(notifs.filter(n => !(n.lida_por || []).includes(user.id)).length);
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
   };
@@ -80,6 +115,8 @@ const Header: React.FC<HeaderProps> = ({
   };
   const getPlanDisplayName = () => {
     switch (currentPlan.id) {
+      case 'admin':
+        return 'Administrador';
       case 'gratuito':
         return 'Gratuito';
       case 'professor':
@@ -110,10 +147,45 @@ const Header: React.FC<HeaderProps> = ({
         </div>
         
         <div className="flex items-center space-x-3">
-          {/* Notificações - sempre visível no mobile, oculto em md+ */}
-          <Button variant="ghost" size="icon" className="relative md:inline-flex">
-            <Bell className="w-5 h-5" />
-          </Button>
+          {/* Notificações push */}
+          <DropdownMenu open={dropdownOpen} onOpenChange={handleDropdownOpenChange}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className={`relative md:inline-flex ${(unreadCount > 0 && !dropdownOpen) ? 'bg-pink-100 animate-pulse ring-2 ring-pink-400/60' : ''}`}>
+                <Bell className={`w-5 h-5 ${(unreadCount > 0 && !dropdownOpen) ? 'text-pink-500' : ''}`} />
+                {unreadCount > 0 && !dropdownOpen && (
+                  <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold shadow animate-bounce">{unreadCount}</span>
+                )}
+                {unreadCount > 0 && dropdownOpen && (
+                  <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold shadow">{unreadCount}</span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
+              <div className="px-3 py-2 border-b font-semibold text-blue-700">Notificações</div>
+              {notifications.length === 0 && (
+                <div className="px-4 py-6 text-center text-gray-400">Nenhuma notificação</div>
+              )}
+              {notifications.map(n => (
+                <DropdownMenuItem
+                  key={n.id}
+                  className={`flex flex-col items-start gap-1 ${!(n.lida_por||[]).includes(user?.id) ? 'bg-blue-50' : ''}`}
+                  onClick={() => handleNotificationClick(n)}
+                >
+                  {n.image_url && (
+                    <Avatar className="w-20 h-20 mb-2 mx-auto"><AvatarImage src={n.image_url} /><AvatarFallback>IMG</AvatarFallback></Avatar>
+                  )}
+                  <div className="flex items-center w-full">
+                    {n.icon && <span className="text-2xl mr-2">{n.icon}</span>}
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">{n.titulo}</div>
+                      <div className="text-xs text-gray-600">{n.mensagem}</div>
+                      <div className="text-[10px] text-gray-400 mt-1">{n.data_envio ? new Date(n.data_envio).toLocaleString('pt-BR') : ''}</div>
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {/* Botão de feedback */}
           {/* User Menu - só mobile, apenas avatar */}
           <DropdownMenu>

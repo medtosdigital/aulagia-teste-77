@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export type TipoPlano = 'gratuito' | 'professor' | 'grupo_escolar';
+export type TipoPlano = 'gratuito' | 'professor' | 'grupo_escolar' | 'admin';
 
 export interface PlanoUsuario {
   id: string;
@@ -92,7 +92,7 @@ class SupabasePlanService {
         .from('planos_usuarios')
         .insert({
           user_id: userId,
-          plano_ativo: 'gratuito' as TipoPlano,
+          plano_ativo: 'gratuito' as any, // Permitir admin no futuro
           data_inicio: new Date().toISOString()
         })
         .select()

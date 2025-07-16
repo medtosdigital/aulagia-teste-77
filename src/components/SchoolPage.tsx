@@ -55,7 +55,7 @@ const SchoolPage: React.FC = () => {
   }, [currentPlan]);
 
   useEffect(() => {
-    if (!planLoading && currentPlan && currentPlan.plano_ativo !== 'grupo_escolar') {
+    if (!planLoading && currentPlan && currentPlan.plano_ativo !== 'grupo_escolar' && currentPlan.plano_ativo !== 'admin') {
       navigate('/dashboard', { replace: true });
     }
   }, [planLoading, currentPlan, navigate]);

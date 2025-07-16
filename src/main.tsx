@@ -3,6 +3,7 @@ import App from './App.tsx'
 import './index.css'
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import AdminUsersPage from './components/AdminUsersPage';
 
 function ScrollToTop() {
   const location = useLocation();

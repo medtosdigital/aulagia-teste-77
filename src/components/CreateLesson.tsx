@@ -800,7 +800,7 @@ const CreateLesson: React.FC = () => {
               {/* Indicador de materiais restantes */}
               <div className="mt-4 inline-flex items-center space-x-2 bg-white px-4 py-2 rounded-full shadow-md border">
                 <span className="text-sm text-gray-600">
-                  Materiais restantes: <span className="font-bold text-blue-600">{getRemainingMaterials()}</span>
+                  Materiais restantes: <span className="font-bold text-blue-600">{currentPlan.id === 'admin' ? 'Ilimitado' : getRemainingMaterials()}</span>
                 </span>
               </div>
             </div>

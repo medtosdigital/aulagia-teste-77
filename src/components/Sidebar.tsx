@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders, MessageCircle, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
@@ -195,13 +195,9 @@ const Sidebar: React.FC<SidebarProps> = ({
     label: 'Configurações',
     icon: Settings
   }] : []), ...(canAccessSettings() ? [{
-    id: 'api-keys',
-    label: 'Chaves de API',
-    icon: Key
-  }] : []), ...(canAccessSettings() ? [{
-    id: 'templates',
-    label: 'Templates',
-    icon: FileText
+    id: 'users',
+    label: 'Usuários',
+    icon: Users
   }] : [])];
   
   const handleItemClick = (itemId: string) => {
@@ -215,7 +211,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   
   const getPlanDisplayName = () => {
     if (!currentPlan) return 'Plano Gratuito';
-    
+    if (currentPlan.plano_ativo === 'admin' || currentPlan.id === 'admin') return 'Plano Administrador';
     switch (currentPlan.plano_ativo) {
       case 'gratuito':
         return 'Plano Gratuito';
@@ -243,8 +239,9 @@ const Sidebar: React.FC<SidebarProps> = ({
     profile: '/perfil',
     subscription: '/assinatura',
     settings: '/configuracoes',
-    'api-keys': '/api-keys',
-    templates: '/templates',
+    users: '/admin/usuarios',
+    'admin/configuracoes': '/admin/configuracoes',
+    'admin/usuarios': '/admin/usuarios',
   };
 
   return <>

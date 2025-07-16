@@ -208,6 +208,8 @@ const ProfilePage = () => {
       case 'grupo_escolar':
       case 'grupo-escolar':
         return 'Grupo Escolar';
+      case 'admin':
+        return 'Plano Administrador';
       default:
         return 'Plano Gratuito';
     }
@@ -659,6 +661,8 @@ const ProfilePage = () => {
                   ? 'Acesso completo aos recursos'
                   : (currentPlan.id === 'grupo_escolar' || currentPlan.id === 'grupo-escolar')
                   ? 'Gerenciamento escolar completo'
+                  : currentPlan.id === 'admin'
+                  ? 'Criação ilimitada de materiais e acesso total à plataforma'
                   : 'Recursos básicos disponíveis'
                 }
               </p>
@@ -702,7 +706,7 @@ const ProfilePage = () => {
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Total de materiais:</span>
-                <span className="font-bold text-lg">{materialStats.totalMaterials}</span>
+                <span className="font-bold text-lg">{currentPlan.id === 'admin' ? 'Ilimitada' : materialStats.totalMaterials}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Planos de aula:</span>

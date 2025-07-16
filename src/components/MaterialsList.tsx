@@ -356,7 +356,7 @@ const MaterialsList: React.FC = () => {
                     Meus Materiais
                   </h1>
                   <Badge variant="secondary" className="py-1 text-sm bg-blue-100 text-blue-700 border-blue-200 w-fit px-[6px]">
-                    {filteredMaterials.length} {filteredMaterials.length === 1 ? 'material' : 'materiais'}
+                    {currentPlan?.id === 'admin' ? 'Materiais Ilimitados' : `${filteredMaterials.length} ${filteredMaterials.length === 1 ? 'material' : 'materiais'}`}
                   </Badge>
                 </div>
               </div>

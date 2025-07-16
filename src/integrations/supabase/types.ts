@@ -526,6 +526,72 @@ export type Database = {
         }
         Relationships: []
       }
+      notificacoes: {
+        Row: {
+          id: string;
+          titulo: string;
+          mensagem: string;
+          data_envio: string | null;
+          ativa: boolean | null;
+          criada_por: string | null;
+          lida_por: string[] | null;
+          created_at: string | null;
+          updated_at: string | null;
+          icon?: string | null;
+          image_url?: string | null;
+        };
+        Insert: {
+          id?: string;
+          titulo: string;
+          mensagem: string;
+          data_envio?: string | null;
+          ativa?: boolean | null;
+          criada_por?: string | null;
+          lida_por?: string[] | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          icon?: string | null;
+          image_url?: string | null;
+        };
+        Update: {
+          id?: string;
+          titulo?: string;
+          mensagem?: string;
+          data_envio?: string | null;
+          ativa?: boolean | null;
+          criada_por?: string | null;
+          lida_por?: string[] | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          icon?: string | null;
+          image_url?: string | null;
+        };
+        Relationships: [];
+      };
+      feedbacks: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          message: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          message: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          message?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     }
     Views: {
       [_ in never]: never

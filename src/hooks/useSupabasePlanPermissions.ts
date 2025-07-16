@@ -219,7 +219,8 @@ export const useSupabasePlanPermissions = () => {
         const planNames: Record<TipoPlano, string> = {
           'gratuito': 'Gratuito',
           'professor': 'Professor',
-          'grupo_escolar': 'Grupo Escolar'
+          'grupo_escolar': 'Grupo Escolar',
+          'admin': 'Administrador'
         };
         
         toast({
@@ -265,7 +266,7 @@ export const useSupabasePlanPermissions = () => {
   }, [currentPlan?.plano_ativo]);
 
   const canAccessSchool = useCallback((): boolean => {
-    return currentPlan?.plano_ativo === 'grupo_escolar';
+    return currentPlan?.plano_ativo === 'grupo_escolar' || currentPlan?.plano_ativo === 'admin';
   }, [currentPlan?.plano_ativo]);
 
   const canAccessCreateMaterial = useCallback((): boolean => {
@@ -315,8 +316,8 @@ export const useSupabasePlanPermissions = () => {
 
   // Funções administrativas otimizadas
   const canAccessSettings = useCallback((): boolean => {
-    return false; // Por enquanto sempre false
-  }, []);
+    return currentPlan?.plano_ativo === 'admin';
+  }, [currentPlan?.plano_ativo]);
 
   const shouldShowSupportModal = false;
 
@@ -332,8 +333,8 @@ export const useSupabasePlanPermissions = () => {
   }, []);
 
   const isAdminAuthenticated = useCallback((): boolean => {
-    return false; // Por enquanto sempre false
-  }, []);
+    return currentPlan?.plano_ativo === 'admin';
+  }, [currentPlan?.plano_ativo]);
 
   return {
     // Estado
@@ -364,7 +365,22 @@ export const useSupabasePlanPermissions = () => {
     isLimitReached,
     
     // Utilitários
-    getPlanDisplayName,
+    getPlanDisplayName: useCallback((): string => {
+      if (loading) return 'Carregando...';
+      if (!currentPlan) return 'Plano Gratuito';
+      switch (currentPlan.plano_ativo) {
+        case 'gratuito':
+          return 'Plano Gratuito';
+        case 'professor':
+          return 'Plano Professor';
+        case 'grupo_escolar':
+          return 'Grupo Escolar';
+        case 'admin':
+          return 'Plano Administrador';
+        default:
+          return 'Plano Gratuito';
+      }
+    }, [loading, currentPlan]),
     canAccessSettings,
     getNextResetDate,
     isAdminAuthenticated
