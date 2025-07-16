@@ -172,7 +172,13 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
       // Se não for JSON, tratar como markdown/texto
       try {
         const parsed = marked.parse(material.conteudo);
-        if (typeof parsed === 'string') conteudoHtml = parsed;
+        // Handle both sync and async marked.parse results
+        if (typeof parsed === 'string') {
+          conteudoHtml = parsed;
+        } else {
+          // If it's a Promise, use original content with line breaks
+          conteudoHtml = material.conteudo.replace(/\n/g, '<br/>');
+        }
       } catch (markdownError) {
         console.error('Error parsing markdown:', markdownError);
         // Se falhar, usar o conteúdo original com quebras de linha
@@ -371,14 +377,30 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
       }
     } catch (error) {
       // Se não for JSON válido, tratar como markdown/texto simples
+      const processMarkdown = () => {
+        try {
+          const parsed = marked.parse(material.conteudo);
+          // Handle both sync and async marked.parse results
+          if (typeof parsed === 'string') {
+            return parsed;
+          } else {
+            // If it's a Promise, fallback to simple line break replacement
+            return material.conteudo.replace(/\n/g, '<br/>');
+          }
+        } catch (markdownError) {
+          console.error('Error parsing markdown:', markdownError);
+          return material.conteudo.replace(/\n/g, '<br/>');
+        }
+      };
+
+      const htmlContent = material.conteudo.includes('#') || material.conteudo.includes('**') 
+        ? processMarkdown()
+        : material.conteudo.replace(/\n/g, '<br/>');
+
       return (
         <div 
           className="prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ 
-            __html: material.conteudo.includes('#') || material.conteudo.includes('**') 
-              ? marked.parse(material.conteudo) 
-              : material.conteudo.replace(/\n/g, '<br/>') 
-          }}
+          dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
       );
     }
@@ -520,7 +542,7 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
-          </AlertDialogFooter>
+          </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
     </>
