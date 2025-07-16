@@ -30,6 +30,7 @@ import {
   AlertDialogCancel
 } from '@/components/ui/alert-dialog';
 import { normalizeMaterialForPreview } from '@/services/materialService';
+import { getMaterialPrincipalInfo } from '@/services/materialService';
 
 // Interface para compatibilidade com GeneratedMaterial
 interface GeneratedMaterialWithOptionalFormData extends Omit<GeneratedMaterial, 'formData'> {
@@ -57,6 +58,8 @@ const MaterialsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [materialToDelete, setMaterialToDelete] = useState<GeneratedMaterialWithOptionalFormData | null>(null);
+  // Adicionar busca dos materiais de apoio
+  const [apoios, setApoios] = useState<any[]>([]);
 
   // Hooks para gerenciamento de planos
   const { canEditMaterials, canDownloadWord, canDownloadPPT } = usePlanPermissions();
@@ -81,6 +84,20 @@ const MaterialsList: React.FC = () => {
   useEffect(() => {
     filterMaterials();
   }, [materials, searchTerm, filterType, filterSubject]);
+
+  useEffect(() => {
+    async function fetchApoios() {
+      // Assuming supabase is available globally or imported elsewhere
+      // For this example, we'll simulate fetching from a dummy data source
+      // In a real app, this would be from a service like userMaterialsService
+      // For now, we'll just set a dummy array to show the structure
+      // setApoios([
+      //   { id: 'apoio1', titulo: 'Apoio 1', material_principal_id: 'material1', created_at: '2023-10-26T10:00:00Z' },
+      //   { id: 'apoio2', titulo: 'Apoio 2', material_principal_id: 'material2', created_at: '2023-10-25T11:00:00Z' },
+      // ]);
+    }
+    fetchApoios();
+  }, []);
 
   const convertUserMaterialToGenerated = (userMaterial: UserMaterial): GeneratedMaterialWithOptionalFormData => {
     // Parse content if it's a JSON string, otherwise use as is
@@ -420,19 +437,19 @@ const MaterialsList: React.FC = () => {
         </Card>
 
         {/* Lista de Materiais */}
-        {filteredMaterials.length === 0 ? (
+        {filteredMaterials.length === 0 && apoios.length === 0 ? (
           <Card className="shadow-lg bg-white/90 backdrop-blur-sm">
             <CardContent className="p-8 md:p-12 text-center">
               <div className="text-gray-400 mb-4">
                 <FileText className="w-12 h-12 md:w-16 md:h-16 mx-auto" />
               </div>
               <h3 className="text-lg md:text-xl font-semibold text-gray-600 mb-2">
-                {materials.length === 0 ? 'Nenhum material criado ainda' : 'Nenhum material encontrado'}
+                {materials.length === 0 && apoios.length === 0 ? 'Nenhum material criado ainda' : 'Nenhum material encontrado'}
               </h3>
               <p className="text-gray-500 mb-6">
-                {materials.length === 0 ? 'Comece criando seu primeiro material pedagógico!' : 'Tente ajustar os filtros para encontrar o que procura.'}
+                {materials.length === 0 && apoios.length === 0 ? 'Comece criando seu primeiro material pedagógico!' : 'Tente ajustar os filtros para encontrar o que procura.'}
               </p>
-              {materials.length === 0 && (
+              {materials.length === 0 && apoios.length === 0 && (
                 <Button 
                   onClick={() => navigate('/')} 
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl"
@@ -445,6 +462,7 @@ const MaterialsList: React.FC = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            {/* Cards de materiais normais */}
             {filteredMaterials.map(material => {
               const typeConfig = getTypeConfig(material.type);
               const IconComponent = typeConfig.icon;
@@ -592,6 +610,10 @@ const MaterialsList: React.FC = () => {
                 </Card>
               );
             })}
+            {/* Cards de apoio */}
+            {apoios.map(apoio => (
+              <ApoioCard key={apoio.id} apoio={apoio} />
+            ))}
           </div>
         )}
       </div>
@@ -654,5 +676,126 @@ const MaterialsList: React.FC = () => {
     </div>
   );
 };
+
+// Novo componente ApoioCard
+function ApoioCard({ apoio }: { apoio: any }) {
+  const [vinculo, setVinculo] = useState<{ tipo: string, titulo: string } | null>(null);
+  useEffect(() => {
+    getMaterialPrincipalInfo(apoio.material_principal_id).then(setVinculo);
+  }, [apoio.material_principal_id]);
+  return (
+    <Card className="group hover:shadow-xl transition-all duration-300 border-0 bg-white hover:scale-[1.02] overflow-hidden relative">
+      <div className="bg-gradient-to-r from-gray-400 to-gray-500 p-4 text-white relative">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+              <BookOpen className="w-4 h-4" />
+            </div>
+            <span className="font-semibold text-sm">Conteúdo de Apoio</span>
+          </div>
+          {vinculo && (
+            <span className="bg-gray-100 text-gray-700 border-0 text-xs font-medium px-2 py-1 rounded-full">
+              {vinculo.tipo.charAt(0).toUpperCase() + vinculo.tipo.slice(1)}: {vinculo.titulo}
+            </span>
+          )}
+        </div>
+      </div>
+      <CardContent className="p-4">
+        <div className="space-y-3">
+          <div>
+            <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-1">
+              {apoio.titulo}
+            </h3>
+            <p className="text-sm text-gray-500">Vinculado a: {vinculo ? `${vinculo.tipo.charAt(0).toUpperCase() + vinculo.tipo.slice(1)} - ${vinculo.titulo}` : '...'}</p>
+          </div>
+          <div className="flex items-center text-xs text-gray-400 border-t pt-3">
+            <Calendar className="w-3 h-3 mr-1" />
+            Criado em {apoio.created_at ? new Date(apoio.created_at).toLocaleDateString('pt-BR') : ''}
+          </div>
+        </div>
+        {/* Botões de ação: Visualizar, Editar, Exportar, Excluir (implementar igual aos outros cards) */}
+        <div className="flex items-center justify-between space-x-2 mt-4 pt-3 border-t">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleViewMaterial({ id: apoio.id, title: apoio.titulo, type: 'apoio', subject: 'Apoio', grade: 'N/A', createdAt: apoio.created_at, content: apoio.conteudo, formData: apoio.form_data })} 
+            className="flex-1 text-xs h-8 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+          >
+            <Eye className="w-3 h-3 mr-1" />
+            Visualizar
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleEdit({ id: apoio.id, title: apoio.titulo, type: 'apoio', subject: 'Apoio', grade: 'N/A', createdAt: apoio.created_at, content: apoio.conteudo, formData: apoio.form_data })} 
+            className={`h-8 w-8 p-0 ${canEditMaterials() 
+              ? 'hover:bg-blue-50 hover:text-blue-600' 
+              : 'opacity-50 cursor-not-allowed hover:bg-gray-50'
+            }`}
+            title={canEditMaterials() ? "Editar" : "Edição disponível apenas em planos pagos"}
+          >
+            {canEditMaterials() ? (
+              <Edit3 className="w-3 h-3" />
+            ) : (
+              <Lock className="w-3 h-3" />
+            )}
+          </Button>
+          <div className="relative">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => toggleExportDropdown(apoio.id)} 
+              className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600" 
+              title="Exportar"
+            >
+              <Download className="w-3 h-3" />
+            </Button>
+            {exportDropdownOpen === apoio.id && (
+              <div className="absolute bottom-full mb-1 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]">
+                <button 
+                  onClick={() => handleExport({ id: apoio.id, title: apoio.titulo, type: 'apoio', subject: 'Apoio', grade: 'N/A', createdAt: apoio.created_at, content: apoio.conteudo, formData: apoio.form_data }, 'print')} 
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                >
+                  <Printer className="w-3 h-3 mr-2" />
+                  Imprimir
+                </button>
+                <button 
+                  onClick={() => handleExport({ id: apoio.id, title: apoio.titulo, type: 'apoio', subject: 'Apoio', grade: 'N/A', createdAt: apoio.created_at, content: apoio.conteudo, formData: apoio.form_data }, 'pdf')} 
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                >
+                  <FileDown className="w-3 h-3 mr-2" />
+                  PDF
+                </button>
+                <button 
+                  onClick={() => handleExport({ id: apoio.id, title: apoio.titulo, type: 'apoio', subject: 'Apoio', grade: 'N/A', createdAt: apoio.created_at, content: apoio.conteudo, formData: apoio.form_data }, 'word')} 
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                >
+                  <FileDown className="w-3 h-3 mr-2" />
+                  Word
+                </button>
+                <button 
+                  onClick={() => handleExport({ id: apoio.id, title: apoio.titulo, type: 'apoio', subject: 'Apoio', grade: 'N/A', createdAt: apoio.created_at, content: apoio.conteudo, formData: apoio.form_data }, 'ppt')} 
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                >
+                  <FileDown className="w-3 h-3 mr-2" />
+                  PPT
+                </button>
+              </div>
+            )}
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleDeleteClick({ id: apoio.id, title: apoio.titulo, type: 'apoio', subject: 'Apoio', grade: 'N/A', createdAt: apoio.created_at, content: apoio.conteudo, formData: apoio.form_data })} 
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-200 h-8 w-8 p-0" 
+            title="Excluir"
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default MaterialsList;

@@ -1026,7 +1026,9 @@ const CreateLesson: React.FC = () => {
                           })} 
                           className="pr-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl bg-gray-50 focus:bg-white transition-all" 
                         />
-                        <AudioTranscriptionButton onTranscriptionComplete={handleTranscriptionComplete} />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <AudioTranscriptionButton onTranscriptionComplete={handleTranscriptionComplete} />
+                        </div>
                       </div>
                     </div>
                   )}

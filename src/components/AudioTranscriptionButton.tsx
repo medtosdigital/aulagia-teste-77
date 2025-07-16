@@ -56,21 +56,21 @@ const AudioTranscriptionButton: React.FC<AudioTranscriptionButtonProps> = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative h-12 min-h-[48px] flex items-center">
       <Button
         type="button"
         variant="ghost"
         size="sm"
         onClick={handleMicClick}
         disabled={isTranscribing}
-        className={`absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all duration-200 ${getButtonStyle()}`}
+        className={`absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all duration-200 ${getButtonStyle()}`}
         title={getTooltipMessage()}
+        style={{transform: 'translateY(-50%)'}} // Garante centralização vertical
       >
         {getIcon()}
       </Button>
-      
       {isRecording && (
-        <div className="absolute right-16 sm:right-20 top-1/2 transform -translate-y-1/2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-medium border border-red-200 shadow-sm animate-fade-in">
+        <div className="absolute right-16 sm:right-20 top-1/2 -translate-y-1/2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-medium border border-red-200 shadow-sm animate-fade-in min-h-[48px] flex items-center">
           Escutando...
         </div>
       )}

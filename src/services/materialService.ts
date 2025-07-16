@@ -552,4 +552,25 @@ export function normalizeMaterialForPreview(material: any) {
   return normalized;
 }
 
+export async function getMaterialPrincipalInfo(material_principal_id: string): Promise<{ tipo: string, titulo: string } | null> {
+  // Tenta buscar em cada tabela
+  const tables: Array<{ type: string, table: 'planos_de_aula' | 'atividades' | 'slides' | 'avaliacoes' }> = [
+    { type: 'plano-de-aula', table: 'planos_de_aula' },
+    { type: 'atividade', table: 'atividades' },
+    { type: 'slides', table: 'slides' },
+    { type: 'avaliacao', table: 'avaliacoes' }
+  ];
+  for (const { type, table } of tables) {
+    const { data, error } = await supabase
+      .from(table)
+      .select('id, titulo')
+      .eq('id', material_principal_id)
+      .single();
+    if (data && data.id) {
+      return { tipo: type, titulo: data.titulo };
+    }
+  }
+  return null;
+}
+
 export const materialService = new MaterialService();
