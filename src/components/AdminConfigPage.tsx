@@ -6,6 +6,7 @@ import { Badge } from './ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { Input } from './ui/input';
 import { Plus, Edit, Bell, Link2, FileText, Users, BarChart2, X, Trash2, Settings, Code, MessageSquare, Save, Eye, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { templateService } from '@/services/templateService';
