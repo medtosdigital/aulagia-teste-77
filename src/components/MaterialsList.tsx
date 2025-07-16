@@ -182,9 +182,6 @@ const MaterialsList: React.FC = () => {
   const filterMaterials = () => {
     let filtered = [...materials];
 
-    // NÃO misture supportMaterialEntries (type 'apoio') no array principal
-    // Renderize os cards de apoio separadamente
-
     if (searchTerm) {
       filtered = filtered.filter(material => 
         material.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -204,23 +201,12 @@ const MaterialsList: React.FC = () => {
   };
 
   const handleViewMaterial = (material: GeneratedMaterialWithOptionalFormData) => {
-    if (material.formData?.supportMaterial) {
-      setSelectedSupportMaterial(material.formData.supportMaterial);
-      setSupportMaterialModalOpen(true);
-    } else {
-      setSelectedMaterial(material);
-      setModalOpen(true);
-    }
-  };
-
-  const handleEdit = (material: GeneratedMaterialWithOptionalFormData) => {
-    if (!canEditMaterials()) {
-      toast.error('Edição de materiais disponível apenas em planos pagos');
-      openUpgradeModal();
-      return;
-    }
-    setMaterialToEdit(material);
-    setInlineEditModalOpen(true);
+    console.log('Opening view modal for material:', material.title);
+    setSelectedMaterial(material);
+    setModalOpen(true);
+    // Garantir que outros modais estão fechados
+    setEditModalOpen(false);
+    setInlineEditModalOpen(false);
   };
 
   const handleEditMaterial = (material: GeneratedMaterialWithOptionalFormData) => {
@@ -229,8 +215,28 @@ const MaterialsList: React.FC = () => {
       openUpgradeModal();
       return;
     }
+    
+    console.log('Opening edit modal for material:', material.title);
     setSelectedMaterial(material);
     setEditModalOpen(true);
+    // Garantir que outros modais estão fechados
+    setModalOpen(false);
+    setInlineEditModalOpen(false);
+  };
+
+  const handleEdit = (material: GeneratedMaterialWithOptionalFormData) => {
+    if (!canEditMaterials()) {
+      toast.error('Edição de materiais disponível apenas em planos pagos');
+      openUpgradeModal();
+      return;
+    }
+    
+    console.log('Opening inline edit modal for material:', material.title);
+    setMaterialToEdit(material);
+    setInlineEditModalOpen(true);
+    // Garantir que outros modais estão fechados
+    setModalOpen(false);
+    setEditModalOpen(false);
   };
 
   const handleCloseModal = () => {
@@ -437,6 +443,7 @@ const MaterialsList: React.FC = () => {
       openUpgradeModal();
       return;
     }
+    console.log('Opening support material edit modal for:', material.titulo);
     setSupportMaterialToEdit(material);
     setSupportMaterialEditModalOpen(true);
   };
@@ -906,16 +913,19 @@ const MaterialsList: React.FC = () => {
         <div className="fixed inset-0 z-40" onClick={() => setExportDropdownOpen(null)} />
       )}
 
+      {/* Modal de visualização */}
       <MaterialModal 
         material={normalizeMaterialForPreview(selectedMaterial as GeneratedMaterial)} 
         open={modalOpen} 
         onClose={handleCloseModal} 
         onEdit={() => {
+          console.log('Edit button clicked from MaterialModal');
           setModalOpen(false);
           setTimeout(() => setEditModalOpen(true), 100);
         }}
       />
 
+      {/* Modal de edição */}
       <MaterialEditModal 
         material={normalizeMaterialForPreview(selectedMaterial as GeneratedMaterial)} 
         open={editModalOpen} 
@@ -923,6 +933,7 @@ const MaterialsList: React.FC = () => {
         onSave={handleSaveEdit} 
       />
 
+      {/* Modal de edição inline */}
       <MaterialInlineEditModal 
         material={normalizeMaterialForPreview(materialToEdit as GeneratedMaterial)} 
         open={inlineEditModalOpen} 
