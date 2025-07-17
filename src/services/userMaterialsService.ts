@@ -321,7 +321,7 @@ class UserMaterialsService {
 
   async updateMaterial(id: string, updates: Partial<UserMaterial>): Promise<boolean> {
     try {
-      console.log('Updating material:', id, updates);
+      console.log('🔧 UserMaterialsService.updateMaterial:', id, updates);
 
       // Get current authenticated user
       const user = await this.getCurrentUser();
@@ -330,42 +330,61 @@ class UserMaterialsService {
         return false;
       }
 
+      // Mapeamento correto dos campos para Supabase
       const updateData: any = {};
-      if (updates.title) updateData.titulo = updates.title;
-      if (updates.content) updateData.conteudo = typeof updates.content === 'string' ? updates.content : JSON.stringify(updates.content);
-      if (updates.subject) updateData.disciplina = updates.subject;
-      if (updates.grade) updateData.serie = updates.grade;
-      if (updates.type) updateData.tipo_material = updates.type;
+      
+      // Mapear todos os campos que podem ser atualizados
+      if (updates.title !== undefined) updateData.titulo = updates.title;
+      if (updates.content !== undefined) updateData.conteudo = typeof updates.content === 'string' ? updates.content : JSON.stringify(updates.content);
+      if (updates.subject !== undefined) updateData.disciplina = updates.subject;
+      if (updates.grade !== undefined) updateData.serie = updates.grade;
+      if (updates.type !== undefined) updateData.tipo_material = updates.type;
 
-      console.log('Update data to send:', updateData);
+      console.log('📊 Update data mapped to Supabase format:', {
+        id,
+        titulo: updateData.titulo,
+        disciplina: updateData.disciplina,
+        serie: updateData.serie,
+        tipo_material: updateData.tipo_material,
+        contentLength: updateData.conteudo?.length || 0
+      });
 
       // Try to update in each table - RLS will ensure only user's own materials can be updated
       for (const [type, tableName] of Object.entries(TABLE_MAPPING)) {
         const { data: existingData } = await supabase
           .from(tableName)
-          .select('id')
+          .select('id, user_id')
           .eq('id', id)
           .single();
 
         if (existingData) {
+          console.log(`🔍 Found material in table: ${tableName}`);
+          
+          // Verificar se o usuário tem permissão
+          if (existingData.user_id !== user.id) {
+            console.error('User does not have permission to update this material');
+            return false;
+          }
+
           const { error } = await supabase
             .from(tableName)
             .update(updateData)
             .eq('id', id);
 
           if (!error) {
-            console.log(`Material updated successfully in ${tableName}`);
+            console.log(`✅ Material updated successfully in ${tableName}`);
             return true;
           } else {
-            console.error(`Erro ao atualizar material na tabela ${tableName}:`, error.message);
+            console.error(`❌ Error updating material in ${tableName}:`, error);
+            return false;
           }
         }
       }
       
-      console.error('Material not found for update');
+      console.error('❌ Material not found for update');
       return false;
     } catch (error) {
-      console.error('Error updating material:', error);
+      console.error('❌ Error in updateMaterial:', error);
       return false;
     }
   }

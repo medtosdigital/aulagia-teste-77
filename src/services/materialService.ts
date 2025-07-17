@@ -413,43 +413,35 @@ class MaterialService {
   async updateMaterial(id: string, updates: Partial<GeneratedMaterial>): Promise<boolean> {
     console.log('📝 Updating material:', id, updates);
     try {
-      // Corrigir o mapeamento para os campos do Supabase
-      const userMaterialUpdates: Partial<UserMaterial> = {};
+      // Mapeamento direto e correto para UserMaterial sem modificar o conteúdo
+      const userMaterialUpdates: any = {};
+      
+      // Mapear campos principais
       if (updates.title) userMaterialUpdates.title = updates.title;
       if (updates.subject) userMaterialUpdates.subject = updates.subject;
       if (updates.grade) userMaterialUpdates.grade = updates.grade;
+      if (updates.type) userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
+      
+      // Para o content, preservar EXATAMENTE como está sem modificações
       if (updates.content) {
+        // Se o content for string, fazer parse. Se for objeto, usar diretamente
         let contentObj = typeof updates.content === 'string' ? JSON.parse(updates.content) : updates.content;
-        contentObj = cleanObjectivesAndSkills(contentObj);
+        
+        // NÃO aplicar cleanObjectivesAndSkills - salvar exatamente como editado
         userMaterialUpdates.content = JSON.stringify(contentObj);
       }
-      if (updates.type) userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
-      if (!userMaterialUpdates.type && updates.type) {
-        userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
-      }
-      // Garantir que o campo 'title' seja passado como 'titulo' para o update
-      if (userMaterialUpdates.title) {
-        (userMaterialUpdates as any).titulo = userMaterialUpdates.title;
-        delete userMaterialUpdates.title;
-      }
-      // Garantir que o campo 'type' seja passado como 'tipo_material' para o update
-      if (userMaterialUpdates.type) {
-        (userMaterialUpdates as any).tipo_material = userMaterialUpdates.type;
-        delete userMaterialUpdates.type;
-      }
-      // Garantir que o campo 'subject' seja passado como 'disciplina'
-      if (userMaterialUpdates.subject) {
-        (userMaterialUpdates as any).disciplina = userMaterialUpdates.subject;
-        delete userMaterialUpdates.subject;
-      }
-      // Garantir que o campo 'grade' seja passado como 'serie'
-      if (userMaterialUpdates.grade) {
-        (userMaterialUpdates as any).serie = userMaterialUpdates.grade;
-        delete userMaterialUpdates.grade;
-      }
-      // O campo 'content' já está correto como 'conteudo'
-      console.log('Enviando para userMaterialsService.updateMaterial:', id, userMaterialUpdates);
+
+      console.log('📊 Dados preparados para update:', {
+        id,
+        title: userMaterialUpdates.title,
+        subject: userMaterialUpdates.subject,
+        grade: userMaterialUpdates.grade,
+        type: userMaterialUpdates.type,
+        contentLength: userMaterialUpdates.content?.length || 0
+      });
+      
       const success = await userMaterialsService.updateMaterial(id, userMaterialUpdates);
+      
       if (success) {
         console.log('✅ Material updated successfully');
       } else {
@@ -637,30 +629,6 @@ export function normalizeMaterialForPreview(material: any) {
     }
   }
   return normalized;
-}
-
-// Função utilitária para limpar arrays de objetivos e habilidades
-function cleanObjectivesAndSkills(content: any) {
-  // Preserva todo o conteúdo existente e apenas limpa campos específicos
-  const cleanedContent = { ...content };
-  
-  if (cleanedContent.objetivos) {
-    if (Array.isArray(cleanedContent.objetivos)) {
-      cleanedContent.objetivos = cleanedContent.objetivos
-        .map((o: any) => typeof o === 'string' ? o.trim() : '')
-        .filter((o: string, idx: number, arr: string[]) => o && arr.indexOf(o) === idx);
-    }
-  }
-  
-  if (cleanedContent.habilidades) {
-    if (Array.isArray(cleanedContent.habilidades)) {
-      cleanedContent.habilidades = cleanedContent.habilidades
-        .map((h: any) => typeof h === 'string' ? h.trim() : '')
-        .filter((h: string, idx: number, arr: string[]) => h && arr.indexOf(h) === idx);
-    }
-  }
-  
-  return cleanedContent;
 }
 
 export async function getMaterialPrincipalInfo(material_principal_id: string): Promise<{ tipo: string, titulo: string } | null> {
