@@ -289,15 +289,24 @@ IMPORTANTE: GERE TODO O CONTEÚDO baseado especificamente no tema "${tema}" para
 
 INSTRUÇÕES CRÍTICAS PARA O PLANO DE AULA:
 
-1. HABILIDADES BNCC:
-   - Forneça EXATAMENTE DE 1 A 4 habilidades que CORRESPONDAM AO ${tema} E O CONTEÚDO GERADO PARA O PLANO DE AULA
-   - Cada habilidade deve ter código REAL da BNCC (ex: EF03MA19, EF67LP28)
-   - Os códigos devem ser específicos para O ${tema} da ${disciplina} e série ${serie}
+1. HABILIDADES BNCC - INSTRUÇÕES ESPECÍFICAS:
+   ⚠️ ATENÇÃO: As habilidades devem ser EXCLUSIVAMENTE baseadas no tema "${tema}" e não apenas na disciplina e série
+   
+   - Identifique DE 2 A 4 habilidades BNCC que estejam DIRETAMENTE relacionadas ao tema "${tema}"
+   - As habilidades devem abordar especificamente o conteúdo que será trabalhado sobre "${tema}"
+   - Use códigos REAIS da BNCC (ex: EF03MA19, EF67LP28) que correspondam EXATAMENTE ao tema "${tema}"
+   - Consulte obrigatoriamente a BNCC oficial para encontrar habilidades que mencionem ou abranjam "${tema}"
+   - NÃO use habilidades genéricas da disciplina - elas devem ser específicas para o tema da aula
    - Formato obrigatório: array de objetos com 'codigo' e 'descricao'
-   - Descrições devem ser claras e específicas sobre os códigos da BNCC GERADOS
-   - Só utilize códigos e descrições reais da BNCC, consultando obrigatoriamente a base oficial (https://basenacionalcomum.mec.gov.br/)
-   - NÃO invente códigos ou descrições. Relacione o código e a descrição exatamente como consta na BNCC oficial
-   - O código deve ser específico para o tema "${tema}", disciplina "${disciplina}" e série "${serie}"
+   - Cada descrição deve explicar COMO a habilidade se aplica especificamente ao tema "${tema}"
+   
+   EXEMPLO CORRETO para tema "Frações":
+   - ✅ Código que aborda especificamente frações, não apenas "números"
+   - ✅ Descrição que menciona frações explicitamente
+   
+   EXEMPLO INCORRETO:
+   - ❌ Código genérico sobre matemática que não menciona o tema específico
+   - ❌ Descrição vaga que poderia servir para qualquer tema da disciplina
 
 2. DESENVOLVIMENTO DAS ETAPAS:
    - Cada etapa deve ter recursos ÚNICOS e específicos
@@ -317,6 +326,21 @@ INSTRUÇÕES CRÍTICAS PARA O PLANO DE AULA:
    - Seja realista para o tema e série
    - Sempre exiba a duração total no formato: "X minutos (Y aula(s))", considerando que cada aula tem 50 minutos. Exemplo: 50 minutos (1 Aula), 100 minutos (2 Aulas).
 
+5. REFERÊNCIAS - INSTRUÇÕES ESPECÍFICAS:
+   ⚠️ OBRIGATÓRIO: Inclua DE 2 A 5 referências em formato ABNT completo
+   
+   - Use referências REAIS e ESPECÍFICAS sobre o tema "${tema}" na disciplina ${disciplina}
+   - Inclua PELO MENOS uma referência da BNCC
+   - Inclua materiais didáticos, livros ou artigos que abordem especificamente "${tema}"
+   - Use formato ABNT COMPLETO com autor, título, editora, ano, páginas quando aplicável
+   - Para sites, inclua URL e data de acesso
+   - Para documentos oficiais, use a referência completa
+   
+   EXEMPLOS de referências corretas:
+   - BRASIL. Ministério da Educação. Base Nacional Comum Curricular. Brasília: MEC, 2018. Disponível em: http://basenacionalcomum.mec.gov.br/. Acesso em: [data atual].
+   - AUTOR, Nome. Título do livro sobre [tema específico]. Cidade: Editora, Ano.
+   - AUTOR, Nome. Título do artigo sobre [tema]. Nome da Revista, v. X, n. Y, p. Z-W, Ano.
+
 Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPECÍFICO sobre "${tema}":
 
 {
@@ -329,9 +353,9 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
   "tema": "${tema}",
   "duracao": "[CALCULE duração total baseada nas etapas e exiba no formato: X minutos (Y aula(s)), considerando 50 minutos = 1 aula. Exemplo: 50 minutos (1 Aula), 100 minutos (2 Aulas)]",
   "habilidades": [
-    {"codigo": "[CÓDIGO BNCC REAL 1 - ex: EF03MA19]", "descricao": "[DESCRIÇÃO COMPLETA da habilidade 1 sobre ${tema}]"},
-    {"codigo": "[CÓDIGO BNCC REAL 2 - ex: EF03MA20]", "descricao": "[DESCRIÇÃO COMPLETA da habilidade 2 sobre ${tema}]"},
-    {"codigo": "[CÓDIGO BNCC REAL 3 - ex: EF03MA21]", "descricao": "[DESCRIÇÃO COMPLETA da habilidade 3 sobre ${tema}]"}
+    {"codigo": "[CÓDIGO BNCC REAL QUE ABORDA ESPECIFICAMENTE ${tema}]", "descricao": "[DESCRIÇÃO COMPLETA de como esta habilidade se aplica ao tema ${tema}]"},
+    {"codigo": "[CÓDIGO BNCC REAL QUE ABORDA ESPECIFICAMENTE ${tema}]", "descricao": "[DESCRIÇÃO COMPLETA de como esta habilidade se aplica ao tema ${tema}]"},
+    {"codigo": "[CÓDIGO BNCC REAL QUE ABORDA ESPECIFICAMENTE ${tema}]", "descricao": "[DESCRIÇÃO COMPLETA de como esta habilidade se aplica ao tema ${tema}]"}
   ],
   "bncc": ["[CÓDIGO 1]", "[CÓDIGO 2]", "[CÓDIGO 3]"],
   "objetivos": [
@@ -380,19 +404,22 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
   "metodologia": "[METODOLOGIA ESPECÍFICA para ensinar ${tema} em ${disciplina} para ${serie} - detalhada]",
   "avaliacao": "[MÉTODO DE AVALIAÇÃO específico para ${tema} - como será avaliado]",
   "referencias": [
-    "[REFERÊNCIA 1 sobre ${tema} em ${disciplina}]",
-    "[REFERÊNCIA 2 sobre ${tema} em ${disciplina}]"
+    "BRASIL. Ministério da Educação. Base Nacional Comum Curricular. Brasília: MEC, 2018. Disponível em: http://basenacionalcomum.mec.gov.br/. Acesso em: $(date +%d/%m/%Y).",
+    "[REFERÊNCIA 2 em formato ABNT sobre ${tema} em ${disciplina} - autor, título, editora, ano]",
+    "[REFERÊNCIA 3 em formato ABNT sobre ${tema} em ${disciplina} - pode ser artigo, livro ou site com data de acesso]",
+    "[REFERÊNCIA 4 em formato ABNT sobre ${tema} em ${disciplina} - específica e real]"
   ]
 }
 
 REGRAS FINAIS OBRIGATÓRIAS:
-1. Habilidades: SEMPRE array de objetos com codigo e descricao
+1. Habilidades: SEMPRE buscar códigos BNCC que abordem especificamente o tema "${tema}"
 2. BNCC: SEMPRE array apenas com os códigos das habilidades
 3. Recursos nas etapas: ÚNICOS e específicos, separados por vírgula
 4. Recursos gerais: lista consolidada de TODOS os recursos das etapas
-5. Códigos BNCC devem ser REAIS e específicos para ${disciplina} e ${serie}
+5. Códigos BNCC devem ser REAIS e específicos para o tema "${tema}" na ${disciplina} e ${serie}
 6. NÃO repetir recursos entre etapas
 7. Duração total deve ser soma dos tempos das etapas
+8. Referências: DE 2 A 5 referências em formato ABNT completo, incluindo BNCC e materiais específicos sobre "${tema}"
 `;
 
     case 'slides':
