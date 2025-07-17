@@ -1,125 +1,77 @@
-import { useState, useEffect, useRef } from 'react';
 
-interface FeedbackState {
-  materialsCreated: number;
-  showFeedbackModal: boolean;
-  dontShowAgain: boolean;
-  lastShownDate: string | null; // Mudança: armazenar apenas a data (YYYY-MM-DD)
-}
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
-// Helper para saber se o plano deve mostrar feedback
-const isFeedbackEligiblePlan = (plano: string) => ['gratuito', 'professor', 'grupo_escolar'].includes(plano);
+export const useFeedback = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
-export const useFeedback = (planoAtivo: string, isFirstAccess: boolean) => {
-  const [feedbackState, setFeedbackState] = useState<FeedbackState>({
-    materialsCreated: 0,
-    showFeedbackModal: false,
-    dontShowAgain: false,
-    lastShownDate: null
-  });
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Carregar estado do localStorage
-  useEffect(() => {
-    const savedState = localStorage.getItem('feedbackState');
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
-        setFeedbackState(parsed);
-      } catch (error) {
-        console.error('Error loading feedback state:', error);
-      }
+  const submitFeedback = async (message: string, type: string) => {
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para enviar feedback.",
+        variant: "destructive"
+      });
+      return false;
     }
-  }, []);
 
-  // Salvar estado no localStorage
-  const saveFeedbackState = (newState: Partial<FeedbackState>) => {
-    const updatedState = { ...feedbackState, ...newState };
-    setFeedbackState(updatedState);
-    localStorage.setItem('feedbackState', JSON.stringify(updatedState));
-  };
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('feedbacks')
+        .insert([{
+          message,
+          type,
+          user_id: user.id
+        }]);
 
-  // Verificar se deve mostrar o modal baseado na data
-  const shouldShowTodayModal = (): boolean => {
-    if (feedbackState.dontShowAgain) return false;
-    const today = new Date().toISOString().split('T')[0];
-    if (!feedbackState.lastShownDate) return true;
-    return feedbackState.lastShownDate !== today;
-  };
+      if (error) throw error;
 
-  // Incrementar contador de materiais criados
-  const incrementMaterialsCreated = () => {
-    if (!isFeedbackEligiblePlan(planoAtivo)) return;
-    const newCount = feedbackState.materialsCreated + 1;
-    saveFeedbackState({ materialsCreated: newCount });
-    if (!feedbackState.dontShowAgain && newCount % 3 === 0) {
-      if (shouldShowTodayModal()) {
-        saveFeedbackState({ showFeedbackModal: true });
-      }
+      toast({
+        title: "Feedback enviado",
+        description: "Obrigado pelo seu feedback! Ele foi enviado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao enviar feedback:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar o feedback. Tente novamente.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Abrir modal manualmente (botão ?)
-  const openFeedbackModal = () => {
-    saveFeedbackState({ showFeedbackModal: true });
+  const getUserFeedbacks = async () => {
+    if (!user) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from('feedbacks')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Erro ao carregar feedbacks:', error);
+      return [];
+    }
   };
-
-  // Fechar modal
-  const closeFeedbackModal = () => {
-    const today = new Date().toISOString().split('T')[0];
-    saveFeedbackState({ showFeedbackModal: false, lastShownDate: today });
-  };
-
-  // Marcar para não mostrar novamente
-  const dontShowAgain = () => {
-    const today = new Date().toISOString().split('T')[0];
-    saveFeedbackState({ showFeedbackModal: false, dontShowAgain: true, lastShownDate: today });
-  };
-
-  // Resetar configurações (para desenvolvimento/testes)
-  const resetFeedbackSettings = () => {
-    const resetState: FeedbackState = {
-      materialsCreated: 0,
-      showFeedbackModal: false,
-      dontShowAgain: false,
-      lastShownDate: null
-    };
-    setFeedbackState(resetState);
-    localStorage.setItem('feedbackState', JSON.stringify(resetState));
-  };
-
-  // Limpar timer ao desmontar
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  // Novo: escutar evento para abrir modal manualmente
-  useEffect(() => {
-    const handleFeedbackModalUpdated = () => {
-      const savedState = localStorage.getItem('feedbackState');
-      if (savedState) {
-        try {
-          const parsed = JSON.parse(savedState);
-          setFeedbackState(parsed);
-        } catch (error) {
-          console.error('Erro ao atualizar feedbackState:', error);
-        }
-      }
-    };
-    window.addEventListener('feedbackModalUpdated', handleFeedbackModalUpdated);
-    return () => {
-      window.removeEventListener('feedbackModalUpdated', handleFeedbackModalUpdated);
-    };
-  }, []);
 
   return {
-    ...feedbackState,
-    incrementMaterialsCreated,
-    openFeedbackModal,
-    closeFeedbackModal,
-    dontShowAgain,
-    resetFeedbackSettings
+    submitFeedback,
+    getUserFeedbacks,
+    loading
   };
 };
