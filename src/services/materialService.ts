@@ -1,4 +1,3 @@
-
 import { userMaterialsService, UserMaterial } from './userMaterialsService';
 import { supabase } from '@/integrations/supabase/client';
 import { QuestionParserService } from './questionParserService';
@@ -642,20 +641,26 @@ export function normalizeMaterialForPreview(material: any) {
 
 // Função utilitária para limpar arrays de objetivos e habilidades
 function cleanObjectivesAndSkills(content: any) {
-  if (content) {
-    if (Array.isArray(content.objetivos)) {
-      content.objetivos = content.objetivos
+  // Preserva todo o conteúdo existente e apenas limpa campos específicos
+  const cleanedContent = { ...content };
+  
+  if (cleanedContent.objetivos) {
+    if (Array.isArray(cleanedContent.objetivos)) {
+      cleanedContent.objetivos = cleanedContent.objetivos
         .map((o: any) => typeof o === 'string' ? o.trim() : '')
         .filter((o: string, idx: number, arr: string[]) => o && arr.indexOf(o) === idx);
     }
-    if (Array.isArray(content.habilidades)) {
-      content.habilidades = content.habilidades
+  }
+  
+  if (cleanedContent.habilidades) {
+    if (Array.isArray(cleanedContent.habilidades)) {
+      cleanedContent.habilidades = cleanedContent.habilidades
         .map((h: any) => typeof h === 'string' ? h.trim() : '')
         .filter((h: string, idx: number, arr: string[]) => h && arr.indexOf(h) === idx);
     }
-    // Nunca copie habilidades para objetivos nem vice-versa
   }
-  return content;
+  
+  return cleanedContent;
 }
 
 export async function getMaterialPrincipalInfo(material_principal_id: string): Promise<{ tipo: string, titulo: string } | null> {
