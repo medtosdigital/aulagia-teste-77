@@ -153,7 +153,7 @@ serve(async (req) => {
         const validationResult = await validateBNCCCodes(tema, disciplina, serie, codigosGerados);
         
         if (validationResult && validationResult.codigosValidados) {
-          // Atualizar habilidades com códigos validados
+          // Atualizar habilidades com códigos validados SEM o texto adicional
           const habilidadesValidadas = structuredContent.habilidades.map((habilidade: any, index: number) => {
             const validacao = validationResult.codigosValidados[index];
             if (validacao && !validacao.isValid && validacao.codigoCorreto) {
@@ -161,14 +161,24 @@ serve(async (req) => {
               return {
                 ...habilidade,
                 codigo: validacao.codigoCorreto,
-                descricao: `${habilidade.descricao} (Código validado e corrigido pela BNCC)`
+                descricao: habilidade.descricao // Mantém apenas a descrição original, sem texto adicional
               };
             }
             return habilidade;
           });
 
-          structuredContent.habilidades = habilidadesValidadas;
-          structuredContent.bncc = habilidadesValidadas.map((h: any) => h.codigo).filter(Boolean);
+          // NOVA FUNCIONALIDADE: Remover códigos BNCC duplicados
+          const codigosUnicos = new Set<string>();
+          const habilidadesSemDuplicatas = habilidadesValidadas.filter((h: any) => {
+            if (!h.codigo || codigosUnicos.has(h.codigo)) {
+              return false; // Remove duplicata ou código vazio
+            }
+            codigosUnicos.add(h.codigo);
+            return true;
+          });
+
+          structuredContent.habilidades = habilidadesSemDuplicatas;
+          structuredContent.bncc = habilidadesSemDuplicatas.map((h: any) => h.codigo).filter(Boolean);
           
           // Adicionar informações de validação ao conteúdo
           structuredContent.bncc_validation = {
@@ -369,23 +379,29 @@ IMPORTANTE: GERE TODO O CONTEÚDO baseado especificamente no tema "${tema}" para
 INSTRUÇÕES CRÍTICAS PARA O PLANO DE AULA:
 
 1. HABILIDADES BNCC - INSTRUÇÕES ESPECÍFICAS:
-   ⚠️ ATENÇÃO: As habilidades devem ser EXCLUSIVAMENTE baseadas no tema "${tema}" e não apenas na disciplina e série
+   ⚠️ ATENÇÃO ABSOLUTA: NÃO REPETIR CÓDIGOS BNCC! ⚠️
    
-   - Identifique DE 2 A 4 habilidades BNCC que estejam DIRETAMENTE relacionadas ao tema "${tema}"
+   - Identifique DE 1 A 5 habilidades BNCC ÚNICAS que estejam DIRETAMENTE relacionadas ao tema "${tema}"
+   - JAMAIS REPITA o mesmo código BNCC - cada código deve ser ÚNICO
+   - Se o tema só tiver 1 habilidade relevante na BNCC, use APENAS 1 habilidade
+   - Se encontrar múltiplas habilidades, use no máximo 5, mas TODAS devem ser DIFERENTES
    - As habilidades devem abordar especificamente o conteúdo que será trabalhado sobre "${tema}"
-   - Use códigos REAIS da BNCC (ex: EF03MA19, EF67LP28) que correspondam EXATAMENTE ao tema "${tema}"
+   - Use códigos REAIS da BNCC (ex: EF03MA15, EF04MA16) que correspondam EXATAMENTE ao tema "${tema}"
    - Consulte obrigatoriamente a BNCC oficial para encontrar habilidades que mencionem ou abranjam "${tema}"
    - NÃO use habilidades genéricas da disciplina - elas devem ser específicas para o tema da aula
    - Formato obrigatório: array de objetos com 'codigo' e 'descricao'
    - Cada descrição deve explicar COMO a habilidade se aplica especificamente ao tema "${tema}"
    
    EXEMPLO CORRETO para tema "Frações":
-   - ✅ Código que aborda especificamente frações, não apenas "números"
-   - ✅ Descrição que menciona frações explicitamente
+   - ✅ EF03MA09 (sobre frações unitárias)
+   - ✅ EF04MA09 (sobre frações equivalentes)  
+   - ✅ EF05MA04 (sobre comparação de frações)
+   - ❌ JAMAIS repetir EF03MA09, EF03MA09, EF03MA09
    
    EXEMPLO INCORRETO:
    - ❌ Código genérico sobre matemática que não menciona o tema específico
    - ❌ Descrição vaga que poderia servir para qualquer tema da disciplina
+   - ❌ REPETIÇÃO de códigos como EF03MA15, EF03MA15, EF03MA15
 
 2. DESENVOLVIMENTO DAS ETAPAS:
    - Cada etapa deve ter recursos ÚNICOS e específicos
@@ -432,11 +448,9 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
   "tema": "${tema}",
   "duracao": "[CALCULE duração total baseada nas etapas e exiba no formato: X minutos (Y aula(s)), considerando 50 minutos = 1 aula. Exemplo: 50 minutos (1 Aula), 100 minutos (2 Aulas)]",
   "habilidades": [
-    {"codigo": "[CÓDIGO BNCC REAL QUE ABORDA ESPECIFICAMENTE ${tema}]", "descricao": "[DESCRIÇÃO COMPLETA de como esta habilidade se aplica ao tema ${tema}]"},
-    {"codigo": "[CÓDIGO BNCC REAL QUE ABORDA ESPECIFICAMENTE ${tema}]", "descricao": "[DESCRIÇÃO COMPLETA de como esta habilidade se aplica ao tema ${tema}]"},
-    {"codigo": "[CÓDIGO BNCC REAL QUE ABORDA ESPECIFICAMENTE ${tema}]", "descricao": "[DESCRIÇÃO COMPLETA de como esta habilidade se aplica ao tema ${tema}]"}
+    {"codigo": "[CÓDIGO BNCC REAL ÚNICO QUE ABORDA ESPECIFICAMENTE ${tema}]", "descricao": "[DESCRIÇÃO COMPLETA de como esta habilidade se aplica ao tema ${tema}]"}
   ],
-  "bncc": ["[CÓDIGO 1]", "[CÓDIGO 2]", "[CÓDIGO 3]"],
+  "bncc": ["[CÓDIGO ÚNICO 1]"],
   "objetivos": [
     "[OBJETIVO ESPECÍFICO 1 sobre ${tema}]",
     "[OBJETIVO ESPECÍFICO 2 sobre ${tema}]",
@@ -491,14 +505,16 @@ Retorne APENAS o JSON estruturado abaixo, preenchido com conteúdo REAL e ESPEC�
 }
 
 REGRAS FINAIS OBRIGATÓRIAS:
-1. Habilidades: SEMPRE buscar códigos BNCC que abordem especificamente o tema "${tema}"
-2. BNCC: SEMPRE array apenas com os códigos das habilidades
-3. Recursos nas etapas: ÚNICOS e específicos, separados por vírgula
-4. Recursos gerais: lista consolidada de TODOS os recursos das etapas
-5. Códigos BNCC devem ser REAIS e específicos para o tema "${tema}" na ${disciplina} e ${serie}
-6. NÃO repetir recursos entre etapas
-7. Duração total deve ser soma dos tempos das etapas
-8. Referências: DE 2 A 5 referências em formato ABNT completo, incluindo BNCC e materiais específicos sobre "${tema}"
+1. Habilidades: SEMPRE buscar códigos BNCC ÚNICOS que abordem especificamente o tema "${tema}"
+2. JAMAIS REPETIR códigos BNCC - cada um deve ser DIFERENTE
+3. Se só existir 1 código relevante, use APENAS 1 - não invente códigos
+4. BNCC: SEMPRE array apenas com os códigos ÚNICOS das habilidades
+5. Recursos nas etapas: ÚNICOS e específicos, separados por vírgula
+6. Recursos gerais: lista consolidada de TODOS os recursos das etapas
+7. Códigos BNCC devem ser REAIS e específicos para o tema "${tema}" na ${disciplina} e ${serie}
+8. NÃO repetir recursos entre etapas
+9. Duração total deve ser soma dos tempos das etapas
+10. Referências: DE 2 A 5 referências em formato ABNT completo, incluindo BNCC e materiais específicos sobre "${tema}"
 `;
 
     case 'slides':
@@ -765,7 +781,7 @@ INSTRUÇÕES FINAIS CRÍTICAS:
 4. Para "multipla_escolha": sempre 4 alternativas válidas e plausíveis
 5. Para "ligar": exatamente 4 itens em cada coluna com correspondências claras
 6. Para "completar": use lacunas claras marcadas com ______
-7. Para "verdadeiro_falso": crie afirmações que exijam análise crítica
+7. Para "verdadeiro_falso": crie afirmações que exijam conhecimento específico
 8. FOQUE em atividades PRÁTICAS e INTERATIVAS
 9. Use linguagem MOTIVADORA e ENVOLVENTE
 10. Promova PARTICIPAÇÃO ATIVA dos estudantes
@@ -1058,13 +1074,25 @@ function parseGeneratedContent(materialType: string, content: string, formData: 
             }
             return { codigo: '', descricao: '' };
           });
+
+          // NOVA FUNCIONALIDADE: Remover códigos BNCC duplicados
+          const codigosUnicos = new Set<string>();
+          const habilidadesSemDuplicatas = parsedContent.habilidades.filter((h: any) => {
+            if (!h.codigo || codigosUnicos.has(h.codigo)) {
+              return false; // Remove duplicata ou código vazio
+            }
+            codigosUnicos.add(h.codigo);
+            return true;
+          });
+
+          parsedContent.habilidades = habilidadesSemDuplicatas;
         } else {
           parsedContent.habilidades = [];
         }
 
-        // 2. Garantir que bncc seja array apenas com códigos das habilidades
+        // 2. Garantir que bncc seja array apenas com códigos ÚNICOS das habilidades
         parsedContent.bncc = Array.isArray(parsedContent.habilidades)
-          ? parsedContent.habilidades.map((h: any) => h.codigo).filter((c: string) => !!c)
+          ? [...new Set(parsedContent.habilidades.map((h: any) => h.codigo).filter((c: string) => !!c))]
           : [];
 
         // 3. Extrair recursos das etapas e consolidar na seção recursos
