@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import SlideViewer from './SlideViewer';
 import { activityService } from '@/services/activityService';
 import MaterialModal from './MaterialModal';
+import { splitContentIntoPages, enhanceHtmlWithNewTemplate } from '@/services/materialRenderUtils';
 
 interface MaterialInlineEditModalProps {
   material: GeneratedMaterial | null;
@@ -82,22 +83,68 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     };
   }, [editedMaterial]);
 
+  // Função utilitária para extrair campos editados do HTML do iframe e atualizar o objeto content do material
+  function parseEditedHtmlToContent(html: string, originalContent: any, type: string) {
+    // Cria um DOM virtual para manipular o HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const updatedContent = { ...originalContent };
+
+    // Exemplo para campos comuns (ajuste conforme o template usado):
+    if (type === 'plano-de-aula' || type === 'atividade' || type === 'avaliacao') {
+      // Título
+      const tituloEl = doc.querySelector('[data-field="titulo"]');
+      if (tituloEl) updatedContent.titulo = tituloEl.textContent?.trim() || '';
+      // Instruções
+      const instrEl = doc.querySelector('[data-field="instrucoes"]');
+      if (instrEl) updatedContent.instrucoes = instrEl.textContent?.trim() || '';
+      // Objetivos (lista)
+      const objetivosEls = doc.querySelectorAll('[data-field="objetivo"]');
+      if (objetivosEls.length) {
+        updatedContent.objetivos = Array.from(objetivosEls).map(el => el.textContent?.trim() || '');
+      }
+      // Questões (atividade/avaliação)
+      if (type !== 'plano-de-aula') {
+        const questoesEls = doc.querySelectorAll('[data-field="questao"]');
+        if (questoesEls.length) {
+          updatedContent.questoes = Array.from(questoesEls).map((el, idx) => ({
+            ...((originalContent.questoes && originalContent.questoes[idx]) || {}),
+            pergunta: el.textContent?.trim() || ''
+          }));
+        }
+      }
+      // Outros campos podem ser adicionados conforme necessário
+    }
+    // Slides (exemplo)
+    if (type === 'slides') {
+      const slidesEls = doc.querySelectorAll('[data-field="slide"]');
+      if (slidesEls.length) {
+        updatedContent.slides = Array.from(slidesEls).map((el, idx) => ({
+          ...((originalContent.slides && originalContent.slides[idx]) || {}),
+          conteudo: el.textContent?.trim() || ''
+        }));
+      }
+    }
+    return updatedContent;
+  }
+
   const handleSave = async () => {
     if (!editedMaterial) return;
 
     setLoading(true);
     try {
-      // If we have HTML content changes, make sure they're reflected in the material
       let materialToSave = editedMaterial;
-      
-      if (currentHtmlContent) {
+      // Se houver HTML editado, parsear para atualizar o objeto content
+      if (iframeRef.current) {
+        const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
+        if (iframeDoc) {
+          const html = iframeDoc.documentElement.outerHTML;
+          const updatedContent = parseEditedHtmlToContent(html, editedMaterial.content, editedMaterial.type);
         materialToSave = {
           ...editedMaterial,
-          content: typeof editedMaterial.content === 'string' 
-            ? currentHtmlContent 
-            : { ...editedMaterial.content, renderedHtml: currentHtmlContent }
+            content: updatedContent
         };
-        console.log('Saving material with updated HTML content');
+        }
       }
 
       const success = await materialService.updateMaterial(materialToSave.id, materialToSave);
@@ -180,999 +227,144 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     `;
   };
 
-  const splitContentIntoPages = (htmlContent: string): string[] => {
-    console.log('Starting optimized page split for:', editedMaterial?.type);
-    
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    
-    if (editedMaterial?.type === 'atividade' || editedMaterial?.type === 'avaliacao') {
-      const pages: string[] = [];
-      const questions = tempDiv.querySelectorAll('.questao-container, .question');
-      
-      if (questions.length === 0) {
-        return [htmlContent];
-      }
-
-      const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
-      const instructions = tempDiv.querySelector('.instructions-section')?.outerHTML || '';
-      const questionsPerPage = 4;
-      let questionIndex = 0;
-
-      while (questionIndex < questions.length) {
-        const isFirstPage = pages.length === 0;
-        const questionsForPage = [];
-        
-        for (let i = 0; i < questionsPerPage && questionIndex < questions.length; i++) {
-          questionsForPage.push(questions[questionIndex]);
-          questionIndex++;
-        }
-
-        let pageContent = '';
-        if (isFirstPage) {
-          pageContent += editedMaterial.type === 'atividade' ? '<h2>ATIVIDADE</h2>' : '<h2>AVALIAÇÃO</h2>';
-          
-          pageContent += `
-            <table>
-              <tr>
-                <th>Escola:</th>
-                <td>_________________________________</td>
-                <th>Data:</th>
-                <td>${new Date().toLocaleDateString('pt-BR')}</td>
-              </tr>
-              <tr>
-                <th>Disciplina:</th>
-                <td>${editedMaterial.subject || '[DISCIPLINA]'}</td>
-                <th>Série/Ano:</th>
-                <td>${editedMaterial.grade || '[SERIE_ANO]'}</td>
-              </tr>
-              <tr>
-                <th>Aluno(a):</th>
-                <td class="student-info-cell">____________________________________________</td>
-                <th>${editedMaterial.type === 'avaliacao' ? 'NOTA:' : 'BNCC:'}</th>
-                <td class="student-info-cell ${editedMaterial.type === 'avaliacao' ? 'nota-highlight-cell' : ''}">${editedMaterial.type === 'avaliacao' ? '' : '{bncc}'}</td>
-              </tr>
-            </table>
-          `;
-          
-          pageContent += `
-            <div class="instructions">
-              <strong>${editedMaterial.title}:</strong><br>
-              ${instructions || (editedMaterial.type === 'avaliacao' ? 'Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa.' : 'Leia atentamente cada questão e responda de acordo com o solicitado.')}
-            </div>
-          `;
-        }
-        
-        questionsForPage.forEach(question => {
-          pageContent += question.outerHTML;
-        });
-
-        pages.push(wrapPageContentWithTemplate(pageContent, isFirstPage));
-      }
-      
-      return pages.length > 0 ? pages : [htmlContent];
-    }
-
-    if (editedMaterial?.type === 'plano-de-aula') {
-      const sections = tempDiv.querySelectorAll('.section');
-      if (sections.length <= 1) {
-        return [htmlContent];
-      }
-
-      const pages: string[] = [];
-      const sectionsPerPage = 3;
-      let sectionIndex = 0;
-
-      const header = tempDiv.querySelector('.header-section')?.outerHTML || '';
-      
-      while (sectionIndex < sections.length) {
-        const isFirstPage = pages.length === 0;
-        const sectionsForPage = [];
-        
-        for (let i = 0; i < sectionsPerPage && sectionIndex < sections.length; i++) {
-          sectionsForPage.push(sections[sectionIndex]);
-          sectionIndex++;
-        }
-
-        let pageContent = '';
-        if (isFirstPage) {
-          pageContent += header;
-        }
-        
-        sectionsForPage.forEach(section => {
-          pageContent += section.outerHTML;
-        });
-
-        pages.push(wrapPageContentWithTemplate(pageContent, isFirstPage));
-      }
-      
-      return pages.length > 0 ? pages : [htmlContent];
-    }
-
-    return [htmlContent];
-  };
-
-  const enhanceHtmlWithNewTemplate = (htmlContent: string): string => {
-    return `
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${editedMaterial?.title}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-          
-          @page {
-            size: A4;
-            margin: 0;
-          }
-          body {
-            margin: 0;
-            padding: 0;
-            background: #f0f4f8;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px 0;
-          }
-          
-          .page {
-            position: relative;
-            width: 210mm;
-            min-height: 297mm;
-            background: white;
-            overflow: hidden;
-            margin: 0 auto 20px auto;
-            box-sizing: border-box;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            border-radius: 6px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            page-break-after: always;
-          }
-
-          .page:last-of-type {
-            page-break-after: auto;
-            margin-bottom: 0;
-          }
-          
-          .shape-circle {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.25;
-            pointer-events: none;
-            z-index: 0;
-          }
-          .shape-circle.purple {
-            width: 180px; 
-            height: 180px;
-            background: #a78bfa;
-            top: -60px; 
-            left: -40px;
-          }
-          .shape-circle.blue {
-            width: 240px; 
-            height: 240px;
-            background: #60a5fa;
-            bottom: -80px; 
-            right: -60px;
-          }
-          
-          .header {
-            position: absolute;
-            top: 6mm;
-            left: 0;
-            right: 0;
-            display: flex;
-            align-items: center;
-            z-index: 999;
-            height: 12mm;
-            background: transparent;
-            padding: 0 12mm;
-            flex-shrink: 0;
-          }
-          .header .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 3px;
-          }
-          .header .logo {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            flex-shrink: 0;
-            box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
-            pointer-events: none !important;
-          }
-          .header .logo svg {
-            width: 16px;
-            height: 16px;
-            stroke: white;
-            fill: none;
-            stroke-width: 2;
-            pointer-events: none !important;
-          }
-          .header .brand-text {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            pointer-events: none !important;
-          }
-          .header .brand-text h1 {
-            font-size: 20px;
-            color: #0ea5e9;
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            line-height: 1;
-            font-weight: 700;
-            letter-spacing: -0.2px;
-            text-transform: none;
-            pointer-events: none !important;
-          }
-          .header .brand-text p {
-            font-size: 8px;
-            color: #6b7280;
-            margin: -1px 0 0 0;
-            font-family: 'Inter', sans-serif;
-            line-height: 1;
-            font-weight: 400;
-            pointer-events: none !important;
-          }
-          
-          .content {
-            margin-top: 20mm;
-            margin-bottom: 12mm;
-            padding: 0 15mm;
-            position: relative;
-            flex: 1;
-            overflow: visible;
-            z-index: 1;
-          }
-
-          .content.subsequent-page {
-            margin-top: 40mm;
-          }
-
-          h2 {
-            text-align: center;
-            margin: 10px 0 18px 0;
-            font-size: 1.5rem;
-            color: #4f46e5;
-            position: relative;
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-          }
-          h2::after {
-            content: '';
-            width: 50px;
-            height: 3px;
-            background: #a78bfa;
-            display: block;
-            margin: 6px auto 0;
-            border-radius: 2px;
-          }
-          
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 18px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          }
-          th, td {
-            padding: 8px 12px;
-            font-size: 0.85rem;
-            border: none;
-            font-family: 'Inter', sans-serif;
-            vertical-align: top;
-          }
-          th {
-            background: #f3f4f6;
-            color: #1f2937;
-            font-weight: 600;
-            text-align: left;
-            width: 18%;
-          }
-          td {
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-          }
-          td:last-child {
-            border-bottom: none;
-          }
-          table .student-info-cell {
-            width: 32%;
-          }
-          
-          .nota-highlight-cell {
-            background-color: #fef3c7;
-            color: #000000;
-            font-weight: 600;
-            border: 2px solid #f59e0b;
-          }
-          
-          .instructions {
-            background: #eff6ff;
-            padding: 15px;
-            border-left: 4px solid #0ea5e9;
-            margin-bottom: 30px;
-            font-family: 'Inter', sans-serif;
-            border-radius: 6px;
-          }
-
-          .questao-container, .question {
-            margin-bottom: 30px;
-            page-break-inside: avoid;
-            position: relative;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 15px;
-            background: #fafafa;
-          }
-          
-          .question-delete-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 24px;
-            height: 24px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            opacity: 0.7;
-            transition: opacity 0.2s ease;
-            z-index: 10;
-          }
-          
-          .question-delete-btn:hover {
-            opacity: 1;
-            background: #dc2626;
-          }
-          
-          .questao-numero, .question-header {
-            font-weight: 600;
-            color: #4338ca;
-            margin-bottom: 10px;
-            font-size: 1.0rem;
-            font-family: 'Inter', sans-serif;
-          }
-          .questao-enunciado, .question-text {
-            margin-bottom: 15px;
-            text-align: justify;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            line-height: 1.4;
-          }
-          .questao-opcoes, .options {
-            margin-left: 20px;
-          }
-          .opcao, .option {
-            margin-bottom: 8px;
-            display: flex;
-            align-items: flex-start;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-          }
-          .opcao-letra, .option-letter {
-            font-weight: bold;
-            margin-right: 10px;
-            color: #4338ca;
-            min-width: 25px;
-            pointer-events: none !important;
-          }
-
-          .answer-lines {
-            border-bottom: 1px solid #d1d5db;
-            margin-bottom: 8px;
-            height: 20px;
-            width: 100%;
-            display: block;
-          }
-          .answer-lines:last-child {
-            margin-bottom: 0;
-          }
-
-          .matching-section {
-            display: flex;
-            gap: 30px;
-            margin: 15px 0;
-          }
-          .matching-column {
-            flex: 1;
-          }
-          .matching-item {
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            margin-bottom: 8px;
-            border-radius: 4px;
-            background: #f9fafb;
-            font-size: 0.9rem;
-          }
-
-          .fill-blank {
-            display: inline-block;
-            border-bottom: 2px solid #4338ca;
-            min-width: 100px;
-            height: 20px;
-            margin: 0 5px;
-          }
-
-          .image-space, .math-space {
-            border: 2px dashed #d1d5db;
-            min-height: 120px;
-            margin: 15px 0;
-            padding: 15px;
-            border-radius: 6px;
-            background: #fafafa;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #9ca3af;
-            font-size: 0.85rem;
-          }
-          .math-space {
-            min-height: 80px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-          }
-          
-          .footer {
-            position: absolute;
-            bottom: 6mm;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 0.7rem;
-            color: #6b7280;
-            z-index: 999;
-            height: 6mm;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            padding: 0 15mm;
-            font-family: 'Inter', sans-serif;
-            flex-shrink: 0;
-            pointer-events: none !important;
-          }
-
-          .editable-field {
-            transition: all 0.2s ease;
-            cursor: text;
-            min-height: 20px;
-            outline: none;
-            background: rgba(59, 130, 246, 0.05) !important;
-            border: 1px dashed rgba(59, 130, 246, 0.3) !important;
-            border-radius: 4px !important;
-            padding: 4px 8px !important;
-          }
-          .editable-field:hover {
-            background: rgba(59, 130, 246, 0.1) !important;
-            border-color: #3b82f6 !important;
-          }
-          .editable-field:focus {
-            background: white !important;
-            border-color: #2563eb !important;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
-          }
-          
-          .section {
-            margin-bottom: 25px;
-            page-break-inside: avoid;
-          }
-          
-          .section h3 {
-            color: #4f46e5;
-            font-size: 1.1rem;
-            margin-bottom: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
-          
-          .info-table {
-            width: 100%;
-            margin-bottom: 20px;
-            border-collapse: collapse;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          }
-          
-          .info-table th {
-            background: #f3f4f6;
-            color: #1f2937;
-            font-weight: 600;
-            text-align: left;
-            padding: 8px 12px;
-            font-size: 0.85rem;
-            width: 25%;
-          }
-          
-          .info-table td {
-            background: #ffffff;
-            padding: 8px 12px;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 0.85rem;
-          }
-          
-          .objectives-list, .skills-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-          }
-          
-          .objectives-list li, .skills-list li {
-            margin-bottom: 8px;
-            padding-left: 20px;
-            position: relative;
-            font-size: 0.9rem;
-            line-height: 1.4;
-          }
-          
-          .objectives-list li:before {
-            content: "•";
-            color: #3b82f6;
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-          }
-          
-          .skills-list li:before {
-            content: "•";
-            color: #10b981;
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-          }
-          
-          .development-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          }
-          
-          .development-table th {
-            background: #f3f4f6;
-            color: #1f2937;
-            font-weight: 600;
-            text-align: left;
-            padding: 10px 12px;
-            font-size: 0.85rem;
-          }
-          
-          .development-table td {
-            background: #ffffff;
-            padding: 12px;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 0.85rem;
-            vertical-align: top;
-          }
-          
-          .resources-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-          }
-          
-          .resources-list li {
-            margin-bottom: 6px;
-            padding-left: 20px;
-            position: relative;
-            font-size: 0.9rem;
-          }
-          
-          .resources-list li:before {
-            content: "•";
-            color: #f59e0b;
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-          }
-          
-          .evaluation-text {
-            font-size: 0.9rem;
-            line-height: 1.5;
-            text-align: justify;
-            margin-top: 10px;
-          }
-          
-          @media print {
-            body { 
-              margin: 0; 
-              padding: 0; 
-              background: white;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .page { 
-              box-shadow: none; 
-              margin: 0;
-              border-radius: 0;
-              width: 100%;
-              min-height: 100vh;
-              display: flex;
-              flex-direction: column;
-            }
-            .shape-circle {
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .header, .footer {
-              position: fixed;
-              background: transparent;
-            }
-            .header .logo {
-              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .question-delete-btn {
-              display: none !important;
-            }
-          }
-        </style>
-        <script>
-          document.addEventListener('DOMContentLoaded', function() {
-            const questions = document.querySelectorAll('.questao-container, .question');
-            questions.forEach((question, index) => {
-              const deleteBtn = document.createElement('button');
-              deleteBtn.className = 'question-delete-btn';
-              deleteBtn.innerHTML = '×';
-              deleteBtn.title = 'Excluir questão';
-              deleteBtn.onclick = function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (confirm('Tem certeza que deseja excluir esta questão?')) {
-                  question.remove();
-                  const remainingQuestions = document.querySelectorAll('.questao-container, .question');
-                  remainingQuestions.forEach((q, i) => {
-                    const questionHeader = q.querySelector('.questao-numero, .question-header');
-                    if (questionHeader) {
-                      questionHeader.textContent = 'Questão ' + (i + 1);
-                    }
-                  });
-                  
-                  if (window.parent && window.parent.syncContentChanges) {
-                    window.parent.syncContentChanges(document.body.innerHTML);
-                  }
-                }
-              };
-              question.appendChild(deleteBtn);
-            });
-
-            const editableFields = document.querySelectorAll('.editable-field');
-            editableFields.forEach(field => {
-              field.addEventListener('input', function() {
-                if (window.parent && window.parent.syncContentChanges) {
-                  window.parent.syncContentChanges(document.body.innerHTML);
-                }
-              });
-              
-              field.addEventListener('blur', function() {
-                if (window.parent && window.parent.syncContentChanges) {
-                  window.parent.syncContentChanges(document.body.innerHTML);
-                }
-              });
-            });
-          });
-        </script>
-      </head>
-      <body>
-        ${htmlContent}
-      </body>
-      </html>
-    `;
-  };
-
+  // Função para tornar o conteúdo editável
   const makeContentEditable = (htmlContent: string): string => {
     let editableHtml = htmlContent;
 
-    // Make table cells editable (excluding footer links and blank fields)
-    editableHtml = editableHtml.replace(
-      /<td([^>]*)>([^<]+)<\/td>/g,
-      (match, attrs, content) => {
-        if (content.includes('aulagia.com.br') || 
-            content.includes('AulagIA') || 
-            content.includes('_____')) {
-          return match;
-        }
-        return `<td${attrs}><span class="editable-field" contenteditable="true">${content}</span></td>`;
+    // Remove qualquer contenteditable/data-field da logo, texto e slogan
+    editableHtml = editableHtml.replace(/(<div[^>]*class="logo[^"']*"[^>]*)(contenteditable="true"|data-field="[^"]*")/gi, '$1');
+    editableHtml = editableHtml.replace(/(<div[^>]*class="brand-text[^"']*"[^>]*)(contenteditable="true"|data-field="[^"]*")/gi, '$1');
+    editableHtml = editableHtml.replace(/(<h1[^>]*>)(AulagIA)(<\/h1>)/gi, '<h1 class="not-editable">$2</h1>');
+    editableHtml = editableHtml.replace(/(<p[^>]*>)(Sua aula com toque mágico)(<\/p>)/gi, '<p class="not-editable">$2</p>');
+    editableHtml = editableHtml.replace(/(<div[^>]*class="footer[^"']*"[^>]*)(contenteditable="true"|data-field="[^"]*")/gi, '$1');
+    editableHtml = editableHtml.replace(/(<footer[^>]*)(contenteditable="true"|data-field="[^"]*")/gi, '$1');
+
+    // Título
+    editableHtml = editableHtml.replace(/<h1([^>]*)>/i, function(match, attrs) {
+      if (/not-editable/.test(attrs)) return match;
+      return `<h1${attrs} contenteditable="true" data-field="titulo">`;
+    });
+    // Instruções
+    editableHtml = editableHtml.replace(/<p([^>]*)>(.*?)Instruções:(.*?)<\/p>/i, function(match, attrs, before, after) {
+      if (/not-editable/.test(attrs)) return match;
+      return `<p${attrs} contenteditable="true" data-field="instrucoes">${before}Instruções:${after}</p>`;
+    });
+    // Objetivos (li)
+    editableHtml = editableHtml.replace(/<li([^>]*)>(.*?)<\/li>/gi, function(match, attrs, content) {
+      if (/not-editable/.test(attrs)) return match;
+      if (/objetivo/i.test(content)) {
+        return `<li${attrs} contenteditable="true" data-field="objetivo">${content}</li>`;
       }
-    );
-
-    // Make headers editable (excluding brand headers)
-    editableHtml = editableHtml.replace(
-      /<h([1-6])([^>]*)>([^<]*)<\/h([1-6])>/g,
-      (match, tag1, attrs, content, tag2) => {
-        if (content.includes('AulagIA') || content.includes('AVALIAÇÃO') || content.includes('ATIVIDADE')) return match;
-        return `<h${tag1}${attrs}><span class="editable-field" contenteditable="true">${content}</span></h${tag1}>`;
+      if (/OBJETIVO/i.test(editableHtml)) {
+        return `<li${attrs} contenteditable="true" data-field="objetivo">${content}</li>`;
       }
-    );
-
-    // Make list items editable
-    editableHtml = editableHtml.replace(
-      /<li([^>]*)>([^<]*)<\/li>/g,
-      (match, attrs, content) => {
-        if (content.trim() === '') return match;
-        return `<li${attrs}><span class="editable-field" contenteditable="true">${content}</span></li>`;
+      // Habilidades
+      if (/habilidade/i.test(content)) {
+        return `<li${attrs} contenteditable="true" data-field="habilidade">${content}</li>`;
       }
-    );
-
-    // Make development table cells editable
-    editableHtml = editableHtml.replace(
-      /<td([^>]*class="[^"]*development[^"]*"[^>]*)>([^<]*)<\/td>/g,
-      '<td$1><span class="editable-field" contenteditable="true">$2</span></td>'
-    );
-
-    // Make question text editable
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*questao-enunciado[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*question-text[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    // Make question headers editable
-    editableHtml = editableHtml.replace(
-      /(<div[^>]*class="[^"]*question-header[^"]*"[^>]*>Questão \d+<\/div>\s*)([^<]+)(<\/div>|<div)/g,
-      '$1<span class="editable-field" contenteditable="true">$2</span>$3'
-    );
-
-    editableHtml = editableHtml.replace(
-      /(<div[^>]*class="[^"]*questao-container[^"]*"[^>]*>[\s\S]*?<div[^>]*class="[^"]*questao-numero[^"]*"[^>]*>Questão \d+<\/div>\s*)([^<]+?)(\s*<div)/g,
-      '$1<span class="editable-field" contenteditable="true">$2</span>$3'
-    );
-
-    // Make True/False options editable
-    editableHtml = editableHtml.replace(
-      /(Verdadeiro|Falso)(?=\s*<\/)/g,
-      '<span class="editable-field" contenteditable="true">$1</span>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /(\(\s*\)\s*)(Verdadeiro|Falso)/g,
-      '$1<span class="editable-field" contenteditable="true">$2</span>'
-    );
-
-    // Protect already processed spans
-    const protectedSpans: string[] = [];
-    editableHtml = editableHtml.replace(
-      /<span[^>]*class="[^"]*editable-field[^"]*"[^>]*>[^<]*<\/span>/g,
-      (match) => {
-        const index = protectedSpans.length;
-        protectedSpans.push(match);
-        return `{{PROTECTED_SPAN_${index}}}`;
+      if (/HABILIDADE/i.test(editableHtml)) {
+        return `<li${attrs} contenteditable="true" data-field="habilidade">${content}</li>`;
       }
-    );
-
-    // Make multiple choice options editable - structured options
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*opcao[^"]*"[^>]*>)\s*(<span[^>]*class="[^"]*opcao-letra[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]+?)\s*<\/div>/g,
-      '<div$1$2 <span class="editable-field" contenteditable="true">$3</span></div>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*option[^"]*"[^>]*>)\s*(<span[^>]*class="[^"]*option-letter[^"]*"[^>]*>[A-E]\)<\/span>)\s*([^<]+?)\s*<\/div>/g,
-      '<div$1$2 <span class="editable-field" contenteditable="true">$3</span></div>'
-    );
-
-    // Make multiple choice options editable - simple text patterns
-    editableHtml = editableHtml.replace(
-      /^(\s*)([A-E]\))\s+([^<\n]+?)$/gm,
-      (match, indent, letter, text) => {
-        if (text.trim().length > 2 && !text.includes('editable-field') && !text.includes('<span')) {
-          return `${indent}${letter} <span class="editable-field" contenteditable="true">${text.trim()}</span>`;
-        }
-        return match;
+      // Recursos
+      if (/recurso/i.test(content)) {
+        return `<li${attrs} contenteditable="true" data-field="recurso">${content}</li>`;
       }
-    );
-
-    // Make bold letter options editable
-    editableHtml = editableHtml.replace(
-      /(<(?:strong|b)>[A-E]\)<\/(?:strong|b)>)\s*([^<\n]+)/g,
-      (match, letter, text) => {
-        if (text.trim().length > 2 && !text.includes('editable-field')) {
-          return `${letter} <span class="editable-field" contenteditable="true">${text.trim()}</span>`;
-        }
-        return match;
+      if (/RECURSO/i.test(editableHtml)) {
+        return `<li${attrs} contenteditable="true" data-field="recurso">${content}</li>`;
       }
-    );
-
-    // Make paragraph options editable
-    editableHtml = editableHtml.replace(
-      /<p([^>]*)>([A-E]\))\s*([^<]+)<\/p>/g,
-      '<p$1>$2 <span class="editable-field" contenteditable="true">$3</span></p>'
-    );
-
-    // Make list item options editable
-    editableHtml = editableHtml.replace(
-      /<li([^>]*)>([A-E]\))\s*([^<]+)<\/li>/g,
-      '<li$1>$2 <span class="editable-field" contenteditable="true">$3</span></li>'
-    );
-
-    // Make break-separated options editable - FIXED REGEX
-    editableHtml = editableHtml.replace(
-      /(<br\s*\/?>)\s*([A-E]\))\s+([^<]+?)(?=\s*(?:<br|<\/|$))/g,
-      (match, br, letter, text) => {
-        if (text.trim().length > 2 && !text.includes('editable-field')) {
-          return `${br}${letter} <span class="editable-field" contenteditable="true">${text.trim()}</span>`;
-        }
-        return match;
-      }
-    );
-
-    // Restore protected spans
-    protectedSpans.forEach((span, index) => {
-      editableHtml = editableHtml.replace(`{{PROTECTED_SPAN_${index}}}`, span);
+      return `<li${attrs} contenteditable="true">${content}</li>`;
+    });
+    // Desenvolvimento (tabela)
+    editableHtml = editableHtml.replace(/<td([^>]*)>(.*?)<\/td>/gi, function(match, attrs, content) {
+      if (/not-editable/.test(attrs)) return match;
+      return `<td${attrs} contenteditable="true" data-field="desenvolvimento">${content}</td>`;
+    });
+    // Questões
+    editableHtml = editableHtml.replace(/<div([^>]*)class="questao-enunciado"([^>]*)>/gi, function(match, attrs1, attrs2) {
+      if (/not-editable/.test(attrs1 + attrs2)) return match;
+      return `<div${attrs1} class="questao-enunciado"${attrs2} contenteditable="true" data-field="questao">`;
+    });
+    // Slides
+    editableHtml = editableHtml.replace(/<div([^>]*)class="slide-content"([^>]*)>/gi, function(match, attrs1, attrs2) {
+      if (/not-editable/.test(attrs1 + attrs2)) return match;
+      return `<div${attrs1} class="slide-content"${attrs2} contenteditable="true" data-field="slide">`;
     });
 
-    // Make other elements editable
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*matching-item[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
+    // Adiciona contenteditable aos demais campos principais
+    editableHtml = editableHtml.replace(/<(h2|h3|h4|h5|h6)([^>]*)>/gi, function(match, tag, attrs) {
+      if (/not-editable/.test(attrs)) return match;
+      return `<${tag}${attrs} contenteditable="true">`;
+    });
+    editableHtml = editableHtml.replace(/<p([^>]*)>/gi, function(match, attrs) {
+      if (/not-editable/.test(attrs)) return match;
+      return `<p${attrs} contenteditable="true">`;
+    });
 
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*evaluation-text[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*instructions[^"]*"[^>]*)>(<strong>[^<]*<\/strong><br>)([^<]*)<\/div>/g,
-      '<div$1>$2<span class="editable-field" contenteditable="true">$3</span></div>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /(Leia atentamente cada questão e responda de acordo com o solicitado\.|Leia com atenção cada questão e escolha a alternativa correta ou responda de forma completa\.)/g,
-      '<span class="editable-field" contenteditable="true">$1</span>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /(<h3[^>]*>RECURSOS DIDÁTICOS<\/h3>\s*)([^<]+)/g,
-      '$1<span class="editable-field" contenteditable="true">$2</span>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /(<h3[^>]*>AVALIAÇÃO<\/h3>\s*)([^<]+)/g,
-      '$1<span class="editable-field" contenteditable="true">$2</span>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /<p([^>]*)>([^<]+)<\/p>/g,
-      (match, attrs, content) => {
-        if (content.includes('aulagia.com.br') || 
-            content.includes('AulagIA') || 
-            content.includes('Sua aula com toque mágico')) {
-          return match;
+    // Adiciona estilos para destacar campos editáveis e bloquear seleção/edição da logo
+    editableHtml = editableHtml.replace('</head>', `
+      <style>
+        .logo, .brand-text, .not-editable, .footer, footer { pointer-events: none !important; user-select: none !important; -webkit-user-select: none !important; }
+        .not-editable { color: #2563eb !important; font-weight: 700 !important; font-size: 2rem !important; letter-spacing: 0.5px; }
+        [contenteditable="true"]:hover {
+          background-color: rgba(59, 130, 246, 0.08);
+          outline: 1.5px dashed #3b82f6;
+          cursor: text;
         }
-        return `<p${attrs}><span class="editable-field" contenteditable="true">${content}</span></p>`;
-      }
-    );
-
-    editableHtml = editableHtml.replace(
-      /<h1([^>]*)>([^<]*)<\/h1>/g,
-      (match, attrs, content) => {
-        if (content.includes('AulagIA')) return match;
-        return `<h1${attrs}><span class="editable-field" contenteditable="true">${content}</span></h1>`;
-      }
-    );
-
-    editableHtml = editableHtml.replace(
-      /<h2([^>]*)>([^<]*)<\/h2>/g,
-      (match, attrs, content) => {
-        if (content.includes('AulagIA') || content.includes('APRESENTAÇÃO')) return match;
-        return `<h2${attrs}><span class="editable-field" contenteditable="true">${content}</span></h2>`;
-      }
-    );
-
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*subtitle[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /Apresentado por:/g,
-      '<span class="editable-field" contenteditable="true">Apresentado por:</span>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*professor[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*escola[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*keywords[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /<div([^>]*class="[^"]*slide-content[^"]*"[^>]*)>([^<]*)<\/div>/g,
-      '<div$1><span class="editable-field" contenteditable="true">$2</span></div>'
-    );
-
-    editableHtml = editableHtml.replace(
-      /(RECURSOS DIDÁTICOS<\/h3>\s*)([\s\S]*?)(<h3|<div class="footer"|$)/g,
-      (match, title, content, after) => {
-        if (content.trim() && !content.includes('<')) {
-          return title + '<span class="editable-field" contenteditable="true">' + content.trim() + '</span>' + after;
+        [contenteditable="true"]:focus {
+          background-color: rgba(59, 130, 246, 0.15);
+          outline: 2px solid #3b82f6;
+          cursor: text;
         }
-        return match;
-      }
-    );
-
-    editableHtml = editableHtml.replace(
-      /(AVALIAÇÃO<\/h3>\s*)([\s\S]*?)(<div class="footer"|$)/g,
-      (match, title, content, after) => {
-        if (content.trim() && !content.includes('<')) {
-          return title + '<span class="editable-field" contenteditable="true">' + content.trim() + '</span>' + after;
+        [contenteditable="true"] {
+          transition: all 0.2s;
+          min-height: 1em;
         }
-        return match;
-      }
-    );
-
-    // Remove editable spans from footer text
-    editableHtml = editableHtml.replace(
-      /<span class="editable-field" contenteditable="true">([^<]*Sua aula com toque mágico[^<]*)<\/span>/g,
-      '$1'
-    );
+      </style>
+    </head>`);
 
     return editableHtml;
   };
+
+  // Função para envolver o conteúdo com o mesmo container do modal de visualização
+  function wrapWithContainer(html: string) {
+    // Se já tiver container, não duplica
+    if (/<div[^>]*class=["']container["']/.test(html)) return html;
+    return `<div class="container">${html}</div>`;
+  }
 
   const renderMaterialWithSameSystem = () => {
     if (!editedMaterial) return null;
 
     const selectedTemplateId = getDefaultTemplateId(editedMaterial.type);
-    
     try {
-      const renderedHtml = templateService.renderTemplate(selectedTemplateId, editedMaterial.content);
+      // Mesclar dados do material e do conteúdo para o template
+      const templateData = { ...editedMaterial, ...(editedMaterial.content || {}) };
+      const renderedHtml = templateService.renderTemplate(selectedTemplateId, templateData);
       
       if (editedMaterial.type === 'slides') {
         return <SlideViewer htmlContent={makeContentEditable(renderedHtml)} material={editedMaterial} />;
       }
       
-      const pages = splitContentIntoPages(renderedHtml);
+      // Usar o mesmo sistema de paginação do MaterialPreview
+      const pages = splitContentIntoPages(renderedHtml, editedMaterial);
       
+      // Sempre aplicar makeContentEditable ao HTML antes de exibir no iframe
       if (pages.length === 1) {
         return (
           <iframe
             ref={iframeRef}
-            srcDoc={enhanceHtmlWithNewTemplate(makeContentEditable(pages[0]))}
+            srcDoc={enhanceHtmlWithNewTemplate(wrapWithContainer(makeContentEditable(pages[0])), editedMaterial)}
             style={{
               width: '100%',
               height: '100%',
               border: 'none',
-              backgroundColor: 'white'
+              backgroundColor: 'white',
+              overflow: 'visible', // Garante que nada seja cortado
+              display: 'block',
+              position: 'relative',
+              boxSizing: 'border-box',
+              margin: 0,
+              padding: 0
             }}
             title="Material Editor"
           />
@@ -1254,12 +446,18 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
           <div className="flex-1 overflow-hidden">
             <iframe
               ref={iframeRef}
-              srcDoc={enhanceHtmlWithNewTemplate(makeContentEditable(pages[currentPage]))}
+              srcDoc={enhanceHtmlWithNewTemplate(wrapWithContainer(makeContentEditable(pages[currentPage])), editedMaterial)}
               style={{
                 width: '100%',
                 height: '100%',
                 border: 'none',
-                backgroundColor: 'white'
+                backgroundColor: 'white',
+                overflow: 'visible',
+                display: 'block',
+                position: 'relative',
+                boxSizing: 'border-box',
+                margin: 0,
+                padding: 0
               }}
               title={`Material Editor - Página ${currentPage + 1}`}
             />
@@ -1331,13 +529,82 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
     );
   }
 
+  // DESKTOP: Ajustar layout da sidebar para seguir o padrão do MaterialModal para todos os tipos de material
   return (
-    <MaterialModal
-      material={editedMaterial ? normalizeMaterialForPreview(editedMaterial) : null}
-      open={materialModalOpen}
-      onClose={() => { setMaterialModalOpen(false); onClose(); }}
-    />
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex rounded-2xl">
+        <div className="flex-1 overflow-auto rounded-l-2xl bg-white">
+          {/* Renderização consistente para todos os tipos de material */}
+          <div className="h-full flex flex-col">
+            {renderMaterialWithSameSystem()}
+          </div>
+        </div>
+        <div className="w-80 bg-gray-50 border-l flex flex-col rounded-r-2xl">
+          <div className="p-6 pb-4 border-b bg-white rounded-tr-2xl">
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-bold">Editar Material</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClose}
+                className="rounded-lg"
+                disabled={loading}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+            {/* Espaço reservado para futuras opções de edição ou informações */}
+          </div>
+          <div className="p-6 border-t mt-auto rounded-br-2xl">
+            <div className="text-sm text-gray-600 space-y-2 mb-4">
+              <h3 className="font-semibold">Detalhes</h3>
+              <div>
+                <span className="font-medium">Disciplina:</span> {editedMaterial.subject ? editedMaterial.subject.charAt(0).toUpperCase() + editedMaterial.subject.slice(1) : ''}
+              </div>
+              <div>
+                <span className="font-medium">Turma:</span> {editedMaterial.grade}
+              </div>
+              <div>
+                <span className="font-medium">Tipo:</span> {getTypeLabel(editedMaterial.type)}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                disabled={loading}
+                className="w-full"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {loading ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
 export default MaterialInlineEditModal;
+
+// Adicione a função auxiliar para obter o label do tipo de material
+function getTypeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    'plano-de-aula': 'Plano de Aula',
+    'slides': 'Slides',
+    'atividade': 'Atividade',
+    'avaliacao': 'Avaliação',
+  };
+  return labels[type] || type;
+}

@@ -927,12 +927,12 @@ const MaterialsList: React.FC = () => {
         open={modalOpen} 
         onClose={handleCloseModal} 
         onEdit={() => {
-          console.log('Edit button clicked from MaterialModal');
           setModalOpen(false);
           setTimeout(() => {
-            setSelectedMaterial(selectedMaterial);
-            setEditModalOpen(true);
-          }, 100);
+            setMaterialToEdit(selectedMaterial);
+            setInlineEditModalOpen(true);
+            setSelectedMaterial(null); // Limpa o selectedMaterial para garantir que o modal de visualização não reabra
+          }, 200);
         }}
       />
 
