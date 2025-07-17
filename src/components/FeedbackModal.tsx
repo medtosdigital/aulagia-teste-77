@@ -6,6 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { MessageCircle, Heart, Star, Send, X, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -20,6 +22,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
   onDontShowAgain,
   showDontShowOption = false
 }) => {
+  const { user } = useAuth();
   const [feedbackType, setFeedbackType] = useState<'sugestao' | 'reclamacao' | 'elogio'>('sugestao');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,33 +33,25 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
       toast.error('Por favor, escreva sua mensagem');
       return;
     }
-
+    if (!user) {
+      toast.error('Você precisa estar logado para enviar feedback.');
+      return;
+    }
     setIsSubmitting(true);
-    
     try {
-      // Simular envio (aqui você pode integrar com uma API real)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Salvar feedback no localStorage (em produção, enviar para API)
-      const feedback = {
-        type: feedbackType,
-        message: message.trim(),
-        timestamp: new Date().toISOString(),
-        id: Date.now().toString()
-      };
-      
-      const existingFeedbacks = JSON.parse(localStorage.getItem('userFeedbacks') || '[]');
-      existingFeedbacks.push(feedback);
-      localStorage.setItem('userFeedbacks', JSON.stringify(existingFeedbacks));
-      
+      const { error } = await supabase.from('feedbacks').insert([
+        {
+          message: message.trim(),
+          type: feedbackType,
+          user_id: user.id
+        }
+      ]);
+      if (error) throw error;
       setIsSubmitted(true);
       toast.success('Feedback enviado com sucesso! Obrigado pela sua contribuição.');
-      
-      // Fechar modal após 2 segundos
       setTimeout(() => {
         handleClose();
       }, 2000);
-      
     } catch (error) {
       toast.error('Erro ao enviar feedback. Tente novamente.');
     } finally {

@@ -208,26 +208,33 @@ serve(async (req) => {
       const turma = formData.serie || formData.grade || '';
       const titulo = structuredContent.titulo || `Material de Apoio - ${tema}`;
       const materialPrincipalId = formData.material_principal_id || null;
-      
-      const { data: insertData, error: insertError } = await supabase
-        .from('materiais_apoio')
-        .insert([{
-          user_id: userId,
-          tema,
-          disciplina,
-          turma,
-          conteudo: structuredContent.conteudo_completo || JSON.stringify(structuredContent),
-          titulo,
-          material_principal_id: materialPrincipalId
-        }])
-        .select('id')
-        .single();
-        
-      if (insertError) {
-        console.error('Erro ao salvar material de apoio:', insertError);
+      // Só salva se houver HTML gerado
+      if (structuredContent.conteudo_completo && structuredContent.conteudo_completo.trim().length > 0) {
+        const { data: insertData, error: insertError } = await supabase
+          .from('materiais_apoio')
+          .insert([{
+            user_id: userId,
+            tema,
+            disciplina,
+            turma,
+            conteudo: structuredContent.conteudo_completo,
+            titulo,
+            material_principal_id: materialPrincipalId
+          }])
+          .select('id')
+          .single();
+        if (insertError) {
+          console.error('Erro ao salvar material de apoio:', insertError);
+        } else {
+          apoioId = insertData?.id;
+          console.log('✅ Material de apoio salvo com ID:', apoioId);
+        }
       } else {
-        apoioId = insertData?.id;
-        console.log('✅ Material de apoio salvo com ID:', apoioId);
+        console.error('❌ Conteúdo de apoio não gerado corretamente. Nenhum material salvo.');
+        return new Response(JSON.stringify({ error: 'Falha ao gerar conteúdo de apoio. Tente novamente.' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
 
@@ -266,101 +273,54 @@ function generatePrompt(materialType: string, formData: MaterialFormData): strin
 
   if (materialType === 'apoio') {
     return `
-Você é um especialista em pedagogia e formação de professores. Crie um Material de Apoio COMPLETO e DETALHADO para professores, relacionado ao material principal de título: "${tituloMaterialPrincipal}", tema: "${tema}", disciplina: "${disciplina}", turma: "${serie}".
+1. O Que é Esse Tema?
 
-OBJETIVO: Este material de apoio deve servir como uma base teórica e prática ABRANGENTE para que o professor compreenda melhor o conteúdo antes de ministrar a aula, fornecendo fundamentos pedagógicos, estratégias didáticas e recursos complementares.
+Explique de forma simples e didática, como se o professor nunca tivesse estudado o assunto.
 
-INSTRUÇÕES ESPECÍFICAS:
-- No texto introdutório, cite EXPLICITAMENTE que este material de apoio foi gerado para complementar o material principal de título "${tituloMaterialPrincipal}", tema "${tema}", disciplina "${disciplina}", turma "${serie}".
-- Se disponível, utilize os objetivos do material principal: ${objetivosMaterialPrincipal}
-- Seja DETALHADO e ESPECÍFICO em cada seção
-- Use linguagem técnica mas acessível ao professor
-- Inclua exemplos práticos e situações reais de sala de aula
-- Forneça referências em formato ABNT
+Evite termos técnicos complexos. Use analogias se necessário.
 
-🧩 ESTRUTURA OBRIGATÓRIA DO MATERIAL DE APOIO:
+2. Para que Serve Esse Conteúdo na Vida Prática e Escolar?
 
-## 1. Introdução ao ${tema}
-- Contextualização do tema "${tema}" no currículo de ${disciplina} para ${serie}
-- Importância e relevância do conteúdo para o desenvolvimento dos alunos
-- Conexão com conhecimentos prévios e próximos passos curriculares
-- Relação com o material principal "${tituloMaterialPrincipal}"
+Mostre como esse tema é útil e aplicável no cotidiano dos alunos.
 
-## 2. Objetivos de Aprendizagem
-- Objetivos específicos para o tema "${tema}"
-- Competências e habilidades da BNCC relacionadas
-- Resultados esperados ao final da abordagem do tema
+Explique sua importância na formação do aluno.
 
-## 3. Contextualização Teórica
-- Fundamentos teóricos do tema "${tema}"
-- Conceitos-chave explicados de forma clara e didática
-- Teorias pedagógicas aplicáveis ao ensino do tema
-- Exemplos práticos do tema na vida cotidiana dos alunos
+3. Como Ensinar Esse Tema em Sala de Aula – Passo a Passo
 
-## 4. Dicas Pedagógicas para Abordar o Tema em Sala
-- Estratégias metodológicas específicas para o tema
-- Sequências didáticas sugeridas
-- Formas de despertar o interesse dos alunos
-- Técnicas para verificar a compreensão
-- Cuidados importantes e dificuldades comuns dos alunos
-- Adaptações para diferentes ritmos de aprendizagem
+Oriente o professor sobre como apresentar o conteúdo aos alunos.
 
-## 5. Sugestões de Recursos Complementares
-- Vídeos educativos (com links ou títulos específicos)
-- Artigos e textos de apoio
-- Sites educacionais confiáveis
-- Jogos e atividades lúdicas
-- Materiais manipuláveis e recursos visuais
-- Aplicativos ou ferramentas digitais
+Explique como iniciar a explicação, desenvolver o conteúdo e concluir.
 
-## 6. Sugestões de Atividades Práticas
-- Atividades exploratórias para introdução do tema
-- Exercícios de fixação e aprofundamento
-- Atividades colaborativas e em grupo
-- Propostas de avaliação formativa
-- Projetos interdisciplinares relacionados ao tema
-- Atividades para casa que reforcem o aprendizado
+Sugira perguntas disparadoras, comparações visuais ou objetos concretos.
 
-## 7. Possíveis Perguntas para Discussão
-- Questões para estimular reflexão crítica
-- Perguntas que conectam o tema com a realidade dos alunos
-- Questionamentos para debate em sala de aula
-- Perguntas que desenvolvem o pensamento científico/analítico
+4. Exemplos Práticos Prontos para Usar em Sala
 
-## 8. Avaliação e Acompanhamento
-- Critérios para avaliar a compreensão do tema
-- Indicadores de aprendizagem a observar
-- Estratégias de recuperação para alunos com dificuldades
-- Formas de feedback construtivo
+Dê de 2 a 3 exemplos explicados e comentados que o professor possa aplicar diretamente.
 
-## 9. Referências Utilizadas
-- Bibliografia em formato ABNT
-- Fontes digitais confiáveis
-- Documentos oficiais (BNCC, PCNs, etc.)
-- Artigos científicos na área educacional
+Podem ser atividades, situações-problema ou explicações com números/textos.
 
-IMPORTANTE: Retorne APENAS um JSON estruturado no seguinte formato:
+5. Dificuldades Comuns dos Alunos e Como Corrigir
 
-{
-  "titulo": "Material de Apoio - ${tema}",
-  "tema": "${tema}",
-  "disciplina": "${disciplina}",
-  "serie": "${serie}",
-  "material_principal": "${tituloMaterialPrincipal}",
-  "introducao": "[TEXTO COMPLETO da introdução ao tema]",
-  "objetivos_aprendizagem": "[TEXTO COMPLETO dos objetivos de aprendizagem]",
-  "contextualizacao_teorica": "[TEXTO COMPLETO da contextualização teórica]",
-  "dicas_pedagogicas": "[TEXTO COMPLETO das dicas pedagógicas]",
-  "recursos_complementares": "[TEXTO COMPLETO dos recursos complementares]",
-  "atividades_praticas": "[TEXTO COMPLETO das atividades práticas]",
-  "perguntas_discussao": "[TEXTO COMPLETO das perguntas para discussão]",
-  "avaliacao_acompanhamento": "[TEXTO COMPLETO da avaliação e acompanhamento]",
-  "referencias": "[TEXTO COMPLETO das referências em formato ABNT]",
-  "conteudo_completo": "[HTML FORMATADO com todo o conteúdo estruturado para visualização]"
-}
+Liste os principais erros ou confusões que os alunos costumam ter.
 
-GERE conteúdo REAL, ESPECÍFICO e DETALHADO sobre "${tema}" para ${disciplina} na ${serie}. NÃO use placeholders ou conteúdo genérico.
-`;
+Dê dicas claras para o professor lidar com essas dificuldades.
+
+6. Sugestões de Atividades Práticas
+
+Proponha de 1 a 2 ideias de atividades para aplicar o conteúdo de forma prática.
+
+Pode incluir dinâmicas, jogos, situações-problema ou exercícios individuais.
+
+7. Sugestões de Recursos Complementares
+
+Indique materiais extras que podem ajudar o professor (vídeos do youtube, imagens, sites, objetos manipuláveis, etc).
+
+Tema: ${tema}
+Disciplina: ${disciplina}
+Série: ${serie}
+Material principal: ${tituloMaterialPrincipal}
+Se possível, relacione com os objetivos do material principal: ${objetivosMaterialPrincipal}
+Gere o conteúdo em português brasileiro, detalhado, estruturado e pronto para uso pedagógico.`;
   }
 
   switch (materialType) {

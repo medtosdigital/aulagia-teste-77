@@ -69,13 +69,20 @@ const Index = () => {
     closeModal: closeFirstAccessModal
   } = useFirstAccess();
 
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const openFeedbackModal = () => setShowFeedbackModal(true);
+  const closeFeedbackModal = () => setShowFeedbackModal(false);
+
+  useEffect(() => {
+    const handleOpenFeedbackModal = () => openFeedbackModal();
+    window.addEventListener('openFeedbackModal', handleOpenFeedbackModal);
+    return () => {
+      window.removeEventListener('openFeedbackModal', handleOpenFeedbackModal);
+    };
+  }, []);
+
   // Integrar sistema de feedback
-  const {
-    showFeedbackModal,
-    closeFeedbackModal,
-    dontShowAgain,
-    incrementMaterialsCreated
-  } = useFeedback(currentPlan?.plano_ativo || 'gratuito', isFirstAccess);
+  const { submitFeedback, getUserFeedbacks, loading } = useFeedback(currentPlan?.plano_ativo || 'gratuito', isFirstAccess);
 
   useEffect(() => {
     const handleNavigateToProfile = () => {
@@ -84,18 +91,6 @@ const Index = () => {
     const handleNavigateToSubscription = () => {
       navigate('/assinatura');
     };
-    const handleOpenFeedbackModal = () => {
-      if (!isFirstAccess) {
-        window.localStorage.setItem('feedbackState', JSON.stringify({
-          ...JSON.parse(window.localStorage.getItem('feedbackState') || '{}'),
-          showFeedbackModal: true
-        }));
-        window.dispatchEvent(new Event('feedbackModalUpdated'));
-      }
-    };
-    window.addEventListener('navigateToProfile', handleNavigateToProfile);
-    window.addEventListener('navigateToSubscription', handleNavigateToSubscription);
-    window.addEventListener('openFeedbackModal', handleOpenFeedbackModal);
     // Se veio do magic link com plano, já associa ao plano
     const params = new URLSearchParams(window.location.search);
     const plan = params.get('plan');
@@ -105,7 +100,6 @@ const Index = () => {
     return () => {
       window.removeEventListener('navigateToProfile', handleNavigateToProfile);
       window.removeEventListener('navigateToSubscription', handleNavigateToSubscription);
-      window.removeEventListener('openFeedbackModal', handleOpenFeedbackModal);
     };
   }, [user, isFirstAccess, navigate]);
 
@@ -248,7 +242,6 @@ const Index = () => {
         <FeedbackModal
           isOpen={showFeedbackModal}
           onClose={closeFeedbackModal}
-          onDontShowAgain={dontShowAgain}
           showDontShowOption={true}
         />
       )}

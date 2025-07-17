@@ -119,7 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   }, []);
 
   const isMobile = useIsMobile();
-  const { openFeedbackModal, showFeedbackModal } = useFeedback(currentPlan?.plano_ativo || 'gratuito', false);
+  const { submitFeedback, getUserFeedbacks, loading } = useFeedback(currentPlan?.plano_ativo || 'gratuito', false);
 
   // Simplificados - apenas verificar se usuário está logado
   const mobileMenuItems = [{
@@ -380,7 +380,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
       {/* Botão flutuante de feedback no mobile */}
-      {isMobile && !showFeedbackModal && (
+      {isMobile && (
         <button
           onClick={() => window.dispatchEvent(new Event('openFeedbackModal'))}
           className={`fixed z-50 right-4 bottom-6 md:hidden flex items-center px-4 py-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold shadow-lg hover:scale-105 transition-all`}
