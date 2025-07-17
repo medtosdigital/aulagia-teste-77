@@ -67,11 +67,8 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   useEffect(() => {
     if (material && open) {
-      // Cópia profunda do material e do content
-      setEditedMaterial({
-        ...material,
-        content: JSON.parse(JSON.stringify(material.content))
-      });
+      // Usar o conteúdo EXATO do Supabase, sem cópia profunda
+      setEditedMaterial(material);
     }
   }, [material, open]);
 
@@ -85,36 +82,19 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     if (!editedMaterial) return;
     setLoading(true);
     try {
-      // Normalizar e limpar profundamente todos os campos do conteúdo
-      const normalizedContent = normalizeLessonPlanContent({ ...editedMaterial.content });
-      // Garante que todos os campos editáveis estejam presentes
+      // Enviar exatamente o objeto do estado para o update
       const materialToSave = {
         id: editedMaterial.id,
         title: editedMaterial.title,
         subject: editedMaterial.subject,
         grade: editedMaterial.grade,
         type: editedMaterial.type,
-        content: JSON.stringify({
-          ...normalizedContent,
-          // Garante arrays para todos os campos relevantes
-          objetivos: Array.isArray(normalizedContent.objetivos) ? normalizedContent.objetivos : [],
-          habilidades: Array.isArray(normalizedContent.habilidades) ? normalizedContent.habilidades : [],
-          desenvolvimento: Array.isArray(normalizedContent.desenvolvimento) ? normalizedContent.desenvolvimento : [],
-          recursos: Array.isArray(normalizedContent.recursos) ? normalizedContent.recursos : [],
-          conteudosProgramaticos: Array.isArray(normalizedContent.conteudosProgramaticos) ? normalizedContent.conteudosProgramaticos : [],
-          referencias: Array.isArray(normalizedContent.referencias) ? normalizedContent.referencias : [],
-          metodologia: typeof normalizedContent.metodologia === 'string' ? normalizedContent.metodologia : '',
-          avaliacao: typeof normalizedContent.avaliacao === 'string' ? normalizedContent.avaliacao : '',
-          instrucoes: typeof normalizedContent.instrucoes === 'string' ? normalizedContent.instrucoes : '',
-          slides: Array.isArray(normalizedContent.slides) ? normalizedContent.slides : [],
-          questoes: Array.isArray(normalizedContent.questoes) ? normalizedContent.questoes : [],
-          tempoLimite: typeof normalizedContent.tempoLimite === 'string' ? normalizedContent.tempoLimite : '',
-        })
+        content: JSON.stringify(editedMaterial.content)
       };
       const success = await materialService.updateMaterial(materialToSave.id, materialToSave);
       if (success) {
         toast.success('Material atualizado com sucesso!');
-        onSave(); // O componente pai deve recarregar o material do Supabase
+        onSave();
         onClose();
         activityService.addActivity({
           type: 'updated',
@@ -150,8 +130,8 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     if (!editedMaterial) return;
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      // Cópia profunda do content para evitar referência cruzada
-      const content = JSON.parse(JSON.stringify(newMaterial.content));
+      // Usar o objeto content diretamente
+      const content = { ...newMaterial.content };
       const keys = path.split('.');
       let current: any = content;
       for (let i = 0; i < keys.length - 1; i++) {
@@ -195,8 +175,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     if (!editedMaterial) return;
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      // Cópia profunda do content para evitar referência cruzada
-      const content = JSON.parse(JSON.stringify(newMaterial.content));
+      const content = { ...newMaterial.content };
       const keys = path.split('.');
       let current: any = content;
       for (let i = 0; i < keys.length - 1; i++) {
@@ -212,8 +191,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     if (!editedMaterial) return;
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      // Cópia profunda do content para evitar referência cruzada
-      const content = JSON.parse(JSON.stringify(newMaterial.content));
+      const content = { ...newMaterial.content };
       const keys = path.split('.');
       let current: any = content;
       for (let i = 0; i < keys.length - 1; i++) {
