@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -50,6 +49,60 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     }
   }, [editedMaterial, open]);
 
+  // FUNÇÃO HELPER PARA DEEP COPY DE ARRAYS
+  const deepCopyArray = (arr: any[]): any[] => {
+    if (!Array.isArray(arr)) return arr;
+    return arr.map(item => {
+      if (Array.isArray(item)) {
+        return deepCopyArray(item);
+      } else if (typeof item === 'object' && item !== null) {
+        return { ...item };
+      }
+      return item;
+    });
+  };
+
+  // FUNÇÃO HELPER PARA DEEP COPY DE CONTENT
+  const deepCopyContent = (content: any): any => {
+    if (!content || typeof content !== 'object') return content;
+    
+    const newContent: any = {};
+    
+    for (const [key, value] of Object.entries(content)) {
+      if (Array.isArray(value)) {
+        newContent[key] = deepCopyArray(value);
+      } else if (typeof value === 'object' && value !== null) {
+        newContent[key] = { ...value };
+      } else {
+        newContent[key] = value;
+      }
+    }
+    
+    return newContent;
+  };
+
+  // FUNÇÃO HELPER PARA VERIFICAÇÃO DE INTEGRIDADE
+  const verifyArrayIntegrity = (content: any, operation: string) => {
+    if (content.objetivos && content.habilidades) {
+      const objetivosRef = content.objetivos;
+      const habilidadesRef = content.habilidades;
+      const sameReference = objetivosRef === habilidadesRef;
+      
+      console.log(`🔍 MaterialEditModal: Array integrity check after ${operation}:`, {
+        objetivosLength: objetivosRef?.length || 0,
+        habilidadesLength: habilidadesRef?.length || 0,
+        sameReference,
+        objetivosSample: objetivosRef?.slice(0, 2) || [],
+        habilidadesSample: habilidadesRef?.slice(0, 2) || []
+      });
+      
+      if (sameReference) {
+        console.error(`❌ CRITICAL: Arrays sharing reference after ${operation}!`);
+        throw new Error(`Array contamination detected after ${operation}`);
+      }
+    }
+  };
+
   const handleSave = async () => {
     if (!editedMaterial) return;
     setLoading(true);
@@ -66,6 +119,9 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     });
     
     try {
+      // Verificar integridade antes do salvamento
+      verifyArrayIntegrity(editedMaterial.content, 'pre-save');
+      
       // Preparar dados para salvamento - usar EXATAMENTE o que está no estado
       const materialToSave = {
         id: editedMaterial.id,
@@ -127,7 +183,8 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      const content = { ...newMaterial.content };
+      // CORREÇÃO CRÍTICA: Deep copy do content
+      const content = deepCopyContent(newMaterial.content);
       
       const keys = path.split('.');
       let current: any = content;
@@ -143,6 +200,15 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
       
       newMaterial.content = content;
       
+      // Verificar integridade
+      try {
+        verifyArrayIntegrity(newMaterial.content, `updateContent(${path})`);
+      } catch (error) {
+        console.error('❌ Array integrity check failed:', error);
+        // Retornar estado anterior em caso de erro
+        return prev!;
+      }
+      
       console.log('🔄 MaterialEditModal: Content updated, new material:', newMaterial);
       return newMaterial;
     });
@@ -155,7 +221,8 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      const content = { ...newMaterial.content };
+      // CORREÇÃO CRÍTICA: Deep copy do content
+      const content = deepCopyContent(newMaterial.content);
       
       const keys = path.split('.');
       let current: any = content;
@@ -165,13 +232,25 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
         current = current[keys[i]];
       }
       
-      if (!Array.isArray(current[keys[keys.length - 1]])) {
-        current[keys[keys.length - 1]] = [];
+      const arrayKey = keys[keys.length - 1];
+      if (!Array.isArray(current[arrayKey])) {
+        current[arrayKey] = [];
       }
       
-      current[keys[keys.length - 1]].push(defaultItem);
+      // CORREÇÃO CRÍTICA: Deep copy do array existente antes de adicionar
+      current[arrayKey] = deepCopyArray(current[arrayKey]);
+      current[arrayKey].push(defaultItem);
       
       newMaterial.content = content;
+      
+      // Verificar integridade
+      try {
+        verifyArrayIntegrity(newMaterial.content, `addArrayItem(${path})`);
+      } catch (error) {
+        console.error('❌ Array integrity check failed:', error);
+        // Retornar estado anterior em caso de erro
+        return prev!;
+      }
       
       console.log('🔄 MaterialEditModal: Array item added, new material:', newMaterial);
       return newMaterial;
@@ -185,7 +264,8 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      const content = { ...newMaterial.content };
+      // CORREÇÃO CRÍTICA: Deep copy do content
+      const content = deepCopyContent(newMaterial.content);
       
       const keys = path.split('.');
       let current: any = content;
@@ -194,16 +274,29 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
         current = current[keys[i]];
       }
       
-      current[keys[keys.length - 1]].splice(index, 1);
+      const arrayKey = keys[keys.length - 1];
+      
+      // CORREÇÃO CRÍTICA: Deep copy do array antes de remover
+      current[arrayKey] = deepCopyArray(current[arrayKey]);
+      current[arrayKey].splice(index, 1);
       
       newMaterial.content = content;
+      
+      // Verificar integridade
+      try {
+        verifyArrayIntegrity(newMaterial.content, `removeArrayItem(${path}[${index}])`);
+      } catch (error) {
+        console.error('❌ Array integrity check failed:', error);
+        // Retornar estado anterior em caso de erro
+        return prev!;
+      }
       
       console.log('🔄 MaterialEditModal: Array item removed, new material:', newMaterial);
       return newMaterial;
     });
   };
 
-  // CORREÇÃO CRÍTICA: updateArrayItem corrigido para não contaminar arrays
+  // CORREÇÃO CRÍTICA: updateArrayItem completamente reescrito com deep copy
   const updateArrayItem = (path: string, index: number, value: any) => {
     if (!editedMaterial) return;
     
@@ -211,7 +304,8 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      const content = { ...newMaterial.content };
+      // CORREÇÃO CRÍTICA: Deep copy completo do content
+      const content = deepCopyContent(newMaterial.content);
       
       const keys = path.split('.');
       let current: any = content;
@@ -223,18 +317,25 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
       
       const arrayKey = keys[keys.length - 1];
       
-      // CRÍTICO: Criar nova cópia do array para evitar referência cruzada
-      const currentArray = current[arrayKey];
-      if (Array.isArray(currentArray)) {
-        const newArray = [...currentArray];
-        newArray[index] = value;
-        current[arrayKey] = newArray;
+      // CORREÇÃO CRÍTICA: Deep copy do array específico
+      if (Array.isArray(current[arrayKey])) {
+        current[arrayKey] = deepCopyArray(current[arrayKey]);
+        current[arrayKey][index] = value;
       }
       
       newMaterial.content = content;
       
+      // Verificar integridade
+      try {
+        verifyArrayIntegrity(newMaterial.content, `updateArrayItem(${path}[${index}])`);
+      } catch (error) {
+        console.error('❌ Array integrity check failed:', error);
+        // Retornar estado anterior em caso de erro
+        return prev!;
+      }
+      
       console.log('🔄 MaterialEditModal: Array item updated, new material:', newMaterial);
-      console.log('🔍 MaterialEditModal: Verificando arrays após update:', {
+      console.log('🔍 MaterialEditModal: Post-update verification:', {
         objetivos: newMaterial.content.objetivos,
         habilidades: newMaterial.content.habilidades,
         areTheSameReference: newMaterial.content.objetivos === newMaterial.content.habilidades
@@ -251,14 +352,16 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     console.log(`📝 MaterialEditModal: Updating question ${questionIndex} with:`, updatedQuestion);
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      const content = { ...newMaterial.content } as any;
+      // CORREÇÃO CRÍTICA: Deep copy do content
+      const content = deepCopyContent(newMaterial.content);
       
       if (!content.questoes || !Array.isArray(content.questoes)) {
         console.error('❌ MaterialEditModal: Questoes array not found');
         return prev!;
       }
       
-      const updatedQuestoes = [...content.questoes];
+      // CORREÇÃO CRÍTICA: Deep copy do array de questões
+      const updatedQuestoes = deepCopyArray(content.questoes);
       updatedQuestoes[questionIndex] = { ...updatedQuestion };
       
       newMaterial.content = {
