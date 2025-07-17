@@ -419,7 +419,11 @@ class MaterialService {
       if (updates.title) userMaterialUpdates.title = updates.title;
       if (updates.subject) userMaterialUpdates.subject = updates.subject;
       if (updates.grade) userMaterialUpdates.grade = updates.grade;
-      if (updates.content) userMaterialUpdates.content = typeof updates.content === 'string' ? updates.content : JSON.stringify(updates.content);
+      if (updates.content) {
+        let contentObj = typeof updates.content === 'string' ? JSON.parse(updates.content) : updates.content;
+        contentObj = cleanObjectivesAndSkills(contentObj);
+        userMaterialUpdates.content = JSON.stringify(contentObj);
+      }
       if (updates.type) userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
       if (!userMaterialUpdates.type && updates.type) {
         userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
@@ -536,27 +540,37 @@ class MaterialService {
       });
       recursos = Array.from(recursosSet);
     }
-    // Ajuste de habilidades: garantir formato 'CÓDIGO - DESCRIÇÃO'
+    // Ajuste de habilidades: garantir formato 'CÓDIGO - DESCRIÇÃO' e nunca misturar com objetivos
     let habilidades: string[] = [];
+    let objetivos: string[] = [];
     let bnccCodigos: string[] = [];
     if (content.habilidades && Array.isArray(content.habilidades)) {
-      habilidades = content.habilidades.map((h: any) => {
-        if (typeof h === 'object' && h.codigo && h.descricao) {
-          bnccCodigos.push(h.codigo);
-          return `${h.codigo} - ${h.descricao}`;
-        } else if (typeof h === 'string') {
-          // Tenta separar código e descrição por ':' ou '-'
-          const match = h.match(/([A-Z]{2}\d{2}[A-Z]{2}\d{2,})\s*[-:]?\s*(.*)/);
-          if (match) {
-            bnccCodigos.push(match[1]);
-            return `${match[1]} - ${match[2]}`;
+      habilidades = content.habilidades
+        .map((h: any) => {
+          if (typeof h === 'object' && h.codigo && h.descricao) {
+            bnccCodigos.push(h.codigo);
+            return `${h.codigo} - ${h.descricao}`;
+          } else if (typeof h === 'string') {
+            // Tenta separar código e descrição por ':' ou '-'
+            const match = h.match(/([A-Z]{2}\d{2}[A-Z]{2}\d{2,})\s*[-:]?\s*(.*)/);
+            if (match) {
+              bnccCodigos.push(match[1]);
+              return `${match[1]} - ${match[2]}`;
+            }
+            return h;
           }
-          return h;
-        }
-        return '';
-      });
+          return '';
+        })
+        .filter((h: string, idx: number, arr: string[]) => h && arr.indexOf(h) === idx);
     } else if (typeof content.habilidades === 'string') {
       habilidades = [content.habilidades];
+    }
+    if (content.objetivos && Array.isArray(content.objetivos)) {
+      objetivos = content.objetivos
+        .map((o: any) => typeof o === 'string' ? o.trim() : '')
+        .filter((o: string, idx: number, arr: string[]) => o && arr.indexOf(o) === idx);
+    } else if (typeof content.objetivos === 'string') {
+      objetivos = [content.objetivos];
     }
     // Ajuste do campo BNCC: apenas os códigos
     let bncc = '';
@@ -587,6 +601,7 @@ class MaterialService {
         ...content,
         recursos,
         habilidades,
+        objetivos,
         bncc
       },
       formData
@@ -623,6 +638,24 @@ export function normalizeMaterialForPreview(material: any) {
     }
   }
   return normalized;
+}
+
+// Função utilitária para limpar arrays de objetivos e habilidades
+function cleanObjectivesAndSkills(content: any) {
+  if (content) {
+    if (Array.isArray(content.objetivos)) {
+      content.objetivos = content.objetivos
+        .map((o: any) => typeof o === 'string' ? o.trim() : '')
+        .filter((o: string, idx: number, arr: string[]) => o && arr.indexOf(o) === idx);
+    }
+    if (Array.isArray(content.habilidades)) {
+      content.habilidades = content.habilidades
+        .map((h: any) => typeof h === 'string' ? h.trim() : '')
+        .filter((h: string, idx: number, arr: string[]) => h && arr.indexOf(h) === idx);
+    }
+    // Nunca copie habilidades para objetivos nem vice-versa
+  }
+  return content;
 }
 
 export async function getMaterialPrincipalInfo(material_principal_id: string): Promise<{ tipo: string, titulo: string } | null> {

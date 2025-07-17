@@ -23,14 +23,35 @@ interface MaterialEditModalProps {
 
 // Função utilitária para normalizar o conteúdo antes de salvar
 function normalizeLessonPlanContent(content: any): any {
-  // Garante arrays de string
-  if (!Array.isArray(content.objetivos)) content.objetivos = [];
-  if (!Array.isArray(content.habilidades)) content.habilidades = [];
-  content.objetivos = content.objetivos.map((o: any) => typeof o === 'string' ? o : String(o || ''));
-  content.habilidades = content.habilidades.map((h: any) => typeof h === 'string' ? h : String(h || ''));
-  // Garante desenvolvimento como array de objetos
-  if (!Array.isArray(content.desenvolvimento)) content.desenvolvimento = [];
-  // Outros campos podem ser normalizados conforme necessário
+  // Cópia profunda para evitar referência cruzada
+  const objetivos = Array.isArray(content.objetivos) ? [...content.objetivos] : [];
+  const habilidades = Array.isArray(content.habilidades) ? [...content.habilidades] : [];
+
+  // Limpa e deduplica cada campo separadamente
+  content.objetivos = objetivos
+    .filter((o: any) => typeof o === 'string' && o.trim() !== '')
+    .map((o: any) => o.trim())
+    .filter((o: string, idx: number, arr: string[]) => arr.indexOf(o) === idx);
+
+  content.habilidades = habilidades
+    .filter((h: any) => typeof h === 'string' && h.trim() !== '')
+    .map((h: any) => h.trim())
+    .filter((h: string, idx: number, arr: string[]) => arr.indexOf(h) === idx);
+
+  // Garante que não há referência cruzada
+  if (content.objetivos === content.habilidades) {
+    content.habilidades = [...content.habilidades];
+  }
+
+  // Restante igual
+  content.desenvolvimento = Array.isArray(content.desenvolvimento) ? content.desenvolvimento : [];
+  content.professor = typeof content.professor === 'string' ? content.professor : '';
+  content.disciplina = typeof content.disciplina === 'string' ? content.disciplina : '';
+  content.tema = typeof content.tema === 'string' ? content.tema : '';
+  content.duracao = typeof content.duracao === 'string' ? content.duracao : '';
+  content.data = typeof content.data === 'string' ? content.data : '';
+  content.serie = typeof content.serie === 'string' ? content.serie : '';
+  content.bncc = typeof content.bncc === 'string' ? content.bncc : '';
   return content;
 }
 
@@ -46,8 +67,11 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   useEffect(() => {
     if (material && open) {
-      // Carregar sempre o material original do Supabase, sem cópia profunda desnecessária
-      setEditedMaterial(material);
+      // Cópia profunda do material e do content
+      setEditedMaterial({
+        ...material,
+        content: JSON.parse(JSON.stringify(material.content))
+      });
     }
   }, [material, open]);
 
@@ -61,15 +85,31 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     if (!editedMaterial) return;
     setLoading(true);
     try {
-      // Normalizar o conteúdo antes de salvar
-      const normalizedContent = normalizeLessonPlanContent(editedMaterial.content);
+      // Normalizar e limpar profundamente todos os campos do conteúdo
+      const normalizedContent = normalizeLessonPlanContent({ ...editedMaterial.content });
+      // Garante que todos os campos editáveis estejam presentes
       const materialToSave = {
         id: editedMaterial.id,
         title: editedMaterial.title,
         subject: editedMaterial.subject,
         grade: editedMaterial.grade,
         type: editedMaterial.type,
-        content: typeof normalizedContent === 'string' ? normalizedContent : JSON.stringify(normalizedContent)
+        content: JSON.stringify({
+          ...normalizedContent,
+          // Garante arrays para todos os campos relevantes
+          objetivos: Array.isArray(normalizedContent.objetivos) ? normalizedContent.objetivos : [],
+          habilidades: Array.isArray(normalizedContent.habilidades) ? normalizedContent.habilidades : [],
+          desenvolvimento: Array.isArray(normalizedContent.desenvolvimento) ? normalizedContent.desenvolvimento : [],
+          recursos: Array.isArray(normalizedContent.recursos) ? normalizedContent.recursos : [],
+          conteudosProgramaticos: Array.isArray(normalizedContent.conteudosProgramaticos) ? normalizedContent.conteudosProgramaticos : [],
+          referencias: Array.isArray(normalizedContent.referencias) ? normalizedContent.referencias : [],
+          metodologia: typeof normalizedContent.metodologia === 'string' ? normalizedContent.metodologia : '',
+          avaliacao: typeof normalizedContent.avaliacao === 'string' ? normalizedContent.avaliacao : '',
+          instrucoes: typeof normalizedContent.instrucoes === 'string' ? normalizedContent.instrucoes : '',
+          slides: Array.isArray(normalizedContent.slides) ? normalizedContent.slides : [],
+          questoes: Array.isArray(normalizedContent.questoes) ? normalizedContent.questoes : [],
+          tempoLimite: typeof normalizedContent.tempoLimite === 'string' ? normalizedContent.tempoLimite : '',
+        })
       };
       const success = await materialService.updateMaterial(materialToSave.id, materialToSave);
       if (success) {
@@ -108,22 +148,17 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   const updateContent = (path: string, value: any) => {
     if (!editedMaterial) return;
-    
-    console.log(`Updating content at path ${path}:`, value);
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      const content = { ...newMaterial.content };
-      
+      // Cópia profunda do content para evitar referência cruzada
+      const content = JSON.parse(JSON.stringify(newMaterial.content));
       const keys = path.split('.');
       let current: any = content;
-      
       for (let i = 0; i < keys.length - 1; i++) {
         if (!current[keys[i]]) current[keys[i]] = {};
         current = current[keys[i]];
       }
-      
       current[keys[keys.length - 1]] = value;
-      
       newMaterial.content = content;
       return newMaterial;
     });
@@ -158,21 +193,16 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   const removeArrayItem = (path: string, index: number) => {
     if (!editedMaterial) return;
-    
-    console.log(`Removing array item from path ${path} at index ${index}`);
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      const content = { ...newMaterial.content };
-      
+      // Cópia profunda do content para evitar referência cruzada
+      const content = JSON.parse(JSON.stringify(newMaterial.content));
       const keys = path.split('.');
       let current: any = content;
-      
       for (let i = 0; i < keys.length - 1; i++) {
         current = current[keys[i]];
       }
-      
       current[keys[keys.length - 1]].splice(index, 1);
-      
       newMaterial.content = content;
       return newMaterial;
     });
@@ -180,21 +210,16 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   const updateArrayItem = (path: string, index: number, value: any) => {
     if (!editedMaterial) return;
-    
-    console.log(`Updating array item at path ${path}, index ${index}:`, value);
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      const content = { ...newMaterial.content };
-      
+      // Cópia profunda do content para evitar referência cruzada
+      const content = JSON.parse(JSON.stringify(newMaterial.content));
       const keys = path.split('.');
       let current: any = content;
-      
       for (let i = 0; i < keys.length - 1; i++) {
         current = current[keys[i]];
       }
-      
       current[keys[keys.length - 1]][index] = value;
-      
       newMaterial.content = content;
       return newMaterial;
     });
@@ -848,11 +873,25 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   if (!editedMaterial) return null;
 
   return (
-    <MaterialModal
-      material={editedMaterial ? normalizeMaterialForPreview(editedMaterial) : null}
-      open={materialModalOpen}
-      onClose={() => { setMaterialModalOpen(false); onClose(); }}
-    />
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl w-full rounded-2xl">
+        <DialogHeader>
+          <DialogTitle>Editar Material</DialogTitle>
+        </DialogHeader>
+        <div className="overflow-y-auto max-h-[70vh]">
+          {renderContentEditor()}
+        </div>
+        <div className="flex justify-end gap-2 mt-4">
+          <Button variant="outline" onClick={onClose} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave} disabled={loading}>
+            <Save className="w-4 h-4 mr-2" />
+            Salvar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
