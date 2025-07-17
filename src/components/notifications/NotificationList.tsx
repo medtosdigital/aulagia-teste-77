@@ -6,7 +6,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MarkAsReadIcon } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface NotificationListProps {
   onNotificationClick?: () => void;
@@ -93,7 +93,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
                     onClick={(e) => handleMarkAsRead(notification.id, e)}
                     className="shrink-0"
                   >
-                    <MarkAsReadIcon className="h-4 w-4" />
+                    <Check className="h-4 w-4" />
                   </Button>
                 )}
               </div>

@@ -82,7 +82,7 @@ const Index = () => {
   }, []);
 
   // Integrar sistema de feedback
-  const { submitFeedback, getUserFeedbacks, loading } = useFeedback(currentPlan?.plano_ativo || 'gratuito', isFirstAccess);
+  const { submitFeedback, getUserFeedbacks, loading } = useFeedback();
 
   useEffect(() => {
     const handleNavigateToProfile = () => {

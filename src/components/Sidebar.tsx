@@ -119,9 +119,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   }, []);
 
   const isMobile = useIsMobile();
-  const { submitFeedback, getUserFeedbacks, loading } = useFeedback(currentPlan?.plano_ativo || 'gratuito', false);
+  const { submitFeedback, getUserFeedbacks, loading } = useFeedback();
 
-  // Simplificados - apenas verificar se usuário está logado
   const mobileMenuItems = [{
     id: 'dashboard',
     label: 'Início',
