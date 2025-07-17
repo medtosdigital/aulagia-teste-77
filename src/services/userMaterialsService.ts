@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface UserMaterial {
@@ -319,38 +320,71 @@ class UserMaterialsService {
     }
   }
 
+  // FUNÇÃO DE UPDATE CORRIGIDA - FLUXO SIMPLIFICADO
   async updateMaterial(id: string, updates: Partial<UserMaterial>): Promise<boolean> {
-    try {
-      console.log('🔧 UserMaterialsService.updateMaterial:', id, updates);
+    console.log('🔧 UserMaterialsService.updateMaterial: Starting update');
+    console.log('📊 Input data:', {
+      id,
+      title: updates.title,
+      subject: updates.subject,
+      grade: updates.grade,
+      type: updates.type,
+      contentLength: typeof updates.content === 'string' ? updates.content.length : 0
+    });
 
+    try {
       // Get current authenticated user
       const user = await this.getCurrentUser();
       if (!user) {
-        console.error('User must be authenticated to update material');
+        console.error('❌ User must be authenticated to update material');
         return false;
       }
 
-      // Mapeamento correto dos campos para Supabase
+      // Mapeamento DIRETO dos campos para Supabase
       const updateData: any = {};
       
-      // Mapear todos os campos que podem ser atualizados
-      if (updates.title !== undefined) updateData.titulo = updates.title;
-      if (updates.content !== undefined) updateData.conteudo = typeof updates.content === 'string' ? updates.content : JSON.stringify(updates.content);
-      if (updates.subject !== undefined) updateData.disciplina = updates.subject;
-      if (updates.grade !== undefined) updateData.serie = updates.grade;
-      if (updates.type !== undefined) updateData.tipo_material = updates.type;
+      // Mapear campos básicos
+      if (updates.title !== undefined) {
+        updateData.titulo = updates.title;
+        console.log('📝 Mapped title:', updates.title);
+      }
+      
+      if (updates.subject !== undefined) {
+        updateData.disciplina = updates.subject;
+        console.log('📝 Mapped subject:', updates.subject);
+      }
+      
+      if (updates.grade !== undefined) {
+        updateData.serie = updates.grade;
+        console.log('📝 Mapped grade:', updates.grade);
+      }
+      
+      if (updates.type !== undefined) {
+        updateData.tipo_material = updates.type;
+        console.log('📝 Mapped type:', updates.type);
+      }
+      
+      // Para o content: usar EXATAMENTE como recebido
+      if (updates.content !== undefined) {
+        updateData.conteudo = updates.content;
+        console.log('📦 Content mapped directly:', {
+          type: typeof updates.content,
+          length: typeof updates.content === 'string' ? updates.content.length : 'not string'
+        });
+      }
 
-      console.log('📊 Update data mapped to Supabase format:', {
-        id,
+      console.log('📊 Final update data for Supabase:', {
         titulo: updateData.titulo,
         disciplina: updateData.disciplina,
         serie: updateData.serie,
         tipo_material: updateData.tipo_material,
-        contentLength: updateData.conteudo?.length || 0
+        conteudoLength: updateData.conteudo?.length || 0
       });
 
-      // Try to update in each table - RLS will ensure only user's own materials can be updated
+      // Encontrar a tabela correta e fazer o update
       for (const [type, tableName] of Object.entries(TABLE_MAPPING)) {
+        console.log(`🔍 Checking table ${tableName} for material ${id}`);
+        
         const { data: existingData } = await supabase
           .from(tableName)
           .select('id, user_id')
@@ -358,14 +392,16 @@ class UserMaterialsService {
           .single();
 
         if (existingData) {
-          console.log(`🔍 Found material in table: ${tableName}`);
+          console.log(`✅ Found material in table: ${tableName}`);
           
-          // Verificar se o usuário tem permissão
+          // Verificar permissão
           if (existingData.user_id !== user.id) {
-            console.error('User does not have permission to update this material');
+            console.error('❌ User does not have permission to update this material');
             return false;
           }
 
+          console.log(`💾 Executing update in table: ${tableName}`);
+          
           const { error } = await supabase
             .from(tableName)
             .update(updateData)
@@ -373,18 +409,25 @@ class UserMaterialsService {
 
           if (!error) {
             console.log(`✅ Material updated successfully in ${tableName}`);
+            console.log('📊 Update completed with data:', updateData);
             return true;
           } else {
             console.error(`❌ Error updating material in ${tableName}:`, error);
+            console.error('Error details:', {
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+              code: error.code
+            });
             return false;
           }
         }
       }
       
-      console.error('❌ Material not found for update');
+      console.error('❌ Material not found in any table for update');
       return false;
     } catch (error) {
-      console.error('❌ Error in updateMaterial:', error);
+      console.error('❌ Exception in updateMaterial:', error);
       return false;
     }
   }

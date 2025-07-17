@@ -410,28 +410,55 @@ class MaterialService {
     }
   }
 
+  // FLUXO DE SALVAMENTO SIMPLIFICADO E CORRIGIDO
   async updateMaterial(id: string, updates: Partial<GeneratedMaterial>): Promise<boolean> {
-    console.log('📝 Updating material:', id, updates);
+    console.log('📝 MaterialService.updateMaterial: Starting update process');
+    console.log('📊 Input data:', {
+      id,
+      title: updates.title,
+      subject: updates.subject,
+      grade: updates.grade,
+      type: updates.type,
+      contentKeys: updates.content ? Object.keys(updates.content) : [],
+      contentSample: updates.content
+    });
+    
     try {
-      // Mapeamento direto e correto para UserMaterial sem modificar o conteúdo
+      // Preparar dados para userMaterialsService - mapeamento direto e simples
       const userMaterialUpdates: any = {};
       
-      // Mapear campos principais
-      if (updates.title) userMaterialUpdates.title = updates.title;
-      if (updates.subject) userMaterialUpdates.subject = updates.subject;
-      if (updates.grade) userMaterialUpdates.grade = updates.grade;
-      if (updates.type) userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
+      // Mapear campos básicos
+      if (updates.title !== undefined) userMaterialUpdates.title = updates.title;
+      if (updates.subject !== undefined) userMaterialUpdates.subject = updates.subject;
+      if (updates.grade !== undefined) userMaterialUpdates.grade = updates.grade;
+      if (updates.type !== undefined) {
+        userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
+      }
       
-      // Para o content, preservar EXATAMENTE como está sem modificações
-      if (updates.content) {
-        // Se o content for string, fazer parse. Se for objeto, usar diretamente
-        let contentObj = typeof updates.content === 'string' ? JSON.parse(updates.content) : updates.content;
+      // Para o content: serializar EXATAMENTE como recebido, sem modificações
+      if (updates.content !== undefined) {
+        console.log('📦 MaterialService: Serializing content for storage');
         
-        // NÃO aplicar cleanObjectivesAndSkills - salvar exatamente como editado
-        userMaterialUpdates.content = JSON.stringify(contentObj);
+        // Garantir que o content seja um objeto válido
+        let contentToStore = updates.content;
+        if (typeof contentToStore === 'string') {
+          try {
+            contentToStore = JSON.parse(contentToStore);
+          } catch (e) {
+            console.warn('⚠️ MaterialService: Content string is not valid JSON, using as-is');
+          }
+        }
+        
+        // Serializar para string JSON
+        userMaterialUpdates.content = JSON.stringify(contentToStore);
+        console.log('📊 MaterialService: Content prepared for storage:', {
+          originalType: typeof updates.content,
+          serializedLength: userMaterialUpdates.content.length,
+          contentKeys: Object.keys(contentToStore || {})
+        });
       }
 
-      console.log('📊 Dados preparados para update:', {
+      console.log('📤 MaterialService: Calling userMaterialsService.updateMaterial with:', {
         id,
         title: userMaterialUpdates.title,
         subject: userMaterialUpdates.subject,
@@ -440,16 +467,18 @@ class MaterialService {
         contentLength: userMaterialUpdates.content?.length || 0
       });
       
+      // Chamar o serviço de usuário para fazer o update
       const success = await userMaterialsService.updateMaterial(id, userMaterialUpdates);
       
       if (success) {
-        console.log('✅ Material updated successfully');
+        console.log('✅ MaterialService: Update completed successfully');
       } else {
-        console.log('❌ Failed to update material');
+        console.error('❌ MaterialService: Update failed');
       }
+      
       return success;
     } catch (error) {
-      console.error('❌ Error updating material:', error);
+      console.error('❌ MaterialService: Error in updateMaterial:', error);
       return false;
     }
   }

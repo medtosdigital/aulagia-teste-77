@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -21,40 +22,6 @@ interface MaterialEditModalProps {
   onSave: () => void;
 }
 
-// Função utilitária para normalizar o conteúdo antes de salvar
-function normalizeLessonPlanContent(content: any): any {
-  // Cópia profunda para evitar referência cruzada
-  const objetivos = Array.isArray(content.objetivos) ? [...content.objetivos] : [];
-  const habilidades = Array.isArray(content.habilidades) ? [...content.habilidades] : [];
-
-  // Limpa e deduplica cada campo separadamente
-  content.objetivos = objetivos
-    .filter((o: any) => typeof o === 'string' && o.trim() !== '')
-    .map((o: any) => o.trim())
-    .filter((o: string, idx: number, arr: string[]) => arr.indexOf(o) === idx);
-
-  content.habilidades = habilidades
-    .filter((h: any) => typeof h === 'string' && h.trim() !== '')
-    .map((h: any) => h.trim())
-    .filter((h: string, idx: number, arr: string[]) => arr.indexOf(h) === idx);
-
-  // Garante que não há referência cruzada
-  if (content.objetivos === content.habilidades) {
-    content.habilidades = [...content.habilidades];
-  }
-
-  // Restante igual
-  content.desenvolvimento = Array.isArray(content.desenvolvimento) ? content.desenvolvimento : [];
-  content.professor = typeof content.professor === 'string' ? content.professor : '';
-  content.disciplina = typeof content.disciplina === 'string' ? content.disciplina : '';
-  content.tema = typeof content.tema === 'string' ? content.tema : '';
-  content.duracao = typeof content.duracao === 'string' ? content.duracao : '';
-  content.data = typeof content.data === 'string' ? content.data : '';
-  content.serie = typeof content.serie === 'string' ? content.serie : '';
-  content.bncc = typeof content.bncc === 'string' ? content.bncc : '';
-  return content;
-}
-
 const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   material,
   open,
@@ -67,7 +34,12 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   useEffect(() => {
     if (material && open) {
-      // Usar o conteúdo EXATO do Supabase, sem cópia profunda
+      console.log('🔄 MaterialEditModal: Setting editedMaterial from props:', {
+        id: material.id,
+        title: material.title,
+        type: material.type,
+        contentKeys: Object.keys(material.content || {})
+      });
       setEditedMaterial(material);
     }
   }, [material, open]);
@@ -81,18 +53,35 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   const handleSave = async () => {
     if (!editedMaterial) return;
     setLoading(true);
+    
+    console.log('💾 MaterialEditModal: Starting save process');
+    console.log('📊 Current editedMaterial state:', {
+      id: editedMaterial.id,
+      title: editedMaterial.title,
+      type: editedMaterial.type,
+      subject: editedMaterial.subject,
+      grade: editedMaterial.grade,
+      contentKeys: Object.keys(editedMaterial.content || {}),
+      contentSample: editedMaterial.content
+    });
+    
     try {
-      // Enviar exatamente o objeto do estado para o update
+      // Preparar dados para salvamento - usar EXATAMENTE o que está no estado
       const materialToSave = {
         id: editedMaterial.id,
         title: editedMaterial.title,
         subject: editedMaterial.subject,
         grade: editedMaterial.grade,
         type: editedMaterial.type,
-        content: JSON.stringify(editedMaterial.content)
+        content: editedMaterial.content // Usar diretamente sem modificações
       };
+      
+      console.log('📤 MaterialEditModal: Data being sent to materialService.updateMaterial:', materialToSave);
+      
       const success = await materialService.updateMaterial(materialToSave.id, materialToSave);
+      
       if (success) {
+        console.log('✅ MaterialEditModal: Save successful');
         toast.success('Material atualizado com sucesso!');
         onSave();
         onClose();
@@ -106,10 +95,11 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
           grade: editedMaterial.grade
         });
       } else {
+        console.error('❌ MaterialEditModal: Save failed');
         toast.error('Erro ao atualizar material');
       }
     } catch (error) {
-      console.error('Save error:', error);
+      console.error('❌ MaterialEditModal: Save error:', error);
       toast.error('Erro ao salvar material');
     } finally {
       setLoading(false);
@@ -119,27 +109,41 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   const updateBasicInfo = (field: string, value: string) => {
     if (!editedMaterial) return;
     
-    console.log(`Updating basic info ${field}:`, value);
-    setEditedMaterial(prev => ({
-      ...prev!,
-      [field]: value
-    }));
+    console.log(`📝 MaterialEditModal: Updating basic info ${field}:`, value);
+    setEditedMaterial(prev => {
+      const updated = {
+        ...prev!,
+        [field]: value
+      };
+      console.log('🔄 MaterialEditModal: Basic info updated, new state:', updated);
+      return updated;
+    });
   };
 
   const updateContent = (path: string, value: any) => {
     if (!editedMaterial) return;
+    
+    console.log(`📝 MaterialEditModal: Updating content path "${path}" with value:`, value);
+    
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
-      // Usar o objeto content diretamente
       const content = { ...newMaterial.content };
+      
       const keys = path.split('.');
       let current: any = content;
+      
+      // Navegar até o penúltimo nível
       for (let i = 0; i < keys.length - 1; i++) {
         if (!current[keys[i]]) current[keys[i]] = {};
         current = current[keys[i]];
       }
+      
+      // Definir o valor final
       current[keys[keys.length - 1]] = value;
+      
       newMaterial.content = content;
+      
+      console.log('🔄 MaterialEditModal: Content updated, new material:', newMaterial);
       return newMaterial;
     });
   };
@@ -147,7 +151,8 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   const addArrayItem = (path: string, defaultItem: any) => {
     if (!editedMaterial) return;
     
-    console.log(`Adding array item to path ${path}:`, defaultItem);
+    console.log(`➕ MaterialEditModal: Adding array item to path "${path}":`, defaultItem);
+    
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
       const content = { ...newMaterial.content };
@@ -167,38 +172,74 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
       current[keys[keys.length - 1]].push(defaultItem);
       
       newMaterial.content = content;
+      
+      console.log('🔄 MaterialEditModal: Array item added, new material:', newMaterial);
       return newMaterial;
     });
   };
 
   const removeArrayItem = (path: string, index: number) => {
     if (!editedMaterial) return;
+    
+    console.log(`🗑️ MaterialEditModal: Removing array item at index ${index} from path "${path}"`);
+    
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
       const content = { ...newMaterial.content };
+      
       const keys = path.split('.');
       let current: any = content;
+      
       for (let i = 0; i < keys.length - 1; i++) {
         current = current[keys[i]];
       }
+      
       current[keys[keys.length - 1]].splice(index, 1);
+      
       newMaterial.content = content;
+      
+      console.log('🔄 MaterialEditModal: Array item removed, new material:', newMaterial);
       return newMaterial;
     });
   };
 
+  // CORREÇÃO CRÍTICA: updateArrayItem corrigido para não contaminar arrays
   const updateArrayItem = (path: string, index: number, value: any) => {
     if (!editedMaterial) return;
+    
+    console.log(`✏️ MaterialEditModal: Updating array item at index ${index} in path "${path}" with value:`, value);
+    
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
       const content = { ...newMaterial.content };
+      
       const keys = path.split('.');
       let current: any = content;
+      
+      // Navegar até o array alvo
       for (let i = 0; i < keys.length - 1; i++) {
         current = current[keys[i]];
       }
-      current[keys[keys.length - 1]][index] = value;
+      
+      const arrayKey = keys[keys.length - 1];
+      
+      // CRÍTICO: Criar nova cópia do array para evitar referência cruzada
+      const currentArray = current[arrayKey];
+      if (Array.isArray(currentArray)) {
+        const newArray = [...currentArray];
+        newArray[index] = value;
+        current[arrayKey] = newArray;
+      }
+      
       newMaterial.content = content;
+      
+      console.log('🔄 MaterialEditModal: Array item updated, new material:', newMaterial);
+      console.log('🔍 MaterialEditModal: Verificando arrays após update:', {
+        objetivos: newMaterial.content.objetivos,
+        habilidades: newMaterial.content.habilidades,
+        areTheSameReference: newMaterial.content.objetivos === newMaterial.content.habilidades
+      });
+      
       return newMaterial;
     });
   };
@@ -207,13 +248,13 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   const updateQuestion = (questionIndex: number, updatedQuestion: any) => {
     if (!editedMaterial) return;
     
-    console.log(`Updating question ${questionIndex} with:`, updatedQuestion);
+    console.log(`📝 MaterialEditModal: Updating question ${questionIndex} with:`, updatedQuestion);
     setEditedMaterial(prev => {
       const newMaterial = { ...prev! };
       const content = { ...newMaterial.content } as any;
       
       if (!content.questoes || !Array.isArray(content.questoes)) {
-        console.error('Questoes array not found');
+        console.error('❌ MaterialEditModal: Questoes array not found');
         return prev!;
       }
       
@@ -225,7 +266,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
         questoes: updatedQuestoes
       };
       
-      console.log('Question updated successfully:', newMaterial);
+      console.log('✅ MaterialEditModal: Question updated successfully:', newMaterial);
       return newMaterial;
     });
   };
@@ -236,7 +277,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     
     const content = editedMaterial.content as any;
     if (!content.questoes || !content.questoes[questionIndex]) {
-      console.error('Question not found');
+      console.error('❌ MaterialEditModal: Question not found');
       return;
     }
     
@@ -258,7 +299,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     
     const content = editedMaterial.content as any;
     if (!content.questoes || !content.questoes[questionIndex]) {
-      console.error('Question not found');
+      console.error('❌ MaterialEditModal: Question not found');
       return;
     }
     
