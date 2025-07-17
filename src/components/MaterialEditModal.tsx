@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -12,8 +11,8 @@ import { Save, X, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { materialService, type GeneratedMaterial, type LessonPlan, type Activity, type Assessment } from '@/services/materialService';
 import { activityService } from '@/services/activityService';
-import { usePlanPermissions } from '@/hooks/usePlanPermissions';
-import { useUpgradeModal } from '@/hooks/useUpgradeModal';
+import MaterialModal from './MaterialModal';
+import { normalizeMaterialForPreview } from '@/services/materialService';
 
 interface MaterialEditModalProps {
   material: GeneratedMaterial | null;
@@ -43,24 +42,23 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 }) => {
   const [editedMaterial, setEditedMaterial] = useState<GeneratedMaterial | null>(null);
   const [loading, setLoading] = useState(false);
-  const { canEditMaterials } = usePlanPermissions();
-  const { openModal: openUpgradeModal } = useUpgradeModal();
+  const [materialModalOpen, setMaterialModalOpen] = useState(false);
 
   useEffect(() => {
     if (material && open) {
+      // Carregar sempre o material original do Supabase, sem cópia profunda desnecessária
       setEditedMaterial(material);
     }
   }, [material, open]);
 
+  useEffect(() => {
+    if (editedMaterial && open) {
+      setMaterialModalOpen(true);
+    }
+  }, [editedMaterial, open]);
+
   const handleSave = async () => {
     if (!editedMaterial) return;
-    
-    if (!canEditMaterials()) {
-      toast.error('Edição de materiais disponível apenas em planos pagos');
-      openUpgradeModal();
-      return;
-    }
-    
     setLoading(true);
     try {
       // Normalizar o conteúdo antes de salvar
@@ -76,7 +74,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
       const success = await materialService.updateMaterial(materialToSave.id, materialToSave);
       if (success) {
         toast.success('Material atualizado com sucesso!');
-        onSave();
+        onSave(); // O componente pai deve recarregar o material do Supabase
         onClose();
         activityService.addActivity({
           type: 'updated',
@@ -850,72 +848,11 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   if (!editedMaterial) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Editando: {editedMaterial.title}</span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-                disabled={loading}
-                className="hover:bg-gray-50"
-              >
-                <X className="w-4 h-4 mr-1" />
-                Cancelar
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSave}
-                disabled={loading || !canEditMaterials()}
-                className={canEditMaterials() ? 'hover:bg-green-50 text-green-600' : 'opacity-50 cursor-not-allowed'}
-              >
-                <Save className="w-4 h-4 mr-1" />
-                {loading ? 'Salvando...' : 'Salvar'}
-              </Button>
-            </div>
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="flex-1 overflow-auto">
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="title">Título</Label>
-                <Input
-                  id="title"
-                  value={editedMaterial.title}
-                  onChange={(e) => updateBasicInfo('title', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="subject">Disciplina</Label>
-                <Input
-                  id="subject"
-                  value={editedMaterial.subject}
-                  onChange={(e) => updateBasicInfo('subject', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="grade">Série</Label>
-                <Input
-                  id="grade"
-                  value={editedMaterial.grade}
-                  onChange={(e) => updateBasicInfo('grade', e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <Separator />
-            
-            {renderContentEditor()}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <MaterialModal
+      material={editedMaterial ? normalizeMaterialForPreview(editedMaterial) : null}
+      open={materialModalOpen}
+      onClose={() => { setMaterialModalOpen(false); onClose(); }}
+    />
   );
 };
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Download, Edit3, Trash2, Printer, FileDown, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -107,23 +106,13 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
         .eq('id', material.id);
 
       if (error) {
-        console.error('Supabase error:', error);
         toast.error('Erro ao salvar alterações');
         return;
       }
 
       toast.success('Material de apoio atualizado com sucesso!');
       setEditMode(false);
-      
-      // Atualizar o objeto material com os novos dados
-      Object.assign(material, {
-        titulo: editTitulo,
-        conteudo: editConteudo,
-        disciplina: editDisciplina,
-        tema: editTema,
-        turma: editTurma
-      });
-      
+      onClose();
     } catch (error) {
       console.error('Error updating support material:', error);
       toast.error('Erro ao salvar alterações');
@@ -149,7 +138,6 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
         .eq('id', material.id);
 
       if (error) {
-        console.error('Supabase error:', error);
         toast.error('Erro ao excluir material de apoio');
         return;
       }
@@ -167,50 +155,41 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
   const renderSupportHtml = () => {
     const data = new Date().toLocaleDateString('pt-BR');
     
-    // Usar os dados editados se estivermos no modo de edição
-    const currentData = editMode ? {
-      titulo: editTitulo,
-      tema: editTema,
-      disciplina: editDisciplina,
-      turma: editTurma,
-      conteudo: editConteudo
-    } : material;
-    
     // Processar conteúdo estruturado ou HTML
-    let conteudoHtml = currentData.conteudo;
+    let conteudoHtml = material.conteudo;
     
     try {
       // Tentar parsear como JSON estruturado primeiro
-      const parsedContent = JSON.parse(currentData.conteudo);
+      const parsedContent = JSON.parse(material.conteudo);
       if (parsedContent.conteudo_completo) {
         conteudoHtml = parsedContent.conteudo_completo;
       } else {
         // Se não tem conteudo_completo, usar o conteúdo como está
-        conteudoHtml = currentData.conteudo;
+        conteudoHtml = material.conteudo;
       }
     } catch (error) {
       // Se não for JSON, tratar como markdown/texto
       try {
-        const parsed = marked.parse(currentData.conteudo);
+        const parsed = marked.parse(material.conteudo);
         // Handle both sync and async marked.parse results
         if (typeof parsed === 'string') {
           conteudoHtml = parsed;
         } else {
           // If it's a Promise, use original content with line breaks
-          conteudoHtml = currentData.conteudo.replace(/\n/g, '<br/>');
+          conteudoHtml = material.conteudo.replace(/\n/g, '<br/>');
         }
       } catch (markdownError) {
         console.error('Error parsing markdown:', markdownError);
         // Se falhar, usar o conteúdo original com quebras de linha
-        conteudoHtml = currentData.conteudo.replace(/\n/g, '<br/>');
+        conteudoHtml = material.conteudo.replace(/\n/g, '<br/>');
       }
     }
 
     return String(templateService.renderTemplate('5', {
-      titulo: currentData.titulo || 'Material de Apoio ao Professor',
-      tema: currentData.tema,
-      disciplina: currentData.disciplina,
-      serie: currentData.turma,
+      titulo: material.titulo || 'Material de Apoio ao Professor',
+      tema: material.tema,
+      disciplina: material.disciplina,
+      serie: material.turma,
       conteudo: conteudoHtml,
       data
     }) || '');
@@ -432,7 +411,7 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span>{editMode ? 'Editando: ' + editTitulo : material.titulo}</span>
+              <span>{editMode ? 'Editando: ' + material.titulo : material.titulo}</span>
               <div className="flex items-center gap-2">
                 {editMode ? (
                   <>
