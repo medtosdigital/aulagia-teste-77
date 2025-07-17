@@ -40,6 +40,33 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Nova função para validar códigos BNCC
+async function validateBNCCCodes(tema: string, disciplina: string, serie: string, codigosGerados: string[]) {
+  try {
+    console.log('🔍 Iniciando validação de códigos BNCC:', { tema, disciplina, serie, codigosGerados });
+    
+    const { data, error } = await supabase.functions.invoke('validarCodigoBNCC', {
+      body: {
+        tema,
+        disciplina,
+        serie,
+        codigosGerados
+      }
+    });
+
+    if (error) {
+      console.error('❌ Erro na validação BNCC:', error);
+      return null;
+    }
+
+    console.log('✅ Validação BNCC concluída:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ Erro ao chamar validação BNCC:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -107,7 +134,59 @@ serve(async (req) => {
     console.log('✅ Content generated successfully');
 
     // Parse the generated content and structure it appropriately
-    const structuredContent = parseGeneratedContent(materialType, generatedContent, formData);
+    let structuredContent = parseGeneratedContent(materialType, generatedContent, formData);
+
+    // NOVA FUNCIONALIDADE: Validar códigos BNCC para planos de aula
+    if (materialType === 'plano-de-aula' && structuredContent.habilidades) {
+      const tema = formData.tema || formData.topic || '';
+      const disciplina = formData.disciplina || formData.subject || '';
+      const serie = formData.serie || formData.grade || '';
+      
+      // Extrair códigos das habilidades
+      const codigosGerados = structuredContent.habilidades
+        .map((h: any) => h.codigo)
+        .filter((codigo: string) => codigo && codigo.trim() !== '');
+
+      if (codigosGerados.length > 0) {
+        console.log('🔍 Validando códigos BNCC gerados:', codigosGerados);
+        
+        const validationResult = await validateBNCCCodes(tema, disciplina, serie, codigosGerados);
+        
+        if (validationResult && validationResult.codigosValidados) {
+          // Atualizar habilidades com códigos validados
+          const habilidadesValidadas = structuredContent.habilidades.map((habilidade: any, index: number) => {
+            const validacao = validationResult.codigosValidados[index];
+            if (validacao && !validacao.isValid && validacao.codigoCorreto) {
+              console.log(`🔧 Corrigindo código ${validacao.codigo} para ${validacao.codigoCorreto}`);
+              return {
+                ...habilidade,
+                codigo: validacao.codigoCorreto,
+                descricao: `${habilidade.descricao} (Código validado e corrigido pela BNCC)`
+              };
+            }
+            return habilidade;
+          });
+
+          structuredContent.habilidades = habilidadesValidadas;
+          structuredContent.bncc = habilidadesValidadas.map((h: any) => h.codigo).filter(Boolean);
+          
+          // Adicionar informações de validação ao conteúdo
+          structuredContent.bncc_validation = {
+            validated: true,
+            corrections_made: validationResult.codigosValidados.some(v => !v.isValid),
+            suggestions: validationResult.sugestoesMelhoria || []
+          };
+
+          console.log('✅ Códigos BNCC validados e corrigidos');
+        } else {
+          console.log('⚠️ Validação BNCC não disponível, mantendo códigos originais');
+          structuredContent.bncc_validation = {
+            validated: false,
+            message: 'Validação BNCC não disponível no momento'
+          };
+        }
+      }
+    }
 
     // Se for material de apoio, salvar na tabela materiais_apoio
     let apoioId = null;
@@ -748,7 +827,7 @@ REGRAS CRÍTICAS PARA GERAÇÃO DAS QUESTÕES:
 - Para questões "multipla_escolha": sempre 4 alternativas válidas e plausíveis
 - Para questões "ligar": forneça exatamente 4 itens na coluna A e 4 na coluna B
 - Para questões "completar": deixe uma lacuna clara marcada com ______
-- Para questões "verdadeiro_falso": crie afirmações que exijam análise
+- Para questões "verdadeiro_falso": crie afirmações que exijam conhecimento específico
 - Para questões "dissertativa": faça perguntas que promovam análise crítica
 - Para questões "desenho": solicite representações visuais técnicas
 
