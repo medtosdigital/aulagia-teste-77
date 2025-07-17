@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Eye, Edit3, Trash2, Download, Share2, Copy, FileText, Presentation, ClipboardList, FileQuestion, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -57,7 +56,7 @@ const MaterialsList: React.FC = () => {
   const loadMaterials = async () => {
     try {
       setLoading(true);
-      const allMaterials = await materialService.getAllMaterials();
+      const allMaterials = await materialService.getMaterials();
       setMaterials(allMaterials);
     } catch (error) {
       console.error('Error loading materials:', error);
@@ -127,7 +126,7 @@ const MaterialsList: React.FC = () => {
         toast.success('Material excluído com sucesso!');
         await loadMaterials();
         activityService.addActivity({
-          type: 'deleted',
+          type: 'updated',
           title: materialToDelete.title,
           description: `Material excluído: ${materialToDelete.title} (${materialToDelete.type})`,
           materialType: materialToDelete.type,
