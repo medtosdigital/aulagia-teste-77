@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { BNCCValidationService } from '@/services/bnccValidationService';
 import { EnhancedBNCCValidationService } from '@/services/enhancedBNCCValidationService';
 import AudioTranscriptionButton from './AudioTranscriptionButton';
+import MaterialEditModal from './MaterialEditModal';
 
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
 
@@ -173,6 +174,8 @@ const CreateLesson: React.FC = () => {
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [enhancedValidationResult, setEnhancedValidationResult] = useState<EnhancedBNCCValidation | null>(null);
   const [invalidSubjects, setInvalidSubjects] = useState<string[]>([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editMaterial, setEditMaterial] = useState<GeneratedMaterial | null>(null);
 
   // Hooks para gerenciamento de planos e limites
   const { createMaterial, isLimitReached, getRemainingMaterials, currentPlan, canPerformAction, canEditMaterials, canCreateAssessments } = usePlanPermissions();
@@ -762,6 +765,24 @@ const CreateLesson: React.FC = () => {
     setSelectedType(null);
   };
 
+  // Função para abrir o modal de edição
+  const handleEditMaterial = () => {
+    setShowMaterialModal(false);
+    setEditMaterial(generatedMaterial);
+    setShowEditModal(true);
+  };
+
+  // Função para fechar o modal de edição e reabrir o de visualização
+  const handleEditModalClose = async (updated?: boolean) => {
+    setShowEditModal(false);
+    if (updated && generatedMaterial) {
+      // Recarregar o material atualizado do Supabase
+      const updatedMaterial = await materialService.getMaterialById(generatedMaterial.id);
+      setGeneratedMaterial(updatedMaterial);
+    }
+    setTimeout(() => setShowMaterialModal(true), 200); // Pequeno delay para evitar sobreposição
+  };
+
   const getGradeDisplayName = (value: string) => {
     for (const category of grades) {
       for (const option of category.options) {
@@ -949,7 +970,29 @@ const CreateLesson: React.FC = () => {
           material={normalizeMaterialForPreview(generatedMaterial)} 
           open={showMaterialModal || showNextStepsModal} 
           onClose={handleMaterialModalClose} 
+          onEdit={() => {
+            setShowMaterialModal(false);
+            // Navegar para a página de Meus Materiais e abrir o modal de edição
+            navigate(`/materiais?edit=${generatedMaterial?.id}`);
+          }}
         />
+        {showEditModal && editMaterial && (
+          <MaterialEditModal
+            material={editMaterial}
+            open={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              setTimeout(() => setShowMaterialModal(true), 200);
+            }}
+            onSave={async () => {
+              setShowEditModal(false);
+              // Recarrega o material atualizado do Supabase
+              const updatedMaterial = await materialService.getMaterialById(editMaterial.id);
+              setGeneratedMaterial(updatedMaterial);
+              setTimeout(() => setShowMaterialModal(true), 200);
+            }}
+          />
+        )}
         
         {/* Modal de próximos passos - aparece por cima */}
         <NextStepsModal
@@ -1287,7 +1330,29 @@ const CreateLesson: React.FC = () => {
             material={normalizeMaterialForPreview(generatedMaterial)} 
             open={showMaterialModal || showNextStepsModal} 
             onClose={handleMaterialModalClose} 
+            onEdit={() => {
+              setShowMaterialModal(false);
+              setEditMaterial(generatedMaterial);
+              setShowEditModal(true);
+            }}
           />
+          {showEditModal && editMaterial && (
+            <MaterialEditModal
+              material={editMaterial}
+              open={showEditModal}
+              onClose={() => {
+                setShowEditModal(false);
+                setTimeout(() => setShowMaterialModal(true), 200);
+              }}
+              onSave={async () => {
+                setShowEditModal(false);
+                // Recarrega o material atualizado do Supabase
+                const updatedMaterial = await materialService.getMaterialById(editMaterial.id);
+                setGeneratedMaterial(updatedMaterial);
+                setTimeout(() => setShowMaterialModal(true), 200);
+              }}
+            />
+          )}
           
           {/* Modal de próximos passos - aparece por cima */}
           <NextStepsModal

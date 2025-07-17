@@ -307,7 +307,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={onEdit}
+                  onClick={() => { if (onEdit) onEdit(); }}
                   className={`w-full text-blue-600 border-blue-200 hover:bg-blue-50 rounded-xl ${!canEditMaterials() ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={!canEditMaterials()}
                   title={canEditMaterials() ? 'Editar Material' : 'Edição disponível apenas em planos pagos'}
@@ -468,7 +468,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
               <Button
                 variant="outline"
                 size="default"
-                onClick={onEdit}
+                onClick={() => { if (onEdit) onEdit(); }}
                 className={`w-full justify-start text-blue-600 border-blue-200 hover:bg-blue-50 rounded-lg ${!canEditMaterials() ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={!canEditMaterials()}
                 title={canEditMaterials() ? 'Editar Material' : 'Edição disponível apenas em planos pagos'}

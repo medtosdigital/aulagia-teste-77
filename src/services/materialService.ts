@@ -414,15 +414,37 @@ class MaterialService {
   async updateMaterial(id: string, updates: Partial<GeneratedMaterial>): Promise<boolean> {
     console.log('📝 Updating material:', id, updates);
     try {
+      // Corrigir o mapeamento para os campos do Supabase
       const userMaterialUpdates: Partial<UserMaterial> = {};
       if (updates.title) userMaterialUpdates.title = updates.title;
       if (updates.subject) userMaterialUpdates.subject = updates.subject;
       if (updates.grade) userMaterialUpdates.grade = updates.grade;
-      if (updates.content) userMaterialUpdates.content = JSON.stringify(updates.content);
+      if (updates.content) userMaterialUpdates.content = typeof updates.content === 'string' ? updates.content : JSON.stringify(updates.content);
       if (updates.type) userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
       if (!userMaterialUpdates.type && updates.type) {
         userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
       }
+      // Garantir que o campo 'title' seja passado como 'titulo' para o update
+      if (userMaterialUpdates.title) {
+        (userMaterialUpdates as any).titulo = userMaterialUpdates.title;
+        delete userMaterialUpdates.title;
+      }
+      // Garantir que o campo 'type' seja passado como 'tipo_material' para o update
+      if (userMaterialUpdates.type) {
+        (userMaterialUpdates as any).tipo_material = userMaterialUpdates.type;
+        delete userMaterialUpdates.type;
+      }
+      // Garantir que o campo 'subject' seja passado como 'disciplina'
+      if (userMaterialUpdates.subject) {
+        (userMaterialUpdates as any).disciplina = userMaterialUpdates.subject;
+        delete userMaterialUpdates.subject;
+      }
+      // Garantir que o campo 'grade' seja passado como 'serie'
+      if (userMaterialUpdates.grade) {
+        (userMaterialUpdates as any).serie = userMaterialUpdates.grade;
+        delete userMaterialUpdates.grade;
+      }
+      // O campo 'content' já está correto como 'conteudo'
       console.log('Enviando para userMaterialsService.updateMaterial:', id, userMaterialUpdates);
       const success = await userMaterialsService.updateMaterial(id, userMaterialUpdates);
       if (success) {

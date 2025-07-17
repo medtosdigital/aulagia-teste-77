@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { BookOpen, Monitor, FileText, ClipboardCheck, Eye, Edit3, Trash2, Download, Search, Filter, Plus, Calendar, Printer, FileDown, Lock, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +55,7 @@ const MATERIALS_CACHE_DURATION = 60000; // 60 segundos
 
 const MaterialsList: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [materials, setMaterials] = useState<GeneratedMaterialWithOptionalFormData[]>([]);
   const [filteredMaterials, setFilteredMaterials] = useState<GeneratedMaterialWithOptionalFormData[]>([]);
@@ -89,6 +90,8 @@ const MaterialsList: React.FC = () => {
     availablePlans 
   } = useUpgradeModal();
 
+  const [pendingEditId, setPendingEditId] = useState<string | null>(null);
+
   useEffect(() => {
     if (user) {
       loadMaterials();
@@ -99,9 +102,41 @@ const MaterialsList: React.FC = () => {
     }
   }, [user, navigate]);
 
+  // Novo: abrir modal de edição automaticamente se houver ?edit=ID na URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const editId = params.get('edit');
+    if (editId) {
+      setPendingEditId(editId);
+      loadMaterials(true);
+      // Limpa o parâmetro edit da URL
+      const newParams = new URLSearchParams(location.search);
+      newParams.delete('edit');
+      navigate({ search: newParams.toString() }, { replace: true });
+    }
+  }, [location.search, user, navigate]);
+
+  useEffect(() => {
+    if (pendingEditId && materials.length > 0) {
+      const material = materials.find(m => m.id === pendingEditId);
+      if (material) {
+        setSelectedMaterial(material); // Setar selectedMaterial para edição
+        setModalOpen(false); // Nunca abrir modal de visualização
+        setEditModalOpen(true); // Abrir apenas o modal de edição
+        setPendingEditId(null);
+      }
+    }
+  }, [pendingEditId, materials]);
+
   useEffect(() => {
     filterMaterials();
   }, [materials, supportMaterials, searchTerm, filterType, filterSubject]);
+
+  useEffect(() => {
+    if (editModalOpen) {
+      setModalOpen(false);
+    }
+  }, [editModalOpen]);
 
   const loadSupportMaterials = async () => {
     if (!user) return;
@@ -146,21 +181,20 @@ const MaterialsList: React.FC = () => {
     };
   };
 
-  const loadMaterials = async () => {
+  // Modifique loadMaterials para aceitar forceReload
+  const loadMaterials = async (forceReload = false) => {
     if (!user) {
       console.log('No user available for loading materials');
       return;
     }
-
     const cacheKey = `materials_${user.id}`;
     const cached = materialsCache.get(cacheKey);
     const now = Date.now();
-    if (cached && (now - cached.timestamp) < MATERIALS_CACHE_DURATION) {
+    if (!forceReload && cached && (now - cached.timestamp) < MATERIALS_CACHE_DURATION) {
       setMaterials(cached.data);
       setLoading(false);
       return;
     }
-    
     try {
       setLoading(true);
       console.log('Loading materials for authenticated user:', user.id);
@@ -924,7 +958,7 @@ const MaterialsList: React.FC = () => {
       {/* Modal de visualização */}
       <MaterialModal 
         material={normalizeMaterialForPreview(selectedMaterial as GeneratedMaterial)} 
-        open={modalOpen} 
+        open={modalOpen && !pendingEditId} // Só abre se não houver pendingEditId
         onClose={handleCloseModal} 
         onEdit={() => {
           setModalOpen(false);

@@ -21,6 +21,19 @@ interface MaterialEditModalProps {
   onSave: () => void;
 }
 
+// Função utilitária para normalizar o conteúdo antes de salvar
+function normalizeLessonPlanContent(content: any): any {
+  // Garante arrays de string
+  if (!Array.isArray(content.objetivos)) content.objetivos = [];
+  if (!Array.isArray(content.habilidades)) content.habilidades = [];
+  content.objetivos = content.objetivos.map((o: any) => typeof o === 'string' ? o : String(o || ''));
+  content.habilidades = content.habilidades.map((h: any) => typeof h === 'string' ? h : String(h || ''));
+  // Garante desenvolvimento como array de objetos
+  if (!Array.isArray(content.desenvolvimento)) content.desenvolvimento = [];
+  // Outros campos podem ser normalizados conforme necessário
+  return content;
+}
+
 const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   material,
   open,
@@ -33,9 +46,8 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   useEffect(() => {
     if (material && open) {
-      const deepCopy = JSON.parse(JSON.stringify(material));
-      console.log('Setting edited material:', deepCopy);
-      setEditedMaterial(deepCopy);
+      // Carregar sempre o material original do Supabase, sem cópia profunda desnecessária
+      setEditedMaterial(material);
     }
   }, [material, open]);
 
@@ -47,23 +59,22 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
 
   const handleSave = async () => {
     if (!editedMaterial) return;
-
     setLoading(true);
     try {
-      console.log('Saving material:', editedMaterial);
-      // Serializar o campo content como string antes de enviar
+      // Normalizar o conteúdo antes de salvar
+      const normalizedContent = normalizeLessonPlanContent(editedMaterial.content);
       const materialToSave = {
         id: editedMaterial.id,
         title: editedMaterial.title,
         subject: editedMaterial.subject,
         grade: editedMaterial.grade,
-        type: editedMaterial.type, // garantir que o tipo seja enviado
-        content: typeof editedMaterial.content === 'string' ? editedMaterial.content : JSON.stringify(editedMaterial.content)
+        type: editedMaterial.type,
+        content: typeof normalizedContent === 'string' ? normalizedContent : JSON.stringify(normalizedContent)
       };
       const success = await materialService.updateMaterial(materialToSave.id, materialToSave);
       if (success) {
         toast.success('Material atualizado com sucesso!');
-        onSave();
+        onSave(); // O componente pai deve recarregar o material do Supabase
         onClose();
         activityService.addActivity({
           type: 'updated',

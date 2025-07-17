@@ -36,7 +36,8 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
 
   useEffect(() => {
     if (material && open) {
-      setEditedMaterial(JSON.parse(JSON.stringify(material)));
+      // Carregar sempre o material original do Supabase, sem cópia profunda desnecessária
+      setEditedMaterial(material);
       setCurrentPage(0);
       setCurrentHtmlContent('');
       setMaterialModalOpen(true);
@@ -130,7 +131,6 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
 
   const handleSave = async () => {
     if (!editedMaterial) return;
-
     setLoading(true);
     try {
       let materialToSave = editedMaterial;
@@ -140,13 +140,12 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
         if (iframeDoc) {
           const html = iframeDoc.documentElement.outerHTML;
           const updatedContent = parseEditedHtmlToContent(html, editedMaterial.content, editedMaterial.type);
-        materialToSave = {
-          ...editedMaterial,
+          materialToSave = {
+            ...editedMaterial,
             content: updatedContent
-        };
+          };
         }
       }
-
       const success = await materialService.updateMaterial(materialToSave.id, materialToSave);
       if (success) {
         toast.success('Material atualizado com sucesso!');
@@ -159,7 +158,7 @@ const MaterialInlineEditModal: React.FC<MaterialInlineEditModalProps> = ({
           subject: materialToSave.subject,
           grade: materialToSave.grade
         });
-        onSave();
+        onSave(); // O componente pai deve recarregar o material do Supabase
         onClose();
       } else {
         toast.error('Erro ao atualizar material');
