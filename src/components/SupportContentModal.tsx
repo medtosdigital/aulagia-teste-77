@@ -188,30 +188,6 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
       }
       
       // Salvar no Supabase
-      const disciplinaApoio = material.content.disciplina || material.content.subject || material.subject || '';
-      const temaApoio = material.content.tema || material.content.topic || material.title || '';
-      const turmaApoio = material.content.serie || material.content.grade || material.grade || '';
-      
-      const { error: insertError } = await supabase.from('materiais_apoio').insert([
-        {
-          titulo: titulo || `Apoio - ${tema}`,
-          conteudo: conteudoApoio,
-          material_principal_id: material.id,
-          user_id: user.id,
-          disciplina: disciplinaApoio,
-          tema: temaApoio,
-          turma: turmaApoio
-        }
-      ]);
-      
-      if (insertError) {
-        console.error('Erro ao inserir no Supabase:', insertError);
-        toast.error('Erro ao salvar conteúdo de apoio no banco de dados');
-        setSupportContent(null);
-        setIsGenerating(false);
-        isGeneratingRef.current = false;
-        return;
-      }
       
       setSupportContent(conteudoApoio);
       toast.success('Conteúdo de apoio gerado e salvo com sucesso!');
