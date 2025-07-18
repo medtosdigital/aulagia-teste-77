@@ -1682,6 +1682,16 @@ export class TemplateService {
           value = this.renderQuestions(value);
         } else if (key === 'criterios_avaliacao') {
           value = value.map(criterio => `<li>${criterio}</li>`).join('');
+        } else if (key === 'referencias') {
+          // CORREÇÃO: Formatar referências em ABNT
+          value = value.map((ref: string) => {
+            // Se já está no formato ABNT, manter
+            if (ref.includes('SOBRENOME, Nome') || ref.includes(',')) {
+              return `<li>${ref}</li>`;
+            }
+            // Se não está formatado, tentar formatar
+            return `<li>${ref}</li>`;
+          }).join('');
         } else {
           value = value.join(', ');
         }

@@ -25,51 +25,66 @@ serve(async (req) => {
     // Prompts para diferentes tipos de materiais
     if (materialType === 'plano-de-aula') {
       prompt = `
-Crie um plano de aula completo e detalhado sobre o tema "${formData.tema}" para a disciplina ${formData.disciplina} da série ${formData.serie}.
+Crie um plano de aula COMPLETO, DETALHADO e PROFISSIONAL sobre o tema "${formData.tema}" para a disciplina ${formData.disciplina} da série ${formData.serie}.
 
 IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais.
 
 Estrutura obrigatória do JSON:
 {
-  "titulo": "Título do plano de aula",
+  "titulo": "Título completo e atrativo do plano de aula",
   "professor": "${formData.professor || 'Professor(a)'}",
   "disciplina": "${formData.disciplina}",
   "serie": "${formData.serie}",
   "tema": "${formData.tema}",
   "data": "${formData.data || new Date().toLocaleDateString('pt-BR')}",
   "duracao": "${formData.duracao || '50 minutos'}",
-  "bncc": "Códigos BNCC relevantes",
-  "objetivos": ["Objetivo 1", "Objetivo 2", "Objetivo 3"],
+  "bncc": "Códigos BNCC relevantes separados por vírgula",
+  "objetivos": [
+    "Objetivo específico e mensurável 1",
+    "Objetivo específico e mensurável 2", 
+    "Objetivo específico e mensurável 3"
+  ],
   "habilidades": [
-    {"codigo": "EF01MA01", "descricao": "Descrição da habilidade"},
-    {"codigo": "EF01MA02", "descricao": "Descrição da habilidade"}
+    {"codigo": "EF01MA01", "descricao": "Descrição detalhada da habilidade BNCC"},
+    {"codigo": "EF01MA02", "descricao": "Descrição detalhada da habilidade BNCC"}
   ],
   "desenvolvimento": [
     {
       "etapa": "Introdução",
-      "atividade": "Descrição da atividade",
+      "atividade": "Descrição detalhada e criativa da atividade",
       "tempo": "10 minutos",
-      "recursos": "Recursos necessários"
+      "recursos": "Lista completa de recursos necessários"
     },
     {
       "etapa": "Desenvolvimento",
-      "atividade": "Descrição da atividade",
-      "tempo": "30 minutos",
-      "recursos": "Recursos necessários"
+      "atividade": "Descrição detalhada e criativa da atividade",
+      "tempo": "30 minutos", 
+      "recursos": "Lista completa de recursos necessários"
     },
     {
       "etapa": "Conclusão",
-      "atividade": "Descrição da atividade",
+      "atividade": "Descrição detalhada e criativa da atividade",
       "tempo": "10 minutos",
-      "recursos": "Recursos necessários"
+      "recursos": "Lista completa de recursos necessários"
     }
   ],
-  "recursos": ["Recurso 1", "Recurso 2", "Recurso 3"],
-  "conteudosProgramaticos": ["Conteúdo 1", "Conteúdo 2", "Conteúdo 3"],
-  "metodologia": "Descrição da metodologia utilizada",
-  "avaliacao": "Descrição dos critérios de avaliação",
-  "referencias": ["Referência 1", "Referência 2"]
+  "recursos": ["Recurso específico 1", "Recurso específico 2", "Recurso específico 3"],
+  "conteudosProgramaticos": ["Conteúdo específico 1", "Conteúdo específico 2", "Conteúdo específico 3"],
+  "metodologia": "Descrição detalhada da metodologia pedagógica utilizada",
+  "avaliacao": "Descrição detalhada dos critérios e instrumentos de avaliação",
+  "referencias": [
+    "SOBRENOME, Nome. Título da obra. Edição. Local: Editora, ano.",
+    "SOBRENOME, Nome. Título da obra. Edição. Local: Editora, ano."
+  ]
 }
+
+DIRETRIZES ESPECÍFICAS:
+1. Os objetivos devem ser ESPECÍFICOS, MENSURÁVEIS e RELACIONADOS ao tema
+2. As habilidades devem usar códigos BNCC REAIS e VÁLIDOS para a série
+3. O desenvolvimento deve ser DETALHADO e CRIATIVO, não básico
+4. As referências devem seguir o padrão ABNT COMPLETO
+5. A metodologia deve ser PEDAGOGICAMENTE FUNDAMENTADA
+6. A avaliação deve ser DETALHADA e DIVERSIFICADA
 
 Certifique-se de que todos os campos estão preenchidos adequadamente para o tema "${formData.tema}" da disciplina ${formData.disciplina}.
 `;
@@ -921,6 +936,37 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais. E
     }
 
     console.log('✅ Content generated successfully');
+
+    // CORREÇÃO: Se for plano de aula, corrigir as habilidades BNCC
+    if (materialType === 'plano-de-aula' && parsedContent.habilidades && Array.isArray(parsedContent.habilidades)) {
+      console.log('🔧 Corrigindo habilidades BNCC...');
+      
+      try {
+        const { data: correctionData, error: correctionError } = await supabase.functions.invoke('corrigirHabilidadesBNCC', {
+          body: {
+            tema: formData.tema,
+            disciplina: formData.disciplina,
+            serie: formData.serie,
+            habilidadesGeradas: parsedContent.habilidades
+          }
+        });
+
+        if (!correctionError && correctionData && correctionData.success) {
+          console.log('✅ Habilidades corrigidas:', correctionData.habilidadesCorrigidas);
+          parsedContent.habilidades = correctionData.habilidadesCorrigidas;
+          
+          // Atualizar códigos BNCC
+          if (correctionData.habilidadesCorrigidas && correctionData.habilidadesCorrigidas.length > 0) {
+            const codigosBNCC = correctionData.habilidadesCorrigidas.map(h => h.codigo).join(', ');
+            parsedContent.bncc = codigosBNCC;
+          }
+        } else {
+          console.warn('⚠️ Erro ao corrigir habilidades:', correctionError);
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao corrigir habilidades BNCC:', error);
+      }
+    }
 
     return new Response(JSON.stringify({
       success: true,

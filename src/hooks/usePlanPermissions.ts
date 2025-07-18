@@ -7,6 +7,15 @@ export const usePlanPermissions = () => {
   const { user } = useAuth();
   const unifiedPermissions = useUnifiedPlanPermissions();
 
+  // Padronizar id do plano
+  const normalizePlanId = (planId: string | undefined | null): 'gratuito' | 'professor' | 'grupo-escolar' | 'admin' => {
+    if (!planId) return 'gratuito';
+    if (planId === 'admin') return 'admin';
+    if (planId === 'professor') return 'professor';
+    if (planId === 'grupo_escolar' || planId === 'grupo-escolar') return 'grupo-escolar';
+    return 'gratuito';
+  };
+
   // Memoizar valores computados para manter compatibilidade
   const memoizedPlan = useMemo(() => {
     if (!user) {
@@ -47,13 +56,23 @@ export const usePlanPermissions = () => {
 
     // Mapear dados do perfil unificado para o formato esperado
     let planId = unifiedPermissions.currentProfile?.plano_ativo || 'gratuito';
-    
     // Forçar admin para o usuário correto
     if (user && user.email === 'medtosdigital@gmail.com') {
       planId = 'admin';
     }
-    
-    const planLimits = planId === 'admin'
+    // Garantir que o plano seja carregado corretamente da tabela perfis
+    if (unifiedPermissions.currentProfile && unifiedPermissions.currentProfile.plano_ativo) {
+      planId = unifiedPermissions.currentProfile.plano_ativo;
+    }
+    const normalizedPlanId = normalizePlanId(planId);
+    console.log('[usePlanPermissions] Plano carregado:', planId, '->', normalizedPlanId);
+
+    // Se o perfil existe mas o plano não é reconhecido, mostrar erro
+    if (unifiedPermissions.currentProfile && !['gratuito','professor','grupo-escolar','admin'].includes(normalizedPlanId)) {
+      console.error('[usePlanPermissions] Plano desconhecido no perfil:', planId);
+    }
+
+    const planLimits = normalizedPlanId === 'admin'
       ? {
           materialsPerMonth: Infinity,
           canDownloadWord: true,
@@ -65,28 +84,27 @@ export const usePlanPermissions = () => {
           hasHistory: true
         }
       : {
-          materialsPerMonth: planId === 'gratuito' ? 5 : planId === 'professor' ? 50 : 300,
+          materialsPerMonth: normalizedPlanId === 'gratuito' ? 5 : normalizedPlanId === 'professor' ? 50 : 300,
           canDownloadWord: unifiedPermissions.canDownloadWord(),
           canDownloadPPT: unifiedPermissions.canDownloadPPT(),
           canEditMaterials: unifiedPermissions.canEditMaterials(),
           canCreateSlides: unifiedPermissions.canCreateSlides(),
           canCreateAssessments: unifiedPermissions.canCreateAssessments(),
           hasCalendar: unifiedPermissions.hasCalendar(),
-          hasHistory: planId !== 'gratuito'
+          hasHistory: normalizedPlanId !== 'gratuito'
         };
-        
     return {
-      id: planId,
-      name: planId === 'admin' ? 'Plano Administrador' : unifiedPermissions.getPlanDisplayName(),
+      id: normalizedPlanId,
+      name: normalizedPlanId === 'admin' ? 'Plano Administrador' : unifiedPermissions.getPlanDisplayName(),
       limits: planLimits,
-      price: planId === 'admin'
+      price: normalizedPlanId === 'admin'
         ? { monthly: 0, yearly: 0 }
         : {
-            monthly: planId === 'gratuito' ? 0 : planId === 'professor' ? 29.90 : 89.90,
-            yearly: planId === 'gratuito' ? 0 : planId === 'professor' ? 299 : 849
+            monthly: normalizedPlanId === 'gratuito' ? 0 : normalizedPlanId === 'professor' ? 29.90 : 89.90,
+            yearly: normalizedPlanId === 'gratuito' ? 0 : normalizedPlanId === 'professor' ? 299 : 849
           }
     };
-  }, [user, unifiedPermissions]);
+  }, [user?.id, unifiedPermissions.currentProfile?.plano_ativo, unifiedPermissions.loading, unifiedPermissions.remainingMaterials]);
 
   const memoizedUsage = useMemo(() => ({
     materialsThisMonth: Math.max(0, memoizedPlan.limits.materialsPerMonth - unifiedPermissions.remainingMaterials)
@@ -118,8 +136,13 @@ export const usePlanPermissions = () => {
       nextMonth.setMonth(nextMonth.getMonth() + 1);
       nextMonth.setDate(1);
       return nextMonth;
+    },
+    forceRefreshPlan: () => {
+      console.log('Forçando recarregamento do plano...');
+      unifiedPermissions.forceRefreshPlan();
+      window.dispatchEvent(new CustomEvent('planChanged'));
     }
-  }), [unifiedPermissions, memoizedPlan.id]);
+  }), [unifiedPermissions.changePlan, unifiedPermissions.forceRefreshPlan, memoizedPlan.id]);
 
   // Se não estiver logado, retornar valores padrão
   if (!user) {
@@ -183,6 +206,9 @@ export const usePlanPermissions = () => {
     dismissUpgradeModal: unifiedPermissions.dismissUpgradeModal,
     dismissSupportModal: () => {},
     refreshData: unifiedPermissions.refreshData,
+    forceRefreshPlan: unifiedPermissions.forceRefreshPlan,
+    forceRefreshProfile: unifiedPermissions.forceRefreshProfile,
+    forceRefreshPlanFromSubscription: memoizedFunctions.forceRefreshPlan,
     
     // Permissões
     canEditMaterials: unifiedPermissions.canEditMaterials,
