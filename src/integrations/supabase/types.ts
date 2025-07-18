@@ -650,6 +650,45 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          email: string
+          evento: string
+          id: string
+          ip_address: string | null
+          payload: Json | null
+          plano_aplicado: string | null
+          produto: string | null
+          status: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          evento: string
+          id?: string
+          ip_address?: string | null
+          payload?: Json | null
+          plano_aplicado?: string | null
+          produto?: string | null
+          status?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          evento?: string
+          id?: string
+          ip_address?: string | null
+          payload?: Json | null
+          plano_aplicado?: string | null
+          produto?: string | null
+          status?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

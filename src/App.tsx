@@ -1,102 +1,231 @@
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
-import LoginPage from "./pages/LoginPage";
-import TermosDeServico from "./pages/TermosDeServico";
-import PoliticaDePrivacidade from "./pages/PoliticaDePrivacidade";
-import TermosDeUso from "./pages/TermosDeUso";
-import AvisoIA from "./pages/AvisoIA";
-import CentralDeAjuda from './pages/CentralDeAjuda';
-import Contato from './pages/Contato';
-import { useEffect } from 'react';
-import { PresentationProvider } from './contexts/PresentationContext';
-import FullScreenSlideShow from './components/FullScreenSlideShow';
-import { usePresentation } from './contexts/PresentationContext';
-import Dashboard from './components/Dashboard';
-import NotFound from './pages/NotFound';
-import LandingPage from './pages/LandingPage';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from './contexts/AuthContext';
+import { QueryClient } from 'react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import ErrorBoundary from "@/components/ErrorBoundary";
+import LoginPage from '@/pages/login';
+import RegisterPage from '@/pages/register';
+import PricingPage from '@/pages/pricing';
+import DashboardPage from '@/pages/dashboard';
+import CreateMaterial from '@/pages/create-material';
+import MaterialsPage from '@/pages/materials';
+import EditMaterialPage from '@/pages/edit-material';
+import CalendarPage from '@/pages/calendar';
+import SchoolPage from '@/pages/school';
+import SettingsPage from '@/pages/settings';
+import NotificationsPage from '@/pages/notifications';
+import UsersPage from '@/pages/users';
+import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
+import ForgotPasswordPage from '@/pages/forgot-password';
+import ResetPasswordPage from '@/pages/reset-password';
 
-const queryClient = new QueryClient();
-
-function ScrollToTop() {
-  const location = useLocation();
-  useEffect(() => {
-    // Tenta scrollar para o topo de forma suave, mas garante o reset mesmo em navegação rápida
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    setTimeout(() => window.scrollTo(0, 0), 10); // fallback para garantir
-  }, [location.pathname]);
-  return null;
-}
-
-function PresentationPortal() {
-  const { open, material, close } = usePresentation();
-  if (!open || !material) return null;
-  return (
-    <FullScreenSlideShow
-      material={material}
-      onClose={() => {
-        if (document.fullscreenElement) {
-          document.exitFullscreen?.();
-        } else if ((document as any).webkitFullscreenElement) {
-          (document as any).webkitExitFullscreen?.();
-        } else if ((document as any).msFullscreenElement) {
-          (document as any).msExitFullscreen?.();
-        }
-        close();
-      }}
-    />
-  );
-}
-
-function NotFoundRedirect() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (user) {
-      navigate('/', { replace: true });
-    } else {
-      navigate('/landing', { replace: true });
-    }
-  }, [user, navigate]);
-  return null;
-}
+import WebhookLogsPage from '@/components/admin/WebhookLogsPage';
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+    <BrowserRouter>
+      <QueryClient>
         <AuthProvider>
-          <PresentationProvider>
+          <div className="min-h-screen bg-background">
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <div className="flex min-h-screen">
+                      <Sidebar />
+                      <main className="flex-1 ml-64">
+                        <Header />
+                        <DashboardPage />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <div className="flex min-h-screen">
+                      <Sidebar />
+                      <main className="flex-1 ml-64">
+                        <Header />
+                        <DashboardPage />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/create-material"
+                element={
+                  <ProtectedRoute>
+                    <div className="flex min-h-screen">
+                      <Sidebar />
+                      <main className="flex-1 ml-64">
+                        <Header />
+                        <CreateMaterial />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/materials"
+                element={
+                  <ProtectedRoute>
+                    <div className="flex min-h-screen">
+                      <Sidebar />
+                      <main className="flex-1 ml-64">
+                        <Header />
+                        <MaterialsPage />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-material/:id"
+                element={
+                  <ProtectedRoute>
+                    <div className="flex min-h-screen">
+                      <Sidebar />
+                      <main className="flex-1 ml-64">
+                        <Header />
+                        <EditMaterialPage />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/calendar"
+                element={
+                  <ProtectedRoute>
+                    <div className="flex min-h-screen">
+                      <Sidebar />
+                      <main className="flex-1 ml-64">
+                        <Header />
+                        <CalendarPage />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/school"
+                element={
+                  <ProtectedRoute requiredPermission="canAccessSchool">
+                    <div className="flex min-h-screen">
+                      <Sidebar />
+                      <main className="flex-1 ml-64">
+                        <Header />
+                        <SchoolPage />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <div className="flex min-h-screen">
+                      <Sidebar />
+                      <main className="flex-1 ml-64">
+                        <Header />
+                        <SettingsPage />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <div className="flex min-h-screen">
+                      <Sidebar />
+                      <main className="flex-1 ml-64">
+                        <Header />
+                        <NotificationsPage />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/users"
+                element={
+                  <ProtectedRoute requiredPermission="canAccessSettings">
+                    <div className="flex min-h-screen">
+                      <Sidebar />
+                      <main className="flex-1 ml-64">
+                        <Header />
+                        <UsersPage />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Admin Routes */}
+              <Route
+                path="/admin/webhooks"
+                element={
+                  <ProtectedRoute requiredPermission="canAccessSettings">
+                    <div className="flex min-h-screen">
+                      <Sidebar />
+                      <main className="flex-1 ml-64">
+                        <Header />
+                        <WebhookLogsPage />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              
+            </Routes>
             <Toaster />
-            <PresentationPortal />
-            <Router>
-              <ScrollToTop />
-              <ErrorBoundary>
-                <Routes>
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/termos-de-servico" element={<TermosDeServico />} />
-                  <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
-                  <Route path="/termos-de-uso" element={<TermosDeUso />} />
-                  <Route path="/aviso-ia" element={<AvisoIA />} />
-                  <Route path="/central-de-ajuda" element={<CentralDeAjuda />} />
-                  <Route path="/contato" element={<Contato />} />
-                  <Route path="/landing" element={<LandingPage />} />
-                  <Route path="/*" element={<Index />} />
-                  <Route path="*" element={<NotFoundRedirect />} />
-                </Routes>
-              </ErrorBoundary>
-            </Router>
-          </PresentationProvider>
+          </div>
         </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+      </QueryClient>
+    </BrowserRouter>
   );
 }
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requiredPermission?: string;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  requiredPermission,
+}) => {
+  const { user, isAuthenticated, hasPermission, loading } = useAuth();
+
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (requiredPermission && !hasPermission(requiredPermission)) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return <>{children}</>;
+};
 
 export default App;
