@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { Pencil, Save, X, ChevronLeft, ChevronRight, UserCheck, UserX, Clock, Search, Filter, Users, TrendingUp, MessageSquare, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const planLabels = {
   gratuito: 'Gratuito',
@@ -42,81 +43,104 @@ export default function AdminUsersPage() {
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [deletingFeedbackId, setDeletingFeedbackId] = useState<string | null>(null);
 
   async function fetchUsers() {
     setLoading(true);
-    
-    // Buscar dados da tabela perfis com todos os campos necessários
-    const { data: perfis } = await supabase
-      .from('perfis')
-      .select('user_id, nome_preferido, full_name, email, plano_ativo, created_at');
-    
-    // Buscar dados dos planos
-    const { data: plans } = await supabase
-      .from('planos_usuarios')
-      .select('user_id, plano_ativo, data_expiracao, updated_at');
-    
-    // Combinar os dados
-    const usersData = perfis?.map((perfil: any) => {
-      const plano = plans?.find((pl: any) => pl.user_id === perfil.user_id);
-      
-      let paymentStatus = 'em dia';
-      let paymentBadge = 'bg-green-100 text-green-800';
-      let paymentDue = null;
-      if (plano?.data_expiracao) {
-        const exp = new Date(plano.data_expiracao);
-        paymentDue = exp.toLocaleDateString('pt-BR');
-        if (exp < new Date()) {
-          paymentStatus = 'atrasado';
-          paymentBadge = 'bg-red-100 text-red-800';
+    setError(null);
+    try {
+      // Buscar dados da tabela perfis com todos os campos necessários
+      const { data: perfis, error: perfisError } = await supabase
+        .from('perfis')
+        .select('user_id, nome_preferido, full_name, email, plano_ativo, created_at');
+      if (perfisError) throw perfisError;
+      // Buscar dados dos planos
+      const { data: plans, error: plansError } = await supabase
+        .from('planos_usuarios')
+        .select('user_id, plano_ativo, data_expiracao, updated_at');
+      if (plansError) throw plansError;
+      // Combinar os dados
+      const usersData = perfis?.map((perfil: any) => {
+        const plano = plans?.find((pl: any) => pl.user_id === perfil.user_id);
+        let paymentStatus = 'em dia';
+        let paymentBadge = 'bg-green-100 text-green-800';
+        let paymentDue = null;
+        if (plano?.data_expiracao) {
+          const exp = new Date(plano.data_expiracao);
+          paymentDue = exp.toLocaleDateString('pt-BR');
+          if (exp < new Date()) {
+            paymentStatus = 'atrasado';
+            paymentBadge = 'bg-red-100 text-red-800';
+          }
         }
-      }
-      
-      return {
-        id: perfil.user_id,
-        name: perfil.nome_preferido || perfil.full_name || 'Usuário',
-        email: perfil.email || '',
-        plan: perfil.plano_ativo || plano?.plano_ativo || 'gratuito',
-        createdAt: perfil.created_at ? perfil.created_at.split('T')[0] : '',
-        status: 'ativo',
-        isAdmin: perfil.email === 'medtosdigital@gmail.com',
-        paymentStatus,
-        paymentBadge,
-        paymentDue,
-      };
-    }) || [];
-    
-    setUsers(usersData);
-    setLoading(false);
+        return {
+          id: perfil.user_id,
+          name: perfil.nome_preferido || perfil.full_name || 'Usuário',
+          email: perfil.email || '',
+          plan: perfil.plano_ativo || plano?.plano_ativo || 'gratuito',
+          createdAt: perfil.created_at ? perfil.created_at.split('T')[0] : '',
+          status: 'ativo', // Preparado para campo futuro
+          isAdmin: perfil.email === 'medtosdigital@gmail.com',
+          paymentStatus,
+          paymentBadge,
+          paymentDue,
+        };
+      }) || [];
+      setUsers(usersData);
+    } catch (err: any) {
+      setError('Erro ao buscar usuários.');
+      toast({ title: 'Erro', description: 'Erro ao buscar usuários.', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function fetchUserHistory(userId: string) {
     setLoadingHistory(true);
-    const { data } = await supabase
-      .from('user_activities')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(50);
-    setHistory(data || []);
-    setLoadingHistory(false);
+    setError(null);
+    try {
+      const { data, error: historyError } = await supabase
+        .from('user_activities')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (historyError) throw historyError;
+      setHistory(data || []);
+    } catch (err: any) {
+      setError('Erro ao buscar histórico do usuário.');
+      toast({ title: 'Erro', description: 'Erro ao buscar histórico do usuário.', variant: 'destructive' });
+    } finally {
+      setLoadingHistory(false);
+    }
   }
 
   useEffect(() => {
     async function fetchFeedbacks() {
-      const { data: feedbacksData, error } = await supabase
-        .from('feedbacks')
-        .select('id, user_id, type, message, created_at')
-        .order('created_at', { ascending: false })
-        .limit(10);
-      if (feedbacksData) {
-        const userIds = feedbacksData.map(f => f.user_id);
-        const { data: perfis } = await supabase
-          .from('perfis')
-          .select('user_id, nome_preferido')
-          .in('user_id', userIds);
-        const userMap = Object.fromEntries((perfis || []).map(p => [p.user_id, p.nome_preferido || 'Usuário']));
-        setFeedbacks(feedbacksData.map(f => ({ ...f, userName: userMap[f.user_id] || f.user_id })));
+      setError(null);
+      try {
+        const { data: feedbacksData, error: feedbacksError } = await supabase
+          .from('feedbacks')
+          .select('id, user_id, type, message, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (feedbacksError) throw feedbacksError;
+        if (feedbacksData) {
+          const userIds = feedbacksData.map(f => f.user_id);
+          const { data: perfis, error: perfisError } = await supabase
+            .from('perfis')
+            .select('user_id, nome_preferido')
+            .in('user_id', userIds);
+          if (perfisError) throw perfisError;
+          const userMap = Object.fromEntries((perfis || []).map(p => [p.user_id, p.nome_preferido || 'Usuário']));
+          setFeedbacks(feedbacksData.map(f => ({ ...f, userName: userMap[f.user_id] || f.user_id })));
+        }
+      } catch (err: any) {
+        setError('Erro ao buscar feedbacks.');
+        toast({ title: 'Erro', description: 'Erro ao buscar feedbacks.', variant: 'destructive' });
       }
     }
     fetchFeedbacks();
@@ -154,23 +178,31 @@ export default function AdminUsersPage() {
   
   async function saveEdit() {
     setSaving(true);
-    
-    // Atualizar nome na tabela perfis
-    await supabase.from('perfis').update({
-      nome_preferido: editData.name,
-      full_name: editData.name,
-      email: editData.email,
-    }).eq('user_id', editUser.id);
-    
-    // Atualizar plano na tabela planos_usuarios
-    await supabase.from('planos_usuarios').update({
-      plano_ativo: editData.plan,
-      updated_at: new Date().toISOString(),
-    }).eq('user_id', editUser.id);
-    
-    setSaving(false);
-    closeEditModal();
-    fetchUsers();
+    setError(null);
+    try {
+      // Atualizar nome na tabela perfis
+      const { error: perfisError } = await supabase.from('perfis').update({
+        nome_preferido: editData.name,
+        full_name: editData.name,
+        email: editData.email,
+      }).eq('user_id', editUser.id);
+      if (perfisError) throw perfisError;
+      // Atualizar plano na tabela planos_usuarios
+      const { error: planosError } = await supabase.from('planos_usuarios').update({
+        plano_ativo: editData.plan,
+        updated_at: new Date().toISOString(),
+      }).eq('user_id', editUser.id);
+      if (planosError) throw planosError;
+      setSuccess('Usuário atualizado com sucesso!');
+      toast({ title: 'Sucesso', description: 'Usuário atualizado com sucesso!' });
+      closeEditModal();
+      fetchUsers();
+    } catch (err: any) {
+      setError('Erro ao salvar usuário.');
+      toast({ title: 'Erro', description: 'Erro ao salvar usuário.', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
   }
 
   function openHistoryModal(user: any) {
@@ -181,6 +213,23 @@ export default function AdminUsersPage() {
   function closeHistoryModal() {
     setHistoryUser(null);
     setHistory([]);
+  }
+
+  async function handleDeleteFeedback(id: string) {
+    setDeletingFeedbackId(id);
+    setError(null);
+    try {
+      const { error: deleteError } = await supabase.from('feedbacks').delete().eq('id', id);
+      if (deleteError) throw deleteError;
+      setSuccess('Feedback excluído com sucesso!');
+      toast({ title: 'Sucesso', description: 'Feedback excluído com sucesso!' });
+      setFeedbacks((prev) => prev.filter(f => f.id !== id));
+    } catch (err: any) {
+      setError('Erro ao excluir feedback.');
+      toast({ title: 'Erro', description: 'Erro ao excluir feedback.', variant: 'destructive' });
+    } finally {
+      setDeletingFeedbackId(null);
+    }
   }
 
   return (
@@ -241,11 +290,32 @@ export default function AdminUsersPage() {
                           {new Date(f.created_at).toLocaleString('pt-BR')}
                         </div>
                       </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-red-600 hover:bg-red-100"
+                          disabled={deletingFeedbackId === f.id}
+                          onClick={() => {
+                            if (window.confirm('Tem certeza que deseja excluir este feedback?')) {
+                              handleDeleteFeedback(f.id);
+                            }
+                          }}
+                        >
+                          {deletingFeedbackId === f.id ? (
+                            <span className="animate-spin inline-block w-4 h-4 border-b-2 border-red-600 rounded-full"></span>
+                          ) : (
+                            <X size={16} />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))
               )}
             </div>
+            {error && <div className="text-red-600 mt-2 text-sm">{error}</div>}
+            {success && <div className="text-green-600 mt-2 text-sm">{success}</div>}
           </CardContent>
         </Card>
 
