@@ -382,36 +382,6 @@ export type Database = {
         }
         Relationships: []
       }
-      planos_usuarios: {
-        Row: {
-          created_at: string
-          data_expiracao: string | null
-          data_inicio: string
-          id: string
-          plano_ativo: Database["public"]["Enums"]["tipo_plano"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          data_expiracao?: string | null
-          data_inicio?: string
-          id?: string
-          plano_ativo?: Database["public"]["Enums"]["tipo_plano"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          data_expiracao?: string | null
-          data_inicio?: string
-          id?: string
-          plano_ativo?: Database["public"]["Enums"]["tipo_plano"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_activities: {
         Row: {
           created_at: string
@@ -448,36 +418,6 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      uso_mensal_materiais: {
-        Row: {
-          ano: number
-          created_at: string
-          id: string
-          materiais_criados: number
-          mes: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          ano: number
-          created_at?: string
-          id?: string
-          materiais_criados?: number
-          mes: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          ano?: number
-          created_at?: string
-          id?: string
-          materiais_criados?: number
-          mes?: number
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
