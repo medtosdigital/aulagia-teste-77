@@ -252,11 +252,11 @@ export default function AdminConfigPage() {
           const userIds = Array.from(new Set(activities.map(a => a.user_id)));
           const { data: users } = await supabase
             .from('perfis')
-            .select('id, full_name, email')
-            .in('id', userIds);
+            .select('user_id, nome_preferido, full_name')
+            .in('user_id', userIds);
           if (users) {
             users.forEach(u => {
-              userMap[u.id] = u.full_name || u.email || u.id;
+              userMap[u.user_id] = u.nome_preferido || u.full_name || u.user_id;
             });
           }
         }

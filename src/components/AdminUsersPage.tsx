@@ -45,15 +45,21 @@ export default function AdminUsersPage() {
 
   async function fetchUsers() {
     setLoading(true);
-    const { data: profiles } = await supabase
+    
+    // Buscar dados da tabela perfis com todos os campos necessários
+    const { data: perfis } = await supabase
       .from('perfis')
-      .select('id, full_name, email, created_at');
+      .select('user_id, nome_preferido, full_name, email, plano_ativo, created_at');
+    
+    // Buscar dados dos planos
     const { data: plans } = await supabase
       .from('planos_usuarios')
       .select('user_id, plano_ativo, data_expiracao, updated_at');
     
-    const usersData = profiles?.map((p: any) => {
-      const plano = plans?.find((pl: any) => pl.user_id === p.id);
+    // Combinar os dados
+    const usersData = perfis?.map((perfil: any) => {
+      const plano = plans?.find((pl: any) => pl.user_id === perfil.user_id);
+      
       let paymentStatus = 'em dia';
       let paymentBadge = 'bg-green-100 text-green-800';
       let paymentDue = null;
@@ -65,14 +71,15 @@ export default function AdminUsersPage() {
           paymentBadge = 'bg-red-100 text-red-800';
         }
       }
+      
       return {
-        id: p.id,
-        name: p.full_name || '',
-        email: p.email || '',
-        plan: plano?.plano_ativo || 'gratuito',
-        createdAt: p.created_at ? p.created_at.split('T')[0] : '',
+        id: perfil.user_id,
+        name: perfil.nome_preferido || perfil.full_name || 'Usuário',
+        email: perfil.email || '',
+        plan: perfil.plano_ativo || plano?.plano_ativo || 'gratuito',
+        createdAt: perfil.created_at ? perfil.created_at.split('T')[0] : '',
         status: 'ativo',
-        isAdmin: p.email === 'medtosdigital@gmail.com',
+        isAdmin: perfil.email === 'medtosdigital@gmail.com',
         paymentStatus,
         paymentBadge,
         paymentDue,
@@ -104,11 +111,11 @@ export default function AdminUsersPage() {
         .limit(10);
       if (feedbacksData) {
         const userIds = feedbacksData.map(f => f.user_id);
-        const { data: profiles } = await supabase
+        const { data: perfis } = await supabase
           .from('perfis')
-          .select('id, full_name, email')
-          .in('id', userIds);
-        const userMap = Object.fromEntries((profiles || []).map(p => [p.id, p.full_name || p.email || p.id]));
+          .select('user_id, nome_preferido')
+          .in('user_id', userIds);
+        const userMap = Object.fromEntries((perfis || []).map(p => [p.user_id, p.nome_preferido || 'Usuário']));
         setFeedbacks(feedbacksData.map(f => ({ ...f, userName: userMap[f.user_id] || f.user_id })));
       }
     }
@@ -147,14 +154,20 @@ export default function AdminUsersPage() {
   
   async function saveEdit() {
     setSaving(true);
+    
+    // Atualizar nome na tabela perfis
     await supabase.from('perfis').update({
+      nome_preferido: editData.name,
       full_name: editData.name,
       email: editData.email,
-    }).eq('id', editUser.id);
+    }).eq('user_id', editUser.id);
+    
+    // Atualizar plano na tabela planos_usuarios
     await supabase.from('planos_usuarios').update({
       plano_ativo: editData.plan,
       updated_at: new Date().toISOString(),
     }).eq('user_id', editUser.id);
+    
     setSaving(false);
     closeEditModal();
     fetchUsers();

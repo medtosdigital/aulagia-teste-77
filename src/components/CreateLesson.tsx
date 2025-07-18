@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { materialService, GeneratedMaterial, normalizeMaterialForPreview } from '@/services/materialService';
+import { enhancedMaterialService } from '@/services/enhancedMaterialService';
 import { QuestionParserService } from '@/services/questionParserService';
 import MaterialModal from './MaterialModal';
 import NextStepsModal from './NextStepsModal';
@@ -612,7 +613,10 @@ const CreateLesson: React.FC = () => {
         return;
       }
       
-      let material = await materialService.generateMaterial(selectedType!, materialFormData);
+      // Usar serviço aprimorado para planos de aula
+      let material = selectedType === 'plano-de-aula' 
+        ? await enhancedMaterialService.generateEnhancedMaterial(selectedType!, materialFormData)
+        : await materialService.generateMaterial(selectedType!, materialFormData);
       
       updateProgress('content-generation', 70, 'Processando e validando conteúdo...');
       

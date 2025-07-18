@@ -45,38 +45,72 @@ class SupabaseUnifiedPlanService {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('Nenhum usuário autenticado');
+        console.log('[getCurrentUserProfile] Nenhum usuário autenticado');
         return null;
       }
 
       const cacheKey = `profile_${user.id}`;
-      
       return await this.cachedQuery(cacheKey, async () => {
-        console.log('Buscando perfil completo para usuário:', user.id);
-
+        console.log('[getCurrentUserProfile] Tentando buscar perfil do usuário:', user.id);
         const { data, error } = await supabase
           .from('perfis')
           .select('*')
           .eq('user_id', user.id)
           .limit(1)
           .single();
+        console.log('[getCurrentUserProfile] Resultado da consulta perfis:', data, error);
 
         if (error) {
-          console.error('Erro ao buscar perfil do usuário:', error);
-          
-          if (error.code === 'PGRST116') {
-            console.log('Perfil não encontrado, será criado automaticamente no próximo login');
-            return null;
+          // Tratar qualquer erro de perfil não encontrado
+          const notFound = error.code === 'PGRST116' || error.message?.includes('No rows') || error.details?.includes('0 rows');
+          if (notFound) {
+            // Perfil não encontrado, criar automaticamente
+            console.log('[getCurrentUserProfile] Perfil não encontrado, criando perfil gratuito para o usuário:', user.id);
+            const { data: newProfile, error: createError } = await supabase
+              .from('perfis')
+              .insert({
+                user_id: user.id,
+                plano_ativo: 'gratuito',
+                materiais_criados_mes_atual: 0,
+                ano_atual: new Date().getFullYear(),
+                mes_atual: new Date().getMonth() + 1,
+                data_inicio_plano: new Date().toISOString(),
+                ultimo_reset_materiais: new Date().toISOString(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                email: user.email || '',
+                full_name: user.user_metadata?.full_name || '',
+                nome_preferido: user.user_metadata?.nome_preferido || ''
+              })
+              .select()
+              .single();
+            if (createError) {
+              console.error('[getCurrentUserProfile] Erro ao criar perfil gratuito:', createError);
+              return null;
+            }
+            console.log('[getCurrentUserProfile] Perfil gratuito criado:', newProfile);
+            // Buscar novamente o perfil criado para garantir consistência
+            const { data: createdProfile, error: fetchCreatedError } = await supabase
+              .from('perfis')
+              .select('*')
+              .eq('user_id', user.id)
+              .limit(1)
+              .single();
+            if (fetchCreatedError) {
+              console.error('[getCurrentUserProfile] Erro ao buscar perfil recém-criado:', fetchCreatedError);
+              return newProfile || null;
+            }
+            console.log('[getCurrentUserProfile] Perfil recém-criado retornado:', createdProfile);
+            return createdProfile;
           }
-          
+          console.error('[getCurrentUserProfile] Erro ao buscar perfil do usuário:', error);
           return null;
         }
-
-        console.log('Perfil encontrado (cache):', data);
+        console.log('[getCurrentUserProfile] Perfil encontrado (cache):', data);
         return data;
       });
     } catch (error) {
-      console.error('Erro em getCurrentUserProfile:', error);
+      console.error('[getCurrentUserProfile] Erro inesperado:', error);
       return null;
     }
   }
@@ -261,15 +295,25 @@ class SupabaseUnifiedPlanService {
     }
   }
 
-  // Método para limpar cache
+  // Limpar cache
   clearCache(userId?: string): void {
     if (userId) {
-      const keysToDelete = Array.from(unifiedCache.keys()).filter(key => key.includes(userId));
-      keysToDelete.forEach(key => unifiedCache.delete(key));
+      unifiedCache.delete(`profile_${userId}`);
+      unifiedCache.delete(`can_create_${userId}`);
+      unifiedCache.delete(`remaining_${userId}`);
     } else {
       unifiedCache.clear();
     }
-    console.log('Cache limpo', userId ? `para usuário: ${userId}` : 'completamente');
+    console.log('Cache limpo para usuário:', userId || 'todos');
+  }
+
+  // Forçar recarregamento do perfil
+  async forceRefreshProfile(): Promise<PerfilUsuario | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    this.clearCache(user.id);
+    return await this.getCurrentUserProfile();
   }
 }
 
