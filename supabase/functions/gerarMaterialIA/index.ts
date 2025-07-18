@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -205,46 +204,14 @@ Certifique-se de criar exatamente ${quantidadeQuestoes} questões variadas e ade
 `;
     }
 
-    // Prompt específico para Material de Apoio - NOVO PROMPT ATUALIZADO
+    // Prompt específico para Material de Apoio
     if (materialType === 'apoio') {
       console.log('🎯 Generated prompt for apoio');
       
       const prompt = `
-Gere um Material de Apoio ao Professor sobre o tema "${formData.tema}" da disciplina ${formData.disciplina} para ${formData.serie}.
-
-O material deve ser didático, direto e estruturado como um guia para o professor que ainda não domina o assunto. Siga os tópicos abaixo e use uma linguagem clara, objetiva e prática:
+Gere um material de apoio educacional COMPLETO para professores sobre o tema "${formData.tema}" da disciplina ${formData.disciplina} para ${formData.serie}.
 
 IMPORTANTE: Responda APENAS com um JSON válido contendo TODOS os campos necessários para preencher o template de 5 páginas.
-
-📘 Tópicos que Devem Estar no Material Gerado:
-
-1. O Que é Esse Tema?
-- Explique de forma simples e didática, como se o professor nunca tivesse estudado o assunto.
-- Evite termos técnicos complexos. Use analogias se necessário.
-
-2. Para que Serve Esse Conteúdo na Vida Prática e Escolar?
-- Mostre como esse tema é útil e aplicável no cotidiano dos alunos.
-- Explique sua importância na formação do aluno.
-
-3. Como Ensinar Esse Tema em Sala de Aula – Passo a Passo
-- Oriente o professor sobre como apresentar o conteúdo aos alunos.
-- Explique como iniciar a explicação, desenvolver o conteúdo e concluir.
-- Sugira perguntas disparadoras, comparações visuais ou objetos concretos.
-
-4. Exemplos Práticos Prontos para Usar em Sala
-- Dê de 2 a 3 exemplos explicados e comentados que o professor possa aplicar diretamente.
-- Podem ser atividades, situações-problema ou explicações com números/textos.
-
-5. Dificuldades Comuns dos Alunos e Como Corrigir
-- Liste os principais erros ou confusões que os alunos costumam ter.
-- Dê dicas claras para o professor lidar com essas dificuldades.
-
-6. Sugestões de Atividades Práticas
-- Proponha de 1 a 2 ideias de atividades para aplicar o conteúdo de forma prática.
-- Pode incluir dinâmicas, jogos, situações-problema ou exercícios individuais.
-
-7. Sugestões de Recursos Complementares
-- Indique materiais extras que podem ajudar o professor (vídeos, imagens, sites, objetos manipuláveis, etc).
 
 Estrutura obrigatória do JSON:
 
@@ -257,64 +224,64 @@ Estrutura obrigatória do JSON:
   "TURMA_DO_MATERIAL": "${formData.serie}",
   "DATA_GERACAO": "${new Date().toLocaleDateString('pt-BR')}",
   
-  "EXPLICACAO_SIMPLES_DO_TEMA": "Explicação clara e direta do tema em 2-3 frases, como se o professor nunca tivesse estudado o assunto, evitando termos técnicos complexos",
-  "EXPLICACAO_DETALHADA_DO_TEMA": "Explicação completa e didática do tema em 1-2 parágrafos, usando analogias se necessário",
+  "EXPLICACAO_SIMPLES_DO_TEMA": "Explicação clara e direta do tema em 2-3 frases",
+  "EXPLICACAO_DETALHADA_DO_TEMA": "Explicação completa e técnica do tema em 1-2 parágrafos",
   
-  "EXPLICACAO_SIMPLES_UTILIDADE": "Explicação simples de como esse tema é útil e aplicável no cotidiano dos alunos em 2-3 frases",
-  "EXPLICACAO_DETALHADA_UTILIDADE": "Explicação detalhada da aplicação prática e importância na formação do aluno em 1-2 parágrafos",
-  "IMPORTANCIA_NA_FORMACAO_ITEM_1": "Primeiro aspecto da importância deste tema na formação do aluno",
-  "IMPORTANCIA_NA_FORMACAO_ITEM_2": "Segundo aspecto da importância deste tema na formação do aluno", 
-  "IMPORTANCIA_NA_FORMACAO_ITEM_3": "Terceiro aspecto da importância deste tema na formação do aluno",
+  "EXPLICACAO_SIMPLES_UTILIDADE": "Explicação simples da importância na vida prática em 2-3 frases",
+  "EXPLICACAO_DETALHADA_UTILIDADE": "Explicação detalhada da aplicação prática em 1-2 parágrafos",
+  "IMPORTANCIA_NA_FORMACAO_ITEM_1": "Primeiro aspecto da importância na formação",
+  "IMPORTANCIA_NA_FORMACAO_ITEM_2": "Segundo aspecto da importância na formação", 
+  "IMPORTANCIA_NA_FORMACAO_ITEM_3": "Terceiro aspecto da importância na formação",
   
-  "EXPLICACAO_SIMPLES_ENSINO": "Orientação simples sobre como apresentar o conteúdo aos alunos em 2-3 frases",
-  "EXPLICACAO_DETALHADA_ENSINO": "Metodologia detalhada de como iniciar, desenvolver e concluir a explicação em 1-2 parágrafos",
-  "PASSO_A_PASSO_ITEM_1_INICIAR": "Primeiro passo: Como iniciar a explicação do tema (incluir perguntas disparadoras)",
-  "PASSO_A_PASSO_ITEM_2_DESENVOLVER": "Segundo passo: Como desenvolver o conteúdo (incluir comparações visuais ou objetos concretos)",
-  "PASSO_A_PASSO_ITEM_3_CONCLUIR": "Terceiro passo: Como concluir e fixar o aprendizado",
-  "HIGHLIGHT_TITULO_1": "Título de uma dica importante para o ensino",
-  "HIGHLIGHT_TEXTO_1": "Texto da dica importante para o ensino",
-  "PARAGRAFO_COMO_ENSINAR_P3": "Parágrafo adicional com mais orientações sobre como ensinar",
-  "SUGESTAO_VISUAL_OU_CONCRETA_ITEM_1": "Primeira sugestão de comparação visual ou objeto concreto para usar",
-  "SUGESTAO_VISUAL_OU_CONCRETA_ITEM_2": "Segunda sugestão de comparação visual ou objeto concreto para usar",
+  "EXPLICACAO_SIMPLES_ENSINO": "Como ensinar de forma simples em 2-3 frases",
+  "EXPLICACAO_DETALHADA_ENSINO": "Metodologia detalhada de ensino em 1-2 parágrafos",
+  "PASSO_A_PASSO_ITEM_1_INICIAR": "Primeiro passo para iniciar a aula",
+  "PASSO_A_PASSO_ITEM_2_DESENVOLVER": "Segundo passo para desenvolver o conteúdo",
+  "PASSO_A_PASSO_ITEM_3_CONCLUIR": "Terceiro passo para concluir a aula",
+  "HIGHLIGHT_TITULO_1": "Título da dica importante",
+  "HIGHLIGHT_TEXTO_1": "Texto da dica importante",
+  "PARAGRAFO_COMO_ENSINAR_P3": "Parágrafo adicional sobre como ensinar",
+  "SUGESTAO_VISUAL_OU_CONCRETA_ITEM_1": "Primeira sugestão visual ou concreta",
+  "SUGESTAO_VISUAL_OU_CONCRETA_ITEM_2": "Segunda sugestão visual ou concreta",
   
-  "EXPLICACAO_SIMPLES_EXEMPLOS": "Explicação simples sobre os exemplos práticos em 2-3 frases",
-  "EXPLICACAO_DETALHADA_EXEMPLOS": "Explicação detalhada sobre como usar os exemplos em sala em 1-2 parágrafos",
-  "TITULO_EXEMPLO_1": "Título do primeiro exemplo prático pronto para usar",
-  "DESCRICAO_EXEMPLO_1": "Descrição completa do primeiro exemplo que o professor pode aplicar diretamente",
-  "COMENTARIO_EXEMPLO_1": "Comentário pedagógico explicando como usar o primeiro exemplo",
-  "TITULO_EXEMPLO_2": "Título do segundo exemplo prático pronto para usar",
-  "DESCRICAO_EXEMPLO_2": "Descrição completa do segundo exemplo que o professor pode aplicar diretamente",
-  "COMENTARIO_EXEMPLO_2": "Comentário pedagógico explicando como usar o segundo exemplo",
-  "SUCCESS_BOX_TITULO_1": "Título da primeira dica de sucesso",
-  "SUCCESS_BOX_TEXTO_1": "Texto da primeira dica de sucesso para aplicar os exemplos",
+  "EXPLICACAO_SIMPLES_EXEMPLOS": "Explicação simples sobre os exemplos em 2-3 frases",
+  "EXPLICACAO_DETALHADA_EXEMPLOS": "Explicação detalhada sobre os exemplos em 1-2 parágrafos",
+  "TITULO_EXEMPLO_1": "Título do primeiro exemplo prático",
+  "DESCRICAO_EXEMPLO_1": "Descrição completa do primeiro exemplo",
+  "COMENTARIO_EXEMPLO_1": "Comentário pedagógico sobre o primeiro exemplo",
+  "TITULO_EXEMPLO_2": "Título do segundo exemplo prático",
+  "DESCRICAO_EXEMPLO_2": "Descrição completa do segundo exemplo",
+  "COMENTARIO_EXEMPLO_2": "Comentário pedagógico sobre o segundo exemplo",
+  "SUCCESS_BOX_TITULO_1": "Título da caixa de sucesso 1",
+  "SUCCESS_BOX_TEXTO_1": "Texto da caixa de sucesso 1",
   
-  "EXPLICACAO_SIMPLES_DIFICULDADES": "Explicação simples sobre dificuldades comuns dos alunos em 2-3 frases",
-  "EXPLICACAO_DETALHADA_DIFICULDADES": "Explicação detalhada sobre os principais erros dos alunos em 1-2 parágrafos",
-  "TITULO_DIFICULDADE_1": "Título da primeira dificuldade/erro comum dos alunos",
-  "DESCRICAO_DIFICULDADE_1": "Descrição da primeira dificuldade ou confusão que os alunos costumam ter",
-  "CORRECAO_DIFICULDADE_1": "Dica clara para o professor lidar com a primeira dificuldade",
-  "TITULO_DIFICULDADE_2": "Título da segunda dificuldade/erro comum dos alunos",
-  "DESCRICAO_DIFICULDADE_2": "Descrição da segunda dificuldade ou confusão que os alunos costumam ter",
-  "CORRECAO_DIFICULDADE_2": "Dica clara para o professor lidar com a segunda dificuldade",
-  "EXPLICACAO_SIMPLES_ATIVIDADES": "Explicação simples sobre atividades práticas em 2-3 frases",
-  "EXPLICACAO_DETALHADA_ATIVIDADES": "Explicação detalhada sobre como aplicar atividades práticas em 1-2 parágrafos",
-  "ATIVIDADE_PRATICA_1_DESCRICAO": "Descrição da primeira atividade prática (dinâmica, jogo, situação-problema ou exercício)",
-  "ATIVIDADE_PRATICA_2_DESCRICAO": "Descrição da segunda atividade prática (dinâmica, jogo, situação-problema ou exercício)",
+  "EXPLICACAO_SIMPLES_DIFICULDADES": "Explicação simples sobre dificuldades em 2-3 frases",
+  "EXPLICACAO_DETALHADA_DIFICULDADES": "Explicação detalhada sobre dificuldades em 1-2 parágrafos",
+  "TITULO_DIFICULDADE_1": "Título da primeira dificuldade comum",
+  "DESCRICAO_DIFICULDADE_1": "Descrição da primeira dificuldade",
+  "CORRECAO_DIFICULDADE_1": "Como corrigir a primeira dificuldade",
+  "TITULO_DIFICULDADE_2": "Título da segunda dificuldade comum",
+  "DESCRICAO_DIFICULDADE_2": "Descrição da segunda dificuldade",
+  "CORRECAO_DIFICULDADE_2": "Como corrigir a segunda dificuldade",
+  "EXPLICACAO_SIMPLES_ATIVIDADES": "Explicação simples sobre atividades em 2-3 frases",
+  "EXPLICACAO_DETALHADA_ATIVIDADES": "Explicação detalhada sobre atividades em 1-2 parágrafos",
+  "ATIVIDADE_PRATICA_1_DESCRICAO": "Descrição da primeira atividade prática",
+  "ATIVIDADE_PRATICA_2_DESCRICAO": "Descrição da segunda atividade prática",
   
-  "EXPLICACAO_SIMPLES_RECURSOS": "Explicação simples sobre recursos complementares em 2-3 frases",
-  "EXPLICACAO_DETALHADA_RECURSOS": "Explicação detalhada sobre como usar recursos extras em 1-2 parágrafos",
-  "RECURSO_VIDEO_DESCRICAO": "Descrição de vídeos educativos recomendados para o tema",
-  "RECURSO_VIDEO_LINK": "Sugestão de busca ou tipo de vídeo educativo para encontrar",
-  "RECURSO_IMAGEM_DESCRICAO": "Descrição de imagens ou diagramas úteis para o tema",
-  "RECURSO_IMAGEM_LINK": "Sugestão de busca ou tipo de imagem/diagrama para encontrar",
-  "RECURSO_SITE_DESCRICAO": "Descrição de sites interativos ou educativos para o tema",
-  "RECURSO_SITE_LINK": "Sugestão de busca ou tipo de site educativo para encontrar",
-  "RECURSO_OBJETO_DESCRICAO": "Descrição de objetos manipuláveis ou materiais concretos para usar",
-  "SUCCESS_BOX_TITULO_2": "Título da segunda dica de sucesso",
-  "SUCCESS_BOX_TEXTO_2": "Texto da segunda dica de sucesso para usar os recursos complementares"
+  "EXPLICACAO_SIMPLES_RECURSOS": "Explicação simples sobre recursos em 2-3 frases",
+  "EXPLICACAO_DETALHADA_RECURSOS": "Explicação detalhada sobre recursos em 1-2 parágrafos",
+  "RECURSO_VIDEO_DESCRICAO": "Descrição do recurso de vídeo",
+  "RECURSO_VIDEO_LINK": "Link sugerido para vídeo educativo",
+  "RECURSO_IMAGEM_DESCRICAO": "Descrição do recurso de imagem",
+  "RECURSO_IMAGEM_LINK": "Link sugerido para imagens/diagramas",
+  "RECURSO_SITE_DESCRICAO": "Descrição do site interativo",
+  "RECURSO_SITE_LINK": "Link sugerido para site educativo",
+  "RECURSO_OBJETO_DESCRICAO": "Descrição de objetos manipuláveis",
+  "SUCCESS_BOX_TITULO_2": "Título da caixa de sucesso 2",
+  "SUCCESS_BOX_TEXTO_2": "Texto da caixa de sucesso 2"
 }
 
-Certifique-se de que TODOS os campos estão preenchidos com conteúdo relevante e didático para o tema "${formData.tema}" da disciplina ${formData.disciplina}, seguindo a estrutura dos 7 tópicos solicitados.
+Certifique-se de que TODOS os campos estão preenchidos com conteúdo relevante e educativo para o tema "${formData.tema}" da disciplina ${formData.disciplina}.
 `;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -328,7 +295,7 @@ Certifique-se de que TODOS os campos estão preenchidos com conteúdo relevante 
           messages: [
             {
               role: 'system',
-              content: 'Você é um especialista em educação brasileira que cria materiais de apoio didáticos para professores. Seu objetivo é criar conteúdo claro, prático e acessível para professores que podem não dominar completamente o assunto. Responda APENAS com JSON válido, sem explicações adicionais.'
+              content: 'Você é um especialista em educação brasileira que cria materiais de apoio para professores. Responda APENAS com JSON válido, sem explicações adicionais.'
             },
             {
               role: 'user',

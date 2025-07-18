@@ -36,11 +36,6 @@ function wrapApoioWithA4Template(apoioHtml: string) {
     return apoioHtml.replace(/\{\{DATA_GERACAO\}\}/g, today);
   }
   
-  // Se o conteúdo já vem como HTML completo (sem variáveis), usar diretamente
-  if (apoioHtml.includes('<!DOCTYPE html>') || apoioHtml.includes('<html')) {
-    return apoioHtml;
-  }
-  
   // Se vem como conteúdo simples, aplicar o template básico
   return `
   <!DOCTYPE html>
