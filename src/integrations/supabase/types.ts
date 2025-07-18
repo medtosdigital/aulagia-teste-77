@@ -309,53 +309,74 @@ export type Database = {
       }
       perfis: {
         Row: {
+          ano_atual: number | null
           anos_serie: string[] | null
           avatar_url: string | null
           celular: string | null
           created_at: string | null
+          data_expiracao_plano: string | null
+          data_inicio_plano: string | null
           disciplinas: string[] | null
           email: string | null
           escola: string | null
           etapas_ensino: string[] | null
           full_name: string | null
           id: string
+          materiais_criados_mes_atual: number | null
+          mes_atual: number | null
           nome_preferido: string | null
+          plano_ativo: Database["public"]["Enums"]["tipo_plano"] | null
           preferencia_bncc: boolean | null
           tipo_material_favorito: string[] | null
+          ultimo_reset_materiais: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          ano_atual?: number | null
           anos_serie?: string[] | null
           avatar_url?: string | null
           celular?: string | null
           created_at?: string | null
+          data_expiracao_plano?: string | null
+          data_inicio_plano?: string | null
           disciplinas?: string[] | null
           email?: string | null
           escola?: string | null
           etapas_ensino?: string[] | null
           full_name?: string | null
           id?: string
+          materiais_criados_mes_atual?: number | null
+          mes_atual?: number | null
           nome_preferido?: string | null
+          plano_ativo?: Database["public"]["Enums"]["tipo_plano"] | null
           preferencia_bncc?: boolean | null
           tipo_material_favorito?: string[] | null
+          ultimo_reset_materiais?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          ano_atual?: number | null
           anos_serie?: string[] | null
           avatar_url?: string | null
           celular?: string | null
           created_at?: string | null
+          data_expiracao_plano?: string | null
+          data_inicio_plano?: string | null
           disciplinas?: string[] | null
           email?: string | null
           escola?: string | null
           etapas_ensino?: string[] | null
           full_name?: string | null
           id?: string
+          materiais_criados_mes_atual?: number | null
+          mes_atual?: number | null
           nome_preferido?: string | null
+          plano_ativo?: Database["public"]["Enums"]["tipo_plano"] | null
           preferencia_bncc?: boolean | null
           tipo_material_favorito?: string[] | null
+          ultimo_reset_materiais?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -512,6 +533,10 @@ export type Database = {
         Args: { plan_type: Database["public"]["Enums"]["tipo_plano"] }
         Returns: number
       }
+      get_remaining_materials: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       get_user_material_limit: {
         Args: { p_user_id: string }
         Returns: number
@@ -523,6 +548,14 @@ export type Database = {
       mark_notification_as_read: {
         Args: { notification_id: string; user_id: string }
         Returns: undefined
+      }
+      update_user_plan: {
+        Args: {
+          p_user_id: string
+          p_new_plan: Database["public"]["Enums"]["tipo_plano"]
+          p_expiration_date?: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

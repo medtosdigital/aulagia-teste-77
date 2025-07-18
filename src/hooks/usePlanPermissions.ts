@@ -1,12 +1,13 @@
-import { useSupabasePlanPermissions } from './useSupabasePlanPermissions';
+
+import { useUnifiedPlanPermissions } from './useUnifiedPlanPermissions';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useCallback } from 'react';
 
 export const usePlanPermissions = () => {
   const { user } = useAuth();
-  const supabasePermissions = useSupabasePlanPermissions();
+  const unifiedPermissions = useUnifiedPlanPermissions();
 
-  // Memoizar valores computados para evitar recálculos desnecessários
+  // Memoizar valores computados para manter compatibilidade
   const memoizedPlan = useMemo(() => {
     if (!user) {
       return {
@@ -26,7 +27,7 @@ export const usePlanPermissions = () => {
       };
     }
 
-    if (supabasePermissions.loading) {
+    if (unifiedPermissions.loading) {
       return {
         id: 'carregando',
         name: 'Carregando...',
@@ -44,14 +45,14 @@ export const usePlanPermissions = () => {
       };
     }
 
-    // Mapear dados do Supabase para o formato esperado
-    let planId = supabasePermissions.currentPlan?.plano_ativo;
+    // Mapear dados do perfil unificado para o formato esperado
+    let planId = unifiedPermissions.currentProfile?.plano_ativo || 'gratuito';
+    
     // Forçar admin para o usuário correto
     if (user && user.email === 'medtosdigital@gmail.com') {
       planId = 'admin';
-    } else if (!planId) {
-      planId = 'gratuito';
     }
+    
     const planLimits = planId === 'admin'
       ? {
           materialsPerMonth: Infinity,
@@ -65,17 +66,18 @@ export const usePlanPermissions = () => {
         }
       : {
           materialsPerMonth: planId === 'gratuito' ? 5 : planId === 'professor' ? 50 : 300,
-          canDownloadWord: supabasePermissions.canDownloadWord(),
-          canDownloadPPT: supabasePermissions.canDownloadPPT(),
-          canEditMaterials: supabasePermissions.canEditMaterials(),
-          canCreateSlides: supabasePermissions.canCreateSlides(),
-          canCreateAssessments: supabasePermissions.canCreateAssessments(),
-          hasCalendar: supabasePermissions.hasCalendar(),
+          canDownloadWord: unifiedPermissions.canDownloadWord(),
+          canDownloadPPT: unifiedPermissions.canDownloadPPT(),
+          canEditMaterials: unifiedPermissions.canEditMaterials(),
+          canCreateSlides: unifiedPermissions.canCreateSlides(),
+          canCreateAssessments: unifiedPermissions.canCreateAssessments(),
+          hasCalendar: unifiedPermissions.hasCalendar(),
           hasHistory: planId !== 'gratuito'
         };
+        
     return {
       id: planId,
-      name: planId === 'admin' ? 'Plano Administrador' : supabasePermissions.getPlanDisplayName(),
+      name: planId === 'admin' ? 'Plano Administrador' : unifiedPermissions.getPlanDisplayName(),
       limits: planLimits,
       price: planId === 'admin'
         ? { monthly: 0, yearly: 0 }
@@ -84,13 +86,13 @@ export const usePlanPermissions = () => {
             yearly: planId === 'gratuito' ? 0 : planId === 'professor' ? 299 : 849
           }
     };
-  }, [user, supabasePermissions.loading, supabasePermissions.currentPlan, supabasePermissions.getPlanDisplayName, supabasePermissions.canDownloadWord, supabasePermissions.canDownloadPPT, supabasePermissions.canEditMaterials, supabasePermissions.canCreateSlides, supabasePermissions.canCreateAssessments, supabasePermissions.hasCalendar]);
+  }, [user, unifiedPermissions]);
 
   const memoizedUsage = useMemo(() => ({
-    materialsThisMonth: Math.max(0, memoizedPlan.limits.materialsPerMonth - supabasePermissions.remainingMaterials)
-  }), [memoizedPlan.limits.materialsPerMonth, supabasePermissions.remainingMaterials]);
+    materialsThisMonth: Math.max(0, memoizedPlan.limits.materialsPerMonth - unifiedPermissions.remainingMaterials)
+  }), [memoizedPlan.limits.materialsPerMonth, unifiedPermissions.remainingMaterials]);
 
-  // Memoizar funções para evitar recriações desnecessárias
+  // Memoizar funções para compatibilidade
   const memoizedFunctions = useMemo(() => ({
     changePlan: async (planId: string) => {
       const planTypeMap: Record<string, 'gratuito' | 'professor' | 'grupo_escolar'> = {
@@ -99,7 +101,7 @@ export const usePlanPermissions = () => {
         'grupo-escolar': 'grupo_escolar'
       };
       const mappedPlanType = planTypeMap[planId] || 'gratuito';
-      const result = await supabasePermissions.changePlan(mappedPlanType);
+      const result = await unifiedPermissions.changePlan(mappedPlanType);
       window.dispatchEvent(new CustomEvent('planChanged'));
       return result;
     },
@@ -117,22 +119,9 @@ export const usePlanPermissions = () => {
       nextMonth.setDate(1);
       return nextMonth;
     }
-  }), [supabasePermissions.changePlan, memoizedPlan.id]);
+  }), [unifiedPermissions, memoizedPlan.id]);
 
-  // Atualização em tempo real do plano ao receber evento global
-  useEffect(() => {
-    const handlePlanUpdate = () => {
-      if (typeof supabasePermissions.refreshData === 'function') {
-        supabasePermissions.refreshData();
-      }
-    };
-    window.addEventListener('planUpdated', handlePlanUpdate);
-    return () => {
-      window.removeEventListener('planUpdated', handlePlanUpdate);
-    };
-  }, [supabasePermissions]);
-
-  // Se não estiver logado, retornar valores padrão otimizados
+  // Se não estiver logado, retornar valores padrão
   if (!user) {
     return {
       currentPlan: memoizedPlan,
@@ -177,44 +166,44 @@ export const usePlanPermissions = () => {
     };
   }
 
-  // Retornar dados otimizados
+  // Retornar dados compatíveis usando o serviço unificado
   return {
-    // Estados - usar apenas dados do Supabase
+    // Estados - usar dados unificados
     currentPlan: memoizedPlan,
     usage: memoizedUsage,
-    shouldShowUpgrade: supabasePermissions.shouldShowUpgrade,
+    shouldShowUpgrade: unifiedPermissions.shouldShowUpgrade,
     shouldShowSupportModal: false,
-    loading: supabasePermissions.loading,
+    loading: unifiedPermissions.loading,
     
-    // Ações (já otimizadas)
-    createMaterial: supabasePermissions.createMaterial,
-    getRemainingMaterials: () => supabasePermissions.remainingMaterials,
-    isLimitReached: supabasePermissions.isLimitReached,
+    // Ações
+    createMaterial: unifiedPermissions.createMaterial,
+    getRemainingMaterials: () => unifiedPermissions.remainingMaterials,
+    isLimitReached: unifiedPermissions.isLimitReached,
     changePlan: memoizedFunctions.changePlan,
-    dismissUpgradeModal: supabasePermissions.dismissUpgradeModal,
+    dismissUpgradeModal: unifiedPermissions.dismissUpgradeModal,
     dismissSupportModal: () => {},
-    refreshData: supabasePermissions.refreshData,
+    refreshData: unifiedPermissions.refreshData,
     
-    // Permissões (já otimizadas com useCallback)
-    canEditMaterials: supabasePermissions.canEditMaterials,
-    canDownloadWord: supabasePermissions.canDownloadWord,
-    canDownloadPPT: supabasePermissions.canDownloadPPT,
-    canCreateSlides: supabasePermissions.canCreateSlides,
-    canCreateAssessments: supabasePermissions.canCreateAssessments,
-    hasCalendar: supabasePermissions.hasCalendar,
+    // Permissões
+    canEditMaterials: unifiedPermissions.canEditMaterials,
+    canDownloadWord: unifiedPermissions.canDownloadWord,
+    canDownloadPPT: unifiedPermissions.canDownloadPPT,
+    canCreateSlides: unifiedPermissions.canCreateSlides,
+    canCreateAssessments: unifiedPermissions.canCreateAssessments,
+    hasCalendar: unifiedPermissions.hasCalendar,
     canAccessCalendarPage: () => true,
-    canAccessSchool: () => memoizedPlan.id === 'grupo_escolar' || memoizedPlan.id === 'grupo-escolar' || memoizedPlan.id === 'admin',
+    canAccessSchool: unifiedPermissions.canAccessSchool,
     canAccessCreateMaterial: () => true,
     canAccessMaterials: () => true,
     
-    // Funções auxiliares otimizadas
-    canPerformAction: () => !supabasePermissions.isLimitReached(),
+    // Funções auxiliares
+    canPerformAction: () => !unifiedPermissions.isLimitReached(),
     getNextResetDate: memoizedFunctions.getNextResetDate,
     getAvailablePlansForUpgrade: memoizedFunctions.getAvailablePlansForUpgrade,
     
     // Funções administrativas
-    canAccessSettings: () => false,
-    isAdminAuthenticated: () => false,
+    canAccessSettings: unifiedPermissions.canAccessSettings,
+    isAdminAuthenticated: unifiedPermissions.isAdminAuthenticated,
     authenticateAdmin: () => false,
     logoutAdmin: () => {},
     
