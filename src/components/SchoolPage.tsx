@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Dialog as UIDialog, DialogContent as UIDialogContent, DialogHeader as UIDialogHeader, DialogTitle as UIDialogTitle, DialogFooter as UIDialogFooter } from '@/components/ui/dialog';
-import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 
 interface Teacher {
   id: string;
@@ -48,14 +48,14 @@ const SchoolPage: React.FC = () => {
   const navigate = useNavigate();
   const [editUserLimit, setEditUserLimit] = useState<{ teacher: Teacher, value: number } | null>(null);
   const [planoInfo, setPlanoInfo] = useState<{ nome: string, status: string, dataExpiracao: string } | null>(null);
-  const { canAccessSchool, loading: planLoading, currentPlan } = usePlanPermissions();
+  const { canAccessSchool, loading: planLoading, currentPlan } = useSupabasePlanPermissions();
 
   useEffect(() => {
     console.log('currentPlan:', currentPlan);
   }, [currentPlan]);
 
   useEffect(() => {
-    if (!planLoading && currentPlan && currentPlan.id !== 'grupo_escolar' && currentPlan.id !== 'admin') {
+    if (!planLoading && currentPlan && currentPlan.plano_ativo !== 'grupo_escolar' && currentPlan.plano_ativo !== 'admin') {
       navigate('/dashboard', { replace: true });
     }
   }, [planLoading, currentPlan, navigate]);
@@ -76,15 +76,15 @@ const SchoolPage: React.FC = () => {
     const fetchPlano = async () => {
       if (!user?.id) return;
       const { data } = await supabase
-        .from('perfis')
-        .select('plano_ativo, data_expiracao_plano')
+        .from('planos_usuarios')
+        .select('plano_ativo, data_expiracao')
         .eq('user_id', user.id)
         .single();
       if (data) {
         setPlanoInfo({
           nome: data.plano_ativo === 'grupo_escolar' ? 'Plano Escola Premium' : data.plano_ativo,
           status: 'Ativo',
-          dataExpiracao: data.data_expiracao_plano ? new Date(data.data_expiracao_plano).toLocaleDateString('pt-BR') : '--/--/----',
+          dataExpiracao: data.data_expiracao ? new Date(data.data_expiracao).toLocaleDateString('pt-BR') : '--/--/----',
         });
       }
     };
@@ -95,46 +95,45 @@ const SchoolPage: React.FC = () => {
     try {
       setLoading(true);
       
-      // Get all users from perfis
-      const { data: perfis, error } = await supabase
-        .from('perfis')
-        .select('user_id, nome_preferido, full_name, email, avatar_url');
+      // Get all users from profiles
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*');
 
       if (error) {
-        console.error('Error loading perfis:', error);
+        console.error('Error loading profiles:', error);
         return;
       }
 
-      if (!perfis) {
+      if (!profiles) {
         setTeachers([]);
         return;
       }
 
       // Load material counts for each teacher
       const teachersWithCounts = await Promise.all(
-        perfis.map(async (perfil) => {
+        profiles.map(async (profile) => {
           try {
-            // Por enquanto, vamos usar um valor fixo para materiais
-            // TODO: Implementar busca de materiais por usuário específico
-            const materialsCount = 0;
+            const materials = await userMaterialsService.getMaterialsByUser(profile.id);
+            const materialsCount = materials ? materials.length : 0;
 
             return {
-              id: perfil.user_id,
-              name: perfil.nome_preferido || perfil.full_name || 'Professor',
-              email: perfil.email || '',
-              avatar_url: perfil.avatar_url || '',
+              id: profile.id,
+              name: profile.full_name || profile.email || 'Professor',
+              email: profile.email || '',
+              avatar_url: profile.avatar_url || '',
               subject: 'Multidisciplinar',
               grade: 'Todas as séries',
               materialsCount,
               materialLimit: 300 // Assuming a default limit of 300 materials
             };
           } catch (error) {
-            console.error(`Error loading materials for user ${perfil.user_id}:`, error);
+            console.error(`Error loading materials for user ${profile.id}:`, error);
             return {
-              id: perfil.user_id,
-              name: perfil.nome_preferido || perfil.full_name || 'Professor',
-              email: perfil.email || '',
-              avatar_url: perfil.avatar_url || '',
+              id: profile.id,
+              name: profile.full_name || profile.email || 'Professor',
+              email: profile.email || '',
+              avatar_url: profile.avatar_url || '',
               subject: 'Multidisciplinar',
               grade: 'Todas as séries',
               materialsCount: 0,
@@ -202,7 +201,7 @@ const SchoolPage: React.FC = () => {
         return;
       }
       // Checar se já existe usuário com esse e-mail (opcional)
-      const { data: existing, error: checkError } = await supabase.from('perfis').select('user_id').eq('email', addTeacherForm.email).single();
+      const { data: existing, error: checkError } = await supabase.from('profiles').select('id').eq('email', addTeacherForm.email).single();
       if (existing) {
         toast({ title: 'Usuário já cadastrado', description: 'Este e-mail já está em uso.', variant: 'destructive' });
         setAddTeacherLoading(false);
@@ -240,7 +239,19 @@ const SchoolPage: React.FC = () => {
     // Excluir convite
     await supabase.from('invites').delete().eq('email', email).eq('plan', 'grupo_escolar').eq('status', 'pending');
 
-    // Como não temos email na tabela perfis, vamos apenas recarregar os dados
+    // Buscar usuário na tabela profiles
+    const { data: userProfile } = await supabase.from('profiles').select('id').eq('email', email).single();
+
+    if (userProfile && userProfile.id) {
+      // Verificar se existe perfil completo
+      const { data: perfil } = await supabase.from('perfis').select('id').eq('user_id', userProfile.id).single();
+      // Se NÃO houver perfil, pode excluir o usuário "fantasma"
+      if (!perfil) {
+        await supabase.from('profiles').delete().eq('id', userProfile.id);
+        // Opcional: excluir do auth via função edge/admin
+      }
+    }
+
     loadPendingInvites();
     loadTeachers();
   };
@@ -249,8 +260,8 @@ const SchoolPage: React.FC = () => {
   const handleRemoveTeacher = async (teacherId: string) => {
     // Remover vínculo do grupo escolar
     await supabase.from('membros_grupo_escolar').delete().eq('user_id', teacherId);
-    // Atualizar plano do usuário para gratuito na tabela perfis
-    await supabase.from('perfis').update({ plano_ativo: 'gratuito' }).eq('user_id', teacherId);
+    // Atualizar plano do usuário para gratuito
+    await supabase.from('planos_usuarios').update({ plano_ativo: 'gratuito' }).eq('user_id', teacherId);
     loadTeachers();
   };
 

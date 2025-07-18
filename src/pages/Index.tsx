@@ -18,7 +18,7 @@ import FirstAccessModal from '@/components/FirstAccessModal';
 import FeedbackModal from '@/components/FeedbackModal';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { useFirstAccess } from '@/hooks/useFirstAccess';
 import { useFeedback } from '@/hooks/useFeedback';
@@ -52,7 +52,7 @@ const Index = () => {
     currentPlan,
     getNextResetDate,
     isAdminAuthenticated
-  } = usePlanPermissions();
+  } = useSupabasePlanPermissions();
 
   const {
     isOpen: isUpgradeModalOpen,
@@ -108,8 +108,42 @@ const Index = () => {
     document.querySelector('.flex-1')?.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // O currentPlan já vem no formato correto do hook usePlanPermissions
-  const mappedCurrentPlan = currentPlan;
+  const mappedCurrentPlan = currentPlan ? {
+    id: currentPlan.plano_ativo,
+    name: currentPlan.plano_ativo === 'gratuito' ? 'Plano Gratuito' :
+      currentPlan.plano_ativo === 'professor' ? 'Plano Professor' : 'Grupo Escolar',
+    limits: {
+      materialsPerMonth: currentPlan.plano_ativo === 'gratuito' ? 5 :
+        currentPlan.plano_ativo === 'professor' ? 50 : 300,
+      canDownloadWord: currentPlan.plano_ativo !== 'gratuito',
+      canDownloadPPT: currentPlan.plano_ativo !== 'gratuito',
+      canEditMaterials: currentPlan.plano_ativo !== 'gratuito',
+      canCreateSlides: currentPlan.plano_ativo !== 'gratuito',
+      canCreateAssessments: currentPlan.plano_ativo !== 'gratuito',
+      hasCalendar: currentPlan.plano_ativo !== 'gratuito',
+      hasHistory: currentPlan.plano_ativo !== 'gratuito'
+    },
+    price: {
+      monthly: currentPlan.plano_ativo === 'gratuito' ? 0 :
+        currentPlan.plano_ativo === 'professor' ? 29.90 : 89.90,
+      yearly: currentPlan.plano_ativo === 'gratuito' ? 0 :
+        currentPlan.plano_ativo === 'professor' ? 299 : 849
+    }
+  } : {
+    id: 'gratuito',
+    name: 'Plano Gratuito',
+    limits: {
+      materialsPerMonth: 5,
+      canDownloadWord: false,
+      canDownloadPPT: false,
+      canEditMaterials: false,
+      canCreateSlides: false,
+      canCreateAssessments: false,
+      hasCalendar: false,
+      hasHistory: false
+    },
+    price: { monthly: 0, yearly: 0 }
+  };
 
   // Função para proteger rotas que exigem login
   const requireAuth = (element: React.ReactNode) => {

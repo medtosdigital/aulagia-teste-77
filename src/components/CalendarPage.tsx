@@ -8,7 +8,7 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addW
 import { ptBR } from 'date-fns/locale';
 import { materialService } from '@/services/materialService';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import ScheduleModal from './ScheduleModal';
 import MaterialModal from './MaterialModal';
@@ -39,7 +39,7 @@ const CalendarPage: React.FC = () => {
   const { user } = useAuth();
   
   // Hooks para verificar funcionalidades específicas do plano
-  const { hasCalendar } = usePlanPermissions();
+  const { hasCalendar } = useSupabasePlanPermissions();
   const { 
     isOpen: isUpgradeModalOpen, 
     closeModal: closeUpgradeModal, 

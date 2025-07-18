@@ -107,7 +107,7 @@ const ProfilePage = () => {
 
     try {
       setLoading(true);
-      // Buscar perfil do usuário com todos os campos
+      // Buscar perfil do usuário
       const { data: profile, error } = await supabase
         .from('perfis')
         .select('*')
@@ -127,8 +127,8 @@ const ProfilePage = () => {
       let newFormData;
       if (profile) {
         newFormData = {
-          name: profile.nome_preferido || profile.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
-          photo: profile.avatar_url || '',
+          name: profile.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
+          photo: '',
           teachingLevel: profile.etapas_ensino?.[0] || '',
           grades: profile.anos_serie || [],
           subjects: profile.disciplinas || [],
@@ -141,6 +141,17 @@ const ProfilePage = () => {
           ...formData,
           name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário'
         };
+      }
+
+      // Carregar avatar do profiles (tabela existente)
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single();
+
+      if (userProfile?.avatar_url) {
+        newFormData.photo = userProfile.avatar_url;
       }
 
       setFormData(newFormData);
@@ -264,9 +275,6 @@ const ProfilePage = () => {
       const profileData = {
         user_id: user.id,
         nome_preferido: formData.name,
-        full_name: formData.name,
-        email: user.email,
-        avatar_url: formData.photo,
         etapas_ensino: formData.teachingLevel ? [formData.teachingLevel] : [],
         anos_serie: formData.grades,
         disciplinas: formData.subjects,
@@ -291,6 +299,23 @@ const ProfilePage = () => {
         return;
       }
 
+      // Atualizar avatar na tabela profiles se houver foto
+      if (formData.photo) {
+        const { error: avatarError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            full_name: formData.name,
+            avatar_url: formData.photo,
+            email: user.email,
+            updated_at: new Date().toISOString()
+          });
+
+        if (avatarError) {
+          console.error('Error updating avatar:', avatarError);
+        }
+      }
+
       // Disparar evento para atualizar header
       window.dispatchEvent(new CustomEvent('profileUpdated'));
       
@@ -300,11 +325,18 @@ const ProfilePage = () => {
       });
       
       setIsEditing(false);
+
+      activityService.addActivity({
+        type: 'updated',
+        title: 'Perfil atualizado',
+        description: `Perfil atualizado: ${formData.name}, disciplinas: ${formData.subjects.join(', ')}, séries: ${formData.grades.join(', ')}`
+      });
+
     } catch (error) {
       console.error('Error saving profile:', error);
       toast({
-        title: "Erro ao salvar perfil",
-        description: "Ocorreu um erro inesperado ao salvar o perfil.",
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
         variant: "destructive"
       });
     } finally {
