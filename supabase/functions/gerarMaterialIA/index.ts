@@ -269,13 +269,17 @@ ESTRUTURA OBRIGATÓRIA:
       parsedContent = JSON.parse(generatedContent);
       console.log('✅ [JSON] Parse realizado com sucesso');
       
-      // Validação específica para o tema
+      // Validação mais flexível para o tema
       if (materialType === 'slides') {
-        const temaNoTitulo = parsedContent.tema && parsedContent.tema.toLowerCase().includes(temaEspecifico.toLowerCase());
-        const temaNoConteudo = parsedContent.conceitos && parsedContent.conceitos.toLowerCase().includes(temaEspecifico.toLowerCase());
+        // Verificar se o tema está presente de forma mais flexível
+        const temaPresente = parsedContent.tema && (
+          parsedContent.tema.toLowerCase().includes(temaEspecifico.toLowerCase()) ||
+          parsedContent.conceitos.toLowerCase().includes(temaEspecifico.toLowerCase()) ||
+          parsedContent.introducao.toLowerCase().includes(temaEspecifico.toLowerCase())
+        );
         
-        if (!temaNoTitulo || !temaNoConteudo) {
-          console.error('❌ [VALIDAÇÃO] Conteúdo não específico para tema:', temaEspecifico);
+        if (!temaPresente) {
+          console.error('❌ [VALIDAÇÃO] Conteúdo não contém o tema solicitado:', temaEspecifico);
           console.error('❌ [VALIDAÇÃO] Título:', parsedContent.tema);
           console.error('❌ [VALIDAÇÃO] Conceitos:', parsedContent.conceitos);
           throw new Error(`Conteúdo gerado não é específico para o tema: ${temaEspecifico}`);
