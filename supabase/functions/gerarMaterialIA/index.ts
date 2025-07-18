@@ -28,7 +28,7 @@ async function generateImage(prompt: string): Promise<string> {
 
     if (!response.ok) {
       console.error('❌ Erro na geração de imagem:', response.status, response.statusText);
-      return '';
+      throw new Error(`Falha na geração de imagem: ${response.status}`);
     }
 
     const result = await response.json();
@@ -37,11 +37,11 @@ async function generateImage(prompt: string): Promise<string> {
       return result.imageUrl;
     } else {
       console.error('❌ Falha na geração de imagem:', result.error);
-      return '';
+      throw new Error(`Erro na geração: ${result.error}`);
     }
   } catch (error) {
     console.error('❌ Erro ao chamar gerarImagemIA:', error);
-    return '';
+    throw error;
   }
 }
 
@@ -252,18 +252,17 @@ ESTRUTURA OBRIGATÓRIA:
         'desenvolvimento_3_imagem', 'desenvolvimento_4_imagem', 'exemplo_imagem'
       ];
 
-      // Processar cada campo de imagem
+      // Processar cada campo de imagem sequencialmente
       for (const field of imageFields) {
         if (parsedContent[field]) {
           console.log(`🖼️ Gerando imagem para ${field}:`, parsedContent[field]);
-          const imageUrl = await generateImage(parsedContent[field]);
-          
-          if (imageUrl) {
-            // Substituir o prompt pela URL da imagem gerada
+          try {
+            const imageUrl = await generateImage(parsedContent[field]);
             parsedContent[field] = imageUrl;
             console.log(`✅ Imagem gerada para ${field}`);
-          } else {
-            console.warn(`⚠️ Falha ao gerar imagem para ${field}, mantendo prompt original`);
+          } catch (error) {
+            console.error(`❌ Erro ao gerar imagem para ${field}:`, error);
+            throw new Error(`Falha na geração de imagem para ${field}: ${error.message}`);
           }
         }
       }

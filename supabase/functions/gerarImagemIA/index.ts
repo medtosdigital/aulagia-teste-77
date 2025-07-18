@@ -1,5 +1,5 @@
 
-// Edge Function: gerarImagemIA - Optimized Open-DALLE v1.1 Version
+// Edge Function: gerarImagemIA - Open-DALLE v1.1 Version
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Replicate from "https://esm.sh/replicate@0.30.0";
 
@@ -16,7 +16,7 @@ serve(async (req) => {
 
   try {
     const { prompt } = await req.json();
-    console.log('🎨 Starting optimized Open-DALLE v1.1 generation for prompt:', prompt);
+    console.log('🎨 Starting Open-DALLE v1.1 generation for prompt:', prompt);
     
     if (!prompt || typeof prompt !== 'string') {
       return new Response(JSON.stringify({ success: false, error: 'Prompt inválido.' }), { 
@@ -82,7 +82,7 @@ serve(async (req) => {
       return optimizedPrompt;
     };
 
-    // Negative Prompt Educacional Ultra-Reforçado
+    // Negative Prompt Educacional
     const educationalNegativePrompt = [
       // TEXTOS E ELEMENTOS ESCRITOS - MÁXIMA PRIORIDADE
       'text, texts, word, words, letter, letters, alphabet, character, characters',
@@ -142,7 +142,7 @@ serve(async (req) => {
           width: 512,
           height: 512,
           num_outputs: 1,
-          guidance_scale: 8.5, // Aumentado para melhor controle educacional
+          guidance_scale: 8.5,
           num_inference_steps: 35,
           scheduler: "K_EULER"
         }
@@ -251,71 +251,6 @@ serve(async (req) => {
     
   } catch (error) {
     console.error('❌ Error in educational Open-DALLE v1.1:', error);
-    
-    // Fallback educacional simplificado
-    try {
-      const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN');
-      if (!REPLICATE_API_TOKEN) {
-        throw new Error('API key not available for fallback');
-      }
-
-      const replicate = new Replicate({
-        auth: REPLICATE_API_TOKEN,
-      });
-
-      const requestBody = await req.json();
-      const originalPrompt = requestBody.prompt;
-      
-      // Prompt educacional ultra-simplificado para fallback
-      const simpleFallbackPrompt = `${originalPrompt.split('.')[0]}, Brazilian educational illustration, simple design, visual only, no text, classroom appropriate`;
-      const simpleFallbackNegativePrompt = 'text, words, letters, numbers, inappropriate content, low quality, NO TEXT, EDUCATIONAL VISUAL ONLY';
-
-      console.log('🔄 Attempting educational fallback...');
-      const fallbackOutput = await replicate.run(
-        "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
-        {
-          input: {
-            prompt: simpleFallbackPrompt,
-            negative_prompt: simpleFallbackNegativePrompt,
-            width: 512,
-            height: 512,
-            num_outputs: 1,
-            guidance_scale: 8.0,
-            num_inference_steps: 25
-          }
-        }
-      );
-
-      if (fallbackOutput && Array.isArray(fallbackOutput) && fallbackOutput[0]) {
-        const fallbackImageUrl = fallbackOutput[0];
-        
-        const fallbackResponse = await fetch(fallbackImageUrl);
-        if (fallbackResponse.ok) {
-          const fallbackArrayBuffer = await fallbackResponse.arrayBuffer();
-          const fallbackUint8Array = new Uint8Array(fallbackArrayBuffer);
-          
-          const fallbackBinaryString = Array.from(fallbackUint8Array, byte => String.fromCharCode(byte)).join('');
-          const fallbackB64 = btoa(fallbackBinaryString);
-          const fallbackDataUrl = `data:image/png;base64,${fallbackB64}`;
-          
-          console.log('🆘 Educational fallback completed successfully');
-          
-          return new Response(JSON.stringify({ 
-            success: true, 
-            imageUrl: fallbackDataUrl,
-            imageData: fallbackB64,
-            model: 'open-dalle-v1.1-educational-fallback',
-            fallback: true,
-            warning: 'Generated using simplified educational fallback due to primary generation failure'
-          }), { 
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
-      }
-    } catch (fallbackError) {
-      console.error('❌ Educational fallback also failed:', fallbackError.message);
-    }
     
     return new Response(JSON.stringify({ 
       success: false, 
