@@ -16,7 +16,7 @@ serve(async (req) => {
 
   try {
     const { prompt } = await req.json();
-    console.log('🎨 Starting optimized Open-DALLE v1.1 generation...');
+    console.log('🎨 Starting optimized Open-DALLE v1.1 generation for prompt:', prompt);
     
     if (!prompt || typeof prompt !== 'string') {
       return new Response(JSON.stringify({ success: false, error: 'Prompt inválido.' }), { 
@@ -39,53 +39,51 @@ serve(async (req) => {
       auth: REPLICATE_API_TOKEN,
     });
 
-    // Sistema Otimizado de Prompts
+    // Sistema Otimizado de Prompts para educação
     const optimizePrompt = (originalPrompt: string): string => {
-      console.log('🧠 Optimizing prompt for Open-DALLE v1.1...');
+      console.log('🧠 Optimizing prompt for educational content...');
       
-      // Análise contextual simplificada
+      // Análise contextual para educação
       const context = {
-        isMath: /math|geometric|número|forma|cálculo|equação|geometry|mathematical/i.test(originalPrompt),
+        isMath: /math|geometric|número|forma|cálculo|equação|geometry|mathematical|multiplicação|divisão|adição|subtração/i.test(originalPrompt),
         isScience: /science|biology|ciência|biologia|química|física|scientific|laboratory/i.test(originalPrompt),
         isHistory: /history|história|brasil|cultura|historical|cultural/i.test(originalPrompt),
         isGeography: /geography|geografia|mapa|região|geographical|landscape/i.test(originalPrompt),
-        isElementary: /elementary|fundamental|criança|infantil|children|kids/i.test(originalPrompt),
+        isElementary: /elementary|fundamental|criança|infantil|children|kids|ensino fundamental/i.test(originalPrompt),
         isBrazilian: /brazilian|brasil|cultura brasileira/i.test(originalPrompt)
       };
 
-      // Prompt otimizado básico
+      // Prompt otimizado para educação
       let optimizedPrompt = originalPrompt.trim();
 
       // Contexto educacional brasileiro
-      if (!context.isBrazilian) {
-        optimizedPrompt += ', Brazilian educational context';
-      }
+      optimizedPrompt += ', Brazilian educational illustration';
 
       // Especificações de disciplina
       if (context.isMath) {
-        optimizedPrompt += ', clean geometric shapes, mathematical illustration';
+        optimizedPrompt += ', clean mathematical illustration, geometric shapes, educational math content';
       } else if (context.isScience) {
-        optimizedPrompt += ', scientific illustration, natural elements';
+        optimizedPrompt += ', scientific educational illustration, natural elements, learning materials';
       } else if (context.isHistory) {
-        optimizedPrompt += ', Brazilian historical illustration, cultural elements';
+        optimizedPrompt += ', Brazilian historical educational illustration, cultural elements';
       } else if (context.isGeography) {
-        optimizedPrompt += ', Brazilian geographical illustration, landscape elements';
+        optimizedPrompt += ', Brazilian geographical educational illustration, landscape elements';
       }
 
       // Faixa etária apropriada
       if (context.isElementary) {
-        optimizedPrompt += ', colorful and engaging for children, kid-friendly';
+        optimizedPrompt += ', colorful and engaging for children, kid-friendly educational content';
       }
 
-      // Especificações visuais essenciais - reforçando sem texto
-      optimizedPrompt += ', high quality educational illustration, vibrant colors, clean design, detailed artwork, visual only, no text elements, pure visual content';
+      // Especificações visuais essenciais para educação
+      optimizedPrompt += ', high quality educational illustration, vibrant colors, clean design, detailed artwork, visual learning content, educational material, no text elements, pure visual educational content, classroom appropriate';
       
-      console.log('✨ Prompt optimized');
+      console.log('✨ Educational prompt optimized');
       return optimizedPrompt;
     };
 
-    // Negative Prompt Ultra-Reforçado para Eliminar Completamente Textos
-    const ultraReinforcedNegativePrompt = [
+    // Negative Prompt Educacional Ultra-Reforçado
+    const educationalNegativePrompt = [
       // TEXTOS E ELEMENTOS ESCRITOS - MÁXIMA PRIORIDADE
       'text, texts, word, words, letter, letters, alphabet, character, characters',
       'writing, written, handwriting, handwritten, script, scripted',
@@ -103,10 +101,11 @@ serve(async (req) => {
       'formula, formulas, calculation, calculations, arithmetic, algebraic',
       'plus, minus, equals, multiply, divide, percentage, fraction, fractions',
       
-      // MARCAS D\'ÁGUA E LOGOS
-      'watermark, watermarks, logo, logos, brand, branding, trademark, trademarks',
-      'copyright, copyrighted, signature, signatures, stamp, stamps, seal, seals',
-      'emblem, emblems, badge, badges, mark, marks, marking, markings',
+      // CONTEÚDO INADEQUADO PARA EDUCAÇÃO
+      'adult content, mature content, inappropriate themes, explicit content',
+      'violent, aggressive, threatening, scary, frightening, horror',
+      'commercial advertising, promotional content, marketing material',
+      'social media interface, app interface, website interface, UI elements',
       
       // QUALIDADE BAIXA E DEFEITOS VISUAIS
       'low quality, poor quality, bad quality, worst quality, terrible quality',
@@ -114,56 +113,43 @@ serve(async (req) => {
       'pixelated, pixelation, pixel art, low resolution, low res, poor resolution',
       'distorted, distortion, deformed, malformed, warped, twisted',
       'grainy, grain, noise, noisy, artifacts, artifact, compression artifacts',
-      'jpeg artifacts, compression, over-compressed, under-exposed, over-exposed',
       'dark, too dark, gloomy, dim, shadowy, murky, unclear, indistinct',
       
-      // ELEMENTOS VISUAIS INDESEJADOS
+      // ELEMENTOS VISUAIS INDESEJADOS PARA EDUCAÇÃO
       'cluttered, clutter, messy, chaotic, confusing, disorganized, jumbled',
       'broken, incomplete, unfinished, partial, fragmented, cropped badly',
       'ugly, hideous, grotesque, disturbing, inappropriate, offensive',
-      'scary, frightening, horror, violent, aggressive, threatening',
       'wrong proportions, bad proportions, disproportionate, asymmetric badly',
       
-      // CONTEXTOS INADEQUADOS PARA EDUCAÇÃO
-      'adult content, mature content, inappropriate themes, explicit content',
-      'religious symbols, political symbols, controversial content',
-      'commercial advertising, promotional content, marketing material',
-      'social media interface, app interface, website interface, UI elements',
-      
-      // ELEMENTOS TÉCNICOS INDESEJADOS
-      'screenshot, screen capture, computer screen, monitor, display',
-      'cursor, mouse pointer, selection box, highlight, border ugly',
-      'frame ugly, border thick, outline heavy, shadow ugly, gradient ugly',
-      
-      // REFORÇO ADICIONAL ANTI-TEXTO
+      // REFORÇO ADICIONAL ANTI-TEXTO PARA EDUCAÇÃO
       'NO TEXT, NO WORDS, NO LETTERS, NO WRITING, NO TITLES, NO CAPTIONS',
-      'VISUAL ONLY, IMAGE ONLY, PICTURE ONLY, ILLUSTRATION ONLY',
-      'EDUCATIONAL VISUAL, PURE VISUAL CONTENT, CLEAN VISUAL DESIGN'
+      'EDUCATIONAL VISUAL ONLY, LEARNING IMAGE ONLY, TEACHING ILLUSTRATION ONLY',
+      'CLASSROOM APPROPRIATE, CHILD SAFE, EDUCATIONAL CONTENT ONLY'
     ].join(', ');
 
-    // Aplicar otimização
+    // Aplicar otimização educacional
     const optimizedPrompt = optimizePrompt(prompt);
 
-    console.log('🚀 Calling Open-DALLE v1.1 with ultra-reinforced anti-text parameters...');
+    console.log('🚀 Calling Open-DALLE v1.1 with educational parameters...');
     
-    // Parâmetros com negative prompt ultra-reforçado
+    // Parâmetros otimizados para conteúdo educacional
     const output = await replicate.run(
       "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
       {
         input: {
           prompt: optimizedPrompt,
-          negative_prompt: ultraReinforcedNegativePrompt,
+          negative_prompt: educationalNegativePrompt,
           width: 512,
           height: 512,
           num_outputs: 1,
-          guidance_scale: 8.0, // Aumentado para 8.0 para melhor controle do negative prompt
-          num_inference_steps: 35, // Aumentado ligeiramente para melhor qualidade
+          guidance_scale: 8.5, // Aumentado para melhor controle educacional
+          num_inference_steps: 35,
           scheduler: "K_EULER"
         }
       }
     );
 
-    console.log('✅ Generation completed');
+    console.log('✅ Educational image generation completed');
     
     if (!output) {
       throw new Error('Nenhuma resposta da API Replicate');
@@ -182,16 +168,16 @@ serve(async (req) => {
       throw new Error('URL da imagem inválida');
     }
 
-    console.log('📥 Downloading and processing image...');
+    console.log('📥 Downloading and processing educational image...');
     
-    // Sistema de download otimizado
+    // Sistema de download otimizado com timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // Aumentado timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     
     const imageResponse = await fetch(imageUrl, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (EducationalBot/2.0)',
+        'User-Agent': 'AulagIA-Educational-Bot/2.0',
         'Accept': 'image/webp,image/*,*/*'
       }
     });
@@ -226,16 +212,16 @@ serve(async (req) => {
     const mimeType = originalFormat === 'webp' ? 'image/webp' : `image/${originalFormat}`;
     const imageDataUrl = `data:${mimeType};base64,${imageB64}`;
     
-    console.log('🎨 Open-DALLE v1.1 ultra-reinforced anti-text generation completed successfully!');
+    console.log('🎨 Educational image generation completed successfully!');
     
     return new Response(JSON.stringify({ 
       success: true, 
       imageUrl: imageDataUrl,
       imageData: imageB64,
-      model: 'open-dalle-v1.1-ultra-anti-text',
+      model: 'open-dalle-v1.1-educational',
       optimizations: {
-        promptOptimization: true,
-        ultraReinforcedNegativePrompt: true,
+        educationalPromptOptimization: true,
+        educationalNegativePrompt: true,
         increasedGuidanceScale: true,
         enhancedInferenceSteps: true,
         optimizedDownload: true,
@@ -247,27 +233,26 @@ serve(async (req) => {
         dimensions: '512x512',
         originalFormat: originalFormat,
         inferenceSteps: 35,
-        guidanceScale: 8.0,
+        guidanceScale: 8.5,
         scheduler: 'K_EULER'
       },
-      antiTextMeasures: [
-        'Ultra-reinforced negative prompt with 50+ text-related exclusions',
-        'Increased guidance scale to 8.0 for better negative prompt control',
-        'Enhanced inference steps to 35 for better quality control',
-        'Visual-only content specifications in positive prompt',
-        'Multi-language text exclusions (português/english)',
-        'Complete symbol and number exclusions'
-      ],
-      textPlacementSuggestion: 'Utilize a área superior ou inferior da imagem para sobreposição de texto, mantendo o centro livre para o conteúdo visual principal.'
+      educationalFeatures: [
+        'Educational prompt optimization for Brazilian classroom content',
+        'Child-safe and classroom-appropriate image generation',
+        'Enhanced negative prompt for educational content',
+        'Optimized for learning materials and teaching aids',
+        'Brazilian educational context integration',
+        'Age-appropriate content filtering'
+      ]
     }), { 
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
-    console.error('❌ Error in ultra-reinforced Open-DALLE v1.1:', error);
+    console.error('❌ Error in educational Open-DALLE v1.1:', error);
     
-    // Sistema de fallback ultra-simplificado
+    // Fallback educacional simplificado
     try {
       const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN');
       if (!REPLICATE_API_TOKEN) {
@@ -281,17 +266,17 @@ serve(async (req) => {
       const requestBody = await req.json();
       const originalPrompt = requestBody.prompt;
       
-      // Prompt ultra-simplificado para fallback com reforço anti-texto
-      const ultraSimpleFallbackPrompt = `${originalPrompt.split('.')[0]}. Simple Brazilian educational illustration, clean design, visual only, no text, no words, no letters`;
-      const ultraSimpleFallbackNegativePrompt = 'text, words, letters, numbers, titles, captions, labels, writing, typography, signs, low quality, blurry, pixelated, distorted, artifacts, noise, NO TEXT, NO WORDS, VISUAL ONLY';
+      // Prompt educacional ultra-simplificado para fallback
+      const simpleFallbackPrompt = `${originalPrompt.split('.')[0]}, Brazilian educational illustration, simple design, visual only, no text, classroom appropriate`;
+      const simpleFallbackNegativePrompt = 'text, words, letters, numbers, inappropriate content, low quality, NO TEXT, EDUCATIONAL VISUAL ONLY';
 
-      console.log('🔄 Attempting ultra-simple anti-text fallback...');
+      console.log('🔄 Attempting educational fallback...');
       const fallbackOutput = await replicate.run(
         "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
         {
           input: {
-            prompt: ultraSimpleFallbackPrompt,
-            negative_prompt: ultraSimpleFallbackNegativePrompt,
+            prompt: simpleFallbackPrompt,
+            negative_prompt: simpleFallbackNegativePrompt,
             width: 512,
             height: 512,
             num_outputs: 1,
@@ -313,15 +298,15 @@ serve(async (req) => {
           const fallbackB64 = btoa(fallbackBinaryString);
           const fallbackDataUrl = `data:image/png;base64,${fallbackB64}`;
           
-          console.log('🆘 Ultra-simple anti-text fallback completed successfully');
+          console.log('🆘 Educational fallback completed successfully');
           
           return new Response(JSON.stringify({ 
             success: true, 
             imageUrl: fallbackDataUrl,
             imageData: fallbackB64,
-            model: 'open-dalle-v1.1-ultra-anti-text-fallback',
+            model: 'open-dalle-v1.1-educational-fallback',
             fallback: true,
-            warning: 'Generated using ultra-simplified anti-text fallback due to primary generation failure'
+            warning: 'Generated using simplified educational fallback due to primary generation failure'
           }), { 
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -329,12 +314,12 @@ serve(async (req) => {
         }
       }
     } catch (fallbackError) {
-      console.error('❌ Ultra-simple anti-text fallback also failed:', fallbackError.message);
+      console.error('❌ Educational fallback also failed:', fallbackError.message);
     }
     
     return new Response(JSON.stringify({ 
       success: false, 
-      error: `Erro na geração ultra-reforçada com Open-DALLE v1.1: ${error.message}`,
+      error: `Erro na geração educacional com Open-DALLE v1.1: ${error.message}`,
       errorType: error.constructor.name,
       timestamp: new Date().toISOString()
     }), { 

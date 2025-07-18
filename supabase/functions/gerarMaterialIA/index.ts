@@ -12,6 +12,39 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Função para gerar imagem via edge function
+async function generateImage(prompt: string): Promise<string> {
+  try {
+    console.log('🎨 Gerando imagem para prompt:', prompt);
+    
+    const response = await fetch(`${supabaseUrl}/functions/v1/gerarImagemIA`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({ prompt: prompt }),
+    });
+
+    if (!response.ok) {
+      console.error('❌ Erro na geração de imagem:', response.status, response.statusText);
+      return '';
+    }
+
+    const result = await response.json();
+    if (result.success && result.imageUrl) {
+      console.log('✅ Imagem gerada com sucesso');
+      return result.imageUrl;
+    } else {
+      console.error('❌ Falha na geração de imagem:', result.error);
+      return '';
+    }
+  } catch (error) {
+    console.error('❌ Erro ao chamar gerarImagemIA:', error);
+    return '';
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -206,6 +239,36 @@ ESTRUTURA OBRIGATÓRIA:
       console.error('❌ Failed to parse JSON:', parseError);
       console.error('❌ Raw content:', generatedContent);
       throw new Error('Generated content is not valid JSON');
+    }
+
+    // Processar imagens para slides
+    if (materialType === 'slides') {
+      console.log('🎨 Processando imagens para slides...');
+      
+      // Lista de campos de imagem para processar
+      const imageFields = [
+        'tema_imagem', 'introducao_imagem', 'conceitos_imagem',
+        'desenvolvimento_1_imagem', 'desenvolvimento_2_imagem',
+        'desenvolvimento_3_imagem', 'desenvolvimento_4_imagem', 'exemplo_imagem'
+      ];
+
+      // Processar cada campo de imagem
+      for (const field of imageFields) {
+        if (parsedContent[field]) {
+          console.log(`🖼️ Gerando imagem para ${field}:`, parsedContent[field]);
+          const imageUrl = await generateImage(parsedContent[field]);
+          
+          if (imageUrl) {
+            // Substituir o prompt pela URL da imagem gerada
+            parsedContent[field] = imageUrl;
+            console.log(`✅ Imagem gerada para ${field}`);
+          } else {
+            console.warn(`⚠️ Falha ao gerar imagem para ${field}, mantendo prompt original`);
+          }
+        }
+      }
+
+      console.log('✅ Processamento de imagens concluído');
     }
 
     // Validar estrutura específica para slides
