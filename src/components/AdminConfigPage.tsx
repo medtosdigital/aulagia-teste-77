@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
-import { Plus, Edit, Bell, Link2, FileText, Users, BarChart2, X, Trash2, Settings, Code, MessageSquare, Save, Eye, Sparkles, Zap, Link, Shield } from 'lucide-react';
+import { Plus, Edit, Bell, Link2, FileText, Users, BarChart2, X, Trash2, Settings, Code, MessageSquare, Save, Eye, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { templateService } from '@/services/templateService';
 import MaterialPreview from './MaterialPreview';
@@ -47,18 +47,6 @@ export default function AdminConfigPage() {
   const [viewingTemplateEdit, setViewingTemplateEdit] = useState<string>('');
   const [viewingModalOpen, setViewingModalOpen] = useState(false);
   const [savingViewingTemplate, setSavingViewingTemplate] = useState(false);
-
-  // Webhook state
-  const [webhookEmail, setWebhookEmail] = useState('');
-  const [webhookEvento, setWebhookEvento] = useState('assinatura aprovada');
-  const [webhookProduto, setWebhookProduto] = useState('Plano Professor (Mensal)');
-  const [webhookLoading, setWebhookLoading] = useState(false);
-  const [webhookResult, setWebhookResult] = useState<string|null>(null);
-  const [webhookLogs, setWebhookLogs] = useState<any[]>([]);
-  const [logsPage, setLogsPage] = useState(1);
-  const [logsTotal, setLogsTotal] = useState(0);
-  const [securityEnabled, setSecurityEnabled] = useState(false);
-  const LOGS_PAGE_SIZE = 10;
 
   const { user } = useAuth();
 
@@ -182,61 +170,6 @@ export default function AdminConfigPage() {
     }
   }
 
-  // Função para simular webhook
-  async function handleSimularWebhook(e: React.FormEvent) {
-    e.preventDefault();
-    setWebhookLoading(true);
-    setWebhookResult(null);
-    try {
-      const res = await fetch('/api/webhooks/aulagia', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: webhookEmail,
-          evento: webhookEvento,
-          produto: webhookProduto,
-          token: securityEnabled ? 'q64w1ncxx2k' : undefined
-        })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setWebhookResult('Webhook processado com sucesso!');
-        fetchWebhookLogs();
-      } else {
-        setWebhookResult(data.error || 'Erro ao processar webhook.');
-      }
-    } catch (err) {
-      setWebhookResult('Erro ao conectar ao servidor.');
-    } finally {
-      setWebhookLoading(false);
-    }
-  }
-
-  // Função para buscar logs do webhook
-  async function fetchWebhookLogs(page = 1) {
-    // Busca via Supabase client-side (ajuste se necessário para SSR/API)
-    const { data, error, count } = await supabase
-      .from('webhook_logs')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range((page-1)*LOGS_PAGE_SIZE, page*LOGS_PAGE_SIZE-1);
-    if (!error && data) {
-      setWebhookLogs(data);
-      setLogsTotal(count || 0);
-    }
-  }
-
-  // Função para ativar/desativar segurança do token
-  async function toggleSecurity() {
-    const res = await fetch('/api/webhooks/aulagia/security', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enabled: !securityEnabled })
-    });
-    const data = await res.json();
-    setSecurityEnabled(data.enabled);
-  }
-
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
@@ -319,11 +252,11 @@ export default function AdminConfigPage() {
           const userIds = Array.from(new Set(activities.map(a => a.user_id)));
           const { data: users } = await supabase
             .from('perfis')
-            .select('user_id, nome_preferido, full_name')
-            .in('user_id', userIds);
+            .select('id, full_name, email')
+            .in('id', userIds);
           if (users) {
             users.forEach(u => {
-              userMap[u.user_id] = u.nome_preferido || u.full_name || u.user_id;
+              userMap[u.id] = u.full_name || u.email || u.id;
             });
           }
         }
@@ -343,10 +276,6 @@ export default function AdminConfigPage() {
     fetchDashboardData();
   }, []);
 
-  useEffect(() => {
-    fetchWebhookLogs(logsPage);
-  }, [logsPage]);
-
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -362,7 +291,7 @@ export default function AdminConfigPage() {
         </div>
 
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-lg">
+          <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-lg">
             <TabsTrigger 
               value="dashboard" 
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
@@ -383,13 +312,6 @@ export default function AdminConfigPage() {
             >
               <Bell className="w-4 h-4 mr-2" />
               Notificações
-            </TabsTrigger>
-            <TabsTrigger 
-              value="webhooks"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
-            >
-              <Zap className="w-4 h-4 mr-2" />
-              Webhooks
             </TabsTrigger>
           </TabsList>
 
@@ -478,94 +400,6 @@ export default function AdminConfigPage() {
 
           <TabsContent value="notificacoes" className="mt-8">
             <NotificationsSection />
-          </TabsContent>
-
-          <TabsContent value="webhooks" className="space-y-8 mt-8">
-            <Card className="border-0 shadow-sm p-6">
-              <CardHeader className="flex flex-row items-center gap-4">
-                <Link className="w-6 h-6 text-primary" />
-                <CardTitle className="text-xl">Integração Webhooks</CardTitle>
-                <Button size="sm" variant={securityEnabled ? 'default' : 'outline'} onClick={toggleSecurity} className="ml-auto flex gap-2 items-center">
-                  <Shield className="w-4 h-4" />
-                  {securityEnabled ? 'Segurança Ativada' : 'Segurança Desativada'}
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4">
-                  <span className="font-semibold">URL do endpoint:</span>
-                  <div className="flex items-center gap-2 mt-2">
-                    <code className="bg-gray-100 px-2 py-1 rounded text-sm select-all">/api/webhooks/aulagia</code>
-                    <Button size="sm" onClick={() => {navigator.clipboard.writeText('/api/webhooks/aulagia')}}>Copiar</Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Cadastre esta URL na sua plataforma de pagamentos para automação de planos.</p>
-                </div>
-                <div className="mb-8">
-                  <h3 className="font-semibold mb-2">Simulador de Webhooks</h3>
-                  <form className="flex flex-col md:flex-row gap-4 items-end" onSubmit={handleSimularWebhook}>
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium mb-1">E-mail</label>
-                      <Input type="email" placeholder="cliente@exemplo.com" value={webhookEmail} onChange={e => setWebhookEmail(e.target.value)} required />
-                    </div>
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium mb-1">Evento</label>
-                      <select className="h-10 rounded border px-2" value={webhookEvento} onChange={e => setWebhookEvento(e.target.value)}>
-                        <option value="assinatura aprovada">Assinatura aprovada</option>
-                        <option value="assinatura cancelada">Assinatura cancelada</option>
-                        <option value="assinatura renovada">Assinatura renovada</option>
-                        <option value="assinatura atrasada">Assinatura atrasada</option>
-                      </select>
-                    </div>
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium mb-1">Produto</label>
-                      <select className="h-10 rounded border px-2" value={webhookProduto} onChange={e => setWebhookProduto(e.target.value)}>
-                        <option value="Plano Professor (Mensal)">Professor mensal</option>
-                        <option value="Plano Professor (Anual)">Professor anual</option>
-                        <option value="Plano Grupo Escolar (Mensal)">Grupo Escolar mensal</option>
-                        <option value="Plano Grupo Escolar (Anual)">Grupo Escolar anual</option>
-                      </select>
-                    </div>
-                    <Button type="submit" className="h-10" disabled={webhookLoading}>{webhookLoading ? 'Enviando...' : 'Simular Webhook'}</Button>
-                  </form>
-                  {webhookResult && <div className={`mt-2 text-sm ${webhookResult.includes('sucesso') ? 'text-green-600' : 'text-red-600'}`}>{webhookResult}</div>}
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">Últimos Webhooks Processados</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Data/Hora</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Evento recebido</TableHead>
-                        <TableHead>Plano aplicado</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {webhookLogs.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="text-center">Nenhum log encontrado.</TableCell></TableRow>
-                      ) : (
-                        webhookLogs.map(log => (
-                          <TableRow key={log.id}>
-                            <TableCell>{new Date(log.created_at).toLocaleString('pt-BR')}</TableCell>
-                            <TableCell>{log.email}</TableCell>
-                            <TableCell>{log.evento}</TableCell>
-                            <TableCell>{log.plano_aplicado}</TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs text-muted-foreground">Página {logsPage} de {Math.ceil(logsTotal/LOGS_PAGE_SIZE) || 1}</span>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" disabled={logsPage === 1} onClick={() => setLogsPage(1)}>«</Button>
-                      <Button size="sm" variant="outline" disabled={logsPage === 1} onClick={() => setLogsPage(logsPage-1)}>‹</Button>
-                      <Button size="sm" variant="outline" disabled={logsPage === Math.ceil(logsTotal/LOGS_PAGE_SIZE) || logsTotal === 0} onClick={() => setLogsPage(logsPage+1)}>›</Button>
-                      <Button size="sm" variant="outline" disabled={logsPage === Math.ceil(logsTotal/LOGS_PAGE_SIZE) || logsTotal === 0} onClick={() => setLogsPage(Math.ceil(logsTotal/LOGS_PAGE_SIZE))}>»</Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
 

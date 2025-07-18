@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileText, LogOut, User, School, Sliders, MessageCircle, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePlanPermissions } from '@/hooks/usePlanPermissions';
+import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -19,7 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onItemClick
 }) => {
   const { user } = useAuth();
-  const { canAccessSchool, canAccessSettings, currentPlan } = usePlanPermissions();
+  const { canAccessSchool, canAccessSettings, currentPlan } = useSupabasePlanPermissions();
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
@@ -38,19 +38,26 @@ const Sidebar: React.FC<SidebarProps> = ({
       // Buscar dados do perfil do usuário
       const { data: profile } = await supabase
         .from('perfis')
-        .select('nome_preferido, full_name, avatar_url')
+        .select('nome_preferido')
         .eq('user_id', user.id)
         .single();
 
+      // Buscar avatar do usuário
+      const { data: userProfileData } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single();
+
       // Definir nome preferido
-      const preferredName = profile?.nome_preferido || profile?.full_name || 
+      const preferredName = profile?.nome_preferido || 
                            user.user_metadata?.full_name || 
                            user.email?.split('@')[0] || 
                            'Professor(a)';
       
       setUserProfile({
         name: preferredName,
-        photo: profile?.avatar_url || ''
+        photo: userProfileData?.avatar_url || ''
       });
 
     } catch (error) {
@@ -69,18 +76,18 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   }, [user]);
 
-  // Listen for plan changes
   useEffect(() => {
-    const handlePlanChange = () => {
-      console.log('Evento planChanged recebido, recarregando dados do usuário...');
+    // Listener personalizado para mudanças no perfil
+    const handleProfileUpdate = () => {
       if (user) {
         loadUserProfile();
       }
     };
 
-    window.addEventListener('planChanged', handlePlanChange);
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+
     return () => {
-      window.removeEventListener('planChanged', handlePlanChange);
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
   }, [user]);
 
@@ -203,8 +210,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   
   const getPlanDisplayName = () => {
     if (!currentPlan) return 'Plano Gratuito';
-    if (currentPlan.id === 'admin') return 'Plano Administrador';
-    switch (currentPlan.id) {
+    if (currentPlan.plano_ativo === 'admin' || currentPlan.id === 'admin') return 'Plano Administrador';
+    switch (currentPlan.plano_ativo) {
       case 'gratuito':
         return 'Plano Gratuito';
       case 'professor':

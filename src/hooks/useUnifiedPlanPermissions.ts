@@ -11,7 +11,6 @@ const CACHE_DURATION = 60000; // 60 segundos
 
 export const useUnifiedPlanPermissions = () => {
   const { user } = useAuth();
-  console.log('Usuário autenticado no hook useUnifiedPlanPermissions:', user);
   const { toast } = useToast();
   const [currentProfile, setCurrentProfile] = useState<PerfilUsuario | null>(null);
   const [remainingMaterials, setRemainingMaterials] = useState<number>(0);
@@ -115,7 +114,7 @@ export const useUnifiedPlanPermissions = () => {
     return () => {
       window.removeEventListener('planChanged', handlePlanChanged);
     };
-  }, [user?.id]); // Removido loadProfileData das dependências
+  }, [user?.id, loadProfileData]);
 
   // Limpeza automática do cache
   useEffect(() => {
@@ -217,7 +216,7 @@ export const useUnifiedPlanPermissions = () => {
       });
       return false;
     }
-  }, [user?.id, toast]); // Removido loadProfileData das dependências
+  }, [user?.id, loadProfileData, toast]);
 
   // Verificações de permissões otimizadas
   const canDownloadWord = useCallback((): boolean => {
@@ -256,10 +255,7 @@ export const useUnifiedPlanPermissions = () => {
     if (loading) return 'Carregando...';
     if (!currentProfile) return 'Plano Gratuito';
     
-    // Usar o plano_ativo real da tabela perfis
-    const planoAtivo = currentProfile.plano_ativo;
-    
-    switch (planoAtivo) {
+    switch (currentProfile.plano_ativo) {
       case 'gratuito':
         return 'Plano Gratuito';
       case 'professor':
@@ -285,26 +281,6 @@ export const useUnifiedPlanPermissions = () => {
     }
   }, [user?.id, loadProfileData]);
 
-  // Função para forçar recarregamento do plano
-  const forceRefreshPlan = useCallback(() => {
-    if (user?.id) {
-      unifiedCache.delete(`unified_profile_${user.id}`);
-      unifiedCache.delete(`profile_${user.id}`);
-      loadProfileData(true);
-    }
-  }, [user?.id, loadProfileData]);
-
-  // Função para forçar recarregamento do perfil via serviço
-  const forceRefreshProfile = useCallback(async () => {
-    if (user?.id) {
-      const newProfile = await supabaseUnifiedPlanService.forceRefreshProfile();
-      if (newProfile) {
-        setCurrentProfile(newProfile);
-        console.log('Perfil recarregado via serviço:', newProfile);
-      }
-    }
-  }, [user?.id]);
-
   const canAccessSettings = useCallback((): boolean => {
     return currentProfile?.plano_ativo === 'admin';
   }, [currentProfile?.plano_ativo]);
@@ -325,8 +301,6 @@ export const useUnifiedPlanPermissions = () => {
     changePlan,
     dismissUpgradeModal,
     refreshData,
-    forceRefreshPlan,
-    forceRefreshProfile,
     
     // Verificações de permissões
     canDownloadWord,
