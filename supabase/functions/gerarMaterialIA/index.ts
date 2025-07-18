@@ -120,6 +120,7 @@ serve(async (req) => {
 
       ESTRUTURA OBRIGATÓRIA - O material deve conter exatamente estas seções distribuídas em 5 páginas:
 
+<<<<<<< HEAD
       PÁGINA 1:
       - TEMA_DO_MATERIAL_PRINCIPAL: Título principal do material
       - DISCIPLINA: Nome da disciplina
@@ -759,17 +760,37 @@ serve(async (req) => {
         </div>
       </body>
       </html>
+=======
+      1. **Explicação Simples do Tema** - Definição clara e simples do conceito principal (máximo 150 palavras)
+      2. **Por que é Importante** - Relevância do tema na vida dos alunos (máximo 150 palavras)
+      3. **Como Funciona** - Explicação do processo ou funcionamento (máximo 200 palavras)
+      4. **Exemplos do Dia a Dia** - Situações reais e cotidianas (máximo 200 palavras)
+      5. **Dicas de Estudo** - Pontos-chave e observações relevantes (máximo 150 palavras)
+      6. **Atividades Práticas** - Exercícios simples para fixação (máximo 200 palavras)
+      7. **Curiosidades** - Informações interessantes e complementares (máximo 150 palavras)
+>>>>>>> 4157efcffe15fc06cbd8191265cfa3e89c7c0a9c
 
       FORMATO DE RESPOSTA:
       Retorne apenas um JSON válido com a seguinte estrutura:
 
       {
         "titulo": "Título do Material de Apoio",
+<<<<<<< HEAD
         "html": "HTML completo com todas as variáveis preenchidas usando o template fornecido"
+=======
+        "tema_material_principal": "${formData.tema}",
+        "explicacao_simples": "Conteúdo da seção 1",
+        "por_que_importante": "Conteúdo da seção 2", 
+        "como_funciona": "Conteúdo da seção 3",
+        "exemplos_dia_a_dia": "Conteúdo da seção 4",
+        "dicas_estudo": "Conteúdo da seção 5",
+        "atividades_praticas": "Conteúdo da seção 6",
+        "curiosidades": "Conteúdo da seção 7"
+>>>>>>> 4157efcffe15fc06cbd8191265cfa3e89c7c0a9c
       }
 
       IMPORTANTE:
-      - Cada seção deve ter entre 100-200 palavras
+      - Cada seção deve respeitar o limite de palavras especificado
       - Use formatação HTML simples quando necessário (negrito, itálico, listas)
       - Mantenha a linguagem adequada à faixa etária
       - Seja prático e objetivo
@@ -784,7 +805,18 @@ serve(async (req) => {
         Estrutura esperada:
         {
           "titulo": "string",
+<<<<<<< HEAD
           "html": "string (HTML completo com template e variáveis preenchidas)"
+=======
+          "tema_material_principal": "string",
+          "explicacao_simples": "string",
+          "por_que_importante": "string",
+          "como_funciona": "string", 
+          "exemplos_dia_a_dia": "string",
+          "dicas_estudo": "string",
+          "atividades_praticas": "string",
+          "curiosidades": "string"
+>>>>>>> 4157efcffe15fc06cbd8191265cfa3e89c7c0a9c
         }
       `;
     } else if (materialType === 'plano_aula') {
@@ -1177,10 +1209,472 @@ ESTRUTURA OBRIGATÓRIA:
 
     // Convert structured content to HTML for apoio materials
     let htmlContent = '';
+<<<<<<< HEAD
     if (materialType === 'apoio' && parsedContent.html) {
       // Substituir a data de geração no HTML
       const today = new Date().toLocaleDateString('pt-BR');
       htmlContent = parsedContent.html.replace(/\{\{DATA_GERACAO\}\}/g, today);
+=======
+    if (materialType === 'apoio' && parsedContent) {
+      // Novo template HTML para Material de Apoio
+      htmlContent = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Material de Apoio - ${parsedContent.titulo || 'Conteúdo de Apoio'}</title>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+                
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                
+                body {
+                    font-family: 'Inter', sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    padding: 20px;
+                }
+                
+                .container {
+                    max-width: 800px;
+                    margin: 0 auto;
+                    background: white;
+                    border-radius: 20px;
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+                    overflow: hidden;
+                    position: relative;
+                }
+                
+                .header {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 40px;
+                    text-align: center;
+                    position: relative;
+                    overflow: hidden;
+                }
+                
+                .header::before {
+                    content: '';
+                    position: absolute;
+                    top: -50%;
+                    left: -50%;
+                    width: 200%;
+                    height: 200%;
+                    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="60" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="70" cy="30" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+                    animation: float 20s ease-in-out infinite;
+                    pointer-events: none;
+                }
+                
+                @keyframes float {
+                    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+                    50% { transform: translate(-20px, -20px) rotate(2deg); }
+                }
+                
+                .brand {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 15px;
+                    margin-bottom: 20px;
+                    position: relative;
+                    z-index: 2;
+                }
+                
+                .logo {
+                    width: 50px;
+                    height: 50px;
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                }
+                
+                .logo svg {
+                    width: 28px;
+                    height: 28px;
+                    stroke: white;
+                    fill: none;
+                    stroke-width: 2;
+                }
+                
+                .brand-text h1 {
+                    font-size: 2rem;
+                    font-weight: 700;
+                    margin: 0;
+                    letter-spacing: -0.5px;
+                }
+                
+                .brand-text p {
+                    font-size: 0.9rem;
+                    opacity: 0.9;
+                    margin: 5px 0 0 0;
+                    font-weight: 300;
+                }
+                
+                .subtitle {
+                    font-size: 1.2rem;
+                    opacity: 0.9;
+                    font-weight: 300;
+                    position: relative;
+                    z-index: 2;
+                }
+                
+                .content {
+                    padding: 50px;
+                }
+                
+                .title {
+                    text-align: center;
+                    margin-bottom: 40px;
+                }
+                
+                .title h2 {
+                    font-size: 2.5rem;
+                    font-weight: 700;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    margin-bottom: 10px;
+                    line-height: 1.2;
+                }
+                
+                .theme-highlight {
+                    display: inline-block;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 8px 20px;
+                    border-radius: 25px;
+                    font-size: 1rem;
+                    font-weight: 500;
+                    margin-bottom: 30px;
+                }
+                
+                .section {
+                    margin-bottom: 40px;
+                    padding: 30px;
+                    background: #f8fafc;
+                    border-radius: 16px;
+                    border-left: 5px solid #667eea;
+                    position: relative;
+                    overflow: hidden;
+                }
+                
+                .section::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    width: 100px;
+                    height: 100px;
+                    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+                    border-radius: 50%;
+                    transform: translate(30px, -30px);
+                    pointer-events: none;
+                }
+                
+                .section h3 {
+                    color: #667eea;
+                    font-size: 1.5rem;
+                    font-weight: 600;
+                    margin-bottom: 15px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    position: relative;
+                    z-index: 1;
+                }
+                
+                .section-icon {
+                    width: 24px;
+                    height: 24px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 6px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 14px;
+                    font-weight: bold;
+                    flex-shrink: 0;
+                }
+                
+                .section-content {
+                    font-size: 1rem;
+                    line-height: 1.7;
+                    color: #4a5568;
+                    position: relative;
+                    z-index: 1;
+                }
+                
+                .section-content p {
+                    margin-bottom: 15px;
+                }
+                
+                .section-content ul, .section-content ol {
+                    margin-left: 20px;
+                    margin-bottom: 15px;
+                }
+                
+                .section-content li {
+                    margin-bottom: 8px;
+                }
+                
+                .section-content strong {
+                    color: #2d3748;
+                    font-weight: 600;
+                }
+                
+                .section-content em {
+                    color: #667eea;
+                    font-style: italic;
+                }
+                
+                .footer {
+                    background: #2d3748;
+                    color: white;
+                    padding: 30px;
+                    text-align: center;
+                }
+                
+                .footer-content {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 15px;
+                    margin-bottom: 15px;
+                }
+                
+                .footer-logo {
+                    width: 40px;
+                    height: 40px;
+                    background: rgba(102, 126, 234, 0.2);
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .footer-logo svg {
+                    width: 20px;
+                    height: 20px;
+                    stroke: #667eea;
+                    fill: none;
+                    stroke-width: 2;
+                }
+                
+                .footer-text {
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    color: #667eea;
+                }
+                
+                .footer-tagline {
+                    font-size: 0.9rem;
+                    opacity: 0.8;
+                    font-style: italic;
+                }
+                
+                .footer-bottom {
+                    font-size: 0.8rem;
+                    opacity: 0.7;
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
+                    padding-top: 15px;
+                }
+                
+                @media (max-width: 768px) {
+                    body {
+                        padding: 10px;
+                    }
+                    
+                    .header {
+                        padding: 30px 20px;
+                    }
+                    
+                    .brand {
+                        flex-direction: column;
+                        gap: 10px;
+                    }
+                    
+                    .brand-text h1 {
+                        font-size: 1.5rem;
+                    }
+                    
+                    .content {
+                        padding: 30px 20px;
+                    }
+                    
+                    .title h2 {
+                        font-size: 2rem;
+                    }
+                    
+                    .section {
+                        padding: 20px;
+                    }
+                    
+                    .section h3 {
+                        font-size: 1.3rem;
+                    }
+                    
+                    .footer {
+                        padding: 20px;
+                    }
+                    
+                    .footer-content {
+                        flex-direction: column;
+                        gap: 10px;
+                    }
+                }
+                
+                @media print {
+                    body {
+                        background: white;
+                        padding: 0;
+                    }
+                    
+                    .container {
+                        box-shadow: none;
+                        border-radius: 0;
+                    }
+                    
+                    .header::before {
+                        display: none;
+                    }
+                    
+                    .section::before {
+                        display: none;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <div class="brand">
+                        <div class="logo">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                            </svg>
+                        </div>
+                        <div class="brand-text">
+                            <h1>AulagIA</h1>
+                            <p>Sua aula com toque mágico</p>
+                        </div>
+                    </div>
+                    <div class="subtitle">Material de Apoio Educacional</div>
+                </div>
+                
+                <div class="content">
+                    <div class="title">
+                        <h2>${parsedContent.titulo || 'Material de Apoio'}</h2>
+                        <div class="theme-highlight">Tema: ${parsedContent.tema_material_principal || formData.tema}</div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>
+                            <div class="section-icon">💡</div>
+                            Explicação Simples do Tema
+                        </h3>
+                        <div class="section-content">
+                            ${parsedContent.explicacao_simples || 'Conteúdo não disponível'}
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>
+                            <div class="section-icon">🎯</div>
+                            Por que é Importante?
+                        </h3>
+                        <div class="section-content">
+                            ${parsedContent.por_que_importante || 'Conteúdo não disponível'}
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>
+                            <div class="section-icon">⚙️</div>
+                            Como Funciona?
+                        </h3>
+                        <div class="section-content">
+                            ${parsedContent.como_funciona || 'Conteúdo não disponível'}
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>
+                            <div class="section-icon">🌟</div>
+                            Exemplos do Dia a Dia
+                        </h3>
+                        <div class="section-content">
+                            ${parsedContent.exemplos_dia_a_dia || 'Conteúdo não disponível'}
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>
+                            <div class="section-icon">📚</div>
+                            Dicas de Estudo
+                        </h3>
+                        <div class="section-content">
+                            ${parsedContent.dicas_estudo || 'Conteúdo não disponível'}
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>
+                            <div class="section-icon">✏️</div>
+                            Atividades Práticas
+                        </h3>
+                        <div class="section-content">
+                            ${parsedContent.atividades_praticas || 'Conteúdo não disponível'}
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>
+                            <div class="section-icon">🔍</div>
+                            Curiosidades
+                        </h3>
+                        <div class="section-content">
+                            ${parsedContent.curiosidades || 'Conteúdo não disponível'}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <div class="footer-content">
+                        <div class="footer-logo">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="footer-text">AulagIA</div>
+                            <div class="footer-tagline">Sua aula com toque mágico</div>
+                        </div>
+                    </div>
+                    <div class="footer-bottom">
+                        Material de Apoio gerado em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+      `;
+>>>>>>> 4157efcffe15fc06cbd8191265cfa3e89c7c0a9c
     }
 
     // Save to database for apoio materials
