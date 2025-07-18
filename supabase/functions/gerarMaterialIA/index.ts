@@ -12,10 +12,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Função para gerar imagem via edge function
-async function generateImage(prompt: string): Promise<string> {
+// Função para gerar imagem via edge function gerarImagemIA
+async function generateImage(prompt: string, imageType: string): Promise<string> {
   try {
-    console.log('🎨 Gerando imagem para prompt:', prompt);
+    console.log(`🎨 [IMAGEM-${imageType.toUpperCase()}] Iniciando geração com prompt:`, prompt);
     
     const response = await fetch(`${supabaseUrl}/functions/v1/gerarImagemIA`, {
       method: 'POST',
@@ -27,20 +27,20 @@ async function generateImage(prompt: string): Promise<string> {
     });
 
     if (!response.ok) {
-      console.error('❌ Erro na geração de imagem:', response.status, response.statusText);
-      throw new Error(`Falha na geração de imagem: ${response.status}`);
+      console.error(`❌ [IMAGEM-${imageType.toUpperCase()}] Erro HTTP:`, response.status, response.statusText);
+      throw new Error(`Falha na geração de imagem ${imageType}: HTTP ${response.status}`);
     }
 
     const result = await response.json();
     if (result.success && result.imageUrl) {
-      console.log('✅ Imagem gerada com sucesso');
+      console.log(`✅ [IMAGEM-${imageType.toUpperCase()}] Geração concluída com sucesso`);
       return result.imageUrl;
     } else {
-      console.error('❌ Falha na geração de imagem:', result.error);
-      throw new Error(`Erro na geração: ${result.error}`);
+      console.error(`❌ [IMAGEM-${imageType.toUpperCase()}] Falha na resposta:`, result.error);
+      throw new Error(`Erro na geração de ${imageType}: ${result.error}`);
     }
   } catch (error) {
-    console.error('❌ Erro ao chamar gerarImagemIA:', error);
+    console.error(`❌ [IMAGEM-${imageType.toUpperCase()}] Erro durante geração:`, error);
     throw error;
   }
 }
@@ -52,20 +52,21 @@ serve(async (req) => {
 
   try {
     const { materialType, formData } = await req.json();
-    console.log('🚀 Generating material:', materialType, formData);
+    console.log('🚀 [INÍCIO] Iniciando geração de material:', materialType);
+    console.log('📋 [DADOS] FormData recebido:', formData);
 
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Extrair o tema específico dos dados do formulário
+    // Extrair informações específicas
     const temaEspecifico = formData.tema || formData.topic || '';
     const disciplina = formData.disciplina || formData.subject || '';
     const serie = formData.serie || formData.grade || '';
 
-    console.log('📋 Tema específico extraído:', temaEspecifico);
-    console.log('📋 Disciplina:', disciplina);
-    console.log('📋 Série:', serie);
+    console.log('🎯 [TEMA] Tema específico:', temaEspecifico);
+    console.log('📚 [DISCIPLINA] Disciplina:', disciplina);
+    console.log('🎓 [SÉRIE] Série:', serie);
 
     if (!temaEspecifico.trim()) {
       throw new Error('Tema não fornecido no formData');
@@ -73,6 +74,9 @@ serve(async (req) => {
 
     let prompt = '';
     let systemMessage = '';
+
+    // ETAPA 1: DEFINIR PROMPTS PARA GERAÇÃO DE TEXTO
+    console.log('📝 [ETAPA-1] Configurando prompts para geração de texto...');
 
     if (materialType === 'slides') {
       systemMessage = `Você é um especialista em criação de materiais educacionais ESPECÍFICOS para apresentações de slides.
@@ -100,14 +104,14 @@ ESTRUTURA JSON OBRIGATÓRIA:
   "atividade": "string - atividade sobre ${temaEspecifico}",
   "resumo": "string - resumo de ${temaEspecifico}",
   "conclusao": "string - conclusão sobre ${temaEspecifico}",
-  "tema_imagem": "Ilustração educativa sobre ${temaEspecifico} para ${disciplina}",
-  "introducao_imagem": "Ilustração introdutória de ${temaEspecifico}",
-  "conceitos_imagem": "Diagrama dos conceitos de ${temaEspecifico}",
-  "desenvolvimento_1_imagem": "Ilustração do primeiro aspecto de ${temaEspecifico}",
-  "desenvolvimento_2_imagem": "Ilustração do segundo aspecto de ${temaEspecifico}",
-  "desenvolvimento_3_imagem": "Ilustração do terceiro aspecto de ${temaEspecifico}",
-  "desenvolvimento_4_imagem": "Ilustração do quarto aspecto de ${temaEspecifico}",
-  "exemplo_imagem": "Exemplo visual de ${temaEspecifico}"
+  "tema_imagem_prompt": "Ilustração educativa brasileira sobre ${temaEspecifico} para ${disciplina}, série ${serie}, capa atraente",
+  "introducao_imagem_prompt": "Introdução visual educativa sobre ${temaEspecifico}, conceitos básicos para ${disciplina} ${serie}",
+  "conceitos_imagem_prompt": "Diagrama educativo dos conceitos principais de ${temaEspecifico} para ${disciplina} ${serie}",
+  "desenvolvimento_1_imagem_prompt": "Ilustração específica do primeiro aspecto de ${temaEspecifico} em ${disciplina} para ${serie}",
+  "desenvolvimento_2_imagem_prompt": "Ilustração específica do segundo aspecto de ${temaEspecifico} em ${disciplina} para ${serie}",
+  "desenvolvimento_3_imagem_prompt": "Ilustração específica do terceiro aspecto de ${temaEspecifico} em ${disciplina} para ${serie}",
+  "desenvolvimento_4_imagem_prompt": "Ilustração específica do quarto aspecto de ${temaEspecifico} em ${disciplina} para ${serie}",
+  "exemplo_imagem_prompt": "Exemplo visual prático de ${temaEspecifico} aplicado em ${disciplina} para ${serie}"
 }
 
 Retorne APENAS o JSON válido, sem markdown ou explicações.`;
@@ -122,10 +126,11 @@ DADOS DO MATERIAL:
 
 INSTRUÇÕES CRÍTICAS:
 1. TODOS os textos devem ser sobre "${temaEspecifico}" EXCLUSIVAMENTE
-2. NÃO mencione outros temas matemáticos além de "${temaEspecifico}"
+2. NÃO mencione outros temas além de "${temaEspecifico}"
 3. Use linguagem adequada para ${serie}
 4. Foque em conceitos, exemplos e aplicações específicas de "${temaEspecifico}"
 5. Cada campo do JSON deve conter conteúdo educativo específico sobre "${temaEspecifico}"
+6. Os prompts de imagem devem ser MUITO específicos sobre "${temaEspecifico}"
 
 VALIDAÇÃO: Se o JSON gerado mencionar qualquer tema diferente de "${temaEspecifico}", refaça completamente.
 
@@ -216,7 +221,10 @@ ESTRUTURA OBRIGATÓRIA:
 }`;
     }
 
-    console.log('📤 Enviando solicitação para OpenAI com tema específico:', temaEspecifico);
+    // ETAPA 2: GERAR TEXTO COM OPENAI
+    console.log('🤖 [ETAPA-2] Chamando OpenAI para geração de texto...');
+    console.log('📤 [OPENAI] Enviando prompt para tema:', temaEspecifico);
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -229,103 +237,109 @@ ESTRUTURA OBRIGATÓRIA:
           { role: 'system', content: systemMessage },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.1, // Muito baixo para máxima consistência
+        temperature: 0.1,
         max_tokens: 4000,
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('❌ OpenAI API error:', errorData);
+      console.error('❌ [OPENAI] Erro na API:', errorData);
       throw new Error(`OpenAI API error: ${response.status} ${errorData}`);
     }
 
     const data = await response.json();
-    console.log('✅ OpenAI response received');
+    console.log('✅ [OPENAI] Resposta recebida com sucesso');
 
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('❌ Invalid OpenAI response structure:', data);
+      console.error('❌ [OPENAI] Estrutura de resposta inválida:', data);
       throw new Error('Invalid response structure from OpenAI');
     }
 
     let generatedContent = data.choices[0].message.content.trim();
-    console.log('📝 Generated content preview:', generatedContent.substring(0, 500));
+    console.log('📝 [CONTEÚDO] Preview do conteúdo gerado:', generatedContent.substring(0, 200) + '...');
 
-    // Limpar conteúdo para garantir JSON válido
+    // ETAPA 3: PROCESSAR E VALIDAR JSON
+    console.log('🔍 [ETAPA-3] Processando e validando JSON...');
+
     generatedContent = generatedContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
     
-    // Tentar fazer parse do JSON
     let parsedContent;
     try {
       parsedContent = JSON.parse(generatedContent);
-      console.log('✅ JSON parsed successfully');
+      console.log('✅ [JSON] Parse realizado com sucesso');
       
-      // VALIDAÇÃO ADICIONAL: Verificar se o conteúdo é realmente sobre o tema
+      // Validação específica para o tema
       if (materialType === 'slides') {
         const temaNoTitulo = parsedContent.tema && parsedContent.tema.toLowerCase().includes(temaEspecifico.toLowerCase());
         const temaNoConteudo = parsedContent.conceitos && parsedContent.conceitos.toLowerCase().includes(temaEspecifico.toLowerCase());
         
         if (!temaNoTitulo || !temaNoConteudo) {
-          console.error('❌ Conteúdo gerado não é específico para o tema:', temaEspecifico);
-          console.error('❌ Título:', parsedContent.tema);
-          console.error('❌ Conceitos:', parsedContent.conceitos);
+          console.error('❌ [VALIDAÇÃO] Conteúdo não específico para tema:', temaEspecifico);
+          console.error('❌ [VALIDAÇÃO] Título:', parsedContent.tema);
+          console.error('❌ [VALIDAÇÃO] Conceitos:', parsedContent.conceitos);
           throw new Error(`Conteúdo gerado não é específico para o tema: ${temaEspecifico}`);
         }
+        console.log('✅ [VALIDAÇÃO] Conteúdo validado para o tema:', temaEspecifico);
       }
       
     } catch (parseError) {
-      console.error('❌ Failed to parse JSON:', parseError);
-      console.error('❌ Raw content:', generatedContent);
+      console.error('❌ [JSON] Falha no parse:', parseError);
+      console.error('❌ [JSON] Conteúdo raw:', generatedContent);
       throw new Error('Generated content is not valid JSON');
     }
 
-    // Processar imagens para slides
+    // ETAPA 4: GERAÇÃO SEQUENCIAL DE IMAGENS (APENAS PARA SLIDES)
     if (materialType === 'slides') {
-      console.log('🎨 Processando imagens para slides com tema:', temaEspecifico);
+      console.log('🎨 [ETAPA-4] Iniciando geração sequencial de imagens para slides...');
       
-      // Lista de campos de imagem para processar
       const imageFields = [
-        'tema_imagem', 'introducao_imagem', 'conceitos_imagem',
-        'desenvolvimento_1_imagem', 'desenvolvimento_2_imagem',
-        'desenvolvimento_3_imagem', 'desenvolvimento_4_imagem', 'exemplo_imagem'
+        { field: 'tema_imagem', promptField: 'tema_imagem_prompt', type: 'CAPA' },
+        { field: 'introducao_imagem', promptField: 'introducao_imagem_prompt', type: 'INTRODUÇÃO' },
+        { field: 'conceitos_imagem', promptField: 'conceitos_imagem_prompt', type: 'CONCEITOS' },
+        { field: 'desenvolvimento_1_imagem', promptField: 'desenvolvimento_1_imagem_prompt', type: 'DESENVOLVIMENTO-1' },
+        { field: 'desenvolvimento_2_imagem', promptField: 'desenvolvimento_2_imagem_prompt', type: 'DESENVOLVIMENTO-2' },
+        { field: 'desenvolvimento_3_imagem', promptField: 'desenvolvimento_3_imagem_prompt', type: 'DESENVOLVIMENTO-3' },
+        { field: 'desenvolvimento_4_imagem', promptField: 'desenvolvimento_4_imagem_prompt', type: 'DESENVOLVIMENTO-4' },
+        { field: 'exemplo_imagem', promptField: 'exemplo_imagem_prompt', type: 'EXEMPLO' }
       ];
 
-      // Processar cada campo de imagem sequencialmente com prompts MUITO específicos
-      for (const field of imageFields) {
-        if (parsedContent[field]) {
-          // Criar prompt EXTREMAMENTE específico baseado no tema
-          let specificPrompt = `Ilustração educativa brasileira sobre ${temaEspecifico} para ${disciplina}, série ${serie}`;
+      console.log(`🔄 [SEQUÊNCIA] Total de ${imageFields.length} imagens para gerar`);
+
+      for (let i = 0; i < imageFields.length; i++) {
+        const { field, promptField, type } = imageFields[i];
+        
+        if (parsedContent[promptField]) {
+          console.log(`🖼️ [${i + 1}/${imageFields.length}] Processando imagem: ${type}`);
+          console.log(`📝 [PROMPT-${type}] Prompt:`, parsedContent[promptField]);
           
-          if (field === 'tema_imagem') {
-            specificPrompt = `Capa educativa brasileira sobre ${temaEspecifico} em ${disciplina}, visual atraente para ${serie}`;
-          } else if (field === 'introducao_imagem') {
-            specificPrompt = `Introdução visual sobre ${temaEspecifico}, conceitos básicos para ${disciplina} ${serie}`;
-          } else if (field === 'conceitos_imagem') {
-            specificPrompt = `Diagrama educativo dos conceitos de ${temaEspecifico} para ${disciplina} ${serie}`;
-          } else if (field.includes('desenvolvimento')) {
-            const numero = field.split('_')[1];
-            specificPrompt = `Ilustração específica do tópico ${numero} sobre ${temaEspecifico} em ${disciplina} para ${serie}`;
-          } else if (field === 'exemplo_imagem') {
-            specificPrompt = `Exemplo visual prático de ${temaEspecifico} aplicado em ${disciplina} para ${serie}`;
-          }
-          
-          console.log(`🖼️ Gerando imagem para ${field} com prompt específico:`, specificPrompt);
           try {
-            const imageUrl = await generateImage(specificPrompt);
+            const imageUrl = await generateImage(parsedContent[promptField], type);
             parsedContent[field] = imageUrl;
-            console.log(`✅ Imagem gerada para ${field}`);
+            
+            // Remover o campo de prompt para não incluir no resultado final
+            delete parsedContent[promptField];
+            
+            console.log(`✅ [${i + 1}/${imageFields.length}] Imagem ${type} gerada com sucesso`);
+            
+            // Pequena pausa entre gerações para evitar sobrecarga
+            if (i < imageFields.length - 1) {
+              console.log(`⏳ [PAUSA] Aguardando 1 segundo antes da próxima imagem...`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
           } catch (error) {
-            console.error(`❌ Erro ao gerar imagem para ${field}:`, error);
-            throw new Error(`Falha na geração de imagem para ${field}: ${error.message}`);
+            console.error(`❌ [${i + 1}/${imageFields.length}] Erro na imagem ${type}:`, error);
+            throw new Error(`Falha na geração de imagem para ${type}: ${error.message}`);
           }
+        } else {
+          console.warn(`⚠️ [${i + 1}/${imageFields.length}] Prompt não encontrado para ${type}`);
         }
       }
 
-      console.log('✅ Processamento de imagens concluído');
-    }
+      console.log('✅ [SEQUÊNCIA] Todas as imagens foram processadas com sucesso');
 
-    // Validar estrutura específica para slides
-    if (materialType === 'slides') {
+      // Validar campos obrigatórios para slides
       const requiredFields = [
         'tema', 'disciplina', 'serie', 'professor', 'objetivos', 'introducao', 
         'conceitos', 'desenvolvimento_1', 'desenvolvimento_2', 'desenvolvimento_3', 
@@ -337,17 +351,20 @@ ESTRUTURA OBRIGATÓRIA:
 
       for (const field of requiredFields) {
         if (!parsedContent[field]) {
-          console.error(`❌ Missing required field for slides: ${field}`);
+          console.error(`❌ [VALIDAÇÃO-FINAL] Campo obrigatório ausente: ${field}`);
           throw new Error(`Missing required field: ${field}`);
         }
       }
-      console.log('✅ All required fields present for slides');
+      console.log('✅ [VALIDAÇÃO-FINAL] Todos os campos obrigatórios presentes');
     }
 
-    // LOG FINAL de verificação
-    console.log('📋 VERIFICAÇÃO FINAL - Tema solicitado:', temaEspecifico);
-    console.log('📋 VERIFICAÇÃO FINAL - Tema no material:', parsedContent.tema);
-    console.log('📋 VERIFICAÇÃO FINAL - Disciplina:', parsedContent.disciplina);
+    // ETAPA 5: FINALIZAÇÃO E LOGS FINAIS
+    console.log('🏁 [ETAPA-5] Finalizando geração do material...');
+    console.log('📋 [VERIFICAÇÃO-FINAL] Tema solicitado:', temaEspecifico);
+    console.log('📋 [VERIFICAÇÃO-FINAL] Tema no material:', parsedContent.tema);
+    console.log('📋 [VERIFICAÇÃO-FINAL] Disciplina:', parsedContent.disciplina);
+    console.log('📋 [VERIFICAÇÃO-FINAL] Série:', parsedContent.serie);
+    console.log('✅ [SUCESSO] Material gerado com sucesso!');
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -357,7 +374,7 @@ ESTRUTURA OBRIGATÓRIA:
     });
 
   } catch (error) {
-    console.error('❌ Error in gerarMaterialIA:', error);
+    console.error('❌ [ERRO-GERAL] Falha na geração do material:', error);
     return new Response(JSON.stringify({ 
       success: false, 
       error: error.message 
