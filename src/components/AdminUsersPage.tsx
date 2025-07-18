@@ -47,6 +47,8 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [deletingFeedbackId, setDeletingFeedbackId] = useState<string | null>(null);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   async function fetchUsers() {
     setLoading(true);
@@ -120,27 +122,34 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     async function fetchFeedbacks() {
-      setError(null);
+      setFeedbackError(null);
+      setFeedbackLoading(true);
       try {
         const { data: feedbacksData, error: feedbacksError } = await supabase
           .from('feedbacks')
           .select('id, user_id, type, message, created_at')
           .order('created_at', { ascending: false })
           .limit(10);
-        if (feedbacksError) throw feedbacksError;
-        if (feedbacksData) {
-          const userIds = feedbacksData.map(f => f.user_id);
-          const { data: perfis, error: perfisError } = await supabase
-            .from('perfis')
-            .select('user_id, nome_preferido')
-            .in('user_id', userIds);
-          if (perfisError) throw perfisError;
-          const userMap = Object.fromEntries((perfis || []).map(p => [p.user_id, p.nome_preferido || 'Usuário']));
-          setFeedbacks(feedbacksData.map(f => ({ ...f, userName: userMap[f.user_id] || f.user_id })));
+        if (feedbacksError) throw new Error('Erro ao buscar feedbacks.');
+        if (feedbacksData && feedbacksData.length > 0) {
+          const userIds = feedbacksData.map(f => f.user_id).filter(Boolean);
+          let userMap: Record<string, string> = {};
+          if (userIds.length > 0) {
+            const { data: perfis, error: perfisError } = await supabase
+              .from('perfis')
+              .select('user_id, nome_preferido')
+              .in('user_id', userIds);
+            if (perfisError) setFeedbackError('Erro ao buscar perfis dos usuários.');
+            userMap = Object.fromEntries((perfis || []).map(p => [p.user_id, p.nome_preferido || 'Usuário']));
+          }
+          setFeedbacks(feedbacksData.map(f => ({ ...f, userName: userMap[f.user_id] || f.user_id || 'Usuário' })));
+        } else {
+          setFeedbacks([]);
         }
       } catch (err: any) {
-        setError('Erro ao buscar feedbacks.');
-        toast({ title: 'Erro', description: 'Erro ao buscar feedbacks.', variant: 'destructive' });
+        setFeedbackError(err.message || 'Erro ao buscar feedbacks.');
+      } finally {
+        setFeedbackLoading(false);
       }
     }
     fetchFeedbacks();
@@ -263,7 +272,11 @@ export default function AdminUsersPage() {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4 max-h-64 overflow-y-auto">
-              {feedbacks.length === 0 ? (
+              {feedbackLoading ? (
+                <div className="text-center py-8 text-blue-500">Carregando feedbacks...</div>
+              ) : feedbackError ? (
+                <div className="text-center py-8 text-red-600">{feedbackError}</div>
+              ) : feedbacks.length === 0 ? (
                 <div className="text-center py-8">
                   <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500">Nenhum feedback enviado ainda.</p>
