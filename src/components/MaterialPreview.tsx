@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { templateService } from '@/services/templateService';
 import { GeneratedMaterial } from '@/services/materialService';
@@ -28,6 +27,56 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     return typeMap[type as keyof typeof typeMap] || '1';
   };
 
+  // Método para criar páginas com o novo template
+  const wrapPageContentWithTemplate = (content: string, isFirstPage: boolean): string => {
+    const pageClass = isFirstPage ? 'first-page-content' : 'subsequent-page-content';
+    const contentClass = isFirstPage ? 'content' : 'content subsequent-page';
+    
+    // Definir texto do rodapé baseado no tipo de material
+    const getFooterText = () => {
+      if (material.type === 'plano-de-aula') {
+        return `Plano de aula gerado pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br`;
+      } else if (material.type === 'atividade') {
+        return `Atividade gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br`;
+      } else {
+        return `Avaliação gerada pela AulagIA - Sua aula com toque mágico em ${new Date().toLocaleDateString('pt-BR')} • aulagia.com.br`;
+      }
+    };
+    
+    return `
+      <div class="page ${pageClass}">
+        <!-- Formas decorativas -->
+        <div class="shape-circle purple"></div>
+        <div class="shape-circle blue"></div>
+
+        <!-- Cabeçalho AulagIA - Visível em todas as páginas -->
+        <div class="header">
+          <div class="logo-container">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+            </div>
+            <div class="brand-text">
+              <h1>AulagIA</h1>
+              <p>Sua aula com toque mágico</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rodapé - Visível em todas as páginas -->
+        <div class="footer">
+          ${getFooterText()}
+        </div>
+
+        <div class="${contentClass}">
+          ${content}
+        </div>
+      </div>
+    `;
+  };
+
   const renderMaterial = () => {
     // Forçar template padrão para atividades e avaliações
     let selectedTemplateId = templateId;
@@ -41,15 +90,12 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
         const apoioHtml = material.content?.conteudo || material.content || '';
         return <ApoioIframe apoioHtml={apoioHtml} height={600} title="Material de Apoio" />;
       }
-
-      // Se for slides, usar o SlideViewer diretamente com o conteúdo JSON
-      if (material.type === 'slides') {
-        console.log('🎬 Rendering slides with content:', material.content);
-        return <SlideViewer material={material} />;
-      }
-      
-      // Para outros tipos, usar o sistema de templates
       const renderedHtml = templateService.renderTemplate(selectedTemplateId, material.content);
+      
+      // Se for slides, usar o SlideViewer com material
+      if (material.type === 'slides') {
+        return <SlideViewer htmlContent={renderedHtml} material={material} />;
+      }
       
       // Split content into pages com o novo sistema
       const pages = splitContentIntoPages(renderedHtml, material);
@@ -109,7 +155,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             </div>
           )}
 
-          {/* Mobile Page Counter */}
+          {/* Mobile Page Counter - Increased size even more */}
           {isMobile && (
             <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/95 backdrop-blur-sm px-8 py-4 rounded-full shadow-xl border-2">
               <div className="flex items-center space-x-4">
@@ -121,10 +167,10 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
             </div>
           )}
 
-          {/* Mobile Floating Navigation Buttons */}
+          {/* Mobile Floating Navigation Buttons - Increased size even more */}
           {isMobile && pages.length > 1 && (
             <>
-              {/* Previous Button */}
+              {/* Previous Button - Much larger */}
               <Button
                 variant="outline"
                 size="icon"
@@ -135,7 +181,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
                 <ChevronLeft className="w-12 h-12" />
               </Button>
 
-              {/* Next Button */}
+              {/* Next Button - Much larger */}
               <Button
                 variant="outline"
                 size="icon"
