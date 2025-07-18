@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { templateService } from '@/services/templateService';
+import { SUPPORT_MATERIAL_TEMPLATE, replaceTemplateVariables } from '@/services/supportMaterialTemplate';
 import { marked } from 'marked';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
@@ -39,56 +39,6 @@ interface SupportMaterialModalProps {
   onClose: () => void;
   onDelete?: () => void;
   isEditMode?: boolean;
-}
-
-// Adicione a função utilitária para template institucional A4 igual ao gabarito
-function wrapApoioWithA4Template(apoioHtml: string) {
-  const today = new Date().toLocaleDateString('pt-BR');
-  return `
-  <div class="page first-page-content">
-    <div class="shape-circle purple"></div>
-    <div class="shape-circle blue"></div>
-    <div class="header">
-      <div class="logo-container">
-        <div class="logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-          </svg>
-        </div>
-        <div class="brand-text">
-          <h1>AulagIA</h1>
-          <p>Sua aula com toque mágico</p>
-        </div>
-      </div>
-    </div>
-    <div class="footer">
-      Conteúdo de Apoio gerado pela AulagIA - Sua aula com toque mágico em ${today} • aulagia.com.br
-    </div>
-    <div class="content">
-      ${apoioHtml}
-    </div>
-  </div>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    @page { size: A4; margin: 0; }
-    body { margin: 0; padding: 0; background: #f0f4f8; font-family: 'Inter', sans-serif; }
-    .page { position: relative; width: 210mm; min-height: 297mm; background: white; overflow: hidden; margin: 0 auto 20px auto; box-sizing: border-box; padding: 0; display: flex; flex-direction: column; border-radius: 6px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); page-break-after: always; }
-    .shape-circle { position: absolute; border-radius: 50%; opacity: 0.25; pointer-events: none; z-index: 0; }
-    .shape-circle.purple { width: 180px; height: 180px; background: #a78bfa; top: -60px; left: -40px; }
-    .shape-circle.blue { width: 240px; height: 240px; background: #60a5fa; bottom: -80px; right: -60px; }
-    .header { position: absolute; top: 6mm; left: 0; right: 0; display: flex; align-items: center; z-index: 999; height: 15mm; background: transparent; padding: 0 12mm; flex-shrink: 0; }
-    .header .logo-container { display: flex; align-items: center; gap: 6px; }
-    .header .logo { width: 38px; height: 38px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3); }
-    .header .logo svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; }
-    .header .brand-text { display: flex; flex-direction: column; justify-content: center; }
-    .header .brand-text h1 { font-size: 24px; color: #0ea5e9; margin: 0; font-family: 'Inter', sans-serif; line-height: 1; font-weight: 700; letter-spacing: -0.5px; text-transform: none; }
-    .header .brand-text p { font-size: 9px; color: #6b7280; margin: 1px 0 0 0; font-family: 'Inter', sans-serif; line-height: 1; font-weight: 400; }
-    .content { margin-top: 25mm; margin-bottom: 12mm; padding: 0 15mm; position: relative; flex: 1; overflow: visible; z-index: 1; }
-    .footer { position: absolute; bottom: 6mm; left: 0; right: 0; text-align: center; font-size: 0.7rem; color: #6b7280; z-index: 999; height: 6mm; display: flex; align-items: center; justify-content: center; background: transparent; padding: 0 15mm; font-family: 'Inter', sans-serif; flex-shrink: 0; }
-    @media print { body { margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { box-shadow: none; margin: 0; border-radius: 0; width: 100%; min-height: 100vh; display: flex; flex-direction: column; } .shape-circle { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .header, .footer { position: fixed; background: transparent; } .header .logo { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .header .brand-text h1 { text-transform: none !important; } .header .logo svg { width: 20px !important; height: 20px !important; } }
-  </style>
-  `;
 }
 
 const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({ 
@@ -205,7 +155,13 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
   const renderSupportHtml = () => {
     const data = new Date().toLocaleDateString('pt-BR');
     
-    // Processar conteúdo estruturado ou HTML
+    // Verificar se o conteúdo já é HTML completo (template de 5 páginas)
+    if (material.conteudo.includes('<!DOCTYPE html') && material.conteudo.includes('.page')) {
+      // Já é o template completo, usar como está
+      return material.conteudo;
+    }
+    
+    // Se não for o template completo, processar como antes
     let conteudoHtml = material.conteudo;
     
     try {
@@ -221,28 +177,65 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
       // Se não for JSON, tratar como markdown/texto
       try {
         const parsed = marked.parse(material.conteudo);
-        // Handle both sync and async marked.parse results
         if (typeof parsed === 'string') {
           conteudoHtml = parsed;
         } else {
-          // If it's a Promise, use original content with line breaks
           conteudoHtml = material.conteudo.replace(/\n/g, '<br/>');
         }
       } catch (markdownError) {
         console.error('Error parsing markdown:', markdownError);
-        // Se falhar, usar o conteúdo original com quebras de linha
         conteudoHtml = material.conteudo.replace(/\n/g, '<br/>');
       }
     }
 
-    return String(templateService.renderTemplate('5', {
-      titulo: material.titulo || 'Material de Apoio ao Professor',
-      tema: material.tema,
-      disciplina: material.disciplina,
-      serie: material.turma,
-      conteudo: conteudoHtml,
-      data
-    }) || '');
+    // Usar template simples para conteúdos antigos
+    const simpleTemplate = `
+      <div class="page first-page-content">
+        <div class="shape-circle purple"></div>
+        <div class="shape-circle blue"></div>
+        <div class="header">
+          <div class="logo-container">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+            </div>
+            <div class="brand-text">
+              <h1>AulagIA</h1>
+              <p>Sua aula com toque mágico</p>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          Conteúdo de Apoio gerado pela AulagIA - Sua aula com toque mágico em ${data} • aulagia.com.br
+        </div>
+        <div class="content">
+          ${conteudoHtml}
+        </div>
+      </div>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @page { size: A4; margin: 0; }
+        body { margin: 0; padding: 0; background: #f0f4f8; font-family: 'Inter', sans-serif; }
+        .page { position: relative; width: 210mm; min-height: 297mm; background: white; overflow: hidden; margin: 0 auto 20px auto; box-sizing: border-box; padding: 0; display: flex; flex-direction: column; border-radius: 6px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); page-break-after: always; }
+        .shape-circle { position: absolute; border-radius: 50%; opacity: 0.25; pointer-events: none; z-index: 0; }
+        .shape-circle.purple { width: 180px; height: 180px; background: #a78bfa; top: -60px; left: -40px; }
+        .shape-circle.blue { width: 240px; height: 240px; background: #60a5fa; bottom: -80px; right: -60px; }
+        .header { position: absolute; top: 6mm; left: 0; right: 0; display: flex; align-items: center; z-index: 999; height: 15mm; background: transparent; padding: 0 12mm; flex-shrink: 0; }
+        .header .logo-container { display: flex; align-items: center; gap: 6px; }
+        .header .logo { width: 38px; height: 38px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3); }
+        .header .logo svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; }
+        .header .brand-text { display: flex; flex-direction: column; justify-content: center; }
+        .header .brand-text h1 { font-size: 24px; color: #0ea5e9; margin: 0; font-family: 'Inter', sans-serif; line-height: 1; font-weight: 700; letter-spacing: -0.5px; text-transform: none; }
+        .header .brand-text p { font-size: 9px; color: #6b7280; margin: 1px 0 0 0; font-family: 'Inter', sans-serif; line-height: 1; font-weight: 400; }
+        .content { margin-top: 25mm; margin-bottom: 12mm; padding: 0 15mm; position: relative; flex: 1; overflow: visible; z-index: 1; }
+        .footer { position: absolute; bottom: 6mm; left: 0; right: 0; text-align: center; font-size: 0.7rem; color: #6b7280; z-index: 999; height: 6mm; display: flex; align-items: center; justify-content: center; background: transparent; padding: 0 15mm; font-family: 'Inter', sans-serif; flex-shrink: 0; }
+        @media print { body { margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { box-shadow: none; margin: 0; border-radius: 0; width: 100%; min-height: 100vh; display: flex; flex-direction: column; } .shape-circle { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .header, .footer { position: fixed; background: transparent; } .header .logo { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .header .brand-text h1 { text-transform: none !important; } .header .logo svg { width: 20px !important; height: 20px !important; } }
+      </style>
+    `;
+    
+    return simpleTemplate;
   };
 
   const handleExport = (format: 'pdf' | 'word' | 'print') => {
@@ -289,7 +282,6 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
     setExportDropdownOpen(false);
   };
 
-  // No renderContent, sempre renderize o HTML do apoio dentro do template A4
   const renderContent = () => {
     if (editMode) {
       return (
@@ -343,18 +335,11 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
         </div>
       );
     }
-    // Sempre renderizar o HTML do apoio dentro do template institucional A4
-    let apoioHtml = material.conteudo;
-    try {
-      const parsed = JSON.parse(material.conteudo);
-      if (parsed.conteudo_completo) {
-        apoioHtml = parsed.conteudo_completo;
-      }
-    } catch {}
-    // Exibir tudo em um único bloco .page
+
+    // Renderizar o HTML do apoio
     return (
       <div className="prose prose-sm max-w-none" style={{ background: '#f8fafc', borderRadius: 12, padding: 0, overflow: 'auto' }}>
-        <div dangerouslySetInnerHTML={{ __html: wrapApoioWithA4Template(apoioHtml) }} />
+        <div dangerouslySetInnerHTML={{ __html: renderSupportHtml() }} />
       </div>
     );
   };
