@@ -604,6 +604,14 @@ const CreateLesson: React.FC = () => {
       updateProgress('content-generation', 30, 'Gerando conteúdo pedagógico...');
       console.log('📋 Dados do material sendo enviados:', materialFormData);
       
+      // Não permitir criação de material de apoio no fluxo principal
+      if (selectedType === 'apoio') {
+        toast.error('Conteúdo de apoio só pode ser criado a partir do modal de apoio de um material principal.');
+        setIsGenerating(false);
+        setStep('form');
+        return;
+      }
+      
       let material = await materialService.generateMaterial(selectedType!, materialFormData);
       
       updateProgress('content-generation', 70, 'Processando e validando conteúdo...');

@@ -78,6 +78,10 @@ const MaterialsList: React.FC = () => {
   const [supportMaterialModalOpen, setSupportMaterialModalOpen] = useState(false);
   const [supportMaterialEditModalOpen, setSupportMaterialEditModalOpen] = useState(false);
   const [supportMaterialToEdit, setSupportMaterialToEdit] = useState<SupportMaterial | null>(null);
+  
+  // Estados para exclusão de materiais de apoio
+  const [supportDeleteDialogOpen, setSupportDeleteDialogOpen] = useState(false);
+  const [supportMaterialToDelete, setSupportMaterialToDelete] = useState<SupportMaterial | null>(null);
 
   // Hooks para gerenciamento de planos
   const { canEditMaterials, canDownloadWord, canDownloadPPT } = usePlanPermissions();
@@ -143,13 +147,24 @@ const MaterialsList: React.FC = () => {
     
     try {
       const { data, error } = await supabase
-        .from('materiais_apoio')
+        .from('materiais')
         .select('*')
         .order('created_at', { ascending: false });
       
       if (!error && data) {
-        setSupportMaterials(data);
-        console.log('Support materials loaded:', data.length);
+        // Converter os dados para o tipo SupportMaterial
+        const supportMaterialsData = data.map((item: any) => ({
+          id: item.id,
+          titulo: item.titulo || item.title || '',
+          conteudo: item.conteudo || item.content || '',
+          created_at: item.created_at,
+          disciplina: item.disciplina || item.subject || '',
+          tema: item.tema || item.theme || '',
+          turma: item.turma || item.grade || '',
+          material_principal_id: item.material_principal_id || ''
+        }));
+        setSupportMaterials(supportMaterialsData);
+        console.log('Support materials loaded:', supportMaterialsData.length);
       } else {
         console.error('Error loading support materials:', error);
       }
@@ -319,7 +334,7 @@ const MaterialsList: React.FC = () => {
       if (materialToDelete.formData?.supportMaterial) {
         // Delete support material
         const { error } = await supabase
-          .from('materiais_apoio')
+          .from('materiais')
           .delete()
           .eq('id', materialToDelete.id);
         
@@ -461,7 +476,10 @@ const MaterialsList: React.FC = () => {
     return configs[type as keyof typeof configs] || configs['atividade'];
   };
 
-  const uniqueSubjects = [...new Set([...materials.map(m => m.subject), ...supportMaterials.map(s => s.disciplina)])];
+  const uniqueSubjects = React.useMemo(() => 
+    [...new Set([...materials.map(m => m.subject), ...supportMaterials.map(s => s.disciplina)])],
+    [materials, supportMaterials]
+  );
 
   if (loading) {
     return (
@@ -544,13 +562,21 @@ const MaterialsList: React.FC = () => {
     setExportDropdownOpen(null);
   };
 
-  const handleDeleteSupportMaterial = async (material: SupportMaterial) => {
-    setMaterialToDelete(null); // Não use o modal de confirmação global para apoio, ou crie um modal próprio se necessário
+  // Função para abrir o modal de exclusão de apoio
+  const handleDeleteSupportMaterial = (material: SupportMaterial) => {
+    setSupportMaterialToDelete(material);
+    setSupportDeleteDialogOpen(true);
+  };
+
+  // Função para confirmar exclusão de apoio
+  const confirmDeleteSupportMaterial = async () => {
+    if (!supportMaterialToDelete) return;
     try {
       const { error } = await supabase
-        .from('materiais_apoio')
+        .from('materiais')
         .delete()
-        .eq('id', material.id);
+        .eq('id', supportMaterialToDelete.id)
+        .eq('tipo_material', 'apoio'); // Garante que só deleta apoio
       if (!error) {
         toast.success('Material de apoio excluído com sucesso!');
         loadSupportMaterials();
@@ -559,8 +585,13 @@ const MaterialsList: React.FC = () => {
       }
     } catch (error) {
       toast.error('Erro ao excluir material de apoio');
+    } finally {
+      setSupportDeleteDialogOpen(false);
+      setSupportMaterialToDelete(null);
     }
   };
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -1017,6 +1048,22 @@ const MaterialsList: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de confirmação de exclusão de apoio */}
+      <AlertDialog open={supportDeleteDialogOpen} onOpenChange={setSupportDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este material de apoio? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSupportDeleteDialogOpen(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteSupportMaterial}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
@@ -1029,40 +1076,29 @@ function SupportMaterialPrincipalInfo({ materialPrincipalId }: { materialPrincip
   const [error, setError] = React.useState<string | null>(null);
   React.useEffect(() => {
     if (!materialPrincipalId) return;
-    // Função auxiliar para buscar em todas as tabelas possíveis
+    // Função auxiliar para buscar na tabela materiais
     const fetchMaterial = async () => {
-      // Use os nomes de tabelas válidos e tipados explicitamente
-      const tables: Array<{ table: 'planos_de_aula' | 'atividades' | 'slides' | 'avaliacoes'; fields: string }> = [
-        { table: 'planos_de_aula', fields: 'titulo, disciplina, serie' },
-        { table: 'atividades', fields: 'titulo, disciplina, serie' },
-        { table: 'slides', fields: 'titulo, disciplina, serie' },
-        { table: 'avaliacoes', fields: 'titulo, disciplina, serie' }
-      ];
-      for (const t of tables) {
+      try {
         const { data, error } = await supabase
-          .from(t.table)
-          .select(t.fields)
+          .from('materiais')
+          .select('titulo, disciplina, serie')
           .eq('id', materialPrincipalId)
           .single();
-        // Se houver erro ou data for null, continue
-        if (error || !data) continue;
-        // Só acesse as propriedades se data não for erro
-        if (
-          typeof data === 'object' &&
-          'titulo' in data &&
-          'disciplina' in data &&
-          'serie' in data
-        ) {
-          setInfo({
-            titulo: data.titulo ?? '',
-            disciplina: data.disciplina ?? '',
-            turma: data.serie ?? ''
-          });
-          setError(null);
+        
+        if (error || !data) {
+          setError('Material principal não encontrado.');
           return;
         }
+        
+        setInfo({
+          titulo: data.titulo ?? '',
+          disciplina: data.disciplina ?? '',
+          turma: data.serie ?? ''
+        });
+        setError(null);
+      } catch (error) {
+        setError('Erro ao buscar material principal.');
       }
-      setError('Material principal não encontrado.');
     };
     fetchMaterial();
   }, [materialPrincipalId]);

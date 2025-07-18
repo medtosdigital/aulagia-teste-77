@@ -6,7 +6,7 @@ export interface Activity {
   type: 'created' | 'exported' | 'updated' | 'scheduled';
   title: string;
   description: string;
-  materialType?: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
+  materialType?: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' | 'apoio';
   materialId?: string;
   timestamp: Date;
   subject?: string;

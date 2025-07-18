@@ -18,7 +18,7 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
 
   const generateCorrectAnswer = (questao: any) => {
     switch (questao.tipo) {
-      case 'multipla_escolha':
+      case 'multipla_escolha': {
         // Analisar o contexto da pergunta para determinar a resposta correta
         const pergunta = questao.pergunta?.toLowerCase() || '';
         const opcoes = questao.opcoes || [];
@@ -39,6 +39,7 @@ const AnswerKeyModal: React.FC<AnswerKeyModalProps> = ({ material, open, onClose
           );
           return opcaoCorreta !== -1 ? String.fromCharCode(65 + opcaoCorreta) : 'B';
         }
+      }
 
       case 'verdadeiro_falso':
         const enunciado = questao.pergunta?.toLowerCase() || '';

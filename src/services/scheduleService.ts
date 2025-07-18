@@ -111,7 +111,7 @@ class ScheduleService {
     };
     
     // Começar a partir da data de início do evento
-    let currentDate = new Date(event.startDate);
+    const currentDate = new Date(event.startDate);
     currentDate.setHours(0, 0, 0, 0);
     
     const endDateLimit = new Date(Math.min(recurrenceEnd.getTime(), endDate.getTime()));

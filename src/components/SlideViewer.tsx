@@ -532,16 +532,16 @@ const SlideViewer: React.FC<SlideViewerProps> = ({
     if (index === 0) {
       // Extrair informações do material
       let tema = '';
-      let disciplina = material?.subject || 'Matemática';
-      let serie = material?.grade || 'Ensino Fundamental I-3º Ano';
-      let professor = material?.formData?.professor || 'Prof. Maria';
+      const disciplina = material?.subject || 'Matemática';
+      const serie = material?.grade || 'Ensino Fundamental I-3º Ano';
+      const professor = material?.formData?.professor || 'Prof. Maria';
       
       // Extrair título (tema) do HTML, se houver
       const temaMatch = htmlSemData.match(/<h1[^>]*>(.*?)<\/h1>/i);
       if (temaMatch) tema = temaMatch[1].trim();
       
       // Extrair subtítulo (ex: Aula de Matemática - Ensino Fundamental I-3º Ano)
-      let subtitulo = `Aula de ${disciplina} - ${serie}`;
+      const subtitulo = `Aula de ${disciplina} - ${serie}`;
       
       // Caixa de imagem
       const imageUrl = getGeneratedImageUrl(0);

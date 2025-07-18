@@ -1450,7 +1450,7 @@ class ExportService {
         // Limpar o container após exportar
         printContainer && (printContainer.innerHTML = '');
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         console.error('Erro ao exportar PDF com print-js:', err);
       }
     });

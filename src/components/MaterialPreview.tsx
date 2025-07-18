@@ -87,7 +87,7 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     try {
       // Se for material de apoio, sempre aplicar o template institucional igual ao SupportContentModal
       if (material.type === 'apoio') {
-        let apoioHtml = material.content?.conteudo || material.content || '';
+        const apoioHtml = material.content?.conteudo || material.content || '';
         return <ApoioIframe apoioHtml={apoioHtml} height={600} title="Material de Apoio" />;
       }
       const renderedHtml = templateService.renderTemplate(selectedTemplateId, material.content);

@@ -38,7 +38,7 @@ const Header: React.FC<HeaderProps> = ({
       // Buscar avatar do usuário
       const {
         data: userProfile
-      } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).single();
+      } = await supabase.from('perfis').select('avatar_url').eq('id', user.id).single();
 
       // Definir nome preferido
       const preferredName = profile?.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';

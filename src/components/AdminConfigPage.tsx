@@ -247,7 +247,7 @@ export default function AdminConfigPage() {
           .order('created_at', { ascending: false })
           .limit(10);
 
-        let userMap: Record<string, string> = {};
+        const userMap: Record<string, string> = {};
         if (activities && activities.length > 0) {
           const userIds = Array.from(new Set(activities.map(a => a.user_id)));
           const { data: users } = await supabase

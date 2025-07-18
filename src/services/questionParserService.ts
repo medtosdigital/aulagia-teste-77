@@ -39,9 +39,10 @@ export class QuestionParserService {
 
     // Type-specific validation and fixes
     switch (parsedQuestion.tipo) {
-      case 'multipla_escolha':
+      case 'multipla_escolha': {
         parsedQuestion.opcoes = this.validateMultipleChoice(question.opcoes);
         break;
+      }
         
       case 'ligar':
         const { coluna_a, coluna_b } = this.validateMatching(question.coluna_a, question.coluna_b);

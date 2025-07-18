@@ -53,11 +53,11 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
   const [editMode, setEditMode] = useState(isEditMode);
   
   // Edit form states
-  const [editTitulo, setEditTitulo] = useState(material?.titulo || '');
-  const [editConteudo, setEditConteudo] = useState(material?.conteudo || '');
-  const [editDisciplina, setEditDisciplina] = useState(material?.disciplina || '');
-  const [editTema, setEditTema] = useState(material?.tema || '');
-  const [editTurma, setEditTurma] = useState(material?.turma || '');
+  const [editTitulo, setEditTitulo] = useState('');
+  const [editConteudo, setEditConteudo] = useState('');
+  const [editDisciplina, setEditDisciplina] = useState('');
+  const [editTema, setEditTema] = useState('');
+  const [editTurma, setEditTurma] = useState('');
   const [saving, setSaving] = useState(false);
 
   const { canEditMaterials, canDownloadWord } = usePlanPermissions();
@@ -70,11 +70,16 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
       setEditDisciplina(material.disciplina);
       setEditTema(material.tema);
       setEditTurma(material.turma || '');
+    } else {
+      // Reset form when material is null
+      setEditTitulo('');
+      setEditConteudo('');
+      setEditDisciplina('');
+      setEditTema('');
+      setEditTurma('');
     }
     setEditMode(isEditMode);
   }, [material, isEditMode]);
-
-  if (!material) return null;
 
   const handleEdit = () => {
     if (!canEditMaterials()) {
@@ -95,7 +100,7 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('materiais_apoio')
+        .from('materiais')
         .update({
           titulo: editTitulo,
           conteudo: editConteudo,
@@ -133,7 +138,7 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
   const handleDelete = async () => {
     try {
       const { error } = await supabase
-        .from('materiais_apoio')
+        .from('materiais')
         .delete()
         .eq('id', material.id);
 
@@ -343,6 +348,8 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
       </div>
     );
   };
+
+  if (!material) return null;
 
   return (
     <>

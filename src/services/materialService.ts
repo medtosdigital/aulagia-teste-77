@@ -5,7 +5,7 @@ import { QuestionParserService } from './questionParserService';
 export interface GeneratedMaterial {
   id: string;
   title: string;
-  type: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
+  type: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' | 'apoio';
   subject: string;
   grade: string;
   createdAt: string;
@@ -30,6 +30,7 @@ export interface MaterialFormData {
   data?: string;
   duracao?: string;
   bncc?: string;
+  material_principal_id?: string; // Adicionado para materiais de apoio
 }
 
 // Updated LessonPlan interface to match what components expect
@@ -392,32 +393,15 @@ class MaterialService {
   }
 
   private mapToUnifiedMaterial(type: string, formData: MaterialFormData, content: any): Omit<UnifiedMaterial, 'id' | 'createdAt' | 'status'> {
-    const title = this.generateTitle(type, formData);
-    const materialType = type === 'plano-de-aula' ? 'plano-de-aula' : type as UnifiedMaterial['type'];
-
-    // Corrigir habilidades para sempre salvar como array de strings
-    let habilidades: string[] = [];
-    if (content.habilidades && Array.isArray(content.habilidades)) {
-      habilidades = content.habilidades.map((h: any) => {
-        if (typeof h === 'object' && h.codigo && h.descricao) {
-          return `${h.codigo} - ${h.descricao}`;
-        } else if (typeof h === 'string') {
-          return h;
-        }
-        return '';
-      });
-      content.habilidades = habilidades;
-    } else if (typeof content.habilidades === 'string') {
-      content.habilidades = [content.habilidades];
-    }
-
+    const isApoio = type === 'apoio';
     return {
-      title,
-      type: materialType,
+      title: this.generateTitle(type, formData),
+      type: type as UnifiedMaterial['type'],
       subject: formData.disciplina || formData.subject || 'Não informado',
       grade: formData.serie || formData.grade || 'Não informado',
       userId: '',
-      content: JSON.stringify(content)
+      content: JSON.stringify(content),
+      ...(isApoio && formData.material_principal_id ? { mainMaterialId: formData.material_principal_id } : {})
     };
   }
 
@@ -462,7 +446,7 @@ class MaterialService {
     // Ajuste de habilidades
     let habilidades: string[] = [];
     let objetivos: string[] = [];
-    let bnccCodigos: string[] = [];
+    const bnccCodigos: string[] = [];
 
     if (content.habilidades && Array.isArray(content.habilidades)) {
       habilidades = content.habilidades

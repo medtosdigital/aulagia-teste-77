@@ -4,7 +4,7 @@ export class GrammarService {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Simulação de correções básicas
-    let correctedText = text
+    const correctedText = text
       // Capitalizar primeira letra
       .replace(/^([a-z])/, (match) => match.toUpperCase())
       // Corrigir espaçamentos

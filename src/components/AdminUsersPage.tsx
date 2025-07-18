@@ -46,7 +46,7 @@ export default function AdminUsersPage() {
   async function fetchUsers() {
     setLoading(true);
     const { data: profiles } = await supabase
-      .from('profiles')
+      .from('perfis')
       .select('id, full_name, email, created_at');
     const { data: plans } = await supabase
       .from('planos_usuarios')
@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
       if (feedbacksData) {
         const userIds = feedbacksData.map(f => f.user_id);
         const { data: profiles } = await supabase
-          .from('profiles')
+          .from('perfis')
           .select('id, full_name, email')
           .in('id', userIds);
         const userMap = Object.fromEntries((profiles || []).map(p => [p.id, p.full_name || p.email || p.id]));
@@ -147,7 +147,7 @@ export default function AdminUsersPage() {
   
   async function saveEdit() {
     setSaving(true);
-    await supabase.from('profiles').update({
+    await supabase.from('perfis').update({
       full_name: editData.name,
       email: editData.email,
     }).eq('id', editUser.id);
