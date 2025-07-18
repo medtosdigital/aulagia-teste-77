@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -5,21 +6,23 @@ import { Badge } from './ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Pencil, Save, X, ChevronLeft, ChevronRight, UserCheck, UserX, Clock, Search, Filter, Users, TrendingUp, MessageSquare, Eye } from 'lucide-react';
+import { Pencil, Save, X, ChevronLeft, ChevronRight, UserCheck, UserX, Clock, Search, Filter, Users, MessageSquare, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { supabaseUnifiedPlanService } from '@/services/supabaseUnifiedPlanService';
 import { useToast } from '@/hooks/use-toast';
 
 const planLabels = {
   gratuito: 'Gratuito',
   professor: 'Professor',
   grupo_escolar: 'Grupo Escolar',
+  admin: 'Administrador'
 };
 
 const planOptions = [
   { value: 'gratuito', label: 'Gratuito' },
   { value: 'professor', label: 'Professor' },
   { value: 'grupo_escolar', label: 'Grupo Escolar' },
+  { value: 'admin', label: 'Administrador' }
 ];
 
 const statusOptions = [
@@ -54,45 +57,45 @@ export default function AdminUsersPage() {
     setLoading(true);
     setError(null);
     try {
-      // Buscar dados da tabela perfis com todos os campos necessários
-      const { data: perfis, error: perfisError } = await supabase
-        .from('perfis')
-        .select('user_id, nome_preferido, full_name, email, plano_ativo, created_at');
-      if (perfisError) throw perfisError;
-      // Buscar dados dos planos
-      const { data: plans, error: plansError } = await supabase
-        .from('planos_usuarios')
-        .select('user_id, plano_ativo, data_expiracao, updated_at');
-      if (plansError) throw plansError;
-      // Combinar os dados
-      const usersData = perfis?.map((perfil: any) => {
-        const plano = plans?.find((pl: any) => pl.user_id === perfil.user_id);
+      console.log('Buscando usuários do Supabase...');
+      
+      // Buscar todos os usuários da tabela perfis
+      const allUsers = await supabaseUnifiedPlanService.getAllUsers();
+      console.log('Usuários encontrados:', allUsers.length);
+
+      const usersData = allUsers.map((perfil: any) => {
         let paymentStatus = 'em dia';
         let paymentBadge = 'bg-green-100 text-green-800';
         let paymentDue = null;
-        if (plano?.data_expiracao) {
-          const exp = new Date(plano.data_expiracao);
+        
+        if (perfil.data_expiracao_plano) {
+          const exp = new Date(perfil.data_expiracao_plano);
           paymentDue = exp.toLocaleDateString('pt-BR');
           if (exp < new Date()) {
             paymentStatus = 'atrasado';
             paymentBadge = 'bg-red-100 text-red-800';
           }
         }
+
         return {
           id: perfil.user_id,
           name: perfil.nome_preferido || perfil.full_name || 'Usuário',
           email: perfil.email || '',
-          plan: perfil.plano_ativo || plano?.plano_ativo || 'gratuito',
+          plan: perfil.plano_ativo || 'gratuito',
           createdAt: perfil.created_at ? perfil.created_at.split('T')[0] : '',
-          status: 'ativo', // Preparado para campo futuro
+          status: 'ativo', // Campo para futura implementação
           isAdmin: perfil.email === 'medtosdigital@gmail.com',
           paymentStatus,
           paymentBadge,
           paymentDue,
         };
-      }) || [];
+      });
+
+      console.log('Dados dos usuários processados:', usersData.length);
       setUsers(usersData);
+
     } catch (err: any) {
+      console.error('Erro ao buscar usuários:', err);
       setError('Erro ao buscar usuários.');
       toast({ title: 'Erro', description: 'Erro ao buscar usuários.', variant: 'destructive' });
     } finally {
@@ -110,6 +113,7 @@ export default function AdminUsersPage() {
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(50);
+        
       if (historyError) throw historyError;
       setHistory(data || []);
     } catch (err: any) {
@@ -130,19 +134,27 @@ export default function AdminUsersPage() {
           .select('id, user_id, type, message, created_at')
           .order('created_at', { ascending: false })
           .limit(10);
+          
         if (feedbacksError) throw new Error('Erro ao buscar feedbacks.');
+        
         if (feedbacksData && feedbacksData.length > 0) {
           const userIds = feedbacksData.map(f => f.user_id).filter(Boolean);
           let userMap: Record<string, string> = {};
+          
           if (userIds.length > 0) {
             const { data: perfis, error: perfisError } = await supabase
               .from('perfis')
-              .select('user_id, nome_preferido')
+              .select('user_id, nome_preferido, full_name')
               .in('user_id', userIds);
+              
             if (perfisError) setFeedbackError('Erro ao buscar perfis dos usuários.');
-            userMap = Object.fromEntries((perfis || []).map(p => [p.user_id, p.nome_preferido || 'Usuário']));
+            userMap = Object.fromEntries((perfis || []).map(p => [p.user_id, p.nome_preferido || p.full_name || 'Usuário']));
           }
-          setFeedbacks(feedbacksData.map(f => ({ ...f, userName: userMap[f.user_id] || f.user_id || 'Usuário' })));
+          
+          setFeedbacks(feedbacksData.map(f => ({ 
+            ...f, 
+            userName: userMap[f.user_id] || f.user_id || 'Usuário' 
+          })));
         } else {
           setFeedbacks([]);
         }
@@ -189,23 +201,25 @@ export default function AdminUsersPage() {
     setSaving(true);
     setError(null);
     try {
-      // Atualizar nome na tabela perfis
-      const { error: perfisError } = await supabase.from('perfis').update({
-        nome_preferido: editData.name,
-        full_name: editData.name,
-        email: editData.email,
-      }).eq('user_id', editUser.id);
+      // Atualizar perfil na tabela perfis
+      const { error: perfisError } = await supabase
+        .from('perfis')
+        .update({
+          nome_preferido: editData.name,
+          full_name: editData.name,
+          email: editData.email,
+          plano_ativo: editData.plan,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', editUser.id);
+        
       if (perfisError) throw perfisError;
-      // Atualizar plano na tabela planos_usuarios
-      const { error: planosError } = await supabase.from('planos_usuarios').update({
-        plano_ativo: editData.plan,
-        updated_at: new Date().toISOString(),
-      }).eq('user_id', editUser.id);
-      if (planosError) throw planosError;
+
       setSuccess('Usuário atualizado com sucesso!');
       toast({ title: 'Sucesso', description: 'Usuário atualizado com sucesso!' });
       closeEditModal();
-      fetchUsers();
+      await fetchUsers(); // Recarregar lista de usuários
+      
     } catch (err: any) {
       setError('Erro ao salvar usuário.');
       toast({ title: 'Erro', description: 'Erro ao salvar usuário.', variant: 'destructive' });
@@ -228,8 +242,13 @@ export default function AdminUsersPage() {
     setDeletingFeedbackId(id);
     setError(null);
     try {
-      const { error: deleteError } = await supabase.from('feedbacks').delete().eq('id', id);
+      const { error: deleteError } = await supabase
+        .from('feedbacks')
+        .delete()
+        .eq('id', id);
+        
       if (deleteError) throw deleteError;
+      
       setSuccess('Feedback excluído com sucesso!');
       toast({ title: 'Sucesso', description: 'Feedback excluído com sucesso!' });
       setFeedbacks((prev) => prev.filter(f => f.id !== id));
@@ -421,9 +440,11 @@ export default function AdminUsersPage() {
                           ? 'bg-blue-100 text-blue-800 border-blue-200' 
                           : user.plan === 'grupo_escolar' 
                           ? 'bg-green-100 text-green-800 border-green-200' 
+                          : user.plan === 'admin'
+                          ? 'bg-purple-100 text-purple-800 border-purple-200'
                           : 'bg-gray-100 text-gray-700 border-gray-200'
                       }`}>
-                        {planLabels[user.plan]}
+                        {planLabels[user.plan] || user.plan}
                       </Badge>
                     </TableCell>
                     <TableCell>

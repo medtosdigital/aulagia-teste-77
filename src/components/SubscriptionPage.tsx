@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Crown, Check, Users, Download, FileText, Calendar, CreditCard, Ban, ArrowUpDown, Brain, Presentation, ClipboardList, GraduationCap, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,6 @@ const SubscriptionPage = () => {
   const [isChangeCardModalOpen, setIsChangeCardModalOpen] = useState(false);
   const [isChangePlanModalOpen, setIsChangePlanModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const {
     currentPlan,
@@ -25,16 +25,14 @@ const SubscriptionPage = () => {
     changePlan
   } = usePlanPermissions();
 
-  // Se houver erro ou perfil não encontrado
-  if (error || !currentProfile) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[300px]">
-        <p className="text-red-600 font-semibold text-lg mb-2">{error || 'Perfil não encontrado. Tente novamente.'}</p>
-        <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white rounded">Tentar novamente</button>
-      </div>
-    );
-  }
+  console.log('SubscriptionPage - Dados do plano:', {
+    currentPlan,
+    currentProfile,
+    loading,
+    usage
+  });
 
+  // Se houver erro de carregamento ou perfil não encontrado
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
@@ -50,17 +48,34 @@ const SubscriptionPage = () => {
     );
   }
 
-  // Dados reais do perfil
-  const planoNome = currentPlan.name;
-  const planoId = currentPlan.id;
-  const materiaisRestantes = getRemainingMaterials();
-  const materiaisCriados = currentProfile.materiais_criados_mes_atual;
-  const limiteMateriais = currentPlan.limits.materialsPerMonth;
-  const dataInicio = currentProfile.data_inicio_plano ? new Date(currentProfile.data_inicio_plano) : null;
-  const dataExpiracao = currentProfile.data_expiracao_plano ? new Date(currentProfile.data_expiracao_plano) : null;
-  const nomeUsuario = currentProfile.nome_preferido || currentProfile.full_name || currentProfile.email || '';
+  if (!currentProfile && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
+        <div className="max-w-6xl mx-auto">
+          <Card className="p-6">
+            <div className="flex flex-col items-center justify-center min-h-[300px]">
+              <p className="text-red-600 font-semibold text-lg mb-2">Perfil não encontrado. Tente novamente.</p>
+              <Button onClick={() => refreshData()} className="px-4 py-2 bg-blue-600 text-white rounded">
+                Tentar novamente
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
-  // Recursos do plano
+  // Dados do perfil
+  const planoNome = currentPlan?.name || 'Plano Gratuito';
+  const planoId = currentPlan?.id || 'gratuito';
+  const materiaisRestantes = getRemainingMaterials();
+  const materiaisCriados = currentProfile?.materiais_criados_mes_atual || 0;
+  const limiteMateriais = currentPlan?.limits?.materialsPerMonth || 5;
+  const dataInicio = currentProfile?.data_inicio_plano ? new Date(currentProfile.data_inicio_plano) : null;
+  const dataExpiracao = currentProfile?.data_expiracao_plano ? new Date(currentProfile.data_expiracao_plano) : null;
+  const nomeUsuario = currentProfile?.nome_preferido || currentProfile?.full_name || currentProfile?.email || 'Usuário';
+
+  // Recursos do plano baseados no plano atual
   const recursos = [];
   if (planoId === 'admin') {
     recursos.push('Materiais ilimitados', 'Planos de Aula (ilimitado)', 'Slides (ilimitado)', 'Atividades (ilimitado)', 'Avaliações (ilimitado)', 'Download em PDF', 'Download em Word', 'Download em PowerPoint', 'Edição completa de materiais', 'Calendário de aulas', 'Histórico completo', 'Dashboard colaborativo', 'Compartilhamento entre professores', 'Gestão de usuários', 'Distribuição de materiais entre professores', 'Acesso total a todos os recursos', 'Controle de usuários, planos e histórico', 'Permissão exclusiva para administração', 'Visualização e gestão de todos os usuários e materiais');
@@ -152,4 +167,3 @@ const SubscriptionPage = () => {
 };
 
 export default SubscriptionPage;
-
