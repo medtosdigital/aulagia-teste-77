@@ -1674,7 +1674,7 @@ export class TemplateService {
               : `<li>${item}</li>`
           ).join('');
         } else if (key === 'objetivos' || key === 'recursos' || key === 'conteudosProgramaticos' || key === 'referencias') {
-          value = value.map(item => `<li>${item}</li>`).join('');
+          value = value.map(item => `<li>${typeof item === 'object' ? (item.descricao || JSON.stringify(item)) : item}</li>`).join('');
         } else if (key === 'desenvolvimento') {
           value = value.map(etapa => `
             <tr>
@@ -1690,6 +1690,15 @@ export class TemplateService {
           value = value.map(criterio => `<li>${criterio}</li>`).join('');
         } else {
           value = value.join(', ');
+        }
+      }
+
+      // Corrigir parse de metodologia e avaliacao se vierem como objeto
+      if ((key === 'metodologia' || key === 'avaliacao') && typeof value === 'object' && value !== null) {
+        if (Array.isArray(value)) {
+          value = value.map(item => (typeof item === 'object' ? (item.descricao || JSON.stringify(item)) : item)).join('<br>');
+        } else {
+          value = value.descricao || JSON.stringify(value);
         }
       }
 

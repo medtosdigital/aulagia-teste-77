@@ -905,12 +905,23 @@ IMPORTANTE: Certifique-se de que TODOS os campos estejam preenchidos com conteú
 </html>
 `;
 
-      // Substituir variáveis no template
+      // Substituir variáveis no template (corrigido para slides)
+      function replaceAllPlaceholders(template, data) {
+        let result = template;
+        Object.entries(data).forEach(([key, value]) => {
+          const placeholder = new RegExp(`{{${key}}}`, 'g');
+          if (typeof value === 'object' && value !== null) {
+            // Se for objeto ou array, faz stringificação simples
+            result = result.replace(placeholder, JSON.stringify(value));
+          } else {
+            result = result.replace(placeholder, value !== undefined && value !== null ? String(value) : '');
+          }
+        });
+        return result;
+      }
+
       let finalHtml = SUPPORT_MATERIAL_TEMPLATE;
-      Object.entries(parsedContent).forEach(([key, value]) => {
-        const placeholder = `{{${key}}}`;
-        finalHtml = finalHtml.replace(new RegExp(placeholder, 'g'), value || '');
-      });
+      finalHtml = replaceAllPlaceholders(finalHtml, parsedContent);
 
       // Salvar no banco de dados
       const { data: materialApoio, error: insertError } = await supabase
@@ -939,6 +950,132 @@ IMPORTANTE: Certifique-se de que TODOS os campos estejam preenchidos com conteú
       return new Response(JSON.stringify({
         success: true,
         apoioId: materialApoio.id,
+        content: parsedContent
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Bloco específico para slides
+    if (materialType === 'slides') {
+      // Template HTML dos slides (resumido, use o template real do seu projeto)
+      const SLIDES_TEMPLATE = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{titulo}}</title>
+  <style>
+    body { background: #f0f4f8; font-family: 'Inter', sans-serif; }
+    .slide { width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .image-placeholder { width: 400px; height: 250px; background: #eee; display: flex; align-items: center; justify-content: center; border-radius: 16px; margin: 24px auto; }
+    h1, h2, h3 { color: #1e40af; }
+  </style>
+</head>
+<body>
+  <!-- Slide 1 -->
+  <div class="slide">
+    <h1>{{titulo}}</h1>
+    <h2>{{disciplina}} - {{serie}}</h2>
+    <div class="image-placeholder">{{tema_imagem}}</div>
+    <p>Apresentado por: {{professor}}</p>
+  </div>
+  <!-- Slide 2 -->
+  <div class="slide">
+    <h2>Objetivos da Aula</h2>
+    <ul>
+      <li>{{objetivo_1}}</li>
+      <li>{{objetivo_2}}</li>
+      <li>{{objetivo_3}}</li>
+      <li>{{objetivo_4}}</li>
+    </ul>
+  </div>
+  <!-- Slide 3 -->
+  <div class="slide">
+    <h2>{{introducao_titulo}}</h2>
+    <p>{{introducao_conteudo}}</p>
+    <div class="image-placeholder">{{introducao_imagem}}</div>
+  </div>
+  <!-- Slide 4 -->
+  <div class="slide">
+    <h2>{{conceitos_titulo}}</h2>
+    <p>{{conceitos_conteudo}}</p>
+    <div class="image-placeholder">{{conceitos_imagem}}</div>
+  </div>
+  <!-- Slide 5 -->
+  <div class="slide">
+    <h2>{{desenvolvimento_1_titulo}}</h2>
+    <p>{{desenvolvimento_1_conteudo}}</p>
+    <div class="image-placeholder">{{desenvolvimento_1_imagem}}</div>
+  </div>
+  <!-- Slide 6 -->
+  <div class="slide">
+    <h2>{{desenvolvimento_2_titulo}}</h2>
+    <p>{{desenvolvimento_2_conteudo}}</p>
+    <div class="image-placeholder">{{desenvolvimento_2_imagem}}</div>
+  </div>
+  <!-- Slide 7 -->
+  <div class="slide">
+    <h2>{{desenvolvimento_3_titulo}}</h2>
+    <p>{{desenvolvimento_3_conteudo}}</p>
+    <div class="image-placeholder">{{desenvolvimento_3_imagem}}</div>
+  </div>
+  <!-- Slide 8 -->
+  <div class="slide">
+    <h2>{{desenvolvimento_4_titulo}}</h2>
+    <p>{{desenvolvimento_4_conteudo}}</p>
+    <div class="image-placeholder">{{desenvolvimento_4_imagem}}</div>
+  </div>
+  <!-- Slide 9 -->
+  <div class="slide">
+    <h2>{{exemplo_titulo}}</h2>
+    <p>{{exemplo_conteudo}}</p>
+    <div class="image-placeholder">{{exemplo_imagem}}</div>
+  </div>
+  <!-- Slide 10 -->
+  <div class="slide">
+    <h2>{{conclusao_titulo}}</h2>
+    <p>{{conclusao_conteudo}}</p>
+  </div>
+</body>
+</html>
+      `;
+      // Substituir variáveis
+      function replaceAllPlaceholders(template, data) {
+        let result = template;
+        Object.entries(data).forEach(([key, value]) => {
+          const placeholder = new RegExp(`{{${key}}}`, 'g');
+          result = result.replace(placeholder, value !== undefined && value !== null ? String(value) : '');
+        });
+        return result;
+      }
+      let finalHtml = SLIDES_TEMPLATE;
+      finalHtml = replaceAllPlaceholders(finalHtml, parsedContent);
+      // Salvar no banco de dados
+      const { data: materialSlides, error: insertError } = await supabase
+        .from('materiais')
+        .insert({
+          titulo: parsedContent.titulo || 'Slides',
+          conteudo: finalHtml,
+          disciplina: formData.disciplina,
+          tema: formData.tema,
+          turma: formData.serie,
+          user_id: formData.user_id,
+          material_principal_id: formData.material_principal_id,
+          tipo_material: 'slides',
+          status: 'ativo'
+        })
+        .select()
+        .single();
+      if (insertError) {
+        console.error('Erro ao salvar slides:', insertError);
+        throw new Error('Falha ao salvar slides');
+      }
+      console.log('✅ Slides salvos com sucesso');
+      return new Response(JSON.stringify({
+        success: true,
+        slidesId: materialSlides.id,
         content: parsedContent
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
