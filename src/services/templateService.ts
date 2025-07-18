@@ -18,19 +18,21 @@ export class TemplateService {
           
           body {
             font-family: 'Inter', sans-serif;
-            line-height: 1.6;
+            line-height: 1.45;
             color: #333;
             background: #f8fafc;
             padding: 20px;
+            font-size: 0.89rem;
           }
           
           .container {
             max-width: 800px;
             margin: 0 auto;
             background: white;
-            padding: 40px;
+            padding: 32px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-size: 0.89rem;
           }
           
           .header-section {
@@ -42,7 +44,7 @@ export class TemplateService {
           
           .header-section h1 {
             color: #1e40af;
-            font-size: 2.5rem;
+            font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 10px;
           }
@@ -62,14 +64,14 @@ export class TemplateService {
             padding: 12px 15px;
             text-align: left;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.89rem;
           }
           
           .info-table td {
             background: #f8fafc;
             padding: 12px 15px;
             border-bottom: 1px solid #e2e8f0;
-            font-size: 0.9rem;
+            font-size: 0.89rem;
           }
           
           .info-table th.sticky-right, .info-table td.sticky-right {
@@ -84,14 +86,15 @@ export class TemplateService {
           }
           
           .section {
-            margin-bottom: 30px;
+            margin-bottom: 24px;
             page-break-inside: avoid;
+            font-size: 0.89rem;
           }
           
           .section h3 {
             color: #7c3aed !important;
-            font-size: 1.3rem !important;
-            margin-bottom: 15px !important;
+            font-size: 1.05rem !important;
+            margin-bottom: 12px !important;
             font-weight: 800 !important;
             text-transform: uppercase !important;
             letter-spacing: 0.5px !important;
@@ -111,8 +114,8 @@ export class TemplateService {
             background: #f1f5f9;
             border-left: 4px solid #3b82f6;
             border-radius: 4px;
-            font-size: 0.95rem;
-            line-height: 1.5;
+            font-size: 0.89rem;
+            line-height: 1.45;
           }
           
           .skills-list li {
@@ -135,14 +138,14 @@ export class TemplateService {
             padding: 12px 10px;
             text-align: left;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.89rem;
           }
           
           .development-table td {
             background: white;
             padding: 15px 10px;
             border-bottom: 1px solid #e2e8f0;
-            font-size: 0.85rem;
+            font-size: 0.89rem;
             vertical-align: top;
             line-height: 1.4;
           }
@@ -163,25 +166,20 @@ export class TemplateService {
             background: #fef3c7;
             border-left: 4px solid #f59e0b;
             border-radius: 4px;
-            font-size: 0.9rem;
+            font-size: 0.89rem;
           }
           
-          .content-text {
-            font-size: 0.95rem;
-            line-height: 1.6;
+          .content-text, .evaluation-text {
+            font-size: 0.89rem;
+            line-height: 1.45;
             text-align: justify;
-            margin-top: 10px;
-            padding: 15px;
+            margin-top: 8px;
+            padding: 10px;
             background: #f8fafc;
             border-radius: 6px;
           }
           
           .evaluation-text {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            text-align: justify;
-            margin-top: 10px;
-            padding: 15px;
             background: #fef2f2;
             border-left: 4px solid #ef4444;
             border-radius: 6px;

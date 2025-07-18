@@ -28,15 +28,14 @@ interface SupportContentModalProps {
 }
 
 // Função utilitária para template institucional A4 igual ao gabarito
-function wrapApoioWithA4Template(apoioHtml: string) {
+export function wrapApoioWithA4Template(apoioHtml: string) {
   const today = new Date().toLocaleDateString('pt-BR');
-  
-  // Se o conteúdo já vem como HTML completo (com o template), apenas substituir a data
-  if (apoioHtml.includes('{{DATA_GERACAO}}')) {
-    return apoioHtml.replace(/\{\{DATA_GERACAO\}\}/g, today);
-  }
-  
-  // Se vem como conteúdo simples, aplicar o template básico
+
+  // Remove todos os atributos style que contenham font-size
+  let sanitizedHtml = apoioHtml.replace(/style\s*=\s*"[^"]*font-size:[^;"']+;?[^"]*"/gi, '');
+  sanitizedHtml = sanitizedHtml.replace(/font-size\s*:\s*[^;"']+;?/gi, '');
+
+  // Sempre aplicar o template institucional, mesmo que já contenha <html>
   return `
   <!DOCTYPE html>
   <html lang="pt-BR">
@@ -191,68 +190,42 @@ function wrapApoioWithA4Template(apoioHtml: string) {
         font-family: 'Inter', sans-serif; 
         flex-shrink: 0; 
       }
-      
       /* Estilos para o conteúdo do material de apoio */
-      .support-content {
-        font-size: 1.13rem;
-        color: #222;
-        text-align: justify;
-        line-height: 1.7;
-        word-break: break-word; /* Garante quebra de palavras longas */
+      .support-content, .support-content p, .support-content li, .support-content td, .support-content th, .support-content .content-text, .support-content .evaluation-text {
+        font-size: 0.89rem !important;
+        line-height: 1.6 !important;
+        color: #222 !important;
+        text-align: justify !important;
+        word-break: break-word !important;
+        padding: 0 !important;
+        margin: 0 0 1rem 0 !important;
       }
-      
       .support-content h1 {
-        font-size: 1.8rem;
-        color: #4338ca;
-        font-weight: 800;
+        font-size: 1.5rem !important;
+        color: #4338ca !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+        margin: 0 0 0.5rem 0 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        word-wrap: break-word !important;
+      }
+      .support-content h2, .support-content h3 {
+        font-size: 1.05rem !important;
+        color: #4338ca !important;
+        font-weight: 700 !important;
+        margin: 1.5rem 0 1rem 0 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
+        word-wrap: break-word !important;
+      }
+      .support-content .subtitle-material, .support-content .material-details {
+        font-size: 0.89rem !important;
+        color: #6b7280;
         text-align: center;
-        margin: 0 0 0.5rem 0; /* Ajustado para dar espaço ao subtítulo */
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        word-wrap: break-word; /* Garante quebra de palavras longas */
-      }
-      .support-content .subtitle-material { /* Novo estilo para o subtítulo do material */
-          font-size: 1.1rem;
-          color: #6b7280;
-          text-align: center;
-          margin-bottom: 1.5rem;
-          word-wrap: break-word;
-      }
-      .support-content .material-details { /* Estilo para a linha de detalhes do material */
-          font-size: 1rem;
-          color: #333;
-          text-align: center;
-          margin-top: 5px;
-          margin-bottom: 20px;
-          line-height: 1.4;
-          border-bottom: 1px solid #d1d5db; /* A linha visual */
-          padding-bottom: 10px;
-      }
-      
-      .support-content h2 {
-        font-size: 1.4rem;
-        color: #4338ca;
-        font-weight: 700;
-        margin: 2rem 0 1rem 0;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
+        margin-bottom: 1.5rem;
         word-wrap: break-word;
       }
-      
-      .support-content h3 {
-        font-size: 1.2rem;
-        color: #4338ca;
-        font-weight: 600;
-        margin: 1.5rem 0 0.8rem 0;
-        word-wrap: break-word;
-      }
-      
-      .support-content p {
-        margin: 0 0 1rem 0;
-        text-align: justify;
-        word-wrap: break-word;
-      }
-      
       .support-content ul, .support-content ol {
         margin: 1rem 0;
         padding-left: 1.5rem;
@@ -387,13 +360,23 @@ function wrapApoioWithA4Template(apoioHtml: string) {
       
       <div class="content">
         <div class="support-content">
-          ${apoioHtml}
+          ${sanitizedHtml}
         </div>
       </div>
     </div>
   </body>
   </html>
   `;
+}
+
+export function ApoioIframe({ apoioHtml, height = 420, title = "Material de Apoio" }: { apoioHtml: string, height?: number, title?: string }) {
+  return (
+    <iframe
+      srcDoc={wrapApoioWithA4Template(apoioHtml)}
+      style={{ width: '100%', height, border: 'none', background: 'white' }}
+      title={title}
+    />
+  );
 }
 
 const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, open, onClose }) => {
@@ -441,9 +424,10 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
     }
     setIsGenerating(true);
     try {
-      // Consome 1 crédito antes de gerar
-      const success = await supabasePlanService.incrementMaterialUsage();
-      if (!success) {
+      // Consome 2 créditos antes de gerar
+      const success1 = await supabasePlanService.incrementMaterialUsage();
+      const success2 = await supabasePlanService.incrementMaterialUsage();
+      if (!success1 || !success2) {
         toast.error('Limite de materiais atingido! Faça upgrade para continuar.');
         setIsGenerating(false);
         isGeneratingRef.current = false;
@@ -602,7 +586,7 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
               ) : (
                 'Gerar Novo Conteúdo de Apoio'
               )}
-              <span className="ml-2 text-xs text-red-500 font-semibold">-1 Crédito</span>
+              <span className="ml-2 text-xs text-red-500 font-semibold">-2 Créditos</span>
             </Button>
             {/* Lista de apoios já criados */}
             <div className="space-y-2">
@@ -658,12 +642,7 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
                   </Button>
                 </div>
                 <div className="bg-white border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto">
-                  <div 
-                    ref={pdfContentRef}
-                    className="prose prose-sm max-w-none"
-                    style={{ whiteSpace: 'normal' }}
-                    dangerouslySetInnerHTML={{ __html: wrapApoioWithA4Template(supportContent) }}
-                  />
+                  <ApoioIframe apoioHtml={supportContent} height={420} title="Material de Apoio" />
                 </div>
               </div>
             )}

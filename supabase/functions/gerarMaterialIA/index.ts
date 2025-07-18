@@ -209,79 +209,41 @@ Certifique-se de criar exatamente ${quantidadeQuestoes} questões variadas e ade
       console.log('🎯 Generated prompt for apoio');
       
       const prompt = `
-Gere um material de apoio educacional COMPLETO para professores sobre o tema "${formData.tema}" da disciplina ${formData.disciplina} para ${formData.serie}.
+Gere um Material de Apoio ao Professor sobre o tema "${formData.tema}" e conteúdo do material principal que vai gerar o conteúdo de apoio, voltado para o ensino de ${formData.disciplina} na série ${formData.serie}.
 
-IMPORTANTE: Responda APENAS com um JSON válido contendo TODOS os campos necessários para preencher o template de 5 páginas.
+O material deve ser didático, direto e estruturado como um guia para o professor que ainda não domina o assunto. Siga os tópicos abaixo e use uma linguagem clara, objetiva e prática:
 
-Estrutura obrigatória do JSON:
+📘 Tópicos que Devem Estar no Material Gerado:
 
-{
-  "TEMA_DO_MATERIAL_PRINCIPAL": "${formData.titulo_material_principal || formData.tema}",
-  "DISCIPLINA": "${formData.disciplina}",
-  "NIVEL_ANO": "${formData.serie}",
-  "TIPO_DE_MATERIAL_PRINCIPAL": "Plano de Aula",
-  "TEMA_DO_MATERIAL": "${formData.tema}",
-  "TURMA_DO_MATERIAL": "${formData.serie}",
-  "DATA_GERACAO": "${new Date().toLocaleDateString('pt-BR')}",
-  
-  "EXPLICACAO_SIMPLES_DO_TEMA": "Explicação clara e direta do tema em 2-3 frases",
-  "EXPLICACAO_DETALHADA_DO_TEMA": "Explicação completa e técnica do tema em 1-2 parágrafos",
-  
-  "EXPLICACAO_SIMPLES_UTILIDADE": "Explicação simples da importância na vida prática em 2-3 frases",
-  "EXPLICACAO_DETALHADA_UTILIDADE": "Explicação detalhada da aplicação prática em 1-2 parágrafos",
-  "IMPORTANCIA_NA_FORMACAO_ITEM_1": "Primeiro aspecto da importância na formação",
-  "IMPORTANCIA_NA_FORMACAO_ITEM_2": "Segundo aspecto da importância na formação", 
-  "IMPORTANCIA_NA_FORMACAO_ITEM_3": "Terceiro aspecto da importância na formação",
-  
-  "EXPLICACAO_SIMPLES_ENSINO": "Como ensinar de forma simples em 2-3 frases",
-  "EXPLICACAO_DETALHADA_ENSINO": "Metodologia detalhada de ensino em 1-2 parágrafos",
-  "PASSO_A_PASSO_ITEM_1_INICIAR": "Primeiro passo para iniciar a aula",
-  "PASSO_A_PASSO_ITEM_2_DESENVOLVER": "Segundo passo para desenvolver o conteúdo",
-  "PASSO_A_PASSO_ITEM_3_CONCLUIR": "Terceiro passo para concluir a aula",
-  "HIGHLIGHT_TITULO_1": "Título da dica importante",
-  "HIGHLIGHT_TEXTO_1": "Texto da dica importante",
-  "PARAGRAFO_COMO_ENSINAR_P3": "Parágrafo adicional sobre como ensinar",
-  "SUGESTAO_VISUAL_OU_CONCRETA_ITEM_1": "Primeira sugestão visual ou concreta",
-  "SUGESTAO_VISUAL_OU_CONCRETA_ITEM_2": "Segunda sugestão visual ou concreta",
-  
-  "EXPLICACAO_SIMPLES_EXEMPLOS": "Explicação simples sobre os exemplos em 2-3 frases",
-  "EXPLICACAO_DETALHADA_EXEMPLOS": "Explicação detalhada sobre os exemplos em 1-2 parágrafos",
-  "TITULO_EXEMPLO_1": "Título do primeiro exemplo prático",
-  "DESCRICAO_EXEMPLO_1": "Descrição completa do primeiro exemplo",
-  "COMENTARIO_EXEMPLO_1": "Comentário pedagógico sobre o primeiro exemplo",
-  "TITULO_EXEMPLO_2": "Título do segundo exemplo prático",
-  "DESCRICAO_EXEMPLO_2": "Descrição completa do segundo exemplo",
-  "COMENTARIO_EXEMPLO_2": "Comentário pedagógico sobre o segundo exemplo",
-  "SUCCESS_BOX_TITULO_1": "Título da caixa de sucesso 1",
-  "SUCCESS_BOX_TEXTO_1": "Texto da caixa de sucesso 1",
-  
-  "EXPLICACAO_SIMPLES_DIFICULDADES": "Explicação simples sobre dificuldades em 2-3 frases",
-  "EXPLICACAO_DETALHADA_DIFICULDADES": "Explicação detalhada sobre dificuldades em 1-2 parágrafos",
-  "TITULO_DIFICULDADE_1": "Título da primeira dificuldade comum",
-  "DESCRICAO_DIFICULDADE_1": "Descrição da primeira dificuldade",
-  "CORRECAO_DIFICULDADE_1": "Como corrigir a primeira dificuldade",
-  "TITULO_DIFICULDADE_2": "Título da segunda dificuldade comum",
-  "DESCRICAO_DIFICULDADE_2": "Descrição da segunda dificuldade",
-  "CORRECAO_DIFICULDADE_2": "Como corrigir a segunda dificuldade",
-  "EXPLICACAO_SIMPLES_ATIVIDADES": "Explicação simples sobre atividades em 2-3 frases",
-  "EXPLICACAO_DETALHADA_ATIVIDADES": "Explicação detalhada sobre atividades em 1-2 parágrafos",
-  "ATIVIDADE_PRATICA_1_DESCRICAO": "Descrição da primeira atividade prática",
-  "ATIVIDADE_PRATICA_2_DESCRICAO": "Descrição da segunda atividade prática",
-  
-  "EXPLICACAO_SIMPLES_RECURSOS": "Explicação simples sobre recursos em 2-3 frases",
-  "EXPLICACAO_DETALHADA_RECURSOS": "Explicação detalhada sobre recursos em 1-2 parágrafos",
-  "RECURSO_VIDEO_DESCRICAO": "Descrição do recurso de vídeo",
-  "RECURSO_VIDEO_LINK": "Link sugerido para vídeo educativo",
-  "RECURSO_IMAGEM_DESCRICAO": "Descrição do recurso de imagem",
-  "RECURSO_IMAGEM_LINK": "Link sugerido para imagens/diagramas",
-  "RECURSO_SITE_DESCRICAO": "Descrição do site interativo",
-  "RECURSO_SITE_LINK": "Link sugerido para site educativo",
-  "RECURSO_OBJETO_DESCRICAO": "Descrição de objetos manipuláveis",
-  "SUCCESS_BOX_TITULO_2": "Título da caixa de sucesso 2",
-  "SUCCESS_BOX_TEXTO_2": "Texto da caixa de sucesso 2"
-}
+1. O Que é Esse Tema?
+Explique de forma simples e didática, como se o professor nunca tivesse estudado o assunto.
+Evite termos técnicos complexos. Use analogias se necessário.
 
-Certifique-se de que TODOS os campos estão preenchidos com conteúdo relevante e educativo para o tema "${formData.tema}" da disciplina ${formData.disciplina}.
+2. Para que Serve Esse Conteúdo na Vida Prática e Escolar?
+Mostre como esse tema é útil e aplicável no cotidiano dos alunos.
+Explique sua importância na formação do aluno.
+
+3. Como Ensinar Esse Tema em Sala de Aula – Passo a Passo
+Oriente o professor sobre como apresentar o conteúdo aos alunos.
+Explique como iniciar a explicação, desenvolver o conteúdo e concluir.
+Sugira perguntas disparadoras, comparações visuais ou objetos concretos.
+
+4. Exemplos Práticos Prontos para Usar em Sala
+Dê de 2 a 3 exemplos explicados e comentados que o professor possa aplicar diretamente.
+Podem ser atividades, situações-problema ou explicações com números/textos.
+
+5. Dificuldades Comuns dos Alunos e Como Corrigir
+Liste os principais erros ou confusões que os alunos costumam ter.
+Dê dicas claras para o professor lidar com essas dificuldades.
+
+6. Sugestões de Atividades Práticas
+Proponha de 1 a 2 ideias de atividades para aplicar o conteúdo de forma prática.
+Pode incluir dinâmicas, jogos, situações-problema ou exercícios individuais.
+
+7. Sugestões de Recursos Complementares
+Indique materiais extras que podem ajudar o professor (vídeos, imagens, sites, objetos manipuláveis, etc).
+
+IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais. Estruture o JSON com campos para cada um dos tópicos acima, preenchendo com conteúdo relevante para o tema "${formData.tema}" de ${formData.disciplina}.
 `;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {

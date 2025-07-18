@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { splitContentIntoPages, enhanceHtmlWithNewTemplate } from '@/services/materialRenderUtils';
+import { wrapApoioWithA4Template, ApoioIframe } from './SupportContentModal';
 
 interface MaterialPreviewProps {
   material: GeneratedMaterial;
@@ -84,6 +85,11 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
     if (!selectedTemplateId) selectedTemplateId = getDefaultTemplateId(material.type);
     
     try {
+      // Se for material de apoio, sempre aplicar o template institucional igual ao SupportContentModal
+      if (material.type === 'apoio') {
+        let apoioHtml = material.content?.conteudo || material.content || '';
+        return <ApoioIframe apoioHtml={apoioHtml} height={600} title="Material de Apoio" />;
+      }
       const renderedHtml = templateService.renderTemplate(selectedTemplateId, material.content);
       
       // Se for slides, usar o SlideViewer com material
@@ -222,11 +228,15 @@ const MaterialPreview: React.FC<MaterialPreviewProps> = ({ material, templateId 
   }, []);
 
   return (
-    <div className="material-preview-container w-full h-full overflow-hidden bg-gray-50">
-      <div className="w-full h-full">
-        {renderMaterial()}
-      </div>
-    </div>
+    material.type === 'apoio'
+      ? renderMaterial()
+      : (
+        <div className="material-preview-container w-full h-full overflow-hidden bg-gray-50">
+          <div className="w-full h-full">
+            {renderMaterial()}
+          </div>
+        </div>
+      )
   );
 };
 

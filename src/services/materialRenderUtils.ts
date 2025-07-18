@@ -5,6 +5,11 @@ export function splitContentIntoPages(htmlContent: string, material: any): strin
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = htmlContent;
 
+  // Para materiais de apoio, não dividir nem re-empacotar, apenas retornar o conteúdo original como uma página
+  if (material.type === 'apoio') {
+    return [htmlContent];
+  }
+
   // Para atividades e avaliações
   if (material.type === 'atividade' || material.type === 'avaliacao') {
     const pages: string[] = [];

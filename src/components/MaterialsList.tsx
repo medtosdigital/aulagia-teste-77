@@ -830,8 +830,8 @@ const MaterialsList: React.FC = () => {
                     <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-1">
                       {apoio.titulo}
                     </h3>
-                    {/* Novo: resumo do material principal */}
-                    <SupportMaterialPrincipalInfo materialPrincipalId={apoio.material_principal_id} />
+                    {/* Removido: <SupportMaterialPrincipalInfo materialPrincipalId={apoio.material_principal_id} /> */}
+                    {/* Removido: textos de disciplina, turma, material principal */}
                     <p className="text-xs text-gray-500">Conteúdo de Apoio Didático</p>
                     <div className="flex items-center text-xs text-gray-400 border-t pt-3">
                       <Calendar className="w-3 h-3 mr-1" />
@@ -1026,34 +1026,47 @@ export default MaterialsList;
 // Adicione o componente auxiliar para buscar e exibir dados do material principal
 function SupportMaterialPrincipalInfo({ materialPrincipalId }: { materialPrincipalId: string }) {
   const [info, setInfo] = React.useState<{ titulo: string; disciplina: string; turma: string } | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
   React.useEffect(() => {
     if (!materialPrincipalId) return;
     // Função auxiliar para buscar em todas as tabelas possíveis
     const fetchMaterial = async () => {
-      const tables = [
+      // Use os nomes de tabelas válidos e tipados explicitamente
+      const tables: Array<{ table: 'planos_de_aula' | 'atividades' | 'slides' | 'avaliacoes'; fields: string }> = [
         { table: 'planos_de_aula', fields: 'titulo, disciplina, serie' },
         { table: 'atividades', fields: 'titulo, disciplina, serie' },
         { table: 'slides', fields: 'titulo, disciplina, serie' },
         { table: 'avaliacoes', fields: 'titulo, disciplina, serie' }
       ];
       for (const t of tables) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from(t.table)
           .select(t.fields)
           .eq('id', materialPrincipalId)
           .single();
-        if (data) {
+        // Se houver erro ou data for null, continue
+        if (error || !data) continue;
+        // Só acesse as propriedades se data não for erro
+        if (
+          typeof data === 'object' &&
+          'titulo' in data &&
+          'disciplina' in data &&
+          'serie' in data
+        ) {
           setInfo({
-            titulo: data.titulo,
-            disciplina: data.disciplina,
-            turma: data.serie
+            titulo: data.titulo ?? '',
+            disciplina: data.disciplina ?? '',
+            turma: data.serie ?? ''
           });
+          setError(null);
           return;
         }
       }
+      setError('Material principal não encontrado.');
     };
     fetchMaterial();
   }, [materialPrincipalId]);
+  if (error) return <div className="text-xs text-red-500 mb-1">{error}</div>;
   if (!info) return null;
   return (
     <div className="text-xs text-gray-600 mb-1">
