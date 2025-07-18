@@ -176,7 +176,7 @@ export default function AdminConfigPage() {
       try {
         // Fetch basic metrics
         const { count: userCount } = await supabase
-          .from('profiles')
+          .from('perfis')
           .select('id', { count: 'exact', head: true });
         
         const { count: paidCount } = await supabase
@@ -185,20 +185,24 @@ export default function AdminConfigPage() {
           .in('plano_ativo', ['professor', 'grupo_escolar']);
         
         const { count: planosCount } = await supabase
-          .from('planos_de_aula')
-          .select('id', { count: 'exact', head: true });
+          .from('materiais')
+          .select('id', { count: 'exact', head: true })
+          .eq('tipo_material', 'plano-de-aula');
         
         const { count: atividadesCount } = await supabase
-          .from('atividades')
-          .select('id', { count: 'exact', head: true });
+          .from('materiais')
+          .select('id', { count: 'exact', head: true })
+          .eq('tipo_material', 'atividade');
         
         const { count: slidesCount } = await supabase
-          .from('slides')
-          .select('id', { count: 'exact', head: true });
+          .from('materiais')
+          .select('id', { count: 'exact', head: true })
+          .eq('tipo_material', 'slides');
         
         const { count: avaliacoesCount } = await supabase
-          .from('avaliacoes')
-          .select('id', { count: 'exact', head: true });
+          .from('materiais')
+          .select('id', { count: 'exact', head: true })
+          .eq('tipo_material', 'avaliacao');
 
         // Calculate finance data
         const { data: planCounts } = await supabase
@@ -247,7 +251,7 @@ export default function AdminConfigPage() {
         if (activities && activities.length > 0) {
           const userIds = Array.from(new Set(activities.map(a => a.user_id)));
           const { data: users } = await supabase
-            .from('profiles')
+            .from('perfis')
             .select('id, full_name, email')
             .in('id', userIds);
           if (users) {
