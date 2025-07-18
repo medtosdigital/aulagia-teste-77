@@ -810,142 +810,118 @@ const MaterialsList: React.FC = () => {
                 </Card>
               );
             })}
-            {supportMaterials.map(material => {
-              const typeConfig = getTypeConfig('apoio');
-              const IconComponent = typeConfig.icon;
-              
-              return (
-                <Card key={material.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-white hover:scale-[1.02] overflow-hidden relative">
-                  {/* Cabeçalho colorido por tipo */}
-                  <div className={`${typeConfig.bgGradient} p-4 text-white relative`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                          <IconComponent className="w-4 h-4" />
-                        </div>
-                        <span className="font-semibold text-sm">{typeConfig.label}</span>
+            {supportMaterials.map((apoio) => (
+              <Card key={apoio.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-white hover:scale-[1.02] overflow-hidden relative">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 text-white relative">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                        <HelpCircle className="w-4 h-4" />
                       </div>
-                      <Badge className={`${typeConfig.badgeColor} border-0 text-xs font-medium`}>
-                        {material.disciplina}
-                      </Badge>
+                      <span className="font-semibold text-sm">Conteúdo de Apoio</span>
+                    </div>
+                    <Badge className="bg-orange-100 text-orange-700 border-0 text-xs font-medium">
+                      {apoio.disciplina}
+                    </Badge>
+                  </div>
+                </div>
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-1">
+                      {apoio.titulo}
+                    </h3>
+                    {/* Novo: resumo do material principal */}
+                    <SupportMaterialPrincipalInfo materialPrincipalId={apoio.material_principal_id} />
+                    <p className="text-xs text-gray-500">Conteúdo de Apoio Didático</p>
+                    <div className="flex items-center text-xs text-gray-400 border-t pt-3">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      Criado em {new Date(apoio.created_at).toLocaleDateString('pt-BR')}
                     </div>
                   </div>
-                  
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      {/* Título */}
-                      <div>
-                        <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-1">
-                          {material.titulo}
-                        </h3>
-                        <p className="text-sm text-gray-500">Apoio</p>
-                      </div>
-                      {/* Data de criação */}
-                      <div className="flex items-center text-xs text-gray-400 border-t pt-3">
-                        <Calendar className="w-3 h-3 mr-1" />
-                        Criado em {new Date(material.created_at).toLocaleDateString('pt-BR')}
-                      </div>
-                    </div>
-                    {/* Botões de ação */}
-                    <div className="flex items-center justify-between space-x-2 mt-4 pt-3 border-t">
+                  {/* Botões de ação */}
+                  <div className="flex items-center justify-between space-x-2 mt-4 pt-3 border-t">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleViewSupportMaterial(apoio)} 
+                      className="flex-1 text-xs h-8 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+                    >
+                      <Eye className="w-3 h-3 mr-1" />
+                      Visualizar
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleEditSupportMaterial(apoio)} 
+                      className={`h-8 w-8 p-0 ${canEditMaterials() 
+                        ? 'hover:bg-blue-50 hover:text-blue-600' 
+                        : 'opacity-50 cursor-not-allowed hover:bg-gray-50'
+                      }`}
+                      title={canEditMaterials() ? "Editar" : "Edição disponível apenas em planos pagos"}
+                    >
+                      {canEditMaterials() ? (
+                        <Edit3 className="w-3 h-3" />
+                      ) : (
+                        <Lock className="w-3 h-3" />
+                      )}
+                    </Button>
+                    {/* Dropdown de exportação */}
+                    <div className="relative">
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleViewSupportMaterial(material)} 
-                        className="flex-1 text-xs h-8 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+                        onClick={() => toggleExportDropdown(apoio.id)} 
+                        className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600" 
+                        title="Exportar"
                       >
-                        <Eye className="w-3 h-3 mr-1" />
-                        Visualizar
+                        <Download className="w-3 h-3" />
                       </Button>
-                      {/* Botão de edição com verificação de permissão */}
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleEditSupportMaterial(material)} 
-                        className={`h-8 w-8 p-0 ${canEditMaterials() 
-                          ? 'hover:bg-blue-50 hover:text-blue-600' 
-                          : 'opacity-50 cursor-not-allowed hover:bg-gray-50'
-                        }`}
-                        title={canEditMaterials() ? "Editar" : "Edição disponível apenas em planos pagos"}
-                      >
-                        {canEditMaterials() ? (
-                          <Edit3 className="w-3 h-3" />
-                        ) : (
-                          <Lock className="w-3 h-3" />
-                        )}
-                      </Button>
-                      {/* Dropdown de exportação */}
-                      <div className="relative">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => toggleExportDropdown(material.id)} 
-                          className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600" 
-                          title="Exportar"
-                        >
-                          <Download className="w-3 h-3" />
-                        </Button>
-                        {exportDropdownOpen === material.id && (
-                          <div className="absolute bottom-full mb-1 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]">
-                            <button 
-                              onClick={() => handleExportSupportMaterial(material, 'print')} 
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
-                            >
-                              <Printer className="w-3 h-3 mr-2" />
-                              Imprimir
-                            </button>
-                            <button 
-                              onClick={() => handleExportSupportMaterial(material, 'pdf')} 
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
-                            >
+                      {exportDropdownOpen === apoio.id && (
+                        <div className="absolute bottom-full mb-1 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]">
+                          <button 
+                            onClick={() => handleExportSupportMaterial(apoio, 'print')} 
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                          >
+                            <Printer className="w-3 h-3 mr-2" />
+                            Imprimir
+                          </button>
+                          <button 
+                            onClick={() => handleExportSupportMaterial(apoio, 'pdf')} 
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
+                          >
+                            <FileDown className="w-3 h-3 mr-2" />
+                            PDF
+                          </button>
+                          <button 
+                            onClick={() => handleExportSupportMaterial(apoio, 'word')} 
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center ${
+                              canDownloadWord() ? '' : 'opacity-50 cursor-not-allowed'
+                            }`}
+                            disabled={!canDownloadWord()}
+                          >
+                            {canDownloadWord() ? (
                               <FileDown className="w-3 h-3 mr-2" />
-                              PDF
-                            </button>
-                            <button 
-                              onClick={() => handleExportSupportMaterial(material, 'ppt')} 
-                              className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center ${
-                                canDownloadPPT() ? '' : 'opacity-50 cursor-not-allowed'
-                              }`}
-                              disabled={!canDownloadPPT()}
-                            >
-                              {canDownloadPPT() ? (
-                                <FileDown className="w-3 h-3 mr-2" />
-                              ) : (
-                                <Lock className="w-3 h-3 mr-2" />
-                              )}
-                              PPT {!canDownloadPPT() && '(Premium)'}
-                            </button>
-                            <button 
-                              onClick={() => handleExportSupportMaterial(material, 'word')} 
-                              className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center ${
-                                canDownloadWord() ? '' : 'opacity-50 cursor-not-allowed'
-                              }`}
-                              disabled={!canDownloadWord()}
-                            >
-                              {canDownloadWord() ? (
-                                <FileDown className="w-3 h-3 mr-2" />
-                              ) : (
-                                <Lock className="w-3 h-3 mr-2" />
-                              )}
-                              Word {!canDownloadWord() && '(Premium)'}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleDeleteSupportMaterial(material)} 
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-200 h-8 w-8 p-0" 
-                        title="Excluir"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+                            ) : (
+                              <Lock className="w-3 h-3 mr-2" />
+                            )}
+                            Word {!canDownloadWord() && '(Premium)'}
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleDeleteSupportMaterial(apoio)} 
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-200 h-8 w-8 p-0" 
+                      title="Excluir"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
       </div>
@@ -1046,3 +1022,42 @@ const MaterialsList: React.FC = () => {
 };
 
 export default MaterialsList;
+
+// Adicione o componente auxiliar para buscar e exibir dados do material principal
+function SupportMaterialPrincipalInfo({ materialPrincipalId }: { materialPrincipalId: string }) {
+  const [info, setInfo] = React.useState<{ titulo: string; disciplina: string; turma: string } | null>(null);
+  React.useEffect(() => {
+    if (!materialPrincipalId) return;
+    // Função auxiliar para buscar em todas as tabelas possíveis
+    const fetchMaterial = async () => {
+      const tables = [
+        { table: 'planos_de_aula', fields: 'titulo, disciplina, serie' },
+        { table: 'atividades', fields: 'titulo, disciplina, serie' },
+        { table: 'slides', fields: 'titulo, disciplina, serie' },
+        { table: 'avaliacoes', fields: 'titulo, disciplina, serie' }
+      ];
+      for (const t of tables) {
+        const { data } = await supabase
+          .from(t.table)
+          .select(t.fields)
+          .eq('id', materialPrincipalId)
+          .single();
+        if (data) {
+          setInfo({
+            titulo: data.titulo,
+            disciplina: data.disciplina,
+            turma: data.serie
+          });
+          return;
+        }
+      }
+    };
+    fetchMaterial();
+  }, [materialPrincipalId]);
+  if (!info) return null;
+  return (
+    <div className="text-xs text-gray-600 mb-1">
+      <span className="font-medium">Material Principal:</span> {info.titulo} <span className="text-gray-400">|</span> <span className="font-medium">Disciplina:</span> {info.disciplina} <span className="text-gray-400">|</span> <span className="font-medium">Turma:</span> {info.turma}
+    </div>
+  );
+}

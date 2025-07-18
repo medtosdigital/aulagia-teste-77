@@ -41,6 +41,56 @@ interface SupportMaterialModalProps {
   isEditMode?: boolean;
 }
 
+// Adicione a função utilitária para template institucional A4 igual ao gabarito
+function wrapApoioWithA4Template(apoioHtml: string) {
+  const today = new Date().toLocaleDateString('pt-BR');
+  return `
+  <div class="page first-page-content">
+    <div class="shape-circle purple"></div>
+    <div class="shape-circle blue"></div>
+    <div class="header">
+      <div class="logo-container">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>AulagIA</h1>
+          <p>Sua aula com toque mágico</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      Conteúdo de Apoio gerado pela AulagIA - Sua aula com toque mágico em ${today} • aulagia.com.br
+    </div>
+    <div class="content">
+      ${apoioHtml}
+    </div>
+  </div>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @page { size: A4; margin: 0; }
+    body { margin: 0; padding: 0; background: #f0f4f8; font-family: 'Inter', sans-serif; }
+    .page { position: relative; width: 210mm; min-height: 297mm; background: white; overflow: hidden; margin: 0 auto 20px auto; box-sizing: border-box; padding: 0; display: flex; flex-direction: column; border-radius: 6px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); page-break-after: always; }
+    .shape-circle { position: absolute; border-radius: 50%; opacity: 0.25; pointer-events: none; z-index: 0; }
+    .shape-circle.purple { width: 180px; height: 180px; background: #a78bfa; top: -60px; left: -40px; }
+    .shape-circle.blue { width: 240px; height: 240px; background: #60a5fa; bottom: -80px; right: -60px; }
+    .header { position: absolute; top: 6mm; left: 0; right: 0; display: flex; align-items: center; z-index: 999; height: 15mm; background: transparent; padding: 0 12mm; flex-shrink: 0; }
+    .header .logo-container { display: flex; align-items: center; gap: 6px; }
+    .header .logo { width: 38px; height: 38px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3); }
+    .header .logo svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; }
+    .header .brand-text { display: flex; flex-direction: column; justify-content: center; }
+    .header .brand-text h1 { font-size: 24px; color: #0ea5e9; margin: 0; font-family: 'Inter', sans-serif; line-height: 1; font-weight: 700; letter-spacing: -0.5px; text-transform: none; }
+    .header .brand-text p { font-size: 9px; color: #6b7280; margin: 1px 0 0 0; font-family: 'Inter', sans-serif; line-height: 1; font-weight: 400; }
+    .content { margin-top: 25mm; margin-bottom: 12mm; padding: 0 15mm; position: relative; flex: 1; overflow: visible; z-index: 1; }
+    .footer { position: absolute; bottom: 6mm; left: 0; right: 0; text-align: center; font-size: 0.7rem; color: #6b7280; z-index: 999; height: 6mm; display: flex; align-items: center; justify-content: center; background: transparent; padding: 0 15mm; font-family: 'Inter', sans-serif; flex-shrink: 0; }
+    @media print { body { margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { box-shadow: none; margin: 0; border-radius: 0; width: 100%; min-height: 100vh; display: flex; flex-direction: column; } .shape-circle { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .header, .footer { position: fixed; background: transparent; } .header .logo { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .header .brand-text h1 { text-transform: none !important; } .header .logo svg { width: 20px !important; height: 20px !important; } }
+  </style>
+  `;
+}
+
 const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({ 
   material, 
   open, 
@@ -239,6 +289,7 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
     setExportDropdownOpen(false);
   };
 
+  // No renderContent, sempre renderize o HTML do apoio dentro do template A4
   const renderContent = () => {
     if (editMode) {
       return (
@@ -292,117 +343,20 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
         </div>
       );
     }
-
+    // Sempre renderizar o HTML do apoio dentro do template institucional A4
+    let apoioHtml = material.conteudo;
     try {
-      // Tentar parsear como JSON estruturado
-      const parsedContent = JSON.parse(material.conteudo);
-      
-      if (parsedContent.conteudo_completo) {
-        // Se tem conteudo_completo formatado, usar diretamente
-        return (
-          <div 
-            className="prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: parsedContent.conteudo_completo }}
-          />
-        );
-      } else {
-        // Se é JSON mas sem conteudo_completo, renderizar as seções individualmente
-        return (
-          <div className="space-y-6">
-            {parsedContent.introducao && (
-              <section>
-                <h3 className="text-lg font-semibold text-blue-700 mb-2">🎯 Introdução ao Tema</h3>
-                <div className="text-gray-700">{parsedContent.introducao}</div>
-              </section>
-            )}
-            
-            {parsedContent.objetivos_aprendizagem && (
-              <section>
-                <h3 className="text-lg font-semibold text-blue-700 mb-2">📚 Objetivos de Aprendizagem</h3>
-                <div className="text-gray-700">{parsedContent.objetivos_aprendizagem}</div>
-              </section>
-            )}
-            
-            {parsedContent.contextualizacao_teorica && (
-              <section>
-                <h3 className="text-lg font-semibold text-blue-700 mb-2">🧠 Contextualização Teórica</h3>
-                <div className="text-gray-700">{parsedContent.contextualizacao_teorica}</div>
-              </section>
-            )}
-            
-            {parsedContent.dicas_pedagogicas && (
-              <section>
-                <h3 className="text-lg font-semibold text-blue-700 mb-2">🎓 Dicas Pedagógicas</h3>
-                <div className="text-gray-700">{parsedContent.dicas_pedagogicas}</div>
-              </section>
-            )}
-            
-            {parsedContent.recursos_complementares && (
-              <section>
-                <h3 className="text-lg font-semibold text-blue-700 mb-2">🛠️ Recursos Complementares</h3>
-                <div className="text-gray-700">{parsedContent.recursos_complementares}</div>
-              </section>
-            )}
-            
-            {parsedContent.atividades_praticas && (
-              <section>
-                <h3 className="text-lg font-semibold text-blue-700 mb-2">⚡ Atividades Práticas</h3>
-                <div className="text-gray-700">{parsedContent.atividades_praticas}</div>
-              </section>
-            )}
-            
-            {parsedContent.perguntas_discussao && (
-              <section>
-                <h3 className="text-lg font-semibold text-blue-700 mb-2">💭 Perguntas para Discussão</h3>
-                <div className="text-gray-700">{parsedContent.perguntas_discussao}</div>
-              </section>
-            )}
-            
-            {parsedContent.avaliacao_acompanhamento && (
-              <section>
-                <h3 className="text-lg font-semibold text-blue-700 mb-2">📊 Avaliação e Acompanhamento</h3>
-                <div className="text-gray-700">{parsedContent.avaliacao_acompanhamento}</div>
-              </section>
-            )}
-            
-            {parsedContent.referencias && (
-              <section>
-                <h3 className="text-lg font-semibold text-blue-700 mb-2">📖 Referências</h3>
-                <div className="text-gray-700">{parsedContent.referencias}</div>
-              </section>
-            )}
-          </div>
-        );
+      const parsed = JSON.parse(material.conteudo);
+      if (parsed.conteudo_completo) {
+        apoioHtml = parsed.conteudo_completo;
       }
-    } catch (error) {
-      // Se não for JSON válido, tratar como markdown/texto simples
-      const processMarkdown = () => {
-        try {
-          const parsed = marked.parse(material.conteudo);
-          // Handle both sync and async marked.parse results
-          if (typeof parsed === 'string') {
-            return parsed;
-          } else {
-            // If it's a Promise, fallback to simple line break replacement
-            return material.conteudo.replace(/\n/g, '<br/>');
-          }
-        } catch (markdownError) {
-          console.error('Error parsing markdown:', markdownError);
-          return material.conteudo.replace(/\n/g, '<br/>');
-        }
-      };
-
-      const htmlContent = material.conteudo.includes('#') || material.conteudo.includes('**') 
-        ? processMarkdown()
-        : material.conteudo.replace(/\n/g, '<br/>');
-
-      return (
-        <div 
-          className="prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
-        />
-      );
-    }
+    } catch {}
+    // Exibir tudo em um único bloco .page
+    return (
+      <div className="prose prose-sm max-w-none" style={{ background: '#f8fafc', borderRadius: 12, padding: 0, overflow: 'auto' }}>
+        <div dangerouslySetInnerHTML={{ __html: wrapApoioWithA4Template(apoioHtml) }} />
+      </div>
+    );
   };
 
   return (

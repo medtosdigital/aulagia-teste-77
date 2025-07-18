@@ -14,9 +14,9 @@ serve(async (req) => {
 
   try {
     const { materialType, formData } = await req.json();
-    
+
     console.log('📋 Generating material:', { materialType, formData });
-    
+
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
@@ -110,7 +110,7 @@ serve(async (req) => {
       - Objetivos: ${Array.isArray(formData.objetivos) ? formData.objetivos.join(', ') : (formData.objetivos || 'Não especificado')}
 
       INSTRUÇÕES ESPECÍFICAS:
-      1. Crie um material de apoio completo e estruturado
+      1. Crie um material de apoio completo e estruturado em 5 páginas
       2. Use linguagem clara e adequada ao nível dos alunos
       3. Inclua exemplos práticos e situações do cotidiano
       4. Organize o conteúdo de forma lógica e progressiva
@@ -118,30 +118,654 @@ serve(async (req) => {
       6. Evite linguagem muito técnica ou complexa
       7. Inclua elementos visuais quando apropriado (descrições de imagens, diagramas, etc.)
 
-      ESTRUTURA OBRIGATÓRIA - O material deve conter exatamente estas 7 seções:
+      ESTRUTURA OBRIGATÓRIA - O material deve conter exatamente estas seções distribuídas em 5 páginas:
 
-      1. **O que é?** - Definição clara e simples do conceito principal
-      2. **Por que é importante?** - Relevância do tema na vida dos alunos
-      3. **Como funciona?** - Explicação do processo ou funcionamento
-      4. **Exemplos práticos** - Situações reais e cotidianas
-      5. **Dicas importantes** - Pontos-chave e observações relevantes
-      6. **Atividades sugeridas** - Exercícios simples para fixação
-      7. **Saiba mais** - Curiosidades e informações complementares
+      PÁGINA 1:
+      - TEMA_DO_MATERIAL_PRINCIPAL: Título principal do material
+      - DISCIPLINA: Nome da disciplina
+      - NIVEL_ANO: Série/ano escolar
+      - TIPO_DE_MATERIAL_PRINCIPAL: Tipo do material (plano de aula, atividade, etc.)
+      - TEMA_DO_MATERIAL: Tema específico
+      - TURMA_DO_MATERIAL: Turma específica
+      - EXPLICACAO_SIMPLES_DO_TEMA: Explicação simples do que é o tema
+      - EXPLICACAO_DETALHADA_DO_TEMA: Explicação detalhada do tema
+      - EXPLICACAO_SIMPLES_UTILIDADE: Por que é importante (explicação simples)
+      - EXPLICACAO_DETALHADA_UTILIDADE: Por que é importante (explicação detalhada)
+      - IMPORTANCIA_NA_FORMACAO_ITEM_1: Primeiro item da importância
+      - IMPORTANCIA_NA_FORMACAO_ITEM_2: Segundo item da importância
+      - IMPORTANCIA_NA_FORMACAO_ITEM_3: Terceiro item da importância
+
+      PÁGINA 2:
+      - EXPLICACAO_SIMPLES_ENSINO: Como ensinar (explicação simples)
+      - EXPLICACAO_DETALHADA_ENSINO: Como ensinar (explicação detalhada)
+      - PASSO_A_PASSO_ITEM_1_INICIAR: Primeiro passo para iniciar
+      - PASSO_A_PASSO_ITEM_2_DESENVOLVER: Segundo passo para desenvolver
+      - PASSO_A_PASSO_ITEM_3_CONCLUIR: Terceiro passo para concluir
+      - HIGHLIGHT_TITULO_1: Título do destaque
+      - HIGHLIGHT_TEXTO_1: Texto do destaque
+      - PARAGRAFO_COMO_ENSINAR_P3: Parágrafo adicional sobre como ensinar
+      - SUGESTAO_VISUAL_OU_CONCRETA_ITEM_1: Primeira sugestão visual/concreta
+      - SUGESTAO_VISUAL_OU_CONCRETA_ITEM_2: Segunda sugestão visual/concreta
+
+      PÁGINA 3:
+      - EXPLICACAO_SIMPLES_EXEMPLOS: Exemplos práticos (explicação simples)
+      - EXPLICACAO_DETALHADA_EXEMPLOS: Exemplos práticos (explicação detalhada)
+      - TITULO_EXEMPLO_1: Título do primeiro exemplo
+      - DESCRICAO_EXEMPLO_1: Descrição do primeiro exemplo
+      - COMENTARIO_EXEMPLO_1: Comentário sobre o primeiro exemplo
+      - TITULO_EXEMPLO_2: Título do segundo exemplo
+      - DESCRICAO_EXEMPLO_2: Descrição do segundo exemplo
+      - COMENTARIO_EXEMPLO_2: Comentário sobre o segundo exemplo
+      - SUCCESS_BOX_TITULO_1: Título da caixa de sucesso
+      - SUCCESS_BOX_TEXTO_1: Texto da caixa de sucesso
+
+      PÁGINA 4:
+      - EXPLICACAO_SIMPLES_DIFICULDADES: Dificuldades comuns (explicação simples)
+      - EXPLICACAO_DETALHADA_DIFICULDADES: Dificuldades comuns (explicação detalhada)
+      - TITULO_DIFICULDADE_1: Título da primeira dificuldade
+      - DESCRICAO_DIFICULDADE_1: Descrição da primeira dificuldade
+      - CORRECAO_DIFICULDADE_1: Como corrigir a primeira dificuldade
+      - TITULO_DIFICULDADE_2: Título da segunda dificuldade
+      - DESCRICAO_DIFICULDADE_2: Descrição da segunda dificuldade
+      - CORRECAO_DIFICULDADE_2: Como corrigir a segunda dificuldade
+      - EXPLICACAO_SIMPLES_ATIVIDADES: Atividades práticas (explicação simples)
+      - EXPLICACAO_DETALHADA_ATIVIDADES: Atividades práticas (explicação detalhada)
+      - ATIVIDADE_PRATICA_1_DESCRICAO: Descrição da primeira atividade
+      - ATIVIDADE_PRATICA_2_DESCRICAO: Descrição da segunda atividade
+
+      PÁGINA 5:
+      - EXPLICACAO_SIMPLES_RECURSOS: Recursos complementares (explicação simples)
+      - EXPLICACAO_DETALHADA_RECURSOS: Recursos complementares (explicação detalhada)
+      - RECURSO_VIDEO_DESCRICAO: Descrição do recurso de vídeo
+      - RECURSO_VIDEO_LINK: Link do vídeo
+      - RECURSO_IMAGEM_DESCRICAO: Descrição do recurso de imagem
+      - RECURSO_IMAGEM_LINK: Link da imagem
+      - RECURSO_SITE_DESCRICAO: Descrição do site interativo
+      - RECURSO_SITE_LINK: Link do site
+      - RECURSO_OBJETO_DESCRICAO: Descrição de objetos manipuláveis
+      - SUCCESS_BOX_TITULO_2: Título da segunda caixa de sucesso
+      - SUCCESS_BOX_TEXTO_2: Texto da segunda caixa de sucesso
+
+      TEMPLATE HTML A SER USADO:
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Material de Apoio</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+          @page { 
+            size: A4; 
+            margin: 0; 
+          }
+          body { 
+            margin: 0; 
+            padding: 0; 
+            background: #f0f4f8; 
+            font-family: 'Inter', sans-serif; 
+            display: flex; /* Permite empilhar as páginas verticalmente */
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 0; /* Espaçamento entre as páginas no navegador */
+          }
+          .page { 
+            position: relative; 
+            width: 210mm; 
+            min-height: 297mm; 
+            background: white; 
+            overflow: hidden; 
+            margin: 0 auto 20px auto; /* Margem entre as páginas */
+            box-sizing: border-box; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            border-radius: 6px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+            page-break-after: always; /* Força quebra de página */
+          }
+          .page:last-of-type {
+            page-break-after: auto; /* Remove quebra de página na última */
+            margin-bottom: 0;
+          }
+          .shape-circle { 
+            position: absolute; 
+            border-radius: 50%; 
+            opacity: 0.25; 
+            pointer-events: none; 
+            z-index: 0; 
+          }
+          .shape-circle.purple { 
+            width: 180px; 
+            height: 180px; 
+            background: #a78bfa; 
+            top: -60px; 
+            left: -40px; 
+          }
+          .shape-circle.blue { 
+            width: 240px; 
+            height: 240px; 
+            background: #60a5fa; 
+            bottom: -80px; 
+            right: -60px; 
+          }
+          .header { 
+            position: absolute; 
+            top: 6mm; 
+            left: 0; 
+            right: 0; 
+            display: flex; 
+            /* Ajuste: Alinha a logo e o texto da marca à esquerda */
+            justify-content: flex-start; /* Empurra para o início do container */
+            align-items: center; 
+            z-index: 999; 
+            height: 15mm; 
+            background: transparent; 
+            padding: 0 12mm; /* Padding para afastar da borda */
+            flex-shrink: 0; 
+          }
+          .header .logo-container { 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+          }
+          .header .logo { 
+            width: 38px; 
+            height: 38px; 
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            flex-shrink: 0; 
+            box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3); 
+          }
+          .header .logo svg { 
+            width: 20px; 
+            height: 20px; 
+            stroke: white; 
+            fill: none; 
+            stroke-width: 2; 
+          }
+          .header .brand-text { 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+          }
+          .header .brand-text h1 { 
+            font-size: 24px; 
+            color: #0ea5e9; 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; 
+            line-height: 1; 
+            font-weight: 700; 
+            letter-spacing: -0.5px; 
+            text-transform: none; 
+          }
+          .header .brand-text p { 
+            font-size: 9px; 
+            color: #6b7280; 
+            margin: 1px 0 0 0; 
+            font-family: 'Inter', sans-serif; 
+            line-height: 1; 
+            font-weight: 400; 
+          }
+          .content { 
+            margin-top: 25mm; /* Ajusta a margem superior para o cabeçalho */
+            margin-bottom: 12mm; /* Ajusta a margem inferior para o rodapé */
+            padding: 15mm; /* Padding interno para o conteúdo, garantindo margens laterais */
+            position: relative; 
+            flex: 1; 
+            overflow: hidden; /* Garante que o conteúdo não vaze */
+            z-index: 1; 
+            box-sizing: border-box; /* Inclui padding no cálculo da largura/altura */
+          }
+          .footer { 
+            position: absolute; 
+            bottom: 6mm; 
+            left: 0; 
+            right: 0; 
+            text-align: center; 
+            font-size: 0.7rem; 
+            color: #6b7280; 
+            z-index: 999; 
+            height: 6mm; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: transparent; 
+            padding: 0 15mm; 
+            font-family: 'Inter', sans-serif; 
+            flex-shrink: 0; 
+          }
+          
+          /* Estilos para o conteúdo do material de apoio */
+          .support-content {
+            font-size: 1.13rem;
+            color: #222;
+            text-align: justify;
+            line-height: 1.7;
+            word-break: break-word; /* Garante quebra de palavras longas */
+          }
+          
+          .support-content h1 {
+            font-size: 1.8rem;
+            color: #4338ca;
+            font-weight: 800;
+            text-align: center;
+            margin: 0 0 0.5rem 0; /* Ajustado para dar espaço ao subtítulo */
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            word-wrap: break-word; /* Garante quebra de palavras longas */
+          }
+          .support-content .subtitle-material { /* Novo estilo para o subtítulo do material */
+              font-size: 1.1rem;
+              color: #6b7280;
+              text-align: center;
+              margin-bottom: 1.5rem;
+              word-wrap: break-word;
+          }
+          .support-content .material-details { /* Estilo para a linha de detalhes do material */
+              font-size: 1rem;
+              color: #333;
+              text-align: center;
+              margin-top: 5px;
+              margin-bottom: 20px;
+              line-height: 1.4;
+              border-bottom: 1px solid #d1d5db; /* A linha visual */
+              padding-bottom: 10px;
+          }
+          
+          .support-content h2 {
+            font-size: 1.4rem;
+            color: #4338ca;
+            font-weight: 700;
+            margin: 2rem 0 1rem 0;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            word-wrap: break-word;
+          }
+          
+          .support-content h3 {
+            font-size: 1.2rem;
+            color: #4338ca;
+            font-weight: 600;
+            margin: 1.5rem 0 0.8rem 0;
+            word-wrap: break-word;
+          }
+          
+          .support-content p {
+            margin: 0 0 1rem 0;
+            text-align: justify;
+            word-wrap: break-word;
+          }
+          
+          .support-content ul, .support-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            word-wrap: break-word;
+          }
+          
+          .support-content li {
+            margin: 0.5rem 0;
+            line-height: 1.6;
+            word-wrap: break-word;
+          }
+          
+          .support-content strong {
+            font-weight: 600;
+            color: #4338ca;
+          }
+          
+          .support-content em {
+            font-style: italic;
+            color: #6b7280;
+          }
+          
+          .support-content blockquote {
+            border-left: 4px solid #0ea5e9;
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 0 6px 6px 0;
+            word-wrap: break-word;
+          }
+          
+          .support-content .highlight {
+            background: #fef3c7;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 500;
+            word-wrap: break-word;
+          }
+          
+          .support-content .info-box {
+            background: #eff6ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            word-wrap: break-word;
+          }
+          
+          .support-content .warning-box {
+            background: #fef2f2;
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            word-wrap: break-word;
+          }
+          
+          .support-content .success-box {
+            background: #f0fdf4;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            word-wrap: break-word;
+          }
+          
+          @media print { 
+            body { 
+              margin: 0; 
+              padding: 0; 
+              background: white; 
+              -webkit-print-color-adjust: exact; 
+              print-color-adjust: exact; 
+            } 
+            .page { 
+              box-shadow: none; 
+              margin: 0; 
+              border-radius: 0; 
+              width: 100%; 
+              min-height: 100vh; 
+              display: flex; 
+              flex-direction: column; 
+            } 
+            .shape-circle { 
+              -webkit-print-color-adjust: exact; 
+              print-color-adjust: exact; 
+            } 
+            .header, .footer { 
+              position: fixed; 
+              background: transparent; 
+            } 
+            .header .logo { 
+              background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important; 
+              -webkit-print-color-adjust: exact; 
+              print-color-adjust: exact; 
+            } 
+            .header .brand-text h1 { 
+              text-transform: none !important; 
+            } 
+            .header .logo svg { 
+              width: 20px !important; 
+              height: 20px !important; 
+            } 
+          }
+        </style>
+      </head>
+      <body>
+        <!-- Página 1 -->
+        <div class="page">
+          <div class="shape-circle purple"></div>
+          <div class="shape-circle blue"></div>
+          
+          <div class="header">
+            <div class="logo-container">
+              <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="brand-text">
+                <h1>AulagIA</h1>
+                <p>Sua aula com toque mágico</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer">
+            Conteúdo de Apoio gerado pela AulagIA - Sua aula com toque mágico em {{DATA_GERACAO}} • aulagia.com.br
+          </div>
+          
+          <div class="content">
+            <div class="support-content">
+              <h1>{{TEMA_DO_MATERIAL_PRINCIPAL}}</h1>
+              <p class="material-details">
+                {{DISCIPLINA}} - {{NIVEL_ANO}}<br>
+                {{TIPO_DE_MATERIAL_PRINCIPAL}}: {{TEMA_DO_MATERIAL}}<br>
+                Turma: {{TURMA_DO_MATERIAL}}
+              </p>
+              
+              <h2>1. O Que é Esse Tema?</h2>
+              <p><strong>Explicação Simples:</strong> {{EXPLICACAO_SIMPLES_DO_TEMA}}</p>
+              <p><strong>Explicação Detalhada:</strong> {{EXPLICACAO_DETALHADA_DO_TEMA}}</p>
+              
+              <div class="info-box">
+                <strong>Dica importante:</strong> O conteúdo de apoio deve ser sempre adaptado ao nível de compreensão dos alunos, usando linguagem clara e exemplos práticos.
+              </div>
+              
+              <h2>2. Para que Serve Esse Conteúdo na Vida Prática e Escolar?</h2>
+              <p><strong>Explicação Simples:</strong> {{EXPLICACAO_SIMPLES_UTILIDADE}}</p>
+              <p><strong>Explicação Detalhada:</strong> {{EXPLICACAO_DETALHADA_UTILIDADE}}</p>
+              <ul>
+                <li>{{IMPORTANCIA_NA_FORMACAO_ITEM_1}}</li>
+                <li>{{IMPORTANCIA_NA_FORMACAO_ITEM_2}}</li>
+                <li>{{IMPORTANCIA_NA_FORMACAO_ITEM_3}}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Página 2 -->
+        <div class="page">
+          <div class="shape-circle purple"></div>
+          <div class="shape-circle blue"></div>
+          
+          <div class="header">
+            <div class="logo-container">
+              <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="brand-text">
+                <h1>AulagIA</h1>
+                <p>Sua aula com toque mágico</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer">
+            Conteúdo de Apoio gerado pela AulagIA - Sua aula com toque mágico em {{DATA_GERACAO}} • aulagia.com.br
+          </div>
+          
+          <div class="content">
+            <div class="support-content">
+              <h2>3. Como Ensinar Esse Tema em Sala de Aula – Passo a Passo</h2>
+              <p><strong>Explicação Simples:</strong> {{EXPLICACAO_SIMPLES_ENSINO}}</p>
+              <p><strong>Explicação Detalhada:</strong> {{EXPLICACAO_DETALHADA_ENSINO}}</p>
+              <ol>
+                <li>{{PASSO_A_PASSO_ITEM_1_INICIAR}}</li>
+                <li>{{PASSO_A_PASSO_ITEM_2_DESENVOLVER}}</li>
+                <li>{{PASSO_A_PASSO_ITEM_3_CONCLUIR}}</li>
+              </ol>
+              
+              <div class="highlight">
+                <strong>{{HIGHLIGHT_TITULO_1}}:</strong> {{HIGHLIGHT_TEXTO_1}}
+              </div>
+              
+              <p>{{PARAGRAFO_COMO_ENSINAR_P3}}</p>
+              <ul>
+                <li>{{SUGESTAO_VISUAL_OU_CONCRETA_ITEM_1}}</li>
+                <li>{{SUGESTAO_VISUAL_OU_CONCRETA_ITEM_2}}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Página 3 -->
+        <div class="page">
+          <div class="shape-circle purple"></div>
+          <div class="shape-circle blue"></div>
+          
+          <div class="header">
+            <div class="logo-container">
+              <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="brand-text">
+                <h1>AulagIA</h1>
+                <p>Sua aula com toque mágico</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer">
+            Conteúdo de Apoio gerado pela AulagIA - Sua aula com toque mágico em {{DATA_GERACAO}} • aulagia.com.br
+          </div>
+          
+          <div class="content">
+            <div class="support-content">
+              <h2>4. Exemplos Práticos Prontos para Usar em Sala</h2>
+              <p><strong>Explicação Simples:</strong> {{EXPLICACAO_SIMPLES_EXEMPLOS}}</p>
+              <p><strong>Explicação Detalhada:</strong> {{EXPLICACAO_DETALHADA_EXEMPLOS}}</p>
+              
+              <h3>Exemplo 1: {{TITULO_EXEMPLO_1}}</h3>
+              <p>{{DESCRICAO_EXEMPLO_1}}</p>
+              <div class="info-box">
+                <strong>Comentário:</strong> {{COMENTARIO_EXEMPLO_1}}
+              </div>
+              
+              <h3>Exemplo 2: {{TITULO_EXEMPLO_2}}</h3>
+              <p>{{DESCRICAO_EXEMPLO_2}}</p>
+              <div class="info-box">
+                <strong>Comentário:</strong> {{COMENTARIO_EXEMPLO_2}}
+              </div>
+
+              <div class="success-box">
+                <strong>{{SUCCESS_BOX_TITULO_1}}:</strong> {{SUCCESS_BOX_TEXTO_1}}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Página 4 -->
+        <div class="page">
+          <div class="shape-circle purple"></div>
+          <div class="shape-circle blue"></div>
+          
+          <div class="header">
+            <div class="logo-container">
+              <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="brand-text">
+                <h1>AulagIA</h1>
+                <p>Sua aula com toque mágico</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer">
+            Conteúdo de Apoio gerado pela AulagIA - Sua aula com toque mágico em {{DATA_GERACAO}} • aulagia.com.br
+          </div>
+          
+          <div class="content">
+            <div class="support-content">
+              <h2>5. Dificuldades Comuns dos Alunos e Como Corrigir</h2>
+              <p><strong>Explicação Simples:</strong> {{EXPLICACAO_SIMPLES_DIFICULDADES}}</p>
+              <p><strong>Explicação Detalhada:</strong> {{EXPLICACAO_DETALHADA_DIFICULDADES}}</p>
+              
+              <h3>Dificuldade 1: {{TITULO_DIFICULDADE_1}}</h3>
+              <p>{{DESCRICAO_DIFICULDADE_1}}</p>
+              <div class="warning-box">
+                <strong>Como Corrigir:</strong> {{CORRECAO_DIFICULDADE_1}}
+              </div>
+              
+              <h3>Dificuldade 2: {{TITULO_DIFICULDADE_2}}</h3>
+              <p>{{DESCRICAO_DIFICULDADE_2}}</p>
+              <div class="warning-box">
+                <strong>Como Corrigir:</strong> {{CORRECAO_DIFICULDADE_2}}
+              </div>
+              
+              <h2>6. Sugestões de Atividades Práticas</h2>
+              <p><strong>Explicação Simples:</strong> {{EXPLICACAO_SIMPLES_ATIVIDADES}}</p>
+              <p><strong>Explicação Detalhada:</strong> {{EXPLICACAO_DETALHADA_ATIVIDADES}}</p>
+              <ol>
+                <li>{{ATIVIDADE_PRATICA_1_DESCRICAO}}</li>
+                <li>{{ATIVIDADE_PRATICA_2_DESCRICAO}}</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- Página 5 -->
+        <div class="page">
+          <div class="shape-circle purple"></div>
+          <div class="shape-circle blue"></div>
+          
+          <div class="header">
+            <div class="logo-container">
+              <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="brand-text">
+                <h1>AulagIA</h1>
+                <p>Sua aula com toque mágico</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer">
+            Conteúdo de Apoio gerado pela AulagIA - Sua aula com toque mágico em {{DATA_GERACAO}} • aulagia.com.br
+          </div>
+          
+          <div class="content">
+            <div class="support-content">
+              <h2>7. Sugestões de Recursos Complementares</h2>
+              <p><strong>Explicação Simples:</strong> {{EXPLICACAO_SIMPLES_RECURSOS}}</p>
+              <p><strong>Explicação Detalhada:</strong> {{EXPLICACAO_DETALHADA_RECURSOS}}</p>
+              <ul>
+                <li><strong>Vídeos:</strong> {{RECURSO_VIDEO_DESCRICAO}} - {{RECURSO_VIDEO_LINK}}</li>
+                <li><strong>Imagens/Diagramas:</strong> {{RECURSO_IMAGEM_DESCRICAO}} - {{RECURSO_IMAGEM_LINK}}</li>
+                <li><strong>Sites Interativos:</strong> {{RECURSO_SITE_DESCRICAO}} - {{RECURSO_SITE_LINK}}</li>
+                <li><strong>Objetos Manipuláveis:</strong> {{RECURSO_OBJETO_DESCRICAO}}</li>
+              </ul>
+              
+              <div class="success-box">
+                <strong>{{SUCCESS_BOX_TITULO_2}}:</strong> {{SUCCESS_BOX_TEXTO_2}}
+              </div>
+              
+              <p style="text-align: center; margin-top: 3rem;">--- Fim do Material de Apoio ---</p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
 
       FORMATO DE RESPOSTA:
       Retorne apenas um JSON válido com a seguinte estrutura:
 
       {
         "titulo": "Título do Material de Apoio",
-        "conteudo": {
-          "o_que_e": "Conteúdo da seção 1",
-          "por_que_importante": "Conteúdo da seção 2", 
-          "como_funciona": "Conteúdo da seção 3",
-          "exemplos_praticos": "Conteúdo da seção 4",
-          "dicas_importantes": "Conteúdo da seção 5",
-          "atividades_sugeridas": "Conteúdo da seção 6",
-          "saiba_mais": "Conteúdo da seção 7"
-        }
+        "html": "HTML completo com todas as variáveis preenchidas usando o template fornecido"
       }
 
       IMPORTANTE:
@@ -151,21 +775,16 @@ serve(async (req) => {
       - Seja prático e objetivo
       - Não use markdown, apenas HTML simples
       - Retorne APENAS o JSON válido, sem texto adicional
+      - O HTML deve usar o template fornecido com todas as variáveis preenchidas
+      - Substitua todas as variáveis {{VARIAVEL}} pelos valores apropriados
+      - Inclua a data de geração no formato brasileiro (dd/mm/aaaa)
       `;
 
       responseStructure = `
         Estrutura esperada:
         {
           "titulo": "string",
-          "conteudo": {
-            "o_que_e": "string",
-            "por_que_importante": "string",
-            "como_funciona": "string", 
-            "exemplos_praticos": "string",
-            "dicas_importantes": "string",
-            "atividades_sugeridas": "string",
-            "saiba_mais": "string"
-          }
+          "html": "string (HTML completo com template e variáveis preenchidas)"
         }
       `;
     } else if (materialType === 'plano_aula') {
@@ -181,7 +800,7 @@ serve(async (req) => {
       - Recursos: ${formData.recursos || 'Não especificado'}
       - Metodologia: ${formData.metodologia || 'Não especificado'}
 
-      INSTRUÇÕES ESPECÍFICAS:
+INSTRUÇÕES ESPECÍFICAS:
       1. Elabore um plano de aula completo e bem estruturado.
       2. Use linguagem clara e adequada ao nível dos alunos.
       3. Inclua exemplos práticos e situações do cotidiano.
@@ -452,7 +1071,7 @@ serve(async (req) => {
       6. Evite linguagem muito técnica ou complexa.
       7. Inclua elementos visuais quando apropriado (imagens, gráficos, etc.).
 
-      ESTRUTURA OBRIGATÓRIA:
+ESTRUTURA OBRIGATÓRIA:
       A apresentação deve conter exatamente as seguintes seções:
 
       1. **Título:** Título claro e conciso da apresentação.
@@ -506,7 +1125,7 @@ serve(async (req) => {
           ]
         }
       `;
-    } else {
+      } else {
       throw new Error(`Tipo de material não suportado: ${materialType}`);
     }
 
@@ -558,131 +1177,10 @@ serve(async (req) => {
 
     // Convert structured content to HTML for apoio materials
     let htmlContent = '';
-    if (materialType === 'apoio' && parsedContent.conteudo) {
-      htmlContent = `
-        <div class="material-apoio">
-          <h1>${parsedContent.titulo}</h1>
-          
-          <div class="secao">
-            <h2>💡 O que é?</h2>
-            <div class="conteudo-secao">${parsedContent.conteudo.o_que_e}</div>
-          </div>
-          
-          <div class="secao">
-            <h2>🎯 Por que é importante?</h2>
-            <div class="conteudo-secao">${parsedContent.conteudo.por_que_importante}</div>
-          </div>
-          
-          <div class="secao">
-            <h2>⚙️ Como funciona?</h2>
-            <div class="conteudo-secao">${parsedContent.conteudo.como_funciona}</div>
-          </div>
-          
-          <div class="secao">
-            <h2>🌟 Exemplos práticos</h2>
-            <div class="conteudo-secao">${parsedContent.conteudo.exemplos_praticos}</div>
-          </div>
-          
-          <div class="secao">
-            <h2>📌 Dicas importantes</h2>
-            <div class="conteudo-secao">${parsedContent.conteudo.dicas_importantes}</div>
-          </div>
-          
-          <div class="secao">
-            <h2>📝 Atividades sugeridas</h2>
-            <div class="conteudo-secao">${parsedContent.conteudo.atividades_sugeridas}</div>
-          </div>
-          
-          <div class="secao">
-            <h2>🔍 Saiba mais</h2>
-            <div class="conteudo-secao">${parsedContent.conteudo.saiba_mais}</div>
-          </div>
-        </div>
-        
-        <style>
-          .material-apoio {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            color: #333;
-          }
-          
-          .material-apoio h1 {
-            color: #2563eb;
-            font-size: 2em;
-            margin-bottom: 30px;
-            text-align: center;
-            border-bottom: 3px solid #2563eb;
-            padding-bottom: 10px;
-          }
-          
-          .secao {
-            margin-bottom: 30px;
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 20px;
-            border-left: 4px solid #3b82f6;
-          }
-          
-          .secao h2 {
-            color: #1e40af;
-            font-size: 1.3em;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-          
-          .conteudo-secao {
-            font-size: 1em;
-            line-height: 1.7;
-            color: #374151;
-          }
-          
-          .conteudo-secao p {
-            margin-bottom: 12px;
-          }
-          
-          .conteudo-secao ul, .conteudo-secao ol {
-            margin-left: 20px;
-            margin-bottom: 12px;
-          }
-          
-          .conteudo-secao li {
-            margin-bottom: 6px;
-          }
-          
-          .conteudo-secao strong {
-            color: #1f2937;
-            font-weight: 600;
-          }
-          
-          .conteudo-secao em {
-            color: #6b7280;
-            font-style: italic;
-          }
-          
-          @media (max-width: 768px) {
-            .material-apoio {
-              padding: 15px;
-            }
-            
-            .secao {
-              padding: 15px;
-            }
-            
-            .material-apoio h1 {
-              font-size: 1.6em;
-            }
-            
-            .secao h2 {
-              font-size: 1.2em;
-            }
-          }
-        </style>
-      `;
+    if (materialType === 'apoio' && parsedContent.html) {
+      // Substituir a data de geração no HTML
+      const today = new Date().toLocaleDateString('pt-BR');
+      htmlContent = parsedContent.html.replace(/\{\{DATA_GERACAO\}\}/g, today);
     }
 
     // Save to database for apoio materials
