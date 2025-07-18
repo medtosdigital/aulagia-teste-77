@@ -51,54 +51,63 @@ class SupabaseUnifiedPlanService {
 
       const cacheKey = `profile_${user.id}`;
       return await this.cachedQuery(cacheKey, async () => {
-        console.log('[getCurrentUserProfile] Buscando perfil do usuário:', user.id);
-        
-        // Primeiro, tentar buscar o perfil existente
-        const { data: existingProfile, error: selectError } = await supabase
+        console.log('[getCurrentUserProfile] Tentando buscar perfil do usuário:', user.id);
+        const { data, error } = await supabase
           .from('perfis')
           .select('*')
           .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (selectError) {
-          console.error('[getCurrentUserProfile] Erro ao buscar perfil:', selectError);
-          return null;
-        }
-
-        // Se o perfil existe, retorná-lo
-        if (existingProfile) {
-          console.log('[getCurrentUserProfile] Perfil encontrado:', existingProfile);
-          return existingProfile;
-        }
-
-        // Se não existe, criar um novo perfil
-        console.log('[getCurrentUserProfile] Perfil não encontrado, criando perfil gratuito para:', user.id);
-        const newProfileData = {
-          user_id: user.id,
-          plano_ativo: 'gratuito' as TipoPlano,
-          materiais_criados_mes_atual: 0,
-          ano_atual: new Date().getFullYear(),
-          mes_atual: new Date().getMonth() + 1,
-          data_inicio_plano: new Date().toISOString(),
-          ultimo_reset_materiais: new Date().toISOString(),
-          email: user.email || '',
-          full_name: user.user_metadata?.full_name || user.email || '',
-          nome_preferido: user.user_metadata?.nome_preferido || user.user_metadata?.full_name || ''
-        };
-
-        const { data: newProfile, error: createError } = await supabase
-          .from('perfis')
-          .insert(newProfileData)
-          .select()
+          .limit(1)
           .single();
+        console.log('[getCurrentUserProfile] Resultado da consulta perfis:', data, error);
 
-        if (createError) {
-          console.error('[getCurrentUserProfile] Erro ao criar perfil:', createError);
+        if (error) {
+          // Tratar qualquer erro de perfil não encontrado
+          const notFound = error.code === 'PGRST116' || error.message?.includes('No rows') || error.details?.includes('0 rows');
+          if (notFound) {
+            // Perfil não encontrado, criar automaticamente
+            console.log('[getCurrentUserProfile] Perfil não encontrado, criando perfil gratuito para o usuário:', user.id);
+            const { data: newProfile, error: createError } = await supabase
+              .from('perfis')
+              .insert({
+                user_id: user.id,
+                plano_ativo: 'gratuito',
+                materiais_criados_mes_atual: 0,
+                ano_atual: new Date().getFullYear(),
+                mes_atual: new Date().getMonth() + 1,
+                data_inicio_plano: new Date().toISOString(),
+                ultimo_reset_materiais: new Date().toISOString(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                email: user.email || '',
+                full_name: user.user_metadata?.full_name || '',
+                nome_preferido: user.user_metadata?.nome_preferido || ''
+              })
+              .select()
+              .single();
+            if (createError) {
+              console.error('[getCurrentUserProfile] Erro ao criar perfil gratuito:', createError);
+              return null;
+            }
+            console.log('[getCurrentUserProfile] Perfil gratuito criado:', newProfile);
+            // Buscar novamente o perfil criado para garantir consistência
+            const { data: createdProfile, error: fetchCreatedError } = await supabase
+              .from('perfis')
+              .select('*')
+              .eq('user_id', user.id)
+              .limit(1)
+              .single();
+            if (fetchCreatedError) {
+              console.error('[getCurrentUserProfile] Erro ao buscar perfil recém-criado:', fetchCreatedError);
+              return newProfile || null;
+            }
+            console.log('[getCurrentUserProfile] Perfil recém-criado retornado:', createdProfile);
+            return createdProfile;
+          }
+          console.error('[getCurrentUserProfile] Erro ao buscar perfil do usuário:', error);
           return null;
         }
-
-        console.log('[getCurrentUserProfile] Perfil criado:', newProfile);
-        return newProfile;
+        console.log('[getCurrentUserProfile] Perfil encontrado (cache):', data);
+        return data;
       });
     } catch (error) {
       console.error('[getCurrentUserProfile] Erro inesperado:', error);
@@ -220,10 +229,7 @@ class SupabaseUnifiedPlanService {
 
           if (error) {
             console.error('Erro ao obter materiais restantes:', error);
-            const profile = await this.getCurrentUserProfile();
-            if (!profile) return 5;
-            const limit = this.getPlanLimits(profile.plano_ativo);
-            return Math.max(0, limit - profile.materiais_criados_mes_atual);
+            return 5; // Fallback
           }
 
           const remaining = data || 0;
@@ -231,10 +237,7 @@ class SupabaseUnifiedPlanService {
           return remaining;
         } catch (timeoutError) {
           console.warn('Timeout ao calcular materiais restantes, usando fallback');
-          const profile = await this.getCurrentUserProfile();
-          if (!profile) return 5;
-          const limit = this.getPlanLimits(profile.plano_ativo);
-          return Math.max(0, limit - profile.materiais_criados_mes_atual);
+          return 5;
         }
       }, 15000);
     } catch (error) {
@@ -289,84 +292,6 @@ class SupabaseUnifiedPlanService {
     } catch (error) {
       console.error('Erro ao verificar expiração do plano:', error);
       return false;
-    }
-  }
-
-  // Buscar todos os usuários (para admin)
-  async getAllUsers(): Promise<any[]> {
-    try {
-      const { data: profiles, error } = await supabase
-        .from('perfis')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Erro ao buscar todos os usuários:', error);
-        return [];
-      }
-
-      return profiles || [];
-    } catch (error) {
-      console.error('Erro em getAllUsers:', error);
-      return [];
-    }
-  }
-
-  // Contar usuários totais
-  async getTotalUsersCount(): Promise<number> {
-    try {
-      const { count, error } = await supabase
-        .from('perfis')
-        .select('*', { count: 'exact', head: true });
-
-      if (error) {
-        console.error('Erro ao contar usuários:', error);
-        return 0;
-      }
-
-      return count || 0;
-    } catch (error) {
-      console.error('Erro em getTotalUsersCount:', error);
-      return 0;
-    }
-  }
-
-  // Contar usuários pagos
-  async getPaidUsersCount(): Promise<number> {
-    try {
-      const { count, error } = await supabase
-        .from('perfis')
-        .select('*', { count: 'exact', head: true })
-        .neq('plano_ativo', 'gratuito');
-
-      if (error) {
-        console.error('Erro ao contar usuários pagos:', error);
-        return 0;
-      }
-
-      return count || 0;
-    } catch (error) {
-      console.error('Erro em getPaidUsersCount:', error);
-      return 0;
-    }
-  }
-
-  // Contar materiais criados
-  async getTotalMaterialsCount(): Promise<number> {
-    try {
-      const { count, error } = await supabase
-        .from('materiais')
-        .select('*', { count: 'exact', head: true });
-
-      if (error) {
-        console.error('Erro ao contar materiais:', error);
-        return 0;
-      }
-
-      return count || 0;
-    } catch (error) {
-      console.error('Erro em getTotalMaterialsCount:', error);
-      return 0;
     }
   }
 
