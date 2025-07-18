@@ -58,143 +58,165 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
+    // Extrair o tema específico dos dados do formulário
+    const temaEspecifico = formData.tema || formData.topic || '';
+    const disciplina = formData.disciplina || formData.subject || '';
+    const serie = formData.serie || formData.grade || '';
+
+    console.log('📋 Tema específico extraído:', temaEspecifico);
+    console.log('📋 Disciplina:', disciplina);
+    console.log('📋 Série:', serie);
+
+    if (!temaEspecifico.trim()) {
+      throw new Error('Tema não fornecido no formData');
+    }
+
     let prompt = '';
     let systemMessage = '';
 
     if (materialType === 'slides') {
-      systemMessage = `Você é um especialista em criação de materiais educacionais para apresentações de slides. 
-IMPORTANTE: Crie conteúdo ESPECÍFICO para o tema "${formData.tema || formData.topic}" para ${formData.disciplina || formData.subject}.
+      systemMessage = `Você é um especialista em criação de materiais educacionais ESPECÍFICOS para apresentações de slides.
 
-TODOS os conteúdos e prompts de imagem devem ser OBRIGATORIAMENTE relacionados ao tema "${formData.tema || formData.topic}".
+REGRAS OBRIGATÓRIAS:
+1. TODO o conteúdo DEVE ser especificamente sobre "${temaEspecifico}"
+2. NUNCA mencione temas diferentes de "${temaEspecifico}"
+3. Todas as variáveis devem conter informações EXCLUSIVAMENTE sobre "${temaEspecifico}"
+4. Os prompts de imagem devem ilustrar APENAS conceitos de "${temaEspecifico}"
 
-Retorne APENAS um JSON válido com as variáveis preenchidas. NÃO inclua explicações, markdown ou texto adicional.
-
-ESTRUTURA OBRIGATÓRIA para slides:
+ESTRUTURA JSON OBRIGATÓRIA:
 {
-  "tema": "string - título principal da apresentação sobre ${formData.tema || formData.topic}",
-  "disciplina": "string - nome da disciplina",
-  "serie": "string - série/ano escolar",
-  "professor": "string - nome do professor",
-  "objetivos": ["string", "string", "string"] - lista de objetivos de aprendizagem específicos do tema,
-  "introducao": "string - texto introdutório específico do tema ${formData.tema || formData.topic} (2-3 frases)",
-  "conceitos": "string - conceitos principais específicos de ${formData.tema || formData.topic} (2-3 parágrafos)",
-  "desenvolvimento_1": "string - primeiro tópico específico sobre ${formData.tema || formData.topic} (2-3 frases)",
-  "desenvolvimento_2": "string - segundo tópico específico sobre ${formData.tema || formData.topic} (2-3 frases)",
-  "desenvolvimento_3": "string - terceiro tópico específico sobre ${formData.tema || formData.topic} (2-3 frases)",
-  "desenvolvimento_4": "string - quarto tópico específico sobre ${formData.tema || formData.topic} (2-3 frases)",
-  "exemplo": "string - exemplo prático específico de ${formData.tema || formData.topic} (2-3 frases)",
-  "atividade": "string - atividade interativa específica sobre ${formData.tema || formData.topic} (2-3 frases)",
-  "resumo": "string - resumo dos pontos principais de ${formData.tema || formData.topic} (2-3 frases)",
-  "conclusao": "string - conclusão específica sobre ${formData.tema || formData.topic} (1-2 frases)",
-  "tema_imagem": "string - ilustração educativa de ${formData.tema || formData.topic} para capa",
-  "introducao_imagem": "string - ilustração que introduz visualmente ${formData.tema || formData.topic}",
-  "conceitos_imagem": "string - ilustração dos conceitos principais de ${formData.tema || formData.topic}",
-  "desenvolvimento_1_imagem": "string - ilustração específica do primeiro tópico de ${formData.tema || formData.topic}",
-  "desenvolvimento_2_imagem": "string - ilustração específica do segundo tópico de ${formData.tema || formData.topic}",
-  "desenvolvimento_3_imagem": "string - ilustração específica do terceiro tópico de ${formData.tema || formData.topic}",
-  "desenvolvimento_4_imagem": "string - ilustração específica do quarto tópico de ${formData.tema || formData.topic}",
-  "exemplo_imagem": "string - ilustração visual do exemplo prático de ${formData.tema || formData.topic}"
-}`;
+  "tema": "string - DEVE conter '${temaEspecifico}' no título",
+  "disciplina": "${disciplina}",
+  "serie": "${serie}",
+  "professor": "${formData.professor || 'Professor(a)'}",
+  "objetivos": ["objetivo 1 sobre ${temaEspecifico}", "objetivo 2 sobre ${temaEspecifico}", "objetivo 3 sobre ${temaEspecifico}"],
+  "introducao": "string - introdução específica sobre ${temaEspecifico}",
+  "conceitos": "string - conceitos principais de ${temaEspecifico}",
+  "desenvolvimento_1": "string - primeiro aspecto de ${temaEspecifico}",
+  "desenvolvimento_2": "string - segundo aspecto de ${temaEspecifico}",
+  "desenvolvimento_3": "string - terceiro aspecto de ${temaEspecifico}",
+  "desenvolvimento_4": "string - quarto aspecto de ${temaEspecifico}",
+  "exemplo": "string - exemplo prático de ${temaEspecifico}",
+  "atividade": "string - atividade sobre ${temaEspecifico}",
+  "resumo": "string - resumo de ${temaEspecifico}",
+  "conclusao": "string - conclusão sobre ${temaEspecifico}",
+  "tema_imagem": "Ilustração educativa sobre ${temaEspecifico} para ${disciplina}",
+  "introducao_imagem": "Ilustração introdutória de ${temaEspecifico}",
+  "conceitos_imagem": "Diagrama dos conceitos de ${temaEspecifico}",
+  "desenvolvimento_1_imagem": "Ilustração do primeiro aspecto de ${temaEspecifico}",
+  "desenvolvimento_2_imagem": "Ilustração do segundo aspecto de ${temaEspecifico}",
+  "desenvolvimento_3_imagem": "Ilustração do terceiro aspecto de ${temaEspecifico}",
+  "desenvolvimento_4_imagem": "Ilustração do quarto aspecto de ${temaEspecifico}",
+  "exemplo_imagem": "Exemplo visual de ${temaEspecifico}"
+}
 
-      prompt = `Crie uma apresentação COMPLETA e ESPECÍFICA sobre "${formData.tema || formData.topic}" para ${formData.disciplina || formData.subject}, série ${formData.serie || formData.grade}.
+Retorne APENAS o JSON válido, sem markdown ou explicações.`;
 
-Professor: ${formData.professor || 'Professor(a)'}
+      prompt = `Crie uma apresentação educacional COMPLETA e ESPECÍFICA sobre "${temaEspecifico}".
 
-INSTRUÇÕES ESPECÍFICAS:
-- TODO o conteúdo deve ser sobre "${formData.tema || formData.topic}"
-- Todos os prompts de imagem devem descrever ilustrações educativas específicas de "${formData.tema || formData.topic}"
-- Use linguagem adequada para ${formData.serie || formData.grade}
-- Foque em exemplos práticos e aplicações reais de "${formData.tema || formData.topic}"
-- Cada variável deve ter conteúdo ESPECÍFICO e educativo sobre o tema
+DADOS DO MATERIAL:
+- Tema: ${temaEspecifico}
+- Disciplina: ${disciplina}
+- Série: ${serie}
+- Professor: ${formData.professor || 'Professor(a)'}
 
-Retorne APENAS o JSON com todas as variáveis preenchidas com conteúdo específico de "${formData.tema || formData.topic}".`;
+INSTRUÇÕES CRÍTICAS:
+1. TODOS os textos devem ser sobre "${temaEspecifico}" EXCLUSIVAMENTE
+2. NÃO mencione outros temas matemáticos além de "${temaEspecifico}"
+3. Use linguagem adequada para ${serie}
+4. Foque em conceitos, exemplos e aplicações específicas de "${temaEspecifico}"
+5. Cada campo do JSON deve conter conteúdo educativo específico sobre "${temaEspecifico}"
+
+VALIDAÇÃO: Se o JSON gerado mencionar qualquer tema diferente de "${temaEspecifico}", refaça completamente.
+
+Retorne APENAS o JSON com conteúdo específico sobre "${temaEspecifico}".`;
 
     } else if (materialType === 'plano-de-aula') {
-      systemMessage = `Você é um especialista em educação brasileira. Crie um plano de aula completo seguindo as diretrizes da BNCC.
+      systemMessage = `Você é um especialista em educação brasileira. Crie um plano de aula ESPECÍFICO sobre "${temaEspecifico}".
 Retorne APENAS um JSON válido com a estrutura especificada.`;
 
-      prompt = `Crie um plano de aula sobre "${formData.tema || formData.topic}" para ${formData.disciplina || formData.subject}, ${formData.serie || formData.grade}.
+      prompt = `Crie um plano de aula ESPECÍFICO sobre "${temaEspecifico}" para ${disciplina}, ${serie}.
 
 ESTRUTURA OBRIGATÓRIA:
 {
-  "titulo": "string",
-  "professor": "string",
-  "disciplina": "string", 
-  "serie": "string",
-  "tema": "string",
-  "data": "string",
-  "duracao": "string",
-  "bncc": "string",
-  "objetivos": ["string", "string"],
-  "habilidades": ["string", "string"],
+  "titulo": "Plano de aula: ${temaEspecifico}",
+  "professor": "${formData.professor || 'Professor(a)'}",
+  "disciplina": "${disciplina}", 
+  "serie": "${serie}",
+  "tema": "${temaEspecifico}",
+  "data": "${new Date().toLocaleDateString('pt-BR')}",
+  "duracao": "50 minutos",
+  "bncc": "string - código BNCC relacionado a ${temaEspecifico}",
+  "objetivos": ["objetivo 1 sobre ${temaEspecifico}", "objetivo 2 sobre ${temaEspecifico}"],
+  "habilidades": ["habilidade 1 de ${temaEspecifico}", "habilidade 2 de ${temaEspecifico}"],
   "desenvolvimento": [
-    {"etapa": "string", "atividade": "string", "tempo": "string", "recursos": "string"}
+    {"etapa": "Abertura", "atividade": "Introdução ao ${temaEspecifico}", "tempo": "10 min", "recursos": "Quadro"}
   ],
-  "recursos": ["string", "string"],
-  "conteudosProgramaticos": ["string", "string"],
-  "metodologia": "string",
-  "avaliacao": "string",
-  "referencias": ["string", "string"]
+  "recursos": ["recursos para ${temaEspecifico}"],
+  "conteudosProgramaticos": ["conteúdo 1 de ${temaEspecifico}", "conteúdo 2 de ${temaEspecifico}"],
+  "metodologia": "Metodologia específica para ensinar ${temaEspecifico}",
+  "avaliacao": "Avaliação focada em ${temaEspecifico}",
+  "referencias": ["referência sobre ${temaEspecifico}"]
 }`;
 
     } else if (materialType === 'atividade') {
-      systemMessage = `Você é um especialista em criação de atividades educacionais. Crie questões variadas e educativas.
+      systemMessage = `Você é um especialista em criação de atividades educacionais sobre "${temaEspecifico}".
 Retorne APENAS um JSON válido com a estrutura especificada.`;
 
-      prompt = `Crie uma atividade sobre "${formData.assuntos?.join(', ') || formData.tema}" para ${formData.disciplina || formData.subject}, ${formData.serie || formData.grade}.
+      prompt = `Crie uma atividade ESPECÍFICA sobre "${temaEspecifico}" para ${disciplina}, ${serie}.
 Número de questões: ${formData.numeroQuestoes || formData.quantidadeQuestoes || 5}
 
 ESTRUTURA OBRIGATÓRIA:
 {
-  "titulo": "string",
-  "instrucoes": "string",
+  "titulo": "Atividade: ${temaEspecifico}",
+  "instrucoes": "Instruções para atividade sobre ${temaEspecifico}",
   "questoes": [
     {
-      "numero": number,
-      "tipo": "string",
-      "pergunta": "string",
-      "opcoes": ["string"] // para múltipla escolha
+      "numero": 1,
+      "tipo": "múltipla escolha",
+      "pergunta": "Pergunta sobre ${temaEspecifico}",
+      "opcoes": ["opção sobre ${temaEspecifico}"]
     }
   ]
 }`;
 
     } else if (materialType === 'avaliacao') {
-      systemMessage = `Você é um especialista em avaliações educacionais. Crie questões de diferentes tipos para avaliação.
+      systemMessage = `Você é um especialista em avaliações educacionais sobre "${temaEspecifico}".
 Retorne APENAS um JSON válido com a estrutura especificada.`;
 
-      prompt = `Crie uma avaliação sobre "${formData.assuntos?.join(', ') || formData.tema}" para ${formData.disciplina || formData.subject}, ${formData.serie || formData.grade}.
+      prompt = `Crie uma avaliação ESPECÍFICA sobre "${temaEspecifico}" para ${disciplina}, ${serie}.
 Número de questões: ${formData.numeroQuestoes || formData.quantidadeQuestoes || 10}
 
 ESTRUTURA OBRIGATÓRIA:
 {
-  "titulo": "string",
-  "instrucoes": "string", 
-  "tempoLimite": "string",
+  "titulo": "Avaliação: ${temaEspecifico}",
+  "instrucoes": "Instruções para avaliação sobre ${temaEspecifico}", 
+  "tempoLimite": "60 minutos",
   "questoes": [
     {
-      "numero": number,
-      "tipo": "string",
-      "pergunta": "string",
-      "opcoes": ["string"], // para múltipla escolha
-      "pontuacao": number
+      "numero": 1,
+      "tipo": "múltipla escolha",
+      "pergunta": "Pergunta sobre ${temaEspecifico}",
+      "opcoes": ["opção sobre ${temaEspecifico}"],
+      "pontuacao": 2
     }
   ]
 }`;
 
     } else if (materialType === 'apoio') {
-      systemMessage = `Você é um especialista em materiais de apoio educacional. Crie conteúdo complementar rico e detalhado.
+      systemMessage = `Você é um especialista em materiais de apoio sobre "${temaEspecifico}".
 Retorne APENAS um JSON válido com a estrutura especificada.`;
 
-      prompt = `Crie um material de apoio sobre "${formData.tema || formData.topic}" para ${formData.disciplina || formData.subject}, ${formData.serie || formData.grade}.
+      prompt = `Crie um material de apoio ESPECÍFICO sobre "${temaEspecifico}" para ${disciplina}, ${serie}.
 
 ESTRUTURA OBRIGATÓRIA:
 {
-  "titulo": "string",
-  "conteudo": "string - HTML rico com explicações detalhadas, exemplos e exercícios"
+  "titulo": "Material de Apoio: ${temaEspecifico}",
+  "conteudo": "Conteúdo HTML detalhado específico sobre ${temaEspecifico}"
 }`;
     }
 
-    console.log('📤 Sending request to OpenAI...');
+    console.log('📤 Enviando solicitação para OpenAI com tema específico:', temaEspecifico);
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -207,7 +229,7 @@ ESTRUTURA OBRIGATÓRIA:
           { role: 'system', content: systemMessage },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.3, // Reduzido para mais consistência
+        temperature: 0.1, // Muito baixo para máxima consistência
         max_tokens: 4000,
       }),
     });
@@ -227,7 +249,7 @@ ESTRUTURA OBRIGATÓRIA:
     }
 
     let generatedContent = data.choices[0].message.content.trim();
-    console.log('📝 Generated content preview:', generatedContent.substring(0, 300));
+    console.log('📝 Generated content preview:', generatedContent.substring(0, 500));
 
     // Limpar conteúdo para garantir JSON válido
     generatedContent = generatedContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
@@ -237,6 +259,20 @@ ESTRUTURA OBRIGATÓRIA:
     try {
       parsedContent = JSON.parse(generatedContent);
       console.log('✅ JSON parsed successfully');
+      
+      // VALIDAÇÃO ADICIONAL: Verificar se o conteúdo é realmente sobre o tema
+      if (materialType === 'slides') {
+        const temaNoTitulo = parsedContent.tema && parsedContent.tema.toLowerCase().includes(temaEspecifico.toLowerCase());
+        const temaNoConteudo = parsedContent.conceitos && parsedContent.conceitos.toLowerCase().includes(temaEspecifico.toLowerCase());
+        
+        if (!temaNoTitulo || !temaNoConteudo) {
+          console.error('❌ Conteúdo gerado não é específico para o tema:', temaEspecifico);
+          console.error('❌ Título:', parsedContent.tema);
+          console.error('❌ Conceitos:', parsedContent.conceitos);
+          throw new Error(`Conteúdo gerado não é específico para o tema: ${temaEspecifico}`);
+        }
+      }
+      
     } catch (parseError) {
       console.error('❌ Failed to parse JSON:', parseError);
       console.error('❌ Raw content:', generatedContent);
@@ -245,7 +281,7 @@ ESTRUTURA OBRIGATÓRIA:
 
     // Processar imagens para slides
     if (materialType === 'slides') {
-      console.log('🎨 Processando imagens para slides...');
+      console.log('🎨 Processando imagens para slides com tema:', temaEspecifico);
       
       // Lista de campos de imagem para processar
       const imageFields = [
@@ -254,27 +290,23 @@ ESTRUTURA OBRIGATÓRIA:
         'desenvolvimento_3_imagem', 'desenvolvimento_4_imagem', 'exemplo_imagem'
       ];
 
-      // Criar prompts mais específicos baseados no tema
-      const tema = formData.tema || formData.topic;
-      const disciplina = formData.disciplina || formData.subject;
-      
-      // Processar cada campo de imagem sequencialmente com prompts específicos
+      // Processar cada campo de imagem sequencialmente com prompts MUITO específicos
       for (const field of imageFields) {
         if (parsedContent[field]) {
-          // Criar prompt específico baseado no tema e campo
-          let specificPrompt = '';
+          // Criar prompt EXTREMAMENTE específico baseado no tema
+          let specificPrompt = `Ilustração educativa brasileira sobre ${temaEspecifico} para ${disciplina}, série ${serie}`;
           
           if (field === 'tema_imagem') {
-            specificPrompt = `Ilustração educativa para capa sobre ${tema} em ${disciplina}, visual atraente e educativo`;
+            specificPrompt = `Capa educativa brasileira sobre ${temaEspecifico} em ${disciplina}, visual atraente para ${serie}`;
           } else if (field === 'introducao_imagem') {
-            specificPrompt = `Ilustração introdutória sobre ${tema}, conceitos básicos visuais para ${disciplina}`;
+            specificPrompt = `Introdução visual sobre ${temaEspecifico}, conceitos básicos para ${disciplina} ${serie}`;
           } else if (field === 'conceitos_imagem') {
-            specificPrompt = `Diagrama educativo dos principais conceitos de ${tema} para ${disciplina}`;
+            specificPrompt = `Diagrama educativo dos conceitos de ${temaEspecifico} para ${disciplina} ${serie}`;
           } else if (field.includes('desenvolvimento')) {
             const numero = field.split('_')[1];
-            specificPrompt = `Ilustração específica do tópico ${numero} sobre ${tema} em ${disciplina}, visual explicativo`;
+            specificPrompt = `Ilustração específica do tópico ${numero} sobre ${temaEspecifico} em ${disciplina} para ${serie}`;
           } else if (field === 'exemplo_imagem') {
-            specificPrompt = `Exemplo visual prático de ${tema} aplicado em ${disciplina}, ilustração didática`;
+            specificPrompt = `Exemplo visual prático de ${temaEspecifico} aplicado em ${disciplina} para ${serie}`;
           }
           
           console.log(`🖼️ Gerando imagem para ${field} com prompt específico:`, specificPrompt);
@@ -311,6 +343,11 @@ ESTRUTURA OBRIGATÓRIA:
       }
       console.log('✅ All required fields present for slides');
     }
+
+    // LOG FINAL de verificação
+    console.log('📋 VERIFICAÇÃO FINAL - Tema solicitado:', temaEspecifico);
+    console.log('📋 VERIFICAÇÃO FINAL - Tema no material:', parsedContent.tema);
+    console.log('📋 VERIFICAÇÃO FINAL - Disciplina:', parsedContent.disciplina);
 
     return new Response(JSON.stringify({ 
       success: true, 
