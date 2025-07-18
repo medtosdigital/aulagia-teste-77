@@ -1,871 +1,463 @@
+
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Printer, Download } from 'lucide-react';
-import { Button } from './ui/button';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './ui/pagination';
-import { exportService } from '@/services/exportService';
-import { GeneratedMaterial } from '@/services/materialService';
-import { toast } from 'sonner';
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { GeneratedMaterial } from '@/services/materialService';
 
 interface SlideViewerProps {
-  htmlContent: string;
-  material?: GeneratedMaterial;
+  material: GeneratedMaterial;
+  htmlContent?: string;
 }
 
-const SlideViewer: React.FC<SlideViewerProps> = ({
-  htmlContent,
-  material
-}) => {
+const SlideViewer: React.FC<SlideViewerProps> = ({ material, htmlContent }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
 
-  // Generate slides based on content
+  // Verificar se o conteúdo é JSON ou HTML
+  const isJsonContent = typeof material.content === 'object' && material.content !== null;
+  const slideData = isJsonContent ? material.content : null;
+
+  // Se não for JSON, usar o HTML fornecido ou tentar extrair do material
+  const fallbackHtml = htmlContent || (typeof material.content === 'string' ? material.content : '');
+
   const slides = React.useMemo(() => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, 'text/html');
-    // Seleciona todos os slides do template
-    const slideDivs = doc.querySelectorAll('div.slide');
-    return Array.from(slideDivs).map(div => ({
-      html: div.outerHTML
-    }));
-  }, [htmlContent]);
+    if (!slideData) {
+      // Fallback para HTML: dividir em slides baseado em divs
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(fallbackHtml, 'text/html');
+      const slideElements = doc.querySelectorAll('.slide');
+      
+      return Array.from(slideElements).map((slide, index) => ({
+        id: index,
+        content: slide.outerHTML
+      }));
+    }
 
-  // Função para obter URL da imagem gerada baseada no índice do slide
-  const getGeneratedImageUrl = (slideIndex: number): string | null => {
-    if (!material?.content) return null;
+    // Criar slides a partir do JSON
+    const slidesList = [];
     
-    const content = material.content;
-    const imageMapping: { [key: number]: string } = {
-      0: content.tema_imagem_url,           // Slide 1 - Capa
-      2: content.introducao_imagem_url,     // Slide 3 - Introdução
-      3: content.conceitos_imagem_url,      // Slide 4 - Conceitos
-      4: content.desenvolvimento_1_imagem_url, // Slide 5
-      5: content.desenvolvimento_2_imagem_url, // Slide 6
-      6: content.desenvolvimento_3_imagem_url, // Slide 7
-      7: content.desenvolvimento_4_imagem_url, // Slide 8
-      8: content.exemplo_imagem_url         // Slide 9 - Exemplo
+    // Slide 1 - Título
+    slidesList.push({
+      id: 1,
+      title: slideData.titulo || 'Apresentação',
+      subtitle: `${slideData.disciplina} - ${slideData.serie}`,
+      content: `
+        <div class="slide slide-title">
+          <div class="slide-content">
+            <h1 class="slide-main-title">${slideData.titulo || 'Apresentação'}</h1>
+            <h2 class="slide-subtitle">${slideData.disciplina} - ${slideData.serie}</h2>
+            ${slideData.slide_1_image ? `<div class="slide-image"><img src="${slideData.slide_1_image}" alt="Imagem sobre ${slideData.tema}" /></div>` : ''}
+            <p class="slide-presenter">Apresentado por: ${slideData.professor || 'Professor(a)'}</p>
+          </div>
+        </div>
+      `
+    });
+
+    // Slide 2 - Objetivos
+    slidesList.push({
+      id: 2,
+      title: 'Objetivos da Aula',
+      content: `
+        <div class="slide slide-objectives">
+          <div class="slide-content">
+            <h2 class="slide-title">Objetivos da Aula</h2>
+            <ul class="slide-list">
+              <li>${slideData.objetivo_1 || 'Objetivo 1'}</li>
+              <li>${slideData.objetivo_2 || 'Objetivo 2'}</li>
+              <li>${slideData.objetivo_3 || 'Objetivo 3'}</li>
+              <li>${slideData.objetivo_4 || 'Objetivo 4'}</li>
+            </ul>
+          </div>
+        </div>
+      `
+    });
+
+    // Slide 3 - Introdução
+    slidesList.push({
+      id: 3,
+      title: slideData.introducao_titulo || 'Introdução',
+      content: `
+        <div class="slide slide-intro">
+          <div class="slide-content">
+            <h2 class="slide-title">${slideData.introducao_titulo || 'Introdução'}</h2>
+            <p class="slide-text">${slideData.introducao_conteudo || ''}</p>
+            ${slideData.slide_3_image ? `<div class="slide-image"><img src="${slideData.slide_3_image}" alt="Introdução ao tema" /></div>` : ''}
+          </div>
+        </div>
+      `
+    });
+
+    // Slide 4 - Conceitos
+    slidesList.push({
+      id: 4,
+      title: slideData.conceitos_titulo || 'Conceitos Fundamentais',
+      content: `
+        <div class="slide slide-concepts">
+          <div class="slide-content">
+            <h2 class="slide-title">${slideData.conceitos_titulo || 'Conceitos Fundamentais'}</h2>
+            <p class="slide-text">${slideData.conceitos_conteudo || ''}</p>
+            ${slideData.slide_4_image ? `<div class="slide-image"><img src="${slideData.slide_4_image}" alt="Conceitos fundamentais" /></div>` : ''}
+          </div>
+        </div>
+      `
+    });
+
+    // Slide 5 - Desenvolvimento 1
+    slidesList.push({
+      id: 5,
+      title: slideData.desenvolvimento_1_titulo || 'Aspectos Importantes',
+      content: `
+        <div class="slide slide-development">
+          <div class="slide-content">
+            <h2 class="slide-title">${slideData.desenvolvimento_1_titulo || 'Aspectos Importantes'}</h2>
+            <p class="slide-text">${slideData.desenvolvimento_1_conteudo || ''}</p>
+            ${slideData.slide_5_image ? `<div class="slide-image"><img src="${slideData.slide_5_image}" alt="Aspectos importantes" /></div>` : ''}
+          </div>
+        </div>
+      `
+    });
+
+    // Slide 6 - Desenvolvimento 2
+    slidesList.push({
+      id: 6,
+      title: slideData.desenvolvimento_2_titulo || 'Aplicações Práticas',
+      content: `
+        <div class="slide slide-development">
+          <div class="slide-content">
+            <h2 class="slide-title">${slideData.desenvolvimento_2_titulo || 'Aplicações Práticas'}</h2>
+            <p class="slide-text">${slideData.desenvolvimento_2_conteudo || ''}</p>
+            ${slideData.slide_6_image ? `<div class="slide-image"><img src="${slideData.slide_6_image}" alt="Aplicações práticas" /></div>` : ''}
+          </div>
+        </div>
+      `
+    });
+
+    // Slide 7 - Desenvolvimento 3
+    slidesList.push({
+      id: 7,
+      title: slideData.desenvolvimento_3_titulo || 'Características',
+      content: `
+        <div class="slide slide-development">
+          <div class="slide-content">
+            <h2 class="slide-title">${slideData.desenvolvimento_3_titulo || 'Características'}</h2>
+            <p class="slide-text">${slideData.desenvolvimento_3_conteudo || ''}</p>
+          </div>
+        </div>
+      `
+    });
+
+    // Slide 8 - Desenvolvimento 4
+    slidesList.push({
+      id: 8,
+      title: slideData.desenvolvimento_4_titulo || 'Importância',
+      content: `
+        <div class="slide slide-development">
+          <div class="slide-content">
+            <h2 class="slide-title">${slideData.desenvolvimento_4_titulo || 'Importância'}</h2>
+            <p class="slide-text">${slideData.desenvolvimento_4_conteudo || ''}</p>
+          </div>
+        </div>
+      `
+    });
+
+    // Slide 9 - Exemplo
+    slidesList.push({
+      id: 9,
+      title: slideData.exemplo_titulo || 'Exemplo Prático',
+      content: `
+        <div class="slide slide-example">
+          <div class="slide-content">
+            <h2 class="slide-title">${slideData.exemplo_titulo || 'Exemplo Prático'}</h2>
+            <p class="slide-text">${slideData.exemplo_conteudo || ''}</p>
+            ${slideData.slide_9_image ? `<div class="slide-image"><img src="${slideData.slide_9_image}" alt="Exemplo prático" /></div>` : ''}
+          </div>
+        </div>
+      `
+    });
+
+    // Slide 10 - Conclusão
+    slidesList.push({
+      id: 10,
+      title: slideData.conclusao_titulo || 'Conclusão',
+      content: `
+        <div class="slide slide-conclusion">
+          <div class="slide-content">
+            <h2 class="slide-title">${slideData.conclusao_titulo || 'Conclusão'}</h2>
+            <p class="slide-text">${slideData.conclusao_conteudo || ''}</p>
+          </div>
+        </div>
+      `
+    });
+
+    return slidesList;
+  }, [slideData, fallbackHtml]);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Escape') {
+        setIsFullscreen(false);
+      }
     };
-    
-    return imageMapping[slideIndex] || null;
-  };
 
-  const handlePrint = async () => {
-    try {
-      // Create print-friendly HTML
-      const printContent = generatePrintHTML();
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(printContent);
-        printWindow.document.close();
-        printWindow.print();
-      }
-      toast.success('Slides enviados para impressão!');
-    } catch (error) {
-      toast.error('Erro ao preparar impressão');
-      console.error('Print error:', error);
-    }
-  };
-
-  const handleExportPDF = async () => {
-    try {
-      if (material) {
-        // Create enhanced material for PDF export
-        const enhancedMaterial = {
-          ...material,
-          content: generatePrintHTML()
-        };
-        await exportService.exportToPDF(enhancedMaterial);
-        toast.success('PDF exportado com sucesso!');
-      }
-    } catch (error) {
-      console.error('Erro ao exportar PDF:', error);
-      toast.error('Erro ao exportar PDF');
-    }
-  };
-
-  const handleExportPPT = async () => {
-    try {
-      if (material) {
-        // Create enhanced material for PPT export
-        const enhancedMaterial = {
-          ...material,
-          content: generateSlidesForPPT()
-        };
-        await exportService.exportToPPT(enhancedMaterial);
-        toast.success('PowerPoint exportado com sucesso!');
-      }
-    } catch (error) {
-      console.error('Erro ao exportar PPT:', error);
-      toast.error('Erro ao exportar PowerPoint');
-    }
-  };
-
-  const generatePrintHTML = () => {
-    const today = new Date().toLocaleDateString('pt-BR');
-    return `
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Slides - ${material?.title || 'Apresentação'}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Lato:wght@300;400;700&display=swap');
-          
-          body {
-            margin: 0;
-            padding: 0;
-            background: #f0f2f5;
-            font-family: 'Lato', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 30px 0;
-            box-sizing: border-box;
-          }
-
-          .slide-page {
-            position: relative;
-            width: 1024px;
-            height: 768px;
-            background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
-            overflow: hidden;
-            margin: 0 auto 40px auto;
-            box-sizing: border-box;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.18);
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            page-break-after: always;
-            border: 1px solid #e0e0e0;
-          }
-
-          .slide-page:last-of-type {
-            page-break-after: auto;
-            margin-bottom: 0;
-          }
-
-          .shape-overlay {
-            position: absolute;
-            opacity: 0.1;
-            pointer-events: none;
-            z-index: 0;
-          }
-          
-          .shape-overlay.top-left-wave {
-            width: 250px;
-            height: 250px;
-            background: #00C9B1;
-            border-radius: 50%;
-            top: -120px;
-            left: -100px;
-            transform: rotate(20deg);
-          }
-          
-          .shape-overlay.bottom-right-wave {
-            width: 300px;
-            height: 300px;
-            background: #FF6B6B;
-            border-radius: 50%;
-            bottom: -150px;
-            right: -130px;
-            transform: rotate(-30deg);
-          }
-
-          .slide-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 25px 40px;
-            flex-shrink: 0;
-            z-index: 1;
-            position: relative;
-          }
-          
-          .slide-header .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          }
-          
-          .slide-header .logo {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,123,255,0.4);
-          }
-          
-          .slide-header .logo svg {
-            width: 28px;
-            height: 28px;
-            stroke: white;
-            fill: none;
-            stroke-width: 2;
-          }
-          
-          .slide-header .brand-text h1 {
-            font-family: 'Poppins', sans-serif;
-            font-size: 32px;
-            color: #333333;
-            margin: 0;
-            font-weight: 800;
-            letter-spacing: -1px;
-          }
-          
-          .slide-header .slide-title-header {
-            font-family: 'Poppins', sans-serif;
-            font-size: 26px;
-            color: #FF6B6B;
-            font-weight: 700;
-            text-align: right;
-          }
-
-          .slide-content {
-            flex-grow: 1;
-            padding: 0 80px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: #333333;
-            z-index: 1;
-            font-size: 1.2rem;
-          }
-
-          .slide-content h2 {
-            font-family: 'Poppins', sans-serif;
-            font-size: 4.5rem;
-            color: #333333;
-            margin-bottom: 25px;
-            font-weight: 800;
-            text-align: center;
-            width: 100%;
-            line-height: 1.2;
-          }
-          
-          .slide-content h3 {
-            font-family: 'Poppins', sans-serif;
-            font-size: 2.8rem;
-            color: #00C9B1;
-            margin-top: 30px;
-            margin-bottom: 20px;
-            font-weight: 700;
-            width: 100%;
-            text-align: center;
-          }
-          
-          .slide-content p {
-            line-height: 1.7;
-            margin-bottom: 18px;
-            font-size: 1.15rem;
-          }
-          
-          .slide-content ul {
-            list-style-type: none;
-            padding-left: 0;
-            margin-bottom: 18px;
-            text-align: left;
-          }
-          
-          .slide-content ul li {
-            position: relative;
-            padding-left: 35px;
-            margin-bottom: 12px;
-            font-size: 1.15rem;
-          }
-          
-          .slide-content ul li::before {
-            content: '✔';
-            position: absolute;
-            left: 0;
-            color: #FF6B6B;
-            font-size: 1.3rem;
-            top: -2px;
-          }
-
-          @media print {
-            body { 
-              margin: 0; 
-              padding: 0; 
-              background: white;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .slide-page { 
-              box-shadow: none; 
-              margin: 0;
-              border-radius: 0;
-              border: none;
-              width: 100%;
-              min-height: 100vh;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        ${slides.map((slide, index) => renderSlideForPrint(slide, index)).join('')}
-      </body>
-      </html>
-    `;
-  };
-
-  const generateSlidesForPPT = () => {
-    return slides.map((slide, index) => ({
-      html: slide.html,
-      slideNumber: index + 1
-    }));
-  };
-
-  const renderSlideForPrint = (slide: any, index: number) => {
-    const slideNumber = index + 1;
-    const today = new Date().toLocaleDateString('pt-BR');
-    return `
-      <div class="slide-page">
-        <div class="shape-overlay top-left-wave"></div>
-        <div class="shape-overlay bottom-right-wave"></div>
-        
-        <div class="slide-header">
-          <div class="logo-container">
-            <div class="logo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-              </svg>
-            </div>
-            <div class="brand-text">
-              <h1>AulagIA</h1>
-            </div>
-          </div>
-          <div class="slide-title-header">${slide.type === 'title' ? 'APRESENTAÇÃO' : slide.type === 'conclusion' ? 'FIM' : material?.subject || 'SLIDES'}</div>
-        </div>
-        
-        <div class="slide-content">
-          ${renderSlideContent(slide, index)}
-        </div>
-      </div>
-    `;
-  };
-
-  const renderSlideContent = (slide: any, index: number) => {
-    // Se slide não tem propriedades específicas, apenas retorna o HTML bruto
-    if (!slide.title && !slide.type && !slide.objectives) {
-      return slide.html;
-    }
-    // (Se no futuro houver slides com propriedades, pode-se reabilitar o switch acima)
-  };
-
-  const renderSlide = (slide: any, index: number) => {
-    // Fundo: azul para o primeiro slide e para os ímpares
-    const isBlue = index === 0 || index % 2 !== 0;
-    const bgClass = isBlue ? 'bg-blue-700' // fundo azul sólido
-    : 'bg-white';
-
-    // Detecta se o slide tem imagem central ou ícone destacado
-    const hasImagemCentral = /class=['"]imagem-central['"]/.test(slide.html) || /<img /.test(slide.html);
-    const hasIcone = /class=['"]icone['"]/.test(slide.html);
-
-    // Cor do texto principal
-    const textColor = isBlue ? 'text-white' : 'text-slate-800';
-    const subTextColor = isBlue ? 'text-blue-100' : 'text-slate-600';
-
-    // Remove datas do tipo dd/mm/yyyy e números de página do tipo n/n do HTML do slide
-    let htmlSemData = slide.html.replace(/\d{2}\/\d{2}\/\d{4}/g, '');
-    htmlSemData = htmlSemData.replace(/\b\d{1,2}\s*\/\s*\d{1,2}\b/g, '');
-
-    // Detectar se é slide de agradecimento OU se é o último slide
-    const isObrigado = /obrigado\(a\)|obrigado!/i.test(htmlSemData) || index === slides.length - 1;
-
-    // Logo no canto superior esquerdo
-    const logoEsquerda = <div className="absolute top-0 left-0 flex items-center gap-2 p-6 z-10">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-md">
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-7 h-7">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-              </svg>
-            </div>
-        <span className={`text-2xl font-extrabold tracking-tight drop-shadow-sm ${isBlue ? 'text-blue-200' : 'text-blue-700'}`}>AulagIA</span>
-      </div>;
-
-    // Disciplina no canto superior direito
-    const disciplina = material?.subject || 'Disciplina';
-    const disciplinaFormatada = disciplina.charAt(0).toUpperCase() + disciplina.slice(1);
-    const disciplinaDireita = <div className="absolute top-0 right-0 flex items-center p-6 z-10">
-        <span className={`text-lg font-bold ${isBlue ? 'text-white' : 'text-slate-700'}`}>{disciplinaFormatada}</span>
-      </div>;
-
-    if (isObrigado) {
-      return <div className="relative w-full h-full flex items-center justify-center bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
-        style={{
-          aspectRatio: '4/3',
-          width: '100%',
-          maxWidth: '950px',
-          minWidth: '320px',
-          height: 'auto',
-          maxHeight: '68vh',
-          minHeight: '240px',
-          margin: '0 auto',
-          fontFamily: 'Poppins, Lato, sans-serif',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#fff',
-          boxSizing: 'border-box',
-        }}>
-          {/* Logo com azul forte */}
-          <div className="absolute top-0 left-0 flex items-center gap-2 p-6 z-10">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-md">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-7 h-7">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-              </svg>
-            </div>
-            <span className="text-2xl font-extrabold tracking-tight drop-shadow-sm" style={{color:'#2563eb'}}>AulagIA</span>
-          </div>
-          {disciplinaDireita}
-          <div className="w-full h-full flex flex-col items-center justify-center text-center p-12" style={{
-          maxWidth: 700,
-          margin: '0 auto'
-        }}>
-            <div style={{
-            fontSize: '3.2rem',
-            fontWeight: 900,
-            color: '#1e293b',
-            marginBottom: 18,
-            letterSpacing: '-2px',
-            textShadow: '0 2px 12px #0001',
-            textAlign: 'center'
-          }}>OBRIGADO(A)!</div>
-          <div style={{fontSize:'1.15rem',color:'#64748b',marginBottom:18}}>Para mais materiais educativos, visite:</div>
-          <div style={{fontSize:'2rem',fontWeight:700,letterSpacing:'-1px',color:'#2563eb',marginBottom:24,background:'rgba(37,99,235,0.07)',borderRadius:8,padding:'6px 24px',display:'inline-block',boxShadow:'0 2px 8px #2563eb11'}}>aulagia.com.br</div>
-          <div style={{fontSize:'1.05rem',color:'#64748b',marginBottom:2}}>Slides gerados pela AulagIA</div>
-          <div style={{fontSize:'1.05rem',color:'#94a3b8'}}>Sua aula com toque mágico</div>
-          </div>
-        </div>;
-    }
-
-    // Destacar o primeiro <h2> ou <h3> como tópico principal, estilo extragrosso centralizado, sempre no topo
-    // Remove qualquer destaque anterior
-    htmlSemData = htmlSemData.replace(/<div class='slide-topic-title.*?>.*?<\/div>/gi, '');
-    // Remover o texto 'Slide' isolado (caso apareça)
-    htmlSemData = htmlSemData.replace(/<p>\s*Slide\s*<\/p>/gi, '');
-    htmlSemData = htmlSemData.replace(/\bSlide\b/g, '');
-    // Remover títulos de tópicos do topo (ex: Desenvolvimento do Conteúdo, Continuação dos Tópicos, Exemplo Prático, Atividade Interativa, etc.)
-    // Remove <h1> ou <h2> ou <h3> no início do conteúdo
-    htmlSemData = htmlSemData.replace(/^\s*<(h1|h2|h3)[^>]*>.*?<\/(h1|h2|h3)>/i, '');
-    // Remover <h2> específicos do template
-    htmlSemData = htmlSemData.replace(/<h2>\s*(Desenvolvimento do Conteúdo|Continuação dos Tópicos|Exemplo Prático|Atividade Interativa)\s*<\/h2>/gi, '');
-
-    // Ajuste do tamanho da fonte do tema na página 1 (index 0)
-    if (index === 0) {
-      htmlSemData = htmlSemData.replace(/<(h1|h2|h3)([^>]*)>(.*?)<\/(h1|h2|h3)>/i, "<$1$2 style='font-size:1.2rem;font-weight:700;text-align:center;margin-bottom:0.7em;'>$3</$1>");
-    }
-
-    // Se for a segunda página (objetivos), aplicar estilo especial ao tópico e à lista
-    if (index === 1) {
-      // Título principal destacado, centralizado, cor branca
-      htmlSemData = htmlSemData.replace(/<h2>(.*?)<\/h2>/i, "<div class='slide-topic-title' style='font-family:Poppins, Lato, Arial, sans-serif;font-weight:700;font-size:2.1rem;color:#fff;text-align:center;letter-spacing:-1px;margin-bottom:0.7em;'>$1</div>");
-      htmlSemData = htmlSemData.replace(/<div class='slide-topic-title slide-topic-green'>(.*?)<\/div>/i, "<div class='slide-topic-title' style='font-family:Poppins, Lato, Arial, sans-serif;font-weight:700;font-size:2.1rem;color:#fff;text-align:center;letter-spacing:-1px;margin-bottom:0.7em;'>$1</div>");
-      // Remover <li> vazios e espaços extras
-      htmlSemData = htmlSemData.replace(/<li>\s*<\/li>/g, '');
-      htmlSemData = htmlSemData.replace(/(<li>\s*)+/g, '<li>');
-      htmlSemData = htmlSemData.replace(/(\s*<\/li>)+/g, '</li>');
-    }
-
-    // Layout de duas colunas para páginas específicas
-    const paginasDuasColunas = [0, 2, 3, 4, 5, 8]; // index das páginas 1,3,4,5,6,9
-    if (paginasDuasColunas.includes(index)) {
-      // Obter URL da imagem gerada para este slide
-      const imageUrl = getGeneratedImageUrl(index);
-      let imagemHtml = '';
-      
-      if (imageUrl) {
-        // Tamanho especial para o primeiro slide (capa)
-        const imageSize = index === 0 ? 'width:100%;height:100%;object-fit:cover;' : 'max-width:100%;max-height:100%;object-fit:cover;';
-        imagemHtml = `<img src="${imageUrl}" alt="Imagem gerada por IA" style="${imageSize}border-radius:16px;" />`;
-      } else {
-        imagemHtml = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#888;font-size:1.1rem;background:#f3f4f6;border-radius:16px;">🎨 Carregando imagem...</div>';
-      }
-
-      // Para páginas 3 e 6 (index 2 e 5): imagem à esquerda, texto à direita
-      if (index === 2) {
-        htmlSemData = `
-          <div style='display:flex;flex-direction:row;align-items:center;justify-content:center;width:100%;gap:2.5rem;min-height:320px;flex-wrap:wrap;'>
-            <div class='imagem-intro' style='flex:1 1 220px;min-width:220px;min-height:220px;max-width:320px;max-height:320px;background:#e5e7eb;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#888;margin:0 0.5em;'>${imagemHtml}</div>
-            <div style='flex:2 1 320px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-width:260px;'>
-              ${htmlSemData}
-            </div>
-          </div>
-          <style>
-            @media (max-width: 800px) {
-              .imagem-intro { margin-bottom: 1.5em; }
-              .slide-content > div[style*="display:flex"] { flex-direction: column !important; gap: 0.5em !important; }
-            }
-          </style>
-        `;
-      } else {
-        // Para páginas 1, 4, 5 e 9 (index 0, 3, 4, 5, 8): imagem à direita, texto à esquerda
-        htmlSemData = `
-          <div style='display:flex;flex-direction:row;align-items:center;justify-content:center;width:100%;gap:2.5rem;min-height:320px;flex-wrap:wrap;'>
-            <div style='flex:2 1 320px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-width:260px;'>
-              ${htmlSemData}
-            </div>
-            <div class='imagem-intro' style='flex:1 1 220px;min-width:220px;min-height:220px;max-width:320px;max-height:320px;background:#e5e7eb;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#888;margin:0 0.5em;'>${imagemHtml}</div>
-          </div>
-          <style>
-            @media (max-width: 800px) {
-              .imagem-intro { margin-bottom: 1.5em; }
-              .slide-content > div[style*="display:flex"] { flex-direction: column !important; gap: 0.5em !important; }
-            }
-          </style>
-        `;
-      }
-    }
-
-    // Layout especial para slide de capa (index 0)
-    if (index === 0) {
-      // Extrair informações do material
-      let tema = '';
-      const disciplina = material?.subject || 'Matemática';
-      const serie = material?.grade || 'Ensino Fundamental I-3º Ano';
-      const professor = material?.formData?.professor || 'Prof. Maria';
-      
-      // Extrair título (tema) do HTML, se houver
-      const temaMatch = htmlSemData.match(/<h1[^>]*>(.*?)<\/h1>/i);
-      if (temaMatch) tema = temaMatch[1].trim();
-      
-      // Extrair subtítulo (ex: Aula de Matemática - Ensino Fundamental I-3º Ano)
-      const subtitulo = `Aula de ${disciplina} - ${serie}`;
-      
-      // Caixa de imagem
-      const imageUrl = getGeneratedImageUrl(0);
-      let imagemHtml = '';
-      
-      if (imageUrl) {
-        imagemHtml = `<img src="${imageUrl}" alt="Imagem gerada por IA" style="width:100%;height:100%;border-radius:16px;object-fit:cover;" />`;
-      } else {
-        imagemHtml = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#888;font-size:1.5rem;background:#f3f4f6;border-radius:16px;">🎨 Carregando imagem...</div>';
-      }
-      
-      // Layout em duas colunas
-      return (
-        <div className="relative w-full h-full flex items-center justify-center bg-blue-700 rounded-2xl shadow-2xl overflow-hidden border border-gray-200" style={{
-          aspectRatio: '4/3',
-          maxWidth: '950px',
-          height: '68vh',
-          minHeight: '500px',
-          margin: '0 auto',
-          fontFamily: 'Poppins, Lato, sans-serif'
-        }}>
-          {/* Logo e nome no canto superior esquerdo */}
-          <div className="absolute top-0 left-0 flex items-center gap-2 p-6 z-10">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-md">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-7 h-7">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-              </svg>
-            </div>
-            <span className="text-2xl font-extrabold tracking-tight drop-shadow-sm text-blue-200">AulagIA</span>
-          </div>
-          {/* Disciplina no canto superior direito */}
-          <div className="absolute top-0 right-0 flex items-center p-6 z-10">
-            <span className="text-lg font-bold text-white">{disciplina}</span>
-          </div>
-          {/* Bloco Apresentado por fixo no canto inferior esquerdo */}
-          <div className="absolute left-0 bottom-0 z-20 p-8" style={{paddingLeft:32,paddingBottom:32}}>
-            <div style={{fontWeight: 800, color: '#fde047', fontSize: '1.35rem', marginBottom: 0, textAlign: 'left'}}>Apresentado por:</div>
-            <div style={{fontWeight: 700, color: '#fff', fontSize: '1.15rem', textAlign: 'left'}}>Professor(a): {professor}</div>
-          </div>
-          {/* Conteúdo central em duas colunas */}
-          <div className="w-full h-full flex flex-row items-center justify-between p-12 gap-8" style={{maxWidth: 1100, margin: '0 auto'}}>
-            {/* Coluna texto */}
-            <div className="flex-1 flex flex-col items-start justify-center text-left" style={{minWidth: 320}}>
-              <div style={{
-                fontSize: '3.2rem',
-                fontWeight: 700,
-                color: '#fff',
-                lineHeight: 1.08,
-                letterSpacing: '-1px',
-                textShadow: '0 2px 12px #0002',
-                marginBottom: 18,
-                fontFamily: 'Poppins, Lato, Arial, sans-serif',
-                whiteSpace: 'pre-line',
-                textAlign: 'left'
-              }}>{tema || 'Multiplicação\ne Divisão'}</div>
-              <div style={{
-                fontSize: '1.2rem',
-                fontWeight: 700,
-                color: '#fff',
-                marginBottom: 32,
-                textAlign: 'left',
-                textShadow: '0 2px 12px #0002',
-                fontFamily: 'Poppins, Lato, Arial, sans-serif'
-              }}>{subtitulo}</div>
-            </div>
-            {/* Coluna imagem - Tamanho maior para capa */}
-            <div className="flex-1 flex flex-col items-center justify-center text-center" style={{minWidth: 320}}>
-              <div style={{width: '100%', height: 280, background: '#e5e7eb', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '1.5rem'}} dangerouslySetInnerHTML={{__html: imagemHtml}} />
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Ajustar fonte e dividir conteúdo em parágrafos para slides de conteúdo (exceto títulos)
-    if (index !== 0 && index !== 1) {
-      // Diminui a fonte do conteúdo
-      htmlSemData = htmlSemData.replace(/<div class=['"]w-full slide-content-rich[^>]*>([\s\S]*?)<\/div>/g, (match, inner) => {
-        // Divide em frases por ponto final
-        const paragrafos = inner.split(/\.(?!\d)/).map(p => p.trim()).filter(Boolean);
-        // Junta em 2-3 parágrafos
-        const chunkSize = Math.ceil(paragrafos.length / 2);
-        const paragrafosAgrupados = [];
-        for (let i = 0; i < paragrafos.length; i += chunkSize) {
-          paragrafosAgrupados.push(paragrafos.slice(i, i + chunkSize).join('. ') + (i + chunkSize < paragrafos.length ? '.' : ''));
-        }
-        return `<div class='w-full slide-content-rich' style='font-size:1.08rem; font-weight:500; line-height:1.6; color:inherit; text-align:justify;'>${paragrafosAgrupados.map(p => `<p>${p}</p>`).join('')}</div>`;
-      });
-    }
-
-    return <div className={`relative w-full h-full flex items-center justify-center ${bgClass} rounded-2xl shadow-2xl overflow-hidden border border-gray-200`} style={{
-      aspectRatio: '4/3',
-      maxWidth: '950px',
-      height: '68vh',
-      minHeight: '500px',
-      margin: '0 auto',
-      fontFamily: 'Poppins, Lato, sans-serif'
-    }}>
-        {/* Logo no canto superior esquerdo */}
-        <div className="absolute top-0 left-0 flex items-center gap-2 p-6 z-10">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-md">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-7 h-7">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-            </svg>
-          </div>
-          <span className={`text-2xl font-extrabold tracking-tight drop-shadow-sm ${isBlue ? 'text-blue-200' : 'text-blue-700'}`}>AulagIA</span>
-        </div>
-        {disciplinaDireita}
-        <div className="w-full h-full flex flex-col items-center justify-center p-12" style={{
-        maxWidth: 820,
-        margin: '0 auto'
-      }}>
-          {/* Se houver imagem central ou ícone, dividir em 2 colunas responsivas */}
-          {hasImagemCentral || hasIcone ? <div className="w-full h-full flex flex-col md:flex-row items-center justify-center text-center gap-8" style={{
-          minHeight: 320
-        }}>
-              {/* Coluna texto/título */}
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <div style={{
-              fontSize: '2.8rem',
-              fontWeight: 800,
-              color: isBlue ? '#fff' : '#1e293b',
-              marginBottom: 18,
-              lineHeight: 1.1,
-              letterSpacing: '-1px'
-            }} className="slide-title-custom"></div>
-                <div className={`w-full slide-content-rich ${textColor}`} style={{
-              fontSize: '1.35rem',
-              fontWeight: 500,
-              lineHeight: 1.5
-            }}>
-                  <div dangerouslySetInnerHTML={{
-                __html: `
-                      <style>
-                        .slide-content-rich ul { list-style: disc inside; color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 1.25rem; margin: 1.2em 0; font-weight: 700; }
-                        .slide-content-rich li { margin-bottom: 0.7em; font-size: 1.18rem; }
-                        .slide-content-rich .formula { background: #fef9c3; color: #b45309; font-family: 'Fira Mono', monospace; font-size: 1.3em; padding: 0.7em 1.3em; border-radius: 10px; margin: 1em auto; display: inline-block; box-shadow: 0 2px 12px #fde68a55; }
-                        .slide-content-rich .imagem-central { display: flex; justify-content: center; margin: 1.5em 0; }
-                        .slide-content-rich .imagem-central img { max-width: 340px; max-height: 220px; border-radius: 14px; box-shadow: 0 4px 24px #6366f133; border: 2px solid #e0e7ff; }
-                        .slide-content-rich .icone { display: inline-block; margin: 0 0.3em; font-size: 2.3em; vertical-align: middle; color: #0ea5e9; }
-                        .slide-content-rich .forma { display: inline-block; margin: 0 0.5em; vertical-align: middle; }
-                        .slide-content-rich .forma svg { width: 54px; height: 54px; }
-                        .slide-content-rich h2, .slide-content-rich h3 { color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 2.1rem; font-weight: 800; margin: 1.2em 0 0.7em 0; }
-                        .slide-topic-title { text-align: center; font-size: 2.3rem; font-weight: 900; margin-bottom: 1.2em; margin-top: 0.2em; letter-spacing: -1px; text-shadow: 0 2px 12px #0002; }
-                        .slide-topic-green { color: #059669; }
-                      </style>
-                      ${htmlSemData.replace(/(<div class=['"]imagem-central['"][^>]*>.*?<\/div>)/gs, '')}
-                    `
-              }} />
-                </div>
-              </div>
-              {/* Coluna imagem/ícone */}
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <div className="w-full slide-content-rich" style={{
-              fontSize: '1.35rem',
-              color: isBlue ? '#fff' : '#334155',
-              fontWeight: 500,
-              lineHeight: 1.5
-            }}>
-                  <div dangerouslySetInnerHTML={{
-                __html: `
-                      <style>
-                        .slide-content-rich .imagem-central { display: flex; justify-content: center; align-items: center; height: 100%; }
-                        .slide-content-rich .imagem-central img { max-width: 340px; max-height: 260px; border-radius: 18px; box-shadow: 0 4px 24px #6366f133; border: 2px solid #e0e7ff; }
-                        .slide-content-rich .icone { display: inline-block; margin: 0 0.3em; font-size: 3.5em; vertical-align: middle; color: #0ea5e9; }
-                      </style>
-                      ${(htmlSemData.match(/<div class=['"]imagem-central['"][^>]*>.*?<\/div>/gs) || []).join('')}
-                    `
-              }} />
-            </div>
-            </div>
-            </div> : <div className="w-full h-full flex flex-col items-center justify-center text-center" style={{
-          minHeight: 320
-        }}>
-              <div style={{
-            fontSize: '2.8rem',
-            fontWeight: 800,
-            color: isBlue ? '#fff' : '#1e293b',
-            marginBottom: 18,
-            lineHeight: 1.1,
-            letterSpacing: '-1px'
-          }} className="slide-title-custom"></div>
-              <div className={`w-full slide-content-rich ${textColor}`} style={{
-            fontSize: '1.35rem',
-            fontWeight: 500,
-            lineHeight: 1.5
-          }}>
-                <div dangerouslySetInnerHTML={{
-              __html: `
-                    <style>
-                      .slide-content-rich ul { list-style: disc inside; color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 1.25rem; margin: 1.2em 0; font-weight: 700; }
-                      .slide-content-rich li { margin-bottom: 0.7em; font-size: 1.18rem; }
-                      .slide-content-rich .formula { background: #fef9c3; color: #b45309; font-family: 'Fira Mono', monospace; font-size: 1.3em; padding: 0.7em 1.3em; border-radius: 10px; margin: 1em auto; display: inline-block; box-shadow: 0 2px 12px #fde68a55; }
-                      .slide-content-rich .imagem-central { display: flex; justify-content: center; margin: 1.5em 0; }
-                      .slide-content-rich .imagem-central img { max-width: 340px; max-height: 220px; border-radius: 14px; box-shadow: 0 4px 24px #6366f133; border: 2px solid #e0e7ff; }
-                      .slide-content-rich .icone { display: inline-block; margin: 0 0.3em; font-size: 2.3em; vertical-align: middle; color: #0ea5e9; }
-                      .slide-content-rich .forma { display: inline-block; margin: 0 0.5em; vertical-align: middle; }
-                      .slide-content-rich .forma svg { width: 54px; height: 54px; }
-                      .slide-content-rich h2, .slide-content-rich h3 { color: ${isBlue ? '#fff' : '#2563eb'}; font-size: 2.1rem; font-weight: 800; margin: 1.2em 0 0.7em 0; }
-                    </style>
-                    ${htmlSemData}
-                  `
-            }} />
-            </div>
-            </div>}
-        </div>
-      </div>;
-  };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   if (slides.length === 0) {
-    return <div className="flex items-center justify-center h-96 text-gray-500">
-        Nenhum slide encontrado
-      </div>;
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500">Nenhum slide disponível</p>
+      </div>
+    );
   }
 
-  return <div className="w-full h-full flex flex-col">
-      {/* Slide Content com proporção 4:3 corrigida */}
-      <div className="flex-1 flex justify-center items-center p-4">
-        {isMobile ?
-      // Mobile: Container com altura muito maior para visualização adequada
-      <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" style={{
-        aspectRatio: '4/3',
-        width: '100%',
-        maxWidth: '95vw',
-        minWidth: '240px',
-        height: 'auto',
-        maxHeight: '75vh',
-        minHeight: '180px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#fff',
-        boxSizing: 'border-box',
-      }}>
-            <div className="w-full h-full flex items-center justify-center" style={{aspectRatio:'4/3'}}>
-              {renderSlide(slides[currentSlide], currentSlide)}
-            </div>
-          </div> :
-      // Desktop: Container com largura e altura balanceadas para não cortar
-      <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" style={{
-        aspectRatio: '4/3',
-        width: '100%',
-        maxWidth: '950px',
-        minWidth: '320px',
-        height: 'auto',
-        maxHeight: '68vh',
-        minHeight: '240px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#fff',
-        boxSizing: 'border-box',
-      }}>
-            <div className="w-full h-full flex items-center justify-center" style={{aspectRatio:'4/3'}}>
-              {renderSlide(slides[currentSlide], currentSlide)}
-            </div>
-          </div>}
+  const slideHtml = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Slides</title>
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+        
+        .slide {
+          width: 100%;
+          height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px;
+          box-sizing: border-box;
+          color: white;
+          text-align: center;
+        }
+        
+        .slide-content {
+          max-width: 800px;
+          width: 100%;
+        }
+        
+        .slide-main-title {
+          font-size: 3.5rem;
+          font-weight: 800;
+          margin: 0 0 20px 0;
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+          line-height: 1.1;
+        }
+        
+        .slide-title {
+          font-size: 2.5rem;
+          font-weight: 700;
+          margin: 0 0 30px 0;
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+          line-height: 1.2;
+        }
+        
+        .slide-subtitle {
+          font-size: 1.8rem;
+          font-weight: 500;
+          margin: 0 0 40px 0;
+          opacity: 0.9;
+        }
+        
+        .slide-text {
+          font-size: 1.4rem;
+          line-height: 1.6;
+          margin: 0 0 30px 0;
+          text-align: left;
+          background: rgba(255,255,255,0.1);
+          padding: 20px;
+          border-radius: 10px;
+          backdrop-filter: blur(10px);
+        }
+        
+        .slide-list {
+          text-align: left;
+          font-size: 1.3rem;
+          line-height: 1.8;
+          background: rgba(255,255,255,0.1);
+          padding: 30px;
+          border-radius: 10px;
+          backdrop-filter: blur(10px);
+        }
+        
+        .slide-list li {
+          margin: 15px 0;
+          padding-left: 10px;
+        }
+        
+        .slide-presenter {
+          font-size: 1.2rem;
+          font-style: italic;
+          opacity: 0.8;
+          margin-top: 40px;
+        }
+        
+        .slide-image {
+          margin: 30px 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        
+        .slide-image img {
+          max-width: 100%;
+          max-height: 400px;
+          border-radius: 15px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+          object-fit: contain;
+        }
+        
+        .slide-title {
+          background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        
+        .slide-development {
+          background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+        }
+        
+        .slide-example {
+          background: linear-gradient(135deg, #fd79a8, #e84393);
+        }
+        
+        .slide-conclusion {
+          background: linear-gradient(135deg, #00b894, #00a085);
+        }
+        
+        @media (max-width: 768px) {
+          .slide {
+            padding: 20px;
+          }
+          
+          .slide-main-title {
+            font-size: 2.5rem;
+          }
+          
+          .slide-title {
+            font-size: 2rem;
+          }
+          
+          .slide-subtitle {
+            font-size: 1.4rem;
+          }
+          
+          .slide-text {
+            font-size: 1.2rem;
+          }
+          
+          .slide-list {
+            font-size: 1.1rem;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      ${slides[currentSlide]?.content || ''}
+    </body>
+    </html>
+  `;
+
+  return (
+    <div className={`slide-viewer ${isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'relative w-full h-full'}`}>
+      {/* Navigation Controls */}
+      <div className={`absolute top-4 right-4 z-50 flex items-center space-x-2 ${isMobile ? 'scale-75' : ''}`}>
+        <div className="bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
+          {currentSlide + 1} / {slides.length}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleFullscreen}
+          className="bg-white/90 backdrop-blur-sm hover:bg-white"
+        >
+          {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+        </Button>
       </div>
 
-      {/* Desktop Navigation */}
-      {!isMobile && <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
-          <div className="flex justify-between items-center max-w-4xl mx-auto">
-            {/* Previous Button */}
-            <Button variant="outline" onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))} disabled={currentSlide === 0} className="flex items-center gap-2 h-12 px-6 text-base font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-              <ChevronLeft className="h-5 w-5" />
-              Anterior
-            </Button>
+      {/* Navigation Buttons */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={prevSlide}
+        disabled={currentSlide === 0}
+        className={`absolute left-4 top-1/2 transform -translate-y-1/2 z-50 bg-white/90 backdrop-blur-sm hover:bg-white ${
+          isMobile ? 'w-12 h-12' : 'w-10 h-10'
+        }`}
+      >
+        <ChevronLeft className={isMobile ? 'w-6 h-6' : 'w-4 h-4'} />
+      </Button>
 
-            {/* Page Info and Numbers */}
-            <div className="flex items-center gap-4">
-              {/* Page Numbers */}
-              <div className="flex items-center gap-2">
-                {slides.map((_, index) => <button key={index} onClick={() => setCurrentSlide(index)} className={`w-10 h-10 rounded-full text-sm font-bold transition-all duration-200 ${currentSlide === index ? 'bg-blue-600 text-white shadow-lg scale-110' : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105'}`}>
-                    {index + 1}
-                  </button>)}
-              </div>
-            </div>
-            {/* Página X de Y flutuante no canto inferior direito, dentro do container azul do slide */}
-            {typeof currentSlide !== 'undefined' && (
-              <div style={{position: 'fixed', right: 400, bottom: 100, zIndex: 50}} className="hidden md:block text-base font-semibold text-gray-700 bg-gray-100 px-4 py-1 rounded-lg whitespace-nowrap shadow pointer-events-none">
-                Página {currentSlide + 1} de {slides.length}
-              </div>
-            )}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={nextSlide}
+        disabled={currentSlide === slides.length - 1}
+        className={`absolute right-4 top-1/2 transform -translate-y-1/2 z-50 bg-white/90 backdrop-blur-sm hover:bg-white ${
+          isMobile ? 'w-12 h-12' : 'w-10 h-10'
+        }`}
+      >
+        <ChevronRight className={isMobile ? 'w-6 h-6' : 'w-4 h-4'} />
+      </Button>
 
-            {/* Next Button */}
-            <Button variant="outline" onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))} disabled={currentSlide === slides.length - 1} className="flex items-center gap-2 h-12 px-6 text-base font-semibold bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-              Próximo
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>}
+      {/* Slide Content */}
+      <iframe
+        srcDoc={slideHtml}
+        className="w-full h-full border-none"
+        title={`Slide ${currentSlide + 1}`}
+        style={{ background: 'transparent' }}
+      />
 
-      {/* Mobile Navigation */}
-      {isMobile && <div className="flex-shrink-0 bg-white border-t border-gray-200">
-          <div className="px-4 py-4">
-            {/* Principais botões de navegação - AUMENTADOS */}
-            <div className="flex justify-between items-center mb-4">
-              <Button onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))} disabled={currentSlide === 0} variant="outline" className={`flex items-center gap-3 h-16 px-8 text-lg font-bold rounded-2xl border-3 transition-all duration-200 shadow-lg ${currentSlide === 0 ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 active:scale-95'}`}>
-                <ChevronLeft className="h-6 w-6" />
-                Anterior
-              </Button>
-
-              <Button onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))} disabled={currentSlide === slides.length - 1} className={`flex items-center gap-3 h-16 px-8 text-lg font-bold rounded-2xl transition-all duration-200 shadow-lg ${currentSlide === slides.length - 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-3 border-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'}`}>
-                Próximo
-                <ChevronRight className="h-6 w-6" />
-              </Button>
-            </div>
-
-            {/* Indicador de página central - AUMENTADO */}
-            <div className="text-center text-lg font-bold text-gray-700 bg-gray-100 py-4 rounded-2xl mb-4">
-              Página {currentSlide + 1} de {slides.length}
-            </div>
-
-            {/* Números das páginas - AUMENTADOS */}
-            <div className="flex justify-center items-center gap-3">
-              {slides.map((_, index) => <button key={index} onClick={() => setCurrentSlide(index)} className={`w-14 h-14 rounded-full text-lg font-bold transition-all duration-200 shadow-lg ${currentSlide === index ? 'bg-blue-600 text-white shadow-xl scale-110' : 'bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95'}`}>
-                  {index + 1}
-                </button>)}
-            </div>
-          </div>
-        </div>}
-    </div>;
+      {/* Slide Indicators */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex space-x-2">
+        {slides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentSlide(index)}
+            className={`w-3 h-3 rounded-full transition-all ${
+              index === currentSlide 
+                ? 'bg-white' 
+                : 'bg-white/50 hover:bg-white/75'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default SlideViewer;

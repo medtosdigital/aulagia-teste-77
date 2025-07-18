@@ -1,4 +1,5 @@
 
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -110,42 +111,38 @@ INSTRUÇÕES IMPORTANTES:
 - Todos os slides devem abordar diretamente o tema "${formData.tema}"
 - Use linguagem adequada à faixa etária da série ${formData.serie}
 - Crie conteúdo progressivo e didático sobre o tema
-- Inclua prompts para imagens que ilustrem especificamente o tema
 - Responda APENAS com JSON válido, sem explicações adicionais
 
-Estrutura obrigatória do JSON:
+Estrutura obrigatória do JSON para slides:
 {
-  "titulo": "Apresentação sobre ${formData.tema}",
+  "titulo": "${formData.tema}",
+  "professor": "${formData.professor || 'Professor(a)'}",
   "disciplina": "${formData.disciplina}",
   "serie": "${formData.serie}",
   "tema": "${formData.tema}",
-  "tema_imagem": "Imagem ilustrativa sobre ${formData.tema} para estudantes de ${formData.serie}",
+  "objetivo_1": "Primeiro objetivo específico sobre ${formData.tema}",
+  "objetivo_2": "Segundo objetivo específico sobre ${formData.tema}",
+  "objetivo_3": "Terceiro objetivo específico sobre ${formData.tema}",
+  "objetivo_4": "Quarto objetivo específico sobre ${formData.tema}",
   "introducao_titulo": "Introdução ao ${formData.tema}",
   "introducao_conteudo": "Conteúdo introdutório específico sobre ${formData.tema}",
-  "introducao_imagem": "Imagem que introduza o conceito de ${formData.tema}",
-  "conceitos_titulo": "Conceitos Fundamentais de ${formData.tema}",
+  "conceitos_titulo": "Conceitos Fundamentais",
   "conceitos_conteudo": "Explicação dos conceitos principais de ${formData.tema}",
-  "conceitos_imagem": "Imagem que ilustre os conceitos de ${formData.tema}",
-  "exemplo_titulo": "Exemplo Prático de ${formData.tema}",
-  "exemplo_conteudo": "Exemplo concreto e prático sobre ${formData.tema}",
-  "exemplo_imagem": "Imagem de exemplo prático de ${formData.tema}",
-  "desenvolvimento_1_titulo": "Aspectos Importantes de ${formData.tema}",
+  "desenvolvimento_1_titulo": "Aspectos Importantes",
   "desenvolvimento_1_conteudo": "Primeiro aspecto detalhado de ${formData.tema}",
-  "desenvolvimento_1_imagem": "Imagem relacionada ao primeiro aspecto de ${formData.tema}",
-  "desenvolvimento_2_titulo": "Aplicações de ${formData.tema}",
+  "desenvolvimento_2_titulo": "Aplicações Práticas",
   "desenvolvimento_2_conteudo": "Como ${formData.tema} se aplica na prática",
-  "desenvolvimento_2_imagem": "Imagem mostrando aplicações de ${formData.tema}",
-  "desenvolvimento_3_titulo": "Características de ${formData.tema}",
+  "desenvolvimento_3_titulo": "Características",
   "desenvolvimento_3_conteudo": "Características específicas de ${formData.tema}",
-  "desenvolvimento_3_imagem": "Imagem das características de ${formData.tema}",
-  "desenvolvimento_4_titulo": "Importância de ${formData.tema}",
+  "desenvolvimento_4_titulo": "Importância",
   "desenvolvimento_4_conteudo": "Por que ${formData.tema} é importante para os estudantes",
-  "desenvolvimento_4_imagem": "Imagem da importância de ${formData.tema}",
-  "conclusao_titulo": "Síntese sobre ${formData.tema}",
+  "exemplo_titulo": "Exemplo Prático",
+  "exemplo_conteudo": "Exemplo concreto e prático sobre ${formData.tema}",
+  "conclusao_titulo": "Síntese",
   "conclusao_conteudo": "Resumo e pontos principais sobre ${formData.tema}"
 }
 
-Garanta que cada slide aborde especificamente o tema "${formData.tema}" de forma educativa e adequada.
+Garanta que cada campo do JSON seja preenchido com conteúdo específico sobre "${formData.tema}".
 `;
     } else if (materialType === 'atividade') {
       const tiposQuestoes = formData.tiposQuestoes || ['multipla-escolha', 'verdadeiro-falso', 'dissertativa'];
@@ -956,108 +953,112 @@ IMPORTANTE: Certifique-se de que TODOS os campos estejam preenchidos com conteú
       });
     }
 
-    // Bloco específico para slides
+    // Bloco específico para slides com geração de imagens
     if (materialType === 'slides') {
-      // Template HTML dos slides (resumido, use o template real do seu projeto)
-      const SLIDES_TEMPLATE = `
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{titulo}}</title>
-  <style>
-    body { background: #f0f4f8; font-family: 'Inter', sans-serif; }
-    .slide { width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .image-placeholder { width: 400px; height: 250px; background: #eee; display: flex; align-items: center; justify-content: center; border-radius: 16px; margin: 24px auto; }
-    h1, h2, h3 { color: #1e40af; }
-  </style>
-</head>
-<body>
-  <!-- Slide 1 -->
-  <div class="slide">
-    <h1>{{titulo}}</h1>
-    <h2>{{disciplina}} - {{serie}}</h2>
-    <div class="image-placeholder">{{tema_imagem}}</div>
-    <p>Apresentado por: {{professor}}</p>
-  </div>
-  <!-- Slide 2 -->
-  <div class="slide">
-    <h2>Objetivos da Aula</h2>
-    <ul>
-      <li>{{objetivo_1}}</li>
-      <li>{{objetivo_2}}</li>
-      <li>{{objetivo_3}}</li>
-      <li>{{objetivo_4}}</li>
-    </ul>
-  </div>
-  <!-- Slide 3 -->
-  <div class="slide">
-    <h2>{{introducao_titulo}}</h2>
-    <p>{{introducao_conteudo}}</p>
-    <div class="image-placeholder">{{introducao_imagem}}</div>
-  </div>
-  <!-- Slide 4 -->
-  <div class="slide">
-    <h2>{{conceitos_titulo}}</h2>
-    <p>{{conceitos_conteudo}}</p>
-    <div class="image-placeholder">{{conceitos_imagem}}</div>
-  </div>
-  <!-- Slide 5 -->
-  <div class="slide">
-    <h2>{{desenvolvimento_1_titulo}}</h2>
-    <p>{{desenvolvimento_1_conteudo}}</p>
-    <div class="image-placeholder">{{desenvolvimento_1_imagem}}</div>
-  </div>
-  <!-- Slide 6 -->
-  <div class="slide">
-    <h2>{{desenvolvimento_2_titulo}}</h2>
-    <p>{{desenvolvimento_2_conteudo}}</p>
-    <div class="image-placeholder">{{desenvolvimento_2_imagem}}</div>
-  </div>
-  <!-- Slide 7 -->
-  <div class="slide">
-    <h2>{{desenvolvimento_3_titulo}}</h2>
-    <p>{{desenvolvimento_3_conteudo}}</p>
-    <div class="image-placeholder">{{desenvolvimento_3_imagem}}</div>
-  </div>
-  <!-- Slide 8 -->
-  <div class="slide">
-    <h2>{{desenvolvimento_4_titulo}}</h2>
-    <p>{{desenvolvimento_4_conteudo}}</p>
-    <div class="image-placeholder">{{desenvolvimento_4_imagem}}</div>
-  </div>
-  <!-- Slide 9 -->
-  <div class="slide">
-    <h2>{{exemplo_titulo}}</h2>
-    <p>{{exemplo_conteudo}}</p>
-    <div class="image-placeholder">{{exemplo_imagem}}</div>
-  </div>
-  <!-- Slide 10 -->
-  <div class="slide">
-    <h2>{{conclusao_titulo}}</h2>
-    <p>{{conclusao_conteudo}}</p>
-  </div>
-</body>
-</html>
-      `;
-      // Substituir variáveis
-      function replaceAllPlaceholders(template, data) {
-        let result = template;
-        Object.entries(data).forEach(([key, value]) => {
-          const placeholder = new RegExp(`{{${key}}}`, 'g');
-          result = result.replace(placeholder, value !== undefined && value !== null ? String(value) : '');
-        });
-        return result;
+      console.log('🎯 Generating slides with images');
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: `Você é um especialista em educação brasileira que cria materiais educativos de alta qualidade. Foque especificamente no tema "${formData.tema}" para ${formData.disciplina} da série ${formData.serie}. Responda APENAS com JSON válido, sem explicações adicionais.`
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 2000,
+          top_p: 1.0,
+          frequency_penalty: 0.2,
+          presence_penalty: 0.0
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
       }
-      let finalHtml = SLIDES_TEMPLATE;
-      finalHtml = replaceAllPlaceholders(finalHtml, parsedContent);
+
+      const data = await response.json();
+      const content = data.choices[0].message.content.trim();
+      
+      console.log('🤖 OpenAI response for slides:', content);
+
+      let parsedContent;
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          parsedContent = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('No JSON found in response');
+        }
+      } catch (error) {
+        console.error('Error parsing JSON:', error);
+        throw new Error('Falha ao processar resposta da IA');
+      }
+
+      // Gerar imagens para slides específicos (1, 3, 4, 5, 6, 9)
+      const imagePrompts = [
+        { slide: 1, prompt: `Imagem educativa sobre ${formData.tema} para ${formData.disciplina}, série ${formData.serie}, estilo educacional` },
+        { slide: 3, prompt: `Ilustração dos conceitos fundamentais de ${formData.tema}, visual educativo` },
+        { slide: 4, prompt: `Imagem dos aspectos importantes de ${formData.tema}, educacional` },
+        { slide: 5, prompt: `Ilustração das aplicações práticas de ${formData.tema}, didática` },
+        { slide: 6, prompt: `Imagem das características de ${formData.tema}, educacional` },
+        { slide: 9, prompt: `Exemplo prático visual de ${formData.tema}, ilustração educativa` }
+      ];
+
+      const images = {};
+      
+      // Gerar imagens sequencialmente
+      for (const imageConfig of imagePrompts) {
+        try {
+          console.log(`🎨 Generating image for slide ${imageConfig.slide}`);
+          
+          const imageResponse = await fetch(`${supabaseUrl}/functions/v1/gerarImagemIA`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${supabaseServiceKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              prompt: imageConfig.prompt
+            }),
+          });
+
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json();
+            if (imageData.success && imageData.imageUrl) {
+              images[`slide_${imageConfig.slide}_image`] = imageData.imageUrl;
+              console.log(`✅ Image generated for slide ${imageConfig.slide}`);
+            }
+          } else {
+            console.warn(`⚠️ Failed to generate image for slide ${imageConfig.slide}`);
+          }
+        } catch (imageError) {
+          console.warn(`⚠️ Error generating image for slide ${imageConfig.slide}:`, imageError);
+        }
+      }
+
+      // Adicionar imagens ao conteúdo
+      const finalContent = { ...parsedContent, ...images };
+
+      // Criar cliente Supabase
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
       // Salvar no banco de dados
       const { data: materialSlides, error: insertError } = await supabase
         .from('materiais')
         .insert({
-          titulo: parsedContent.titulo || 'Slides',
-          conteudo: finalHtml,
+          titulo: finalContent.titulo || 'Slides',
+          conteudo: finalContent,
           disciplina: formData.disciplina,
           tema: formData.tema,
           turma: formData.serie,
@@ -1068,15 +1069,19 @@ IMPORTANTE: Certifique-se de que TODOS os campos estejam preenchidos com conteú
         })
         .select()
         .single();
+
       if (insertError) {
         console.error('Erro ao salvar slides:', insertError);
         throw new Error('Falha ao salvar slides');
       }
-      console.log('✅ Slides salvos com sucesso');
+
+      console.log('✅ Slides with images saved successfully');
+
       return new Response(JSON.stringify({
         success: true,
         slidesId: materialSlides.id,
-        content: parsedContent
+        content: finalContent,
+        imagesGenerated: Object.keys(images).length
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -1158,3 +1163,4 @@ IMPORTANTE: Certifique-se de que TODOS os campos estejam preenchidos com conteú
     });
   }
 });
+
