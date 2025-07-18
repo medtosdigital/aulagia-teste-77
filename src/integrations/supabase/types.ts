@@ -312,6 +312,7 @@ export type Database = {
           ano_atual: number | null
           anos_serie: string[] | null
           avatar_url: string | null
+          billing_type: string
           celular: string | null
           created_at: string | null
           data_expiracao_plano: string | null
@@ -336,6 +337,7 @@ export type Database = {
           ano_atual?: number | null
           anos_serie?: string[] | null
           avatar_url?: string | null
+          billing_type?: string
           celular?: string | null
           created_at?: string | null
           data_expiracao_plano?: string | null
@@ -360,6 +362,7 @@ export type Database = {
           ano_atual?: number | null
           anos_serie?: string[] | null
           avatar_url?: string | null
+          billing_type?: string
           celular?: string | null
           created_at?: string | null
           data_expiracao_plano?: string | null
@@ -378,36 +381,6 @@ export type Database = {
           tipo_material_favorito?: string[] | null
           ultimo_reset_materiais?: string | null
           updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      planos_usuarios: {
-        Row: {
-          created_at: string
-          data_expiracao: string | null
-          data_inicio: string
-          id: string
-          plano_ativo: Database["public"]["Enums"]["tipo_plano"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          data_expiracao?: string | null
-          data_inicio?: string
-          id?: string
-          plano_ativo?: Database["public"]["Enums"]["tipo_plano"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          data_expiracao?: string | null
-          data_inicio?: string
-          id?: string
-          plano_ativo?: Database["public"]["Enums"]["tipo_plano"]
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -448,36 +421,6 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      uso_mensal_materiais: {
-        Row: {
-          ano: number
-          created_at: string
-          id: string
-          materiais_criados: number
-          mes: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          ano: number
-          created_at?: string
-          id?: string
-          materiais_criados?: number
-          mes: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          ano?: number
-          created_at?: string
-          id?: string
-          materiais_criados?: number
-          mes?: number
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }

@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -22,139 +23,167 @@ serve(async (req) => {
 
     let prompt = '';
     
-    // Prompts para diferentes tipos de materiais
+    // Prompts melhorados para diferentes tipos de materiais
     if (materialType === 'plano-de-aula') {
       prompt = `
-Crie um plano de aula completo e detalhado sobre o tema "${formData.tema}" para a disciplina ${formData.disciplina} da série ${formData.serie}.
+Você é um especialista em educação brasileira e pedagogo experiente. Crie um plano de aula DETALHADO e ESPECÍFICO sobre o tema "${formData.tema}" para a disciplina ${formData.disciplina} da série ${formData.serie}.
 
-IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais.
+TEMA PRINCIPAL: ${formData.tema}
+DISCIPLINA: ${formData.disciplina}
+SÉRIE/ANO: ${formData.serie}
+
+INSTRUÇÕES IMPORTANTES:
+- O plano deve estar TOTALMENTE FOCADO no tema "${formData.tema}"
+- Todas as atividades devem abordar diretamente este tema
+- Use metodologias ativas e participativas adequadas à faixa etária
+- Inclua competências e habilidades da BNCC pertinentes ao tema
+- Responda APENAS com JSON válido, sem explicações adicionais
 
 Estrutura obrigatória do JSON:
 {
-  "titulo": "Título do plano de aula",
+  "titulo": "Título específico do plano sobre ${formData.tema}",
   "professor": "${formData.professor || 'Professor(a)'}",
   "disciplina": "${formData.disciplina}",
   "serie": "${formData.serie}",
   "tema": "${formData.tema}",
   "data": "${formData.data || new Date().toLocaleDateString('pt-BR')}",
   "duracao": "${formData.duracao || '50 minutos'}",
-  "bncc": "Códigos BNCC relevantes",
-  "objetivos": ["Objetivo 1", "Objetivo 2", "Objetivo 3"],
+  "bncc": "Códigos BNCC específicos para ${formData.tema} em ${formData.disciplina}",
+  "objetivos": [
+    "Objetivo específico 1 relacionado a ${formData.tema}",
+    "Objetivo específico 2 relacionado a ${formData.tema}",
+    "Objetivo específico 3 relacionado a ${formData.tema}"
+  ],
   "habilidades": [
-    {"codigo": "EF01MA01", "descricao": "Descrição da habilidade"},
-    {"codigo": "EF01MA02", "descricao": "Descrição da habilidade"}
+    {"codigo": "Código BNCC", "descricao": "Descrição da habilidade relacionada a ${formData.tema}"},
+    {"codigo": "Código BNCC", "descricao": "Descrição da habilidade relacionada a ${formData.tema}"}
   ],
   "desenvolvimento": [
     {
       "etapa": "Introdução",
-      "atividade": "Descrição da atividade",
+      "atividade": "Atividade introdutória específica sobre ${formData.tema}",
       "tempo": "10 minutos",
-      "recursos": "Recursos necessários"
+      "recursos": "Recursos específicos para apresentar ${formData.tema}"
     },
     {
       "etapa": "Desenvolvimento",
-      "atividade": "Descrição da atividade",
+      "atividade": "Atividade principal focada em ${formData.tema}",
       "tempo": "30 minutos",
-      "recursos": "Recursos necessários"
+      "recursos": "Recursos para explorar ${formData.tema} em profundidade"
     },
     {
       "etapa": "Conclusão",
-      "atividade": "Descrição da atividade",
+      "atividade": "Síntese e fixação do conteúdo sobre ${formData.tema}",
       "tempo": "10 minutos",
-      "recursos": "Recursos necessários"
+      "recursos": "Recursos para consolidar o aprendizado sobre ${formData.tema}"
     }
   ],
-  "recursos": ["Recurso 1", "Recurso 2", "Recurso 3"],
-  "conteudosProgramaticos": ["Conteúdo 1", "Conteúdo 2", "Conteúdo 3"],
-  "metodologia": "Descrição da metodologia utilizada",
-  "avaliacao": "Descrição dos critérios de avaliação",
-  "referencias": ["Referência 1", "Referência 2"]
+  "recursos": [
+    "Recurso específico 1 para ${formData.tema}",
+    "Recurso específico 2 para ${formData.tema}",
+    "Recurso específico 3 para ${formData.tema}"
+  ],
+  "conteudosProgramaticos": [
+    "Conteúdo específico 1 de ${formData.tema}",
+    "Conteúdo específico 2 de ${formData.tema}",
+    "Conteúdo específico 3 de ${formData.tema}"
+  ],
+  "metodologia": "Metodologia detalhada para ensinar ${formData.tema} de forma efetiva",
+  "avaliacao": "Critérios de avaliação específicos para verificar o aprendizado sobre ${formData.tema}",
+  "referencias": [
+    "Referência bibliográfica 1 sobre ${formData.tema}",
+    "Referência bibliográfica 2 sobre ${formData.tema}"
+  ]
 }
 
-Certifique-se de que todos os campos estão preenchidos adequadamente para o tema "${formData.tema}" da disciplina ${formData.disciplina}.
+Certifique-se de que TODOS os elementos do plano estejam diretamente relacionados ao tema "${formData.tema}".
 `;
     } else if (materialType === 'slides') {
       prompt = `
-Crie uma apresentação em slides sobre o tema "${formData.tema}" para a disciplina ${formData.disciplina} da série ${formData.serie}.
+Você é um especialista em educação brasileira e designer instrucional. Crie uma apresentação em slides FOCADA ESPECIFICAMENTE no tema "${formData.tema}" para a disciplina ${formData.disciplina} da série ${formData.serie}.
 
-IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais.
+TEMA PRINCIPAL: ${formData.tema}
+DISCIPLINA: ${formData.disciplina}
+SÉRIE/ANO: ${formData.serie}
+
+INSTRUÇÕES IMPORTANTES:
+- Todos os slides devem abordar diretamente o tema "${formData.tema}"
+- Use linguagem adequada à faixa etária da série ${formData.serie}
+- Crie conteúdo progressivo e didático sobre o tema
+- Inclua prompts para imagens que ilustrem especificamente o tema
+- Responda APENAS com JSON válido, sem explicações adicionais
 
 Estrutura obrigatória do JSON:
 {
-  "titulo": "Título da apresentação",
+  "titulo": "Apresentação sobre ${formData.tema}",
   "disciplina": "${formData.disciplina}",
   "serie": "${formData.serie}",
   "tema": "${formData.tema}",
-  "tema_imagem": "Prompt para gerar imagem do tema principal",
-  "introducao_titulo": "Título da introdução",
-  "introducao_conteudo": "Conteúdo da introdução",
-  "introducao_imagem": "Prompt para gerar imagem da introdução",
-  "conceitos_titulo": "Título dos conceitos",
-  "conceitos_conteudo": "Conteúdo dos conceitos",
-  "conceitos_imagem": "Prompt para gerar imagem dos conceitos",
-  "exemplo_titulo": "Título do exemplo",
-  "exemplo_conteudo": "Conteúdo do exemplo",
-  "exemplo_imagem": "Prompt para gerar imagem do exemplo",
-  "desenvolvimento_1_titulo": "Título do desenvolvimento 1",
-  "desenvolvimento_1_conteudo": "Conteúdo do desenvolvimento 1",
-  "desenvolvimento_1_imagem": "Prompt para gerar imagem do desenvolvimento 1",
-  "desenvolvimento_2_titulo": "Título do desenvolvimento 2",
-  "desenvolvimento_2_conteudo": "Conteúdo do desenvolvimento 2",
-  "desenvolvimento_2_imagem": "Prompt para gerar imagem do desenvolvimento 2",
-  "desenvolvimento_3_titulo": "Título do desenvolvimento 3",
-  "desenvolvimento_3_conteudo": "Conteúdo do desenvolvimento 3",
-  "desenvolvimento_3_imagem": "Prompt para gerar imagem do desenvolvimento 3",
-  "desenvolvimento_4_titulo": "Título do desenvolvimento 4",
-  "desenvolvimento_4_conteudo": "Conteúdo do desenvolvimento 4",
-  "desenvolvimento_4_imagem": "Prompt para gerar imagem do desenvolvimento 4",
-  "conclusao_titulo": "Título da conclusão",
-  "conclusao_conteudo": "Conteúdo da conclusão"
+  "tema_imagem": "Imagem ilustrativa sobre ${formData.tema} para estudantes de ${formData.serie}",
+  "introducao_titulo": "Introdução ao ${formData.tema}",
+  "introducao_conteudo": "Conteúdo introdutório específico sobre ${formData.tema}",
+  "introducao_imagem": "Imagem que introduza o conceito de ${formData.tema}",
+  "conceitos_titulo": "Conceitos Fundamentais de ${formData.tema}",
+  "conceitos_conteudo": "Explicação dos conceitos principais de ${formData.tema}",
+  "conceitos_imagem": "Imagem que ilustre os conceitos de ${formData.tema}",
+  "exemplo_titulo": "Exemplo Prático de ${formData.tema}",
+  "exemplo_conteudo": "Exemplo concreto e prático sobre ${formData.tema}",
+  "exemplo_imagem": "Imagem de exemplo prático de ${formData.tema}",
+  "desenvolvimento_1_titulo": "Aspectos Importantes de ${formData.tema}",
+  "desenvolvimento_1_conteudo": "Primeiro aspecto detalhado de ${formData.tema}",
+  "desenvolvimento_1_imagem": "Imagem relacionada ao primeiro aspecto de ${formData.tema}",
+  "desenvolvimento_2_titulo": "Aplicações de ${formData.tema}",
+  "desenvolvimento_2_conteudo": "Como ${formData.tema} se aplica na prática",
+  "desenvolvimento_2_imagem": "Imagem mostrando aplicações de ${formData.tema}",
+  "desenvolvimento_3_titulo": "Características de ${formData.tema}",
+  "desenvolvimento_3_conteudo": "Características específicas de ${formData.tema}",
+  "desenvolvimento_3_imagem": "Imagem das características de ${formData.tema}",
+  "desenvolvimento_4_titulo": "Importância de ${formData.tema}",
+  "desenvolvimento_4_conteudo": "Por que ${formData.tema} é importante para os estudantes",
+  "desenvolvimento_4_imagem": "Imagem da importância de ${formData.tema}",
+  "conclusao_titulo": "Síntese sobre ${formData.tema}",
+  "conclusao_conteudo": "Resumo e pontos principais sobre ${formData.tema}"
 }
 
-Certifique-se de que todos os campos estão preenchidos adequadamente para o tema "${formData.tema}" da disciplina ${formData.disciplina}.
+Garanta que cada slide aborde especificamente o tema "${formData.tema}" de forma educativa e adequada.
 `;
     } else if (materialType === 'atividade') {
       const tiposQuestoes = formData.tiposQuestoes || ['multipla-escolha', 'verdadeiro-falso', 'dissertativa'];
       const numeroQuestoes = formData.numeroQuestoes || 10;
       
       prompt = `
-Crie uma atividade educativa sobre o tema "${formData.tema}" para a disciplina ${formData.disciplina} da série ${formData.serie}.
+Você é um especialista em educação brasileira e avaliação pedagógica. Crie uma atividade educativa ESPECÍFICA sobre o tema "${formData.tema}" para a disciplina ${formData.disciplina} da série ${formData.serie}.
 
-IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais.
+TEMA PRINCIPAL: ${formData.tema}
+DISCIPLINA: ${formData.disciplina}
+SÉRIE/ANO: ${formData.serie}
 
-A atividade deve ter ${numeroQuestoes} questões dos tipos: ${tiposQuestoes.join(', ')}.
+INSTRUÇÕES IMPORTANTES:
+- TODAS as questões devem abordar diretamente o tema "${formData.tema}"
+- Use linguagem adequada à série ${formData.serie}
+- Crie questões que avaliem diferentes níveis de conhecimento sobre o tema
+- Inclua ${numeroQuestoes} questões dos tipos: ${tiposQuestoes.join(', ')}
+- Responda APENAS com JSON válido, sem explicações adicionais
 
 Estrutura obrigatória do JSON:
 {
-  "titulo": "Título da atividade",
+  "titulo": "Atividade sobre ${formData.tema}",
   "disciplina": "${formData.disciplina}",
   "serie": "${formData.serie}",
   "tema": "${formData.tema}",
-  "instrucoes": "Instruções para os alunos",
+  "instrucoes": "Instruções específicas para a atividade sobre ${formData.tema}",
   "questoes": [
     {
       "numero": 1,
       "tipo": "multipla-escolha",
-      "pergunta": "Pergunta da questão",
-      "opcoes": ["A) Opção 1", "B) Opção 2", "C) Opção 3", "D) Opção 4"],
+      "pergunta": "Pergunta específica sobre ${formData.tema}",
+      "opcoes": ["A) Opção relacionada a ${formData.tema}", "B) Opção relacionada a ${formData.tema}", "C) Opção relacionada a ${formData.tema}", "D) Opção relacionada a ${formData.tema}"],
       "resposta": "A"
-    },
-    {
-      "numero": 2,
-      "tipo": "verdadeiro-falso",
-      "pergunta": "Pergunta da questão",
-      "resposta": "Verdadeiro"
-    },
-    {
-      "numero": 3,
-      "tipo": "dissertativa",
-      "pergunta": "Pergunta da questão",
-      "linhasResposta": 5
     }
   ]
 }
 
-Certifique-se de criar exatamente ${numeroQuestoes} questões variadas e adequadas para o tema "${formData.tema}".
+Crie exatamente ${numeroQuestoes} questões, todas focadas no tema "${formData.tema}".
 `;
     } else if (materialType === 'avaliacao') {
       const assuntos = formData.assuntos || [formData.tema];
@@ -162,45 +191,40 @@ Certifique-se de criar exatamente ${numeroQuestoes} questões variadas e adequad
       const quantidadeQuestoes = formData.quantidadeQuestoes || 10;
       
       prompt = `
-Crie uma avaliação sobre os assuntos: ${assuntos.join(', ')} para a disciplina ${formData.disciplina} da série ${formData.serie}.
+Você é um especialista em educação brasileira e avaliação pedagógica. Crie uma avaliação ESPECÍFICA sobre o tema "${formData.tema}" para a disciplina ${formData.disciplina} da série ${formData.serie}.
 
-IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais.
+TEMA PRINCIPAL: ${formData.tema}
+DISCIPLINA: ${formData.disciplina}
+SÉRIE/ANO: ${formData.serie}
+ASSUNTOS: ${assuntos.join(', ')}
 
-A avaliação deve ter ${quantidadeQuestoes} questões dos tipos: ${tiposQuestoes.join(', ')}.
+INSTRUÇÕES IMPORTANTES:
+- TODAS as questões devem abordar especificamente o tema "${formData.tema}"
+- Use linguagem adequada à série ${formData.serie}
+- Crie questões de diferentes níveis de dificuldade sobre o tema
+- Inclua ${quantidadeQuestoes} questões dos tipos: ${tiposQuestoes.join(', ')}
+- Responda APENAS com JSON válido, sem explicações adicionais
 
 Estrutura obrigatória do JSON:
 {
-  "titulo": "Título da avaliação",
+  "titulo": "Avaliação sobre ${formData.tema}",
   "disciplina": "${formData.disciplina}",
   "serie": "${formData.serie}",
   "assuntos": ${JSON.stringify(assuntos)},
-  "instrucoes": "Instruções para os alunos",
-  "tempoLimite": "Tempo limite para a prova",
+  "instrucoes": "Instruções específicas para a avaliação sobre ${formData.tema}",
+  "tempoLimite": "Tempo adequado para avaliação sobre ${formData.tema}",
   "questoes": [
     {
       "numero": 1,
       "tipo": "multipla-escolha",
-      "pergunta": "Pergunta da questão",
-      "opcoes": ["A) Opção 1", "B) Opção 2", "C) Opção 3", "D) Opção 4"],
+      "pergunta": "Pergunta específica sobre ${formData.tema}",
+      "opcoes": ["A) Opção sobre ${formData.tema}", "B) Opção sobre ${formData.tema}", "C) Opção sobre ${formData.tema}", "D) Opção sobre ${formData.tema}"],
       "pontuacao": 1.0
-    },
-    {
-      "numero": 2,
-      "tipo": "verdadeiro-falso",
-      "pergunta": "Pergunta da questão",
-      "pontuacao": 1.0
-    },
-    {
-      "numero": 3,
-      "tipo": "dissertativa",
-      "pergunta": "Pergunta da questão",
-      "pontuacao": 2.0,
-      "linhasResposta": 5
     }
   ]
 }
 
-Certifique-se de criar exatamente ${quantidadeQuestoes} questões variadas e adequadas para os assuntos especificados.
+Crie exatamente ${quantidadeQuestoes} questões, todas relacionadas diretamente ao tema "${formData.tema}".
 `;
     }
 
@@ -209,41 +233,92 @@ Certifique-se de criar exatamente ${quantidadeQuestoes} questões variadas e ade
       console.log('🎯 Generated prompt for apoio');
       
       const prompt = `
-Gere um Material de Apoio ao Professor sobre o tema "${formData.tema}" e conteúdo do material principal que vai gerar o conteúdo de apoio, voltado para o ensino de ${formData.disciplina} na série ${formData.serie}.
+Você é um especialista em educação brasileira e pedagogo experiente. Gere um Material de Apoio ao Professor ESPECÍFICO sobre o tema "${formData.tema}" para o ensino de ${formData.disciplina} na série ${formData.serie}.
 
-O material deve ser didático, direto e estruturado como um guia para o professor que ainda não domina o assunto. Siga os tópicos abaixo e use uma linguagem clara, objetiva e prática:
+TEMA PRINCIPAL: ${formData.tema}
+DISCIPLINA: ${formData.disciplina}
+SÉRIE/ANO: ${formData.serie}
 
-📘 Tópicos que Devem Estar no Material Gerado:
+INSTRUÇÕES IMPORTANTES:
+- TODO o conteúdo deve estar FOCADO no tema "${formData.tema}"
+- Use linguagem didática e prática para professores
+- Forneça orientações específicas para ensinar "${formData.tema}"
+- Inclua exemplos concretos relacionados ao tema
+- Responda APENAS com JSON válido, sem explicações adicionais
 
-1. O Que é Esse Tema?
-Explique de forma simples e didática, como se o professor nunca tivesse estudado o assunto.
-Evite termos técnicos complexos. Use analogias se necessário.
+Estrutura obrigatória do JSON com foco no tema "${formData.tema}":
 
-2. Para que Serve Esse Conteúdo na Vida Prática e Escolar?
-Mostre como esse tema é útil e aplicável no cotidiano dos alunos.
-Explique sua importância na formação do aluno.
+{
+  "TEMA_DO_MATERIAL_PRINCIPAL": "${formData.tema}",
+  "DISCIPLINA": "${formData.disciplina}",
+  "NIVEL_ANO": "${formData.serie}",
+  "TIPO_DE_MATERIAL_PRINCIPAL": "Material de Apoio",
+  "TEMA_DO_MATERIAL": "${formData.tema}",
+  "TURMA_DO_MATERIAL": "${formData.serie}",
+  "DATA_GERACAO": "${new Date().toLocaleDateString('pt-BR')}",
+  
+  "EXPLICACAO_SIMPLES_DO_TEMA": "Explicação simples e didática sobre ${formData.tema}",
+  "EXPLICACAO_DETALHADA_DO_TEMA": "Explicação detalhada sobre ${formData.tema}, com conceitos fundamentais",
+  
+  "EXPLICACAO_SIMPLES_UTILIDADE": "Para que serve ${formData.tema} na vida prática dos alunos",
+  "EXPLICACAO_DETALHADA_UTILIDADE": "Importância detalhada de ${formData.tema} na formação dos estudantes",
+  "IMPORTANCIA_NA_FORMACAO_ITEM_1": "Primeiro aspecto da importância de ${formData.tema}",
+  "IMPORTANCIA_NA_FORMACAO_ITEM_2": "Segundo aspecto da importância de ${formData.tema}",
+  "IMPORTANCIA_NA_FORMACAO_ITEM_3": "Terceiro aspecto da importância de ${formData.tema}",
+  
+  "EXPLICACAO_SIMPLES_ENSINO": "Como ensinar ${formData.tema} de forma simples",
+  "EXPLICACAO_DETALHADA_ENSINO": "Metodologia detalhada para ensinar ${formData.tema}",
+  "PASSO_A_PASSO_ITEM_1_INICIAR": "Como iniciar a aula sobre ${formData.tema}",
+  "PASSO_A_PASSO_ITEM_2_DESENVOLVER": "Como desenvolver o conteúdo de ${formData.tema}",
+  "PASSO_A_PASSO_ITEM_3_CONCLUIR": "Como concluir a aula sobre ${formData.tema}",
+  
+  "HIGHLIGHT_TITULO_1": "Dica Importante sobre ${formData.tema}",
+  "HIGHLIGHT_TEXTO_1": "Dica prática específica para ensinar ${formData.tema}",
+  "PARAGRAFO_COMO_ENSINAR_P3": "Orientações adicionais para ensinar ${formData.tema}",
+  "SUGESTAO_VISUAL_OU_CONCRETA_ITEM_1": "Recurso visual específico para ${formData.tema}",
+  "SUGESTAO_VISUAL_OU_CONCRETA_ITEM_2": "Recurso concreto específico para ${formData.tema}",
+  
+  "EXPLICACAO_SIMPLES_EXEMPLOS": "Como usar exemplos práticos de ${formData.tema}",
+  "EXPLICACAO_DETALHADA_EXEMPLOS": "Estratégias para exemplificar ${formData.tema}",
+  "TITULO_EXEMPLO_1": "Exemplo Prático 1 de ${formData.tema}",
+  "DESCRICAO_EXEMPLO_1": "Descrição detalhada do primeiro exemplo sobre ${formData.tema}",
+  "COMENTARIO_EXEMPLO_1": "Como aplicar este exemplo de ${formData.tema} em sala",
+  "TITULO_EXEMPLO_2": "Exemplo Prático 2 de ${formData.tema}",
+  "DESCRICAO_EXEMPLO_2": "Descrição detalhada do segundo exemplo sobre ${formData.tema}",
+  "COMENTARIO_EXEMPLO_2": "Como aplicar este segundo exemplo de ${formData.tema} em sala",
+  
+  "SUCCESS_BOX_TITULO_1": "Sucesso ao Ensinar ${formData.tema}",
+  "SUCCESS_BOX_TEXTO_1": "Estratégia comprovada para ensinar ${formData.tema} com eficácia",
+  
+  "EXPLICACAO_SIMPLES_DIFICULDADES": "Principais dificuldades dos alunos com ${formData.tema}",
+  "EXPLICACAO_DETALHADA_DIFICULDADES": "Análise detalhada das dificuldades em ${formData.tema}",
+  "TITULO_DIFICULDADE_1": "Dificuldade Comum 1 em ${formData.tema}",
+  "DESCRICAO_DIFICULDADE_1": "Descrição da primeira dificuldade com ${formData.tema}",
+  "CORRECAO_DIFICULDADE_1": "Como corrigir esta dificuldade em ${formData.tema}",
+  "TITULO_DIFICULDADE_2": "Dificuldade Comum 2 em ${formData.tema}",
+  "DESCRICAO_DIFICULDADE_2": "Descrição da segunda dificuldade com ${formData.tema}",
+  "CORRECAO_DIFICULDADE_2": "Como corrigir esta segunda dificuldade em ${formData.tema}",
+  
+  "EXPLICACAO_SIMPLES_ATIVIDADES": "Atividades práticas para ${formData.tema}",
+  "EXPLICACAO_DETALHADA_ATIVIDADES": "Estratégias de atividades para ensinar ${formData.tema}",
+  "ATIVIDADE_PRATICA_1_DESCRICAO": "Primeira atividade prática específica para ${formData.tema}",
+  "ATIVIDADE_PRATICA_2_DESCRICAO": "Segunda atividade prática específica para ${formData.tema}",
+  
+  "EXPLICACAO_SIMPLES_RECURSOS": "Recursos complementares para ${formData.tema}",
+  "EXPLICACAO_DETALHADA_RECURSOS": "Como usar recursos extras para ensinar ${formData.tema}",
+  "RECURSO_VIDEO_DESCRICAO": "Vídeo recomendado sobre ${formData.tema}",
+  "RECURSO_VIDEO_LINK": "Link ou sugestão de busca por vídeos sobre ${formData.tema}",
+  "RECURSO_IMAGEM_DESCRICAO": "Imagens úteis para ensinar ${formData.tema}",
+  "RECURSO_IMAGEM_LINK": "Sugestão de busca por imagens sobre ${formData.tema}",
+  "RECURSO_SITE_DESCRICAO": "Site interativo para ${formData.tema}",
+  "RECURSO_SITE_LINK": "Sugestão de sites sobre ${formData.tema}",
+  "RECURSO_OBJETO_DESCRICAO": "Objetos manipuláveis para ensinar ${formData.tema}",
+  
+  "SUCCESS_BOX_TITULO_2": "Recursos Eficazes para ${formData.tema}",
+  "SUCCESS_BOX_TEXTO_2": "Dica final para usar recursos no ensino de ${formData.tema}"
+}
 
-3. Como Ensinar Esse Tema em Sala de Aula – Passo a Passo
-Oriente o professor sobre como apresentar o conteúdo aos alunos.
-Explique como iniciar a explicação, desenvolver o conteúdo e concluir.
-Sugira perguntas disparadoras, comparações visuais ou objetos concretos.
-
-4. Exemplos Práticos Prontos para Usar em Sala
-Dê de 2 a 3 exemplos explicados e comentados que o professor possa aplicar diretamente.
-Podem ser atividades, situações-problema ou explicações com números/textos.
-
-5. Dificuldades Comuns dos Alunos e Como Corrigir
-Liste os principais erros ou confusões que os alunos costumam ter.
-Dê dicas claras para o professor lidar com essas dificuldades.
-
-6. Sugestões de Atividades Práticas
-Proponha de 1 a 2 ideias de atividades para aplicar o conteúdo de forma prática.
-Pode incluir dinâmicas, jogos, situações-problema ou exercícios individuais.
-
-7. Sugestões de Recursos Complementares
-Indique materiais extras que podem ajudar o professor (vídeos, imagens, sites, objetos manipuláveis, etc).
-
-IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais. Estruture o JSON com campos para cada um dos tópicos acima, preenchendo com conteúdo relevante para o tema "${formData.tema}" de ${formData.disciplina}.
+IMPORTANTE: Certifique-se de que TODOS os campos estejam preenchidos com conteúdo específico e relevante para o tema "${formData.tema}".
 `;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -253,11 +328,11 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais. E
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4o',
           messages: [
             {
               role: 'system',
-              content: 'Você é um especialista em educação brasileira que cria materiais de apoio para professores. Responda APENAS com JSON válido, sem explicações adicionais.'
+              content: `Você é um especialista em educação brasileira que cria materiais de apoio para professores. Foque especificamente no tema "${formData.tema}" para ${formData.disciplina} da série ${formData.serie}. Responda APENAS com JSON válido.`
             },
             {
               role: 'user',
@@ -265,7 +340,10 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais. E
             }
           ],
           temperature: 0.7,
-          max_tokens: 4000
+          max_tokens: 2000,
+          top_p: 1.0,
+          frequency_penalty: 0.2,
+          presence_penalty: 0.0
         }),
       });
 
@@ -881,11 +959,11 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais. E
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
-            content: 'Você é um especialista em educação brasileira que cria materiais educativos de alta qualidade. Responda APENAS com JSON válido, sem explicações adicionais.'
+            content: `Você é um especialista em educação brasileira que cria materiais educativos de alta qualidade. Foque especificamente no tema "${formData.tema}" para ${formData.disciplina} da série ${formData.serie}. Responda APENAS com JSON válido, sem explicações adicionais.`
           },
           {
             role: 'user',
@@ -893,7 +971,10 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais. E
           }
         ],
         temperature: 0.7,
-        max_tokens: 4000
+        max_tokens: 2000,
+        top_p: 1.0,
+        frequency_penalty: 0.2,
+        presence_penalty: 0.0
       }),
     });
 
