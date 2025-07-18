@@ -37,16 +37,26 @@ function ScrollToTop() {
 function PresentationPortal() {
   const { open, material, close } = usePresentation();
   if (!open || !material) return null;
+
+  // Tipo auxiliar para suportar fullscreen em navegadores antigos
+  type FullscreenDocument = Document & {
+    webkitFullscreenElement?: Element;
+    webkitExitFullscreen?: () => void;
+    msFullscreenElement?: Element;
+    msExitFullscreen?: () => void;
+  };
+  const doc = document as FullscreenDocument;
+
   return (
     <FullScreenSlideShow
       material={material}
       onClose={() => {
         if (document.fullscreenElement) {
           document.exitFullscreen?.();
-        } else if ((document as any).webkitFullscreenElement) {
-          (document as any).webkitExitFullscreen?.();
-        } else if ((document as any).msFullscreenElement) {
-          (document as any).msExitFullscreen?.();
+        } else if (doc.webkitFullscreenElement) {
+          doc.webkitExitFullscreen?.();
+        } else if (doc.msFullscreenElement) {
+          doc.msExitFullscreen?.();
         }
         close();
       }}
