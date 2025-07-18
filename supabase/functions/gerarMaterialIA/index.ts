@@ -63,49 +63,51 @@ serve(async (req) => {
 
     if (materialType === 'slides') {
       systemMessage = `Você é um especialista em criação de materiais educacionais para apresentações de slides. 
-Crie conteúdo educacional COMPLETO e ESTRUTURADO para cada variável específica do template de slides.
+IMPORTANTE: Crie conteúdo ESPECÍFICO para o tema "${formData.tema || formData.topic}" para ${formData.disciplina || formData.subject}.
 
-IMPORTANTE: Retorne APENAS um JSON válido com as variáveis preenchidas. NÃO inclua explicações, markdown ou texto adicional.
+TODOS os conteúdos e prompts de imagem devem ser OBRIGATORIAMENTE relacionados ao tema "${formData.tema || formData.topic}".
+
+Retorne APENAS um JSON válido com as variáveis preenchidas. NÃO inclua explicações, markdown ou texto adicional.
 
 ESTRUTURA OBRIGATÓRIA para slides:
 {
-  "tema": "string - título principal da apresentação",
+  "tema": "string - título principal da apresentação sobre ${formData.tema || formData.topic}",
   "disciplina": "string - nome da disciplina",
   "serie": "string - série/ano escolar",
   "professor": "string - nome do professor",
-  "objetivos": ["string", "string", "string"] - lista de objetivos de aprendizagem,
-  "introducao": "string - texto introdutório do tema (2-3 frases)",
-  "conceitos": "string - conceitos principais (2-3 parágrafos)",
-  "desenvolvimento_1": "string - primeiro tópico de desenvolvimento (2-3 frases)",
-  "desenvolvimento_2": "string - segundo tópico de desenvolvimento (2-3 frases)",
-  "desenvolvimento_3": "string - terceiro tópico de desenvolvimento (2-3 frases)",
-  "desenvolvimento_4": "string - quarto tópico de desenvolvimento (2-3 frases)",
-  "exemplo": "string - exemplo prático aplicado (2-3 frases)",
-  "atividade": "string - atividade interativa sugerida (2-3 frases)",
-  "resumo": "string - resumo dos pontos principais (2-3 frases)",
-  "conclusao": "string - conclusão da apresentação (1-2 frases)",
-  "tema_imagem": "string - prompt para imagem da capa: descreva uma ilustração educativa relacionada ao tema principal para a capa da apresentação",
-  "introducao_imagem": "string - prompt para imagem da introdução: descreva uma ilustração que represente visualmente o conceito introdutório",
-  "conceitos_imagem": "string - prompt para imagem dos conceitos: descreva uma ilustração que explique visualmente os conceitos principais",
-  "desenvolvimento_1_imagem": "string - prompt para imagem do desenvolvimento 1: descreva uma ilustração específica para este tópico",
-  "desenvolvimento_2_imagem": "string - prompt para imagem do desenvolvimento 2: descreva uma ilustração específica para este tópico",
-  "desenvolvimento_3_imagem": "string - prompt para imagem do desenvolvimento 3: descreva uma ilustração específica para este tópico",
-  "desenvolvimento_4_imagem": "string - prompt para imagem do desenvolvimento 4: descreva uma ilustração específica para este tópico",
-  "exemplo_imagem": "string - prompt para imagem do exemplo: descreva uma ilustração que mostre visualmente o exemplo prático"
+  "objetivos": ["string", "string", "string"] - lista de objetivos de aprendizagem específicos do tema,
+  "introducao": "string - texto introdutório específico do tema ${formData.tema || formData.topic} (2-3 frases)",
+  "conceitos": "string - conceitos principais específicos de ${formData.tema || formData.topic} (2-3 parágrafos)",
+  "desenvolvimento_1": "string - primeiro tópico específico sobre ${formData.tema || formData.topic} (2-3 frases)",
+  "desenvolvimento_2": "string - segundo tópico específico sobre ${formData.tema || formData.topic} (2-3 frases)",
+  "desenvolvimento_3": "string - terceiro tópico específico sobre ${formData.tema || formData.topic} (2-3 frases)",
+  "desenvolvimento_4": "string - quarto tópico específico sobre ${formData.tema || formData.topic} (2-3 frases)",
+  "exemplo": "string - exemplo prático específico de ${formData.tema || formData.topic} (2-3 frases)",
+  "atividade": "string - atividade interativa específica sobre ${formData.tema || formData.topic} (2-3 frases)",
+  "resumo": "string - resumo dos pontos principais de ${formData.tema || formData.topic} (2-3 frases)",
+  "conclusao": "string - conclusão específica sobre ${formData.tema || formData.topic} (1-2 frases)",
+  "tema_imagem": "string - ilustração educativa de ${formData.tema || formData.topic} para capa",
+  "introducao_imagem": "string - ilustração que introduz visualmente ${formData.tema || formData.topic}",
+  "conceitos_imagem": "string - ilustração dos conceitos principais de ${formData.tema || formData.topic}",
+  "desenvolvimento_1_imagem": "string - ilustração específica do primeiro tópico de ${formData.tema || formData.topic}",
+  "desenvolvimento_2_imagem": "string - ilustração específica do segundo tópico de ${formData.tema || formData.topic}",
+  "desenvolvimento_3_imagem": "string - ilustração específica do terceiro tópico de ${formData.tema || formData.topic}",
+  "desenvolvimento_4_imagem": "string - ilustração específica do quarto tópico de ${formData.tema || formData.topic}",
+  "exemplo_imagem": "string - ilustração visual do exemplo prático de ${formData.tema || formData.topic}"
 }`;
 
-      prompt = `Crie uma apresentação completa sobre "${formData.tema || formData.topic}" para ${formData.disciplina || formData.subject}, série ${formData.serie || formData.grade}.
+      prompt = `Crie uma apresentação COMPLETA e ESPECÍFICA sobre "${formData.tema || formData.topic}" para ${formData.disciplina || formData.subject}, série ${formData.serie || formData.grade}.
 
 Professor: ${formData.professor || 'Professor(a)'}
 
 INSTRUÇÕES ESPECÍFICAS:
-- Crie conteúdo educacional apropriado para a série informada
-- Cada variável deve ter conteúdo específico e educativo
-- Os prompts de imagem devem ser descritivos e educacionais
-- Use linguagem adequada para o nível escolar
-- Foque em aplicações práticas e exemplos relevantes
+- TODO o conteúdo deve ser sobre "${formData.tema || formData.topic}"
+- Todos os prompts de imagem devem descrever ilustrações educativas específicas de "${formData.tema || formData.topic}"
+- Use linguagem adequada para ${formData.serie || formData.grade}
+- Foque em exemplos práticos e aplicações reais de "${formData.tema || formData.topic}"
+- Cada variável deve ter conteúdo ESPECÍFICO e educativo sobre o tema
 
-Retorne APENAS o JSON com todas as variáveis preenchidas.`;
+Retorne APENAS o JSON com todas as variáveis preenchidas com conteúdo específico de "${formData.tema || formData.topic}".`;
 
     } else if (materialType === 'plano-de-aula') {
       systemMessage = `Você é um especialista em educação brasileira. Crie um plano de aula completo seguindo as diretrizes da BNCC.
@@ -205,7 +207,7 @@ ESTRUTURA OBRIGATÓRIA:
           { role: 'system', content: systemMessage },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.7,
+        temperature: 0.3, // Reduzido para mais consistência
         max_tokens: 4000,
       }),
     });
@@ -225,7 +227,7 @@ ESTRUTURA OBRIGATÓRIA:
     }
 
     let generatedContent = data.choices[0].message.content.trim();
-    console.log('📝 Generated content preview:', generatedContent.substring(0, 200));
+    console.log('📝 Generated content preview:', generatedContent.substring(0, 300));
 
     // Limpar conteúdo para garantir JSON válido
     generatedContent = generatedContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
@@ -252,12 +254,32 @@ ESTRUTURA OBRIGATÓRIA:
         'desenvolvimento_3_imagem', 'desenvolvimento_4_imagem', 'exemplo_imagem'
       ];
 
-      // Processar cada campo de imagem sequencialmente
+      // Criar prompts mais específicos baseados no tema
+      const tema = formData.tema || formData.topic;
+      const disciplina = formData.disciplina || formData.subject;
+      
+      // Processar cada campo de imagem sequencialmente com prompts específicos
       for (const field of imageFields) {
         if (parsedContent[field]) {
-          console.log(`🖼️ Gerando imagem para ${field}:`, parsedContent[field]);
+          // Criar prompt específico baseado no tema e campo
+          let specificPrompt = '';
+          
+          if (field === 'tema_imagem') {
+            specificPrompt = `Ilustração educativa para capa sobre ${tema} em ${disciplina}, visual atraente e educativo`;
+          } else if (field === 'introducao_imagem') {
+            specificPrompt = `Ilustração introdutória sobre ${tema}, conceitos básicos visuais para ${disciplina}`;
+          } else if (field === 'conceitos_imagem') {
+            specificPrompt = `Diagrama educativo dos principais conceitos de ${tema} para ${disciplina}`;
+          } else if (field.includes('desenvolvimento')) {
+            const numero = field.split('_')[1];
+            specificPrompt = `Ilustração específica do tópico ${numero} sobre ${tema} em ${disciplina}, visual explicativo`;
+          } else if (field === 'exemplo_imagem') {
+            specificPrompt = `Exemplo visual prático de ${tema} aplicado em ${disciplina}, ilustração didática`;
+          }
+          
+          console.log(`🖼️ Gerando imagem para ${field} com prompt específico:`, specificPrompt);
           try {
-            const imageUrl = await generateImage(parsedContent[field]);
+            const imageUrl = await generateImage(specificPrompt);
             parsedContent[field] = imageUrl;
             console.log(`✅ Imagem gerada para ${field}`);
           } catch (error) {
