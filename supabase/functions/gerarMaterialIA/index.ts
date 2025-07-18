@@ -836,7 +836,7 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais. E
 
       // Salvar no banco de dados
       const { data: materialApoio, error: insertError } = await supabase
-        .from('materiais_apoio')
+        .from('materiais')
         .insert({
           titulo: parsedContent.TEMA_DO_MATERIAL_PRINCIPAL || 'Material de Apoio',
           conteudo: finalHtml,
@@ -845,6 +845,7 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem explicações adicionais. E
           turma: formData.serie,
           user_id: formData.user_id,
           material_principal_id: formData.material_principal_id,
+          tipo_material: 'apoio',
           status: 'ativo'
         })
         .select()

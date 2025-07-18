@@ -395,9 +395,10 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
     if (!material?.id) return;
     setLoadingApoios(true);
     const { data, error } = await supabase
-      .from('materiais_apoio')
+      .from('materiais')
       .select('id, titulo, created_at, conteudo')
       .eq('material_principal_id', material.id)
+      .eq('tipo_material', 'apoio')
       .order('created_at', { ascending: false })
       .limit(10);
     if (!error && data) setApoios(data);
@@ -519,7 +520,7 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
 
   const confirmDeleteApoio = async () => {
     if (!apoioToDelete) return;
-    const { error } = await supabase.from('materiais_apoio').delete().eq('id', apoioToDelete.id);
+    const { error } = await supabase.from('materiais').delete().eq('id', apoioToDelete.id);
     if (error) {
       toast.error('Erro ao excluir material de apoio');
     } else {

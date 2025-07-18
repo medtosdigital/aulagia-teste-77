@@ -149,6 +149,7 @@ const MaterialsList: React.FC = () => {
       const { data, error } = await supabase
         .from('materiais')
         .select('*')
+        .eq('tipo_material', 'apoio')
         .order('created_at', { ascending: false });
       
       if (!error && data) {
@@ -215,7 +216,9 @@ const MaterialsList: React.FC = () => {
       console.log('Loading materials for authenticated user:', user.id);
       const supabaseMaterials = (await userMaterialsService.getMaterialsByUser()).slice(0, 20);
       console.log('Supabase materials count:', supabaseMaterials.length);
-      const convertedMaterials = supabaseMaterials.map(convertUserMaterialToGenerated);
+      // Filtrar apenas materiais que não são de apoio
+      const nonSupportMaterials = supabaseMaterials.filter(material => material.type !== 'apoio');
+      const convertedMaterials = nonSupportMaterials.map(convertUserMaterialToGenerated);
       console.log('Total materials for authenticated user:', convertedMaterials.length);
       setMaterials(convertedMaterials);
       materialsCache.set(cacheKey, { data: convertedMaterials, timestamp: now });
