@@ -1667,7 +1667,13 @@ export class TemplateService {
 
       // Handle arrays (like objectives, skills, resources, etc.)
       if (Array.isArray(value)) {
-        if (key === 'objetivos' || key === 'habilidades' || key === 'recursos' || key === 'conteudosProgramaticos' || key === 'referencias') {
+        if (key === 'habilidades') {
+          value = value.map(item =>
+            typeof item === 'object' && item !== null
+              ? `<li>${item.codigo ? `<b>${item.codigo}</b>: ` : ''}${item.descricao || JSON.stringify(item)}</li>`
+              : `<li>${item}</li>`
+          ).join('');
+        } else if (key === 'objetivos' || key === 'recursos' || key === 'conteudosProgramaticos' || key === 'referencias') {
           value = value.map(item => `<li>${item}</li>`).join('');
         } else if (key === 'desenvolvimento') {
           value = value.map(etapa => `
