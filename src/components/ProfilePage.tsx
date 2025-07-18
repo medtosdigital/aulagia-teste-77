@@ -126,9 +126,10 @@ const ProfilePage = () => {
 
       let newFormData;
       if (profile) {
+        let avatarFromPerfis = profile.avatar_url || '';
         newFormData = {
           name: profile.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
-          photo: '',
+          photo: avatarFromPerfis,
           teachingLevel: profile.etapas_ensino?.[0] || '',
           grades: profile.anos_serie || [],
           subjects: profile.disciplinas || [],
@@ -142,18 +143,7 @@ const ProfilePage = () => {
           name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário'
         };
       }
-
-      // Carregar avatar do profiles (tabela existente)
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('avatar_url')
-        .eq('id', user.id)
-        .single();
-
-      if (userProfile?.avatar_url) {
-        newFormData.photo = userProfile.avatar_url;
-      }
-
+      // Não buscar mais em 'profiles'
       setFormData(newFormData);
       profileCache.set(cacheKey, { data: newFormData, timestamp: now });
     } catch (error) {
@@ -299,21 +289,12 @@ const ProfilePage = () => {
         return;
       }
 
-      // Atualizar avatar na tabela profiles se houver foto
+      // Atualizar avatar apenas na tabela perfis se houver foto
       if (formData.photo) {
-        const { error: avatarError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: user.id,
-            full_name: formData.name,
-            avatar_url: formData.photo,
-            email: user.email,
-            updated_at: new Date().toISOString()
-          });
-
-        if (avatarError) {
-          console.error('Error updating avatar:', avatarError);
-        }
+        await supabase
+          .from('perfis')
+          .update({ avatar_url: formData.photo })
+          .eq('user_id', user.id);
       }
 
       // Disparar evento para atualizar header

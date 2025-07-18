@@ -3,6 +3,7 @@ import { LayoutDashboard, Plus, BookOpen, Calendar, Crown, Settings, Key, FileTe
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
+import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -20,6 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { user } = useAuth();
   const { canAccessSchool, canAccessSettings, currentPlan } = useSupabasePlanPermissions();
+  const { currentProfile } = usePlanPermissions();
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
@@ -35,18 +37,11 @@ const Sidebar: React.FC<SidebarProps> = ({
     if (!user?.id) return;
 
     try {
-      // Buscar dados do perfil do usuário
+      // Buscar dados do perfil do usuário, incluindo avatar_url
       const { data: profile } = await supabase
         .from('perfis')
-        .select('nome_preferido')
+        .select('nome_preferido, avatar_url')
         .eq('user_id', user.id)
-        .single();
-
-      // Buscar avatar do usuário
-      const { data: userProfileData } = await supabase
-        .from('profiles')
-        .select('avatar_url')
-        .eq('id', user.id)
         .single();
 
       // Definir nome preferido
@@ -54,12 +49,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                            user.user_metadata?.full_name || 
                            user.email?.split('@')[0] || 
                            'Professor(a)';
-      
       setUserProfile({
         name: preferredName,
-        photo: userProfileData?.avatar_url || ''
+        photo: profile?.avatar_url || ''
       });
-
     } catch (error) {
       console.error('Error loading user profile:', error);
       // Fallback para dados básicos do usuário
@@ -209,9 +202,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
   
   const getPlanDisplayName = () => {
-    if (!currentPlan) return 'Plano Gratuito';
-    if (currentPlan.plano_ativo === 'admin' || currentPlan.id === 'admin') return 'Plano Administrador';
-    switch (currentPlan.plano_ativo) {
+    if (!currentProfile) return 'Plano Gratuito';
+    if (currentProfile.plano_ativo === 'admin') return 'Plano Administrador';
+    switch (currentProfile.plano_ativo) {
       case 'gratuito':
         return 'Plano Gratuito';
       case 'professor':

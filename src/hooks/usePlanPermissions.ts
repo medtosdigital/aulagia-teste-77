@@ -171,6 +171,7 @@ export const usePlanPermissions = () => {
     // Estados - usar dados unificados
     currentPlan: memoizedPlan,
     usage: memoizedUsage,
+    currentProfile: unifiedPermissions.currentProfile, // <-- ADICIONADO
     shouldShowUpgrade: unifiedPermissions.shouldShowUpgrade,
     shouldShowSupportModal: false,
     loading: unifiedPermissions.loading,

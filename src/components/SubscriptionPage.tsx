@@ -63,7 +63,8 @@ const SubscriptionPage = () => {
     getNextResetDate,
     changePlan,
     refreshData,
-    loading
+    loading,
+    currentProfile // <-- ADICIONADO
   } = usePlanPermissions();
 
   // Mapear o ID do plano atual para comparação
@@ -89,6 +90,25 @@ const SubscriptionPage = () => {
   // Determine subscription status based on real plan data
   const isSubscriptionActive = currentPlanId !== 'gratuito';
   const subscriptionStatus = isSubscriptionActive ? 'Ativo' : 'Inativo';
+
+  // Detectar tipo de faturamento real do usuário
+  let realBillingType: 'monthly' | 'yearly' = 'monthly';
+  if (currentProfile?.billing_type === 'yearly' || currentProfile?.billing_type === 'monthly') {
+    realBillingType = currentProfile.billing_type;
+  } else if (currentProfile?.data_inicio_plano && currentProfile?.data_expiracao_plano) {
+    const start = new Date(currentProfile.data_inicio_plano);
+    const end = new Date(currentProfile.data_expiracao_plano);
+    const diffMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    // Se diferença for 11 ou 12 meses, considerar anual
+    if (diffMonths >= 11) {
+      realBillingType = 'yearly';
+    }
+  }
+
+  // Atualizar billingType para refletir o real do usuário ao montar
+  React.useEffect(() => {
+    setBillingType(realBillingType);
+  }, [realBillingType]);
 
   // Create a stable callback for refreshData to prevent infinite loops
   const stableRefreshData = useCallback(() => {
@@ -228,6 +248,24 @@ const SubscriptionPage = () => {
   // Get remaining materials using real data
   const remainingMaterials = currentPlan.id === 'admin' ? 'Ilimitado' : getRemainingMaterials();
 
+  // Função para calcular próxima renovação dos materiais
+  const getNextMaterialsResetDate = () => {
+    if (!currentProfile?.ultimo_reset_materiais) return null;
+    const lastReset = new Date(currentProfile.ultimo_reset_materiais);
+    // Próximo reset: mesmo dia do mês seguinte
+    const nextReset = new Date(lastReset);
+    nextReset.setMonth(lastReset.getMonth() + 1);
+    return nextReset;
+  };
+
+  // Função para próxima renovação/pagamento
+  const getNextPaymentDate = () => {
+    if (currentProfile?.data_expiracao_plano) {
+      return new Date(currentProfile.data_expiracao_plano);
+    }
+    return null;
+  };
+
   // Function to get all resources for current plan
   const getAllResourcesForCurrentPlan = () => {
     const resources = [];
@@ -347,7 +385,14 @@ const SubscriptionPage = () => {
     return resources;
   };
 
-  if (loading) {
+  // Formatador de datas do perfil
+  const formatDateString = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  if (loading || currentPlan.id === 'carregando') {
     return (
       <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
         <div className="max-w-6xl mx-auto">
@@ -389,6 +434,7 @@ const SubscriptionPage = () => {
                     }
                   })()}
                 </p>
+                {/* Removido bloco de datas de início e expiração do plano */}
               </div>
               <div className={`rounded-full px-3 sm:px-4 py-1 flex items-center self-start ${
                 isSubscriptionActive 
@@ -411,7 +457,8 @@ const SubscriptionPage = () => {
                     Materiais gerados
                   </h3>
                   <span className="text-blue-600 font-bold text-sm sm:text-base">
-                    {currentPlan.id === 'admin' ? 'Ilimitado/Ilimitado' : `${usage.materialsThisMonth}/${currentPlan.limits.materialsPerMonth}`}
+                    {/* USO REAL DO PERFIL */}
+                    {currentPlan.id === 'admin' ? 'Ilimitado/Ilimitado' : `${currentProfile?.materiais_criados_mes_atual ?? usage.materialsThisMonth}/${currentPlan.limits.materialsPerMonth}`}
                   </span>
                 </div>
                 
@@ -429,7 +476,7 @@ const SubscriptionPage = () => {
                 <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <p className="text-xs text-gray-500 flex items-center">
                     <Calendar className="w-3 h-3 mr-1" />
-                    Renova em {formatDate(nextResetDate)}
+                    Renova em {getNextMaterialsResetDate() ? formatDate(getNextMaterialsResetDate()) : formatDate(nextResetDate)}
                   </p>
                   <p className="text-xs text-blue-600 font-medium">
                     {currentPlan.id === 'admin' ? 'Ilimitado' : remainingMaterials} restantes
@@ -471,7 +518,9 @@ const SubscriptionPage = () => {
                   <>
                     <div className="flex items-center text-xs sm:text-sm text-gray-600 mb-3">
                       <Calendar className="w-4 h-4 mr-2" />
-                      <span>15 de cada mês</span>
+                      <span>
+                        {getNextPaymentDate() ? `Próximo pagamento em ${formatDate(getNextPaymentDate())}` : '15 de cada mês'}
+                      </span>
                     </div>
                     <div className="flex items-center text-xs sm:text-sm text-gray-600">
                       <CreditCard className="w-4 h-4 mr-2" />
@@ -635,7 +684,11 @@ const SubscriptionPage = () => {
             {plans.map((plan) => {
               const Icon = plan.icon;
               // O admin nunca tem plano atual público
-              const isCurrentPlan = currentPlanId === plan.id && currentPlanId !== 'admin';
+              // Só mostrar PLANO ATUAL se o plano e o tipo de faturamento coincidirem com o real do usuário
+              const isCurrentPlan =
+                currentPlanId === plan.id &&
+                currentPlanId !== 'admin' &&
+                billingType === realBillingType;
               const price = billingType === 'monthly' ? plan.price.monthly : plan.price.yearly;
               const yearlyDiscount = getYearlyDiscount(plan);
 
