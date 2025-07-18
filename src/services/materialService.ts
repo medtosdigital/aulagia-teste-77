@@ -1,4 +1,4 @@
-import { userMaterialsService, UserMaterial } from './userMaterialsService';
+import { unifiedMaterialsService, UnifiedMaterial } from './unifiedMaterialsService';
 import { supabase } from '@/integrations/supabase/client';
 import { QuestionParserService } from './questionParserService';
 
@@ -111,7 +111,6 @@ class MaterialService {
     console.log('🚀 Starting material generation with OpenAI:', { type, formData });
     
     try {
-      // Call the Supabase Edge Function to generate content with OpenAI
       console.log('📞 Calling gerarMaterialIA Edge Function...');
       const { data, error } = await supabase.functions.invoke('gerarMaterialIA', {
         body: {
@@ -133,19 +132,16 @@ class MaterialService {
       console.log('✅ Content generated successfully with OpenAI');
       let generatedContent = data.content;
       
-      // Se for slides, gerar imagens com o sistema ultra-otimizado
       if (type === 'slides' && generatedContent) {
         console.log('🎨 Starting ULTRA-OPTIMIZED image generation for slides...');
         generatedContent = await this.generateUltraOptimizedImagesForSlides(generatedContent, formData);
       }
       
-      // Map form data to UserMaterial format
-      const materialData = this.mapToUserMaterial(type, formData, generatedContent);
+      const materialData = this.mapToUnifiedMaterial(type, formData, generatedContent);
       console.log('📝 Material data mapped:', materialData);
       
-      // Save to Supabase
       console.log('💾 Saving material to Supabase...');
-      const savedMaterial = await userMaterialsService.addMaterial(materialData);
+      const savedMaterial = await unifiedMaterialsService.addMaterial(materialData);
       
       if (!savedMaterial) {
         console.error('❌ Failed to save material to Supabase');
@@ -153,11 +149,7 @@ class MaterialService {
       }
       
       console.log('✅ Material saved successfully to Supabase:', savedMaterial.id);
-      
-      // Convert back to GeneratedMaterial format for UI compatibility
       const result = this.convertToGeneratedMaterial(savedMaterial, generatedContent, formData);
-      console.log('🔄 Material converted for UI:', result.id);
-      
       return result;
     } catch (error) {
       console.error('❌ Error in generateMaterial:', error);
@@ -165,53 +157,90 @@ class MaterialService {
     }
   }
 
-  // Função para gerar Material de Apoio
-  async generateSupportMaterial(materialPrincipalId: string, materialPrincipalData: any): Promise<{ success: boolean; apoioId?: string; error?: string }> {
-    console.log('🚀 Starting support material generation...');
+  async getMaterials(): Promise<GeneratedMaterial[]> {
+    console.log('📋 Getting all materials from Supabase...');
+    try {
+      const unifiedMaterials = await unifiedMaterialsService.getMaterialsByUser();
+      console.log('✅ Loaded materials from Supabase:', unifiedMaterials.length);
+      
+      return unifiedMaterials.map(material => this.convertUnifiedToGenerated(material));
+    } catch (error) {
+      console.error('❌ Error getting materials:', error);
+      return [];
+    }
+  }
+
+  async getMaterialById(id: string): Promise<GeneratedMaterial | null> {
+    console.log('🔍 Getting material by ID:', id);
+    try {
+      const material = await unifiedMaterialsService.getMaterialById(id);
+      
+      if (!material) {
+        console.log('❌ Material not found:', id);
+        return null;
+      }
+      
+      console.log('✅ Material found:', material.title);
+      return this.convertUnifiedToGenerated(material);
+    } catch (error) {
+      console.error('❌ Error getting material by ID:', error);
+      return null;
+    }
+  }
+
+  async deleteMaterial(id: string): Promise<boolean> {
+    console.log('🗑️ Deleting material:', id);
+    try {
+      const success = await unifiedMaterialsService.deleteMaterial(id);
+      if (success) {
+        console.log('✅ Material deleted successfully');
+      } else {
+        console.log('❌ Failed to delete material');
+      }
+      return success;
+    } catch (error) {
+      console.error('❌ Error deleting material:', error);
+      return false;
+    }
+  }
+
+  async updateMaterial(id: string, updates: Partial<GeneratedMaterial>): Promise<boolean> {
+    console.log('📝 MaterialService.updateMaterial: Starting update process');
     
     try {
-      // Obter dados do usuário atual
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Usuário não autenticado');
+      const unifiedUpdates: Partial<UnifiedMaterial> = {};
+      
+      if (updates.title !== undefined) unifiedUpdates.title = updates.title;
+      if (updates.subject !== undefined) unifiedUpdates.subject = updates.subject;
+      if (updates.grade !== undefined) unifiedUpdates.grade = updates.grade;
+      if (updates.type !== undefined) {
+        unifiedUpdates.type = updates.type === 'plano-de-aula' ? 'plano-de-aula' : updates.type;
       }
-
-      // Preparar dados para o prompt
-      const formData = {
-        tema: materialPrincipalData.tema || '',
-        disciplina: materialPrincipalData.disciplina || '',
-        serie: materialPrincipalData.serie || '',
-        titulo_material_principal: materialPrincipalData.titulo || '',
-        objetivos_material_principal: Array.isArray(materialPrincipalData.objetivos) 
-          ? materialPrincipalData.objetivos.join(', ') 
-          : materialPrincipalData.objetivos || '',
-        user_id: user.id,
-        material_principal_id: materialPrincipalId
-      };
-
-      console.log('📞 Calling gerarMaterialIA Edge Function for support material...');
-      const { data, error } = await supabase.functions.invoke('gerarMaterialIA', {
-        body: {
-          materialType: 'apoio',
-          formData
+      
+      if (updates.content !== undefined) {
+        let contentToStore = updates.content;
+        if (typeof contentToStore === 'string') {
+          try {
+            contentToStore = JSON.parse(contentToStore);
+          } catch (e) {
+            console.warn('⚠️ Content string is not valid JSON, using as-is');
+          }
         }
-      });
-
-      if (error) {
-        console.error('❌ Edge Function error:', error);
-        return { success: false, error: `Erro ao gerar conteúdo: ${error.message}` };
+        unifiedUpdates.content = JSON.stringify(contentToStore);
       }
 
-      if (!data || !data.success) {
-        console.error('❌ Invalid response from Edge Function:', data);
-        return { success: false, error: 'Resposta inválida do serviço de geração' };
+      const success = await unifiedMaterialsService.updateMaterial(id, unifiedUpdates);
+      
+      if (success) {
+        console.log('✅ MaterialService: Update completed successfully');
+      } else {
+        console.error('❌ MaterialService: Update failed');
       }
-
-      console.log('✅ Support material generated successfully with ID:', data.apoioId);
-      return { success: true, apoioId: data.apoioId };
+      
+      return success;
     } catch (error) {
-      console.error('❌ Error in generateSupportMaterial:', error);
-      return { success: false, error: error.message };
+      console.error('❌ MaterialService: Error in updateMaterial:', error);
+      return false;
     }
   }
 
@@ -365,10 +394,10 @@ class MaterialService {
   async getMaterials(): Promise<GeneratedMaterial[]> {
     console.log('📋 Getting all materials from Supabase...');
     try {
-      const userMaterials = await userMaterialsService.getAllMaterials();
-      console.log('✅ Loaded materials from Supabase:', userMaterials.length);
+      const unifiedMaterials = await unifiedMaterialsService.getMaterialsByUser();
+      console.log('✅ Loaded materials from Supabase:', unifiedMaterials.length);
       
-      return userMaterials.map(material => this.convertUserMaterialToGenerated(material));
+      return unifiedMaterials.map(material => this.convertUnifiedToGenerated(material));
     } catch (error) {
       console.error('❌ Error getting materials:', error);
       return [];
@@ -378,8 +407,7 @@ class MaterialService {
   async getMaterialById(id: string): Promise<GeneratedMaterial | null> {
     console.log('🔍 Getting material by ID:', id);
     try {
-      const userMaterials = await userMaterialsService.getAllMaterials();
-      const material = userMaterials.find(m => m.id === id);
+      const material = await unifiedMaterialsService.getMaterialById(id);
       
       if (!material) {
         console.log('❌ Material not found:', id);
@@ -387,7 +415,7 @@ class MaterialService {
       }
       
       console.log('✅ Material found:', material.title);
-      return this.convertUserMaterialToGenerated(material);
+      return this.convertUnifiedToGenerated(material);
     } catch (error) {
       console.error('❌ Error getting material by ID:', error);
       return null;
@@ -397,7 +425,7 @@ class MaterialService {
   async deleteMaterial(id: string): Promise<boolean> {
     console.log('🗑️ Deleting material:', id);
     try {
-      const success = await userMaterialsService.deleteMaterial(id);
+      const success = await unifiedMaterialsService.deleteMaterial(id);
       if (success) {
         console.log('✅ Material deleted successfully');
       } else {
@@ -410,65 +438,32 @@ class MaterialService {
     }
   }
 
-  // FLUXO DE SALVAMENTO SIMPLIFICADO E CORRIGIDO
   async updateMaterial(id: string, updates: Partial<GeneratedMaterial>): Promise<boolean> {
     console.log('📝 MaterialService.updateMaterial: Starting update process');
-    console.log('📊 Input data:', {
-      id,
-      title: updates.title,
-      subject: updates.subject,
-      grade: updates.grade,
-      type: updates.type,
-      contentKeys: updates.content ? Object.keys(updates.content) : [],
-      contentSample: updates.content
-    });
     
     try {
-      // Preparar dados para userMaterialsService - mapeamento direto e simples
-      const userMaterialUpdates: any = {};
+      const unifiedUpdates: Partial<UnifiedMaterial> = {};
       
-      // Mapear campos básicos
-      if (updates.title !== undefined) userMaterialUpdates.title = updates.title;
-      if (updates.subject !== undefined) userMaterialUpdates.subject = updates.subject;
-      if (updates.grade !== undefined) userMaterialUpdates.grade = updates.grade;
+      if (updates.title !== undefined) unifiedUpdates.title = updates.title;
+      if (updates.subject !== undefined) unifiedUpdates.subject = updates.subject;
+      if (updates.grade !== undefined) unifiedUpdates.grade = updates.grade;
       if (updates.type !== undefined) {
-        userMaterialUpdates.type = updates.type === 'plano-de-aula' ? 'plano-aula' : updates.type;
+        unifiedUpdates.type = updates.type === 'plano-de-aula' ? 'plano-de-aula' : updates.type;
       }
       
-      // Para o content: serializar EXATAMENTE como recebido, sem modificações
       if (updates.content !== undefined) {
-        console.log('📦 MaterialService: Serializing content for storage');
-        
-        // Garantir que o content seja um objeto válido
         let contentToStore = updates.content;
         if (typeof contentToStore === 'string') {
           try {
             contentToStore = JSON.parse(contentToStore);
           } catch (e) {
-            console.warn('⚠️ MaterialService: Content string is not valid JSON, using as-is');
+            console.warn('⚠️ Content string is not valid JSON, using as-is');
           }
         }
-        
-        // Serializar para string JSON
-        userMaterialUpdates.content = JSON.stringify(contentToStore);
-        console.log('📊 MaterialService: Content prepared for storage:', {
-          originalType: typeof updates.content,
-          serializedLength: userMaterialUpdates.content.length,
-          contentKeys: Object.keys(contentToStore || {})
-        });
+        unifiedUpdates.content = JSON.stringify(contentToStore);
       }
 
-      console.log('📤 MaterialService: Calling userMaterialsService.updateMaterial with:', {
-        id,
-        title: userMaterialUpdates.title,
-        subject: userMaterialUpdates.subject,
-        grade: userMaterialUpdates.grade,
-        type: userMaterialUpdates.type,
-        contentLength: userMaterialUpdates.content?.length || 0
-      });
-      
-      // Chamar o serviço de usuário para fazer o update
-      const success = await userMaterialsService.updateMaterial(id, userMaterialUpdates);
+      const success = await unifiedMaterialsService.updateMaterial(id, unifiedUpdates);
       
       if (success) {
         console.log('✅ MaterialService: Update completed successfully');
@@ -483,29 +478,9 @@ class MaterialService {
     }
   }
 
-  private convertUserMaterialToGenerated(userMaterial: UserMaterial): GeneratedMaterial {
-    let content;
-    try {
-      content = userMaterial.content ? JSON.parse(userMaterial.content) : {};
-    } catch (error) {
-      console.error('Error parsing content:', error);
-      content = {};
-    }
-
-    return {
-      id: userMaterial.id,
-      title: userMaterial.title,
-      type: userMaterial.type === 'plano-aula' ? 'plano-de-aula' : userMaterial.type,
-      subject: userMaterial.subject,
-      grade: userMaterial.grade,
-      createdAt: userMaterial.createdAt,
-      content
-    };
-  }
-
-  private mapToUserMaterial(type: string, formData: MaterialFormData, content: any): Omit<UserMaterial, 'id' | 'createdAt' | 'status'> {
+  private mapToUnifiedMaterial(type: string, formData: MaterialFormData, content: any): Omit<UnifiedMaterial, 'id' | 'createdAt' | 'status'> {
     const title = this.generateTitle(type, formData);
-    const materialType = type === 'plano-de-aula' ? 'plano-aula' : type as 'plano-aula' | 'atividade' | 'slides' | 'avaliacao';
+    const materialType = type === 'plano-de-aula' ? 'plano-de-aula' : type as UnifiedMaterial['type'];
 
     // Corrigir habilidades para sempre salvar como array de strings
     let habilidades: string[] = [];
@@ -533,18 +508,28 @@ class MaterialService {
     };
   }
 
-  private generateTitle(type: string, formData: MaterialFormData): string {
-    if (type === 'avaliacao' && formData.assuntos && formData.assuntos.length > 0) {
-      const topics = formData.assuntos.filter(s => s.trim() !== '').slice(0, 2);
-      const topicText = topics.length > 1 ? `${topics[0]} e mais` : topics[0];
-      return topicText;
+  private convertUnifiedToGenerated(unifiedMaterial: UnifiedMaterial): GeneratedMaterial {
+    let content;
+    try {
+      content = unifiedMaterial.content ? JSON.parse(unifiedMaterial.content) : {};
+    } catch (error) {
+      console.error('Error parsing content:', error);
+      content = {};
     }
-    const topic = formData.tema || formData.topic || 'Conteúdo Personalizado';
-    return topic;
+
+    return {
+      id: unifiedMaterial.id,
+      title: unifiedMaterial.title,
+      type: unifiedMaterial.type === 'plano-de-aula' ? 'plano-de-aula' : unifiedMaterial.type,
+      subject: unifiedMaterial.subject,
+      grade: unifiedMaterial.grade,
+      createdAt: unifiedMaterial.createdAt,
+      content
+    };
   }
 
-  private convertToGeneratedMaterial(userMaterial: UserMaterial, content: any, formData: MaterialFormData): GeneratedMaterial {
-    // Ajuste de recursos didáticos: juntar todos os recursos das etapas do desenvolvimento, sem duplicados
+  private convertToGeneratedMaterial(unifiedMaterial: UnifiedMaterial, content: any, formData: MaterialFormData): GeneratedMaterial {
+    // Ajuste de recursos didáticos
     let recursos: string[] = [];
     if (content.desenvolvimento && Array.isArray(content.desenvolvimento)) {
       const recursosSet = new Set<string>();
@@ -560,10 +545,12 @@ class MaterialService {
       });
       recursos = Array.from(recursosSet);
     }
-    // Ajuste de habilidades: garantir formato 'CÓDIGO - DESCRIÇÃO' e nunca misturar com objetivos
+
+    // Ajuste de habilidades
     let habilidades: string[] = [];
     let objetivos: string[] = [];
     let bnccCodigos: string[] = [];
+
     if (content.habilidades && Array.isArray(content.habilidades)) {
       habilidades = content.habilidades
         .map((h: any) => {
@@ -571,7 +558,6 @@ class MaterialService {
             bnccCodigos.push(h.codigo);
             return `${h.codigo} - ${h.descricao}`;
           } else if (typeof h === 'string') {
-            // Tenta separar código e descrição por ':' ou '-'
             const match = h.match(/([A-Z]{2}\d{2}[A-Z]{2}\d{2,})\s*[-:]?\s*(.*)/);
             if (match) {
               bnccCodigos.push(match[1]);
@@ -582,41 +568,28 @@ class MaterialService {
           return '';
         })
         .filter((h: string, idx: number, arr: string[]) => h && arr.indexOf(h) === idx);
-    } else if (typeof content.habilidades === 'string') {
-      habilidades = [content.habilidades];
     }
+
     if (content.objetivos && Array.isArray(content.objetivos)) {
       objetivos = content.objetivos
         .map((o: any) => typeof o === 'string' ? o.trim() : '')
         .filter((o: string, idx: number, arr: string[]) => o && arr.indexOf(o) === idx);
-    } else if (typeof content.objetivos === 'string') {
-      objetivos = [content.objetivos];
     }
-    // Ajuste do campo BNCC: apenas os códigos
+
     let bncc = '';
     if (bnccCodigos.length > 0) {
       bncc = bnccCodigos.join(', ');
-    } else if (Array.isArray(content.bncc)) {
-      // Se for array de objetos com código
-      if (content.bncc.length > 0 && typeof content.bncc[0] === 'object' && content.bncc[0].codigo) {
-        bncc = content.bncc.map((b: any) => b.codigo).filter(Boolean).join(', ');
-      } else {
-        bncc = content.bncc.join(', ');
-      }
-    } else if (typeof content.bncc === 'object') {
-      bncc = Object.values(content.bncc).join(', ');
-    } else if (typeof content.bncc === 'string') {
-      bncc = content.bncc;
     } else if (formData && formData.bncc) {
       bncc = formData.bncc;
     }
+
     return {
-      id: userMaterial.id,
-      title: userMaterial.title,
-      type: userMaterial.type === 'plano-aula' ? 'plano-de-aula' : userMaterial.type,
-      subject: userMaterial.subject,
-      grade: userMaterial.grade,
-      createdAt: userMaterial.createdAt,
+      id: unifiedMaterial.id,
+      title: unifiedMaterial.title,
+      type: unifiedMaterial.type === 'plano-de-aula' ? 'plano-de-aula' : unifiedMaterial.type,
+      subject: unifiedMaterial.subject,
+      grade: unifiedMaterial.grade,
+      createdAt: unifiedMaterial.createdAt,
       content: {
         ...content,
         recursos,
@@ -627,15 +600,23 @@ class MaterialService {
       formData
     };
   }
+
+  private generateTitle(type: string, formData: MaterialFormData): string {
+    if (type === 'avaliacao' && formData.assuntos && formData.assuntos.length > 0) {
+      const topics = formData.assuntos.filter(s => s.trim() !== '').slice(0, 2);
+      const topicText = topics.length > 1 ? `${topics[0]} e mais` : topics[0];
+      return topicText;
+    }
+    const topic = formData.tema || formData.topic || 'Conteúdo Personalizado';
+    return topic;
+  }
 }
 
-// Função utilitária para normalizar campos das questões
-function normalizeQuestionFields(q) {
-  // Converte colunaA/colunaB para coluna_a/coluna_b se necessário
+// Função para normalizar campos das questões
+function normalizeQuestionFields(q: any) {
   const newQ = { ...q };
   if (q.colunaA && !q.coluna_a) newQ.coluna_a = q.colunaA;
   if (q.colunaB && !q.coluna_b) newQ.coluna_b = q.colunaB;
-  // Remove os campos antigos para evitar duplicidade
   delete newQ.colunaA;
   delete newQ.colunaB;
   return newQ;
@@ -644,9 +625,7 @@ function normalizeQuestionFields(q) {
 // Função utilitária para normalizar material para preview/modal
 export function normalizeMaterialForPreview(material: any) {
   if (!material) return material;
-  // Copia superficial para não mutar o original
   const normalized = { ...material };
-  // Normaliza questões se for atividade ou avaliação
   if (normalized.type === 'atividade' || normalized.type === 'avaliacao') {
     const questoes = (normalized.content?.questoes || normalized.questoes || []).map((q: any, i: number) =>
       QuestionParserService.validateAndFixQuestion(normalizeQuestionFields(q), i)
@@ -660,25 +639,15 @@ export function normalizeMaterialForPreview(material: any) {
   return normalized;
 }
 
+// Função para obter informações principais do material
 export async function getMaterialPrincipalInfo(material_principal_id: string): Promise<{ tipo: string, titulo: string } | null> {
-  // Tenta buscar em cada tabela
-  const tables: Array<{ type: string, table: 'planos_de_aula' | 'atividades' | 'slides' | 'avaliacoes' }> = [
-    { type: 'plano-de-aula', table: 'planos_de_aula' },
-    { type: 'atividade', table: 'atividades' },
-    { type: 'slides', table: 'slides' },
-    { type: 'avaliacao', table: 'avaliacoes' }
-  ];
-  for (const { type, table } of tables) {
-    const { data, error } = await supabase
-      .from(table)
-      .select('id, titulo')
-      .eq('id', material_principal_id)
-      .single();
-    if (data && data.id) {
-      return { tipo: type, titulo: data.titulo };
-    }
-  }
-  return null;
+  const material = await unifiedMaterialsService.getMaterialById(material_principal_id);
+  if (!material) return null;
+  
+  return {
+    tipo: material.type,
+    titulo: material.title
+  };
 }
 
 export const materialService = new MaterialService();

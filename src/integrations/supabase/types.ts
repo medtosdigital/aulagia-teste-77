@@ -14,90 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      atividades: {
-        Row: {
-          conteudo: string
-          created_at: string
-          data_criacao: string
-          disciplina: string | null
-          id: string
-          serie: string | null
-          template_usado: string | null
-          tipo_material: string
-          titulo: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          conteudo: string
-          created_at?: string
-          data_criacao?: string
-          disciplina?: string | null
-          id?: string
-          serie?: string | null
-          template_usado?: string | null
-          tipo_material?: string
-          titulo: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          conteudo?: string
-          created_at?: string
-          data_criacao?: string
-          disciplina?: string | null
-          id?: string
-          serie?: string | null
-          template_usado?: string | null
-          tipo_material?: string
-          titulo?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      avaliacoes: {
-        Row: {
-          conteudo: string
-          created_at: string
-          data_criacao: string
-          disciplina: string | null
-          id: string
-          serie: string | null
-          template_usado: string | null
-          tipo_material: string
-          titulo: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          conteudo: string
-          created_at?: string
-          data_criacao?: string
-          disciplina?: string | null
-          id?: string
-          serie?: string | null
-          template_usado?: string | null
-          tipo_material?: string
-          titulo: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          conteudo?: string
-          created_at?: string
-          data_criacao?: string
-          disciplina?: string | null
-          id?: string
-          serie?: string | null
-          template_usado?: string | null
-          tipo_material?: string
-          titulo?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       calendar_events: {
         Row: {
           classroom: string | null
@@ -230,52 +146,80 @@ export type Database = {
         }
         Relationships: []
       }
-      materiais_apoio: {
+      materiais: {
         Row: {
+          avaliacoes: number | null
           conteudo: string
-          created_at: string | null
-          disciplina: string
+          created_at: string
+          data_criacao: string
+          dias_semana: string[] | null
+          disciplina: string | null
           id: string
           material_principal_id: string | null
+          meses: Json | null
+          observacoes: string | null
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          semanas: Json | null
+          serie: string | null
           status: string | null
-          tema: string
-          titulo: string | null
+          tema: string | null
+          template_usado: string | null
+          tipo_material: string
+          titulo: string
           turma: string | null
-          user_id: string | null
+          updated_at: string
+          user_id: string
         }
         Insert: {
+          avaliacoes?: number | null
           conteudo: string
-          created_at?: string | null
-          disciplina: string
+          created_at?: string
+          data_criacao?: string
+          dias_semana?: string[] | null
+          disciplina?: string | null
           id?: string
           material_principal_id?: string | null
+          meses?: Json | null
+          observacoes?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          semanas?: Json | null
+          serie?: string | null
           status?: string | null
-          tema: string
-          titulo?: string | null
+          tema?: string | null
+          template_usado?: string | null
+          tipo_material: string
+          titulo: string
           turma?: string | null
-          user_id?: string | null
+          updated_at?: string
+          user_id: string
         }
         Update: {
+          avaliacoes?: number | null
           conteudo?: string
-          created_at?: string | null
-          disciplina?: string
+          created_at?: string
+          data_criacao?: string
+          dias_semana?: string[] | null
+          disciplina?: string | null
           id?: string
           material_principal_id?: string | null
+          meses?: Json | null
+          observacoes?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          semanas?: Json | null
+          serie?: string | null
           status?: string | null
-          tema?: string
-          titulo?: string | null
+          tema?: string | null
+          template_usado?: string | null
+          tipo_material?: string
+          titulo?: string
           turma?: string | null
-          user_id?: string | null
+          updated_at?: string
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "materiais_apoio_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "perfis"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       membros_grupo_escolar: {
         Row: {
@@ -361,24 +305,19 @@ export type Database = {
           titulo?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "notificacoes_criada_por_fkey"
-            columns: ["criada_por"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       perfis: {
         Row: {
           anos_serie: string[] | null
+          avatar_url: string | null
           celular: string | null
           created_at: string | null
           disciplinas: string[] | null
+          email: string | null
           escola: string | null
           etapas_ensino: string[] | null
+          full_name: string | null
           id: string
           nome_preferido: string | null
           preferencia_bncc: boolean | null
@@ -388,11 +327,14 @@ export type Database = {
         }
         Insert: {
           anos_serie?: string[] | null
+          avatar_url?: string | null
           celular?: string | null
           created_at?: string | null
           disciplinas?: string[] | null
+          email?: string | null
           escola?: string | null
           etapas_ensino?: string[] | null
+          full_name?: string | null
           id?: string
           nome_preferido?: string | null
           preferencia_bncc?: boolean | null
@@ -402,79 +344,19 @@ export type Database = {
         }
         Update: {
           anos_serie?: string[] | null
+          avatar_url?: string | null
           celular?: string | null
           created_at?: string | null
           disciplinas?: string[] | null
+          email?: string | null
           escola?: string | null
           etapas_ensino?: string[] | null
+          full_name?: string | null
           id?: string
           nome_preferido?: string | null
           preferencia_bncc?: boolean | null
           tipo_material_favorito?: string[] | null
           updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      planos_de_aula: {
-        Row: {
-          avaliacoes: number | null
-          conteudo: string
-          created_at: string
-          data_criacao: string
-          dias_semana: string[] | null
-          disciplina: string | null
-          id: string
-          meses: Json | null
-          observacoes: string | null
-          periodo_fim: string | null
-          periodo_inicio: string | null
-          semanas: Json | null
-          serie: string | null
-          template_usado: string | null
-          tipo_material: string
-          titulo: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          avaliacoes?: number | null
-          conteudo: string
-          created_at?: string
-          data_criacao?: string
-          dias_semana?: string[] | null
-          disciplina?: string | null
-          id?: string
-          meses?: Json | null
-          observacoes?: string | null
-          periodo_fim?: string | null
-          periodo_inicio?: string | null
-          semanas?: Json | null
-          serie?: string | null
-          template_usado?: string | null
-          tipo_material?: string
-          titulo: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          avaliacoes?: number | null
-          conteudo?: string
-          created_at?: string
-          data_criacao?: string
-          dias_semana?: string[] | null
-          disciplina?: string | null
-          id?: string
-          meses?: Json | null
-          observacoes?: string | null
-          periodo_fim?: string | null
-          periodo_inicio?: string | null
-          semanas?: Json | null
-          serie?: string | null
-          template_usado?: string | null
-          tipo_material?: string
-          titulo?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -504,78 +386,6 @@ export type Database = {
           data_inicio?: string
           id?: string
           plano_ativo?: Database["public"]["Enums"]["tipo_plano"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          email: string | null
-          full_name: string | null
-          id: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          email?: string | null
-          full_name?: string | null
-          id: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          email?: string | null
-          full_name?: string | null
-          id?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      slides: {
-        Row: {
-          conteudo: string
-          created_at: string
-          data_criacao: string
-          disciplina: string | null
-          id: string
-          serie: string | null
-          template_usado: string | null
-          tipo_material: string
-          titulo: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          conteudo: string
-          created_at?: string
-          data_criacao?: string
-          disciplina?: string | null
-          id?: string
-          serie?: string | null
-          template_usado?: string | null
-          tipo_material?: string
-          titulo: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          conteudo?: string
-          created_at?: string
-          data_criacao?: string
-          disciplina?: string | null
-          id?: string
-          serie?: string | null
-          template_usado?: string | null
-          tipo_material?: string
-          titulo?: string
           updated_at?: string
           user_id?: string
         }
@@ -647,6 +457,45 @@ export type Database = {
           mes?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          email: string
+          evento: string
+          id: string
+          ip_address: string | null
+          payload: Json | null
+          plano_aplicado: string | null
+          produto: string | null
+          status: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          evento: string
+          id?: string
+          ip_address?: string | null
+          payload?: Json | null
+          plano_aplicado?: string | null
+          produto?: string | null
+          status?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          evento?: string
+          id?: string
+          ip_address?: string | null
+          payload?: Json | null
+          plano_aplicado?: string | null
+          produto?: string | null
+          status?: string
+          user_agent?: string | null
         }
         Relationships: []
       }
