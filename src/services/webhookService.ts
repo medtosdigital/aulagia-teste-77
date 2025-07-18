@@ -96,14 +96,14 @@ export const webhookService = {
   // Testar webhook (para desenvolvimento)
   async testWebhook(testData: any): Promise<boolean> {
     try {
-      // Get the webhook URL from the edge function
-      const webhookUrl = `${supabase.supabaseUrl}/functions/v1/webhook-handler`;
+      // Use the webhook URL directly with the project ID
+      const webhookUrl = `https://xmxpteviwcnrljtxvaoo.supabase.co/functions/v1/webhook-handler`;
       
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.supabaseKey}`
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhteHB0ZXZpd2NucmxqdHh2YW9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTc5NzMsImV4cCI6MjA2Njc5Mzk3M30.-wSm455jQbizGZn4ceJATXyftbjBhfXA_l0ZZc5IieU`
         },
         body: JSON.stringify(testData)
       });
