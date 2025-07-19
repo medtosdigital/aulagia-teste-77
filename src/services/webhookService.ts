@@ -28,7 +28,7 @@ export interface WebhookConfig {
 }
 
 class WebhookService {
-  private readonly WEBHOOK_URL = 'https://znczyttfmodaftjuimeb.supabase.co/functions/v1/webhooks-aulagia';
+  private readonly WEBHOOK_URL = 'https://xmxpteviwcnrljtxvaoo.supabase.co/functions/v1/webhooks-aulagia';
   private readonly SECURITY_TOKEN = 'q64w1ncxx2k';
 
   // Obter URL do webhook
@@ -45,9 +45,11 @@ class WebhookService {
   async simulateWebhook(simulation: WebhookSimulation): Promise<{ success: boolean; message: string; plano_aplicado?: string }> {
     try {
       console.log('🚀 Simulando webhook com dados:', simulation);
+      console.log('🌐 URL do webhook:', this.WEBHOOK_URL);
       
       // Validar dados de entrada
       if (!simulation.email || !simulation.evento) {
+        console.error('❌ Dados inválidos:', { email: simulation.email, evento: simulation.evento });
         return {
           success: false,
           message: 'Email e evento são obrigatórios',
@@ -55,6 +57,7 @@ class WebhookService {
       }
 
       // Verificar se o usuário existe no banco antes de simular
+      console.log('🔍 Verificando se usuário existe:', simulation.email);
       const { data: user, error: userError } = await supabase
         .from('perfis')
         .select('plano_ativo')
@@ -62,7 +65,7 @@ class WebhookService {
         .single();
 
       if (userError || !user) {
-        console.error('❌ Usuário não encontrado:', simulation.email);
+        console.error('❌ Usuário não encontrado:', simulation.email, userError);
         return {
           success: false,
           message: `Usuário não encontrado: ${simulation.email}. Verifique se o email está correto.`,
@@ -80,6 +83,7 @@ class WebhookService {
       };
 
       console.log('📤 Enviando payload:', payload);
+      console.log('🔗 Fazendo requisição para:', this.WEBHOOK_URL);
       
       const response = await fetch(this.WEBHOOK_URL, {
         method: 'POST',
@@ -88,6 +92,9 @@ class WebhookService {
         },
         body: JSON.stringify(payload),
       });
+
+      console.log('📥 Status da resposta:', response.status);
+      console.log('📥 Headers da resposta:', Object.fromEntries(response.headers.entries()));
 
       const result = await response.json();
       console.log('📥 Resposta do webhook:', result);
@@ -271,6 +278,34 @@ class WebhookService {
         return 'bg-red-100 text-red-800 border-red-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  }
+
+  // Testar conectividade da Edge Function
+  async testWebhookConnection(): Promise<boolean> {
+    try {
+      console.log('🧪 Testando conectividade da Edge Function...');
+      
+      const response = await fetch(this.WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: 'teste@exemplo.com',
+          evento: 'teste_conectividade',
+          token: this.SECURITY_TOKEN,
+        }),
+      });
+
+      console.log('📥 Status do teste:', response.status);
+      const result = await response.json();
+      console.log('📥 Resultado do teste:', result);
+      
+      return response.ok;
+    } catch (error) {
+      console.error('❌ Erro no teste de conectividade:', error);
+      return false;
     }
   }
 }

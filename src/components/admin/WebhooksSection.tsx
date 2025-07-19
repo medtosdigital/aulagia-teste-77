@@ -386,6 +386,29 @@ export default function WebhooksSection() {
                 )}
               </Button>
               
+              <Button
+                onClick={async () => {
+                  const isConnected = await webhookService.testWebhookConnection();
+                  if (isConnected) {
+                    toast({
+                      title: "✅ Conectividade OK",
+                      description: "Edge Function está acessível e funcionando.",
+                    });
+                  } else {
+                    toast({
+                      title: "❌ Problema de Conectividade",
+                      description: "Não foi possível conectar com a Edge Function.",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+                variant="outline"
+                className="w-full mt-2"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Testar Conectividade
+              </Button>
+              
               <div className="text-sm text-gray-500 mt-2">
                 💡 <strong>Dica:</strong> Use um email que existe no sistema para testar. O webhook irá atualizar o plano do usuário automaticamente.
               </div>
