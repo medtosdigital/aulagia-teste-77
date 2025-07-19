@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabasePlanService, TipoPlano, PlanoUsuario } from '@/services/supabasePlanService';
+import { supabasePlanService, TipoPlano } from '@/services/supabasePlanService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PerformanceOptimizer } from '@/utils/performanceOptimizations';
@@ -7,6 +7,23 @@ import { PerformanceOptimizer } from '@/utils/performanceOptimizations';
 // Cache global para evitar múltiplas consultas - aumentando duração
 const planCache = new Map<string, { data: PlanoUsuario | null; timestamp: number; materials: number }>();
 const CACHE_DURATION = 60000; // 60 segundos para reduzir ainda mais as consultas
+
+export interface PlanoUsuario {
+  id: string;
+  user_id: string;
+  plano_ativo: TipoPlano;
+  data_inicio_plano: string;
+  data_expiracao_plano: string | null;
+  created_at: string;
+  updated_at: string;
+  email?: string;
+  full_name?: string;
+  nome_preferido?: string;
+  materiais_criados_mes_atual?: number;
+  ano_atual?: number;
+  mes_atual?: number;
+  ultimo_reset_materiais?: string;
+}
 
 export const useSupabasePlanPermissions = () => {
   const { user } = useAuth();
@@ -64,6 +81,13 @@ export const useSupabasePlanPermissions = () => {
       console.log('Plano carregado (otimizado):', plan);
       console.log('Materiais restantes (otimizado):', remaining);
       
+      // Log específico para usuário admin
+      if (user.email === 'medtosdigital@gmail.com') {
+        console.log('ADMIN USER DETECTED - Plan data:', plan);
+        console.log('ADMIN USER DETECTED - plano_ativo:', plan?.plano_ativo);
+        console.log('ADMIN USER DETECTED - remaining materials:', remaining);
+      }
+      
       let finalPlan = plan;
       let finalRemaining = remaining;
 
@@ -74,8 +98,8 @@ export const useSupabasePlanPermissions = () => {
           id: 'default',
           user_id: user.id,
           plano_ativo: 'gratuito',
-          data_inicio: new Date().toISOString(),
-          data_expiracao: null,
+          data_inicio_plano: new Date().toISOString(),
+          data_expiracao_plano: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
@@ -100,8 +124,8 @@ export const useSupabasePlanPermissions = () => {
         id: 'error-fallback',
         user_id: user.id,
         plano_ativo: 'gratuito' as TipoPlano,
-        data_inicio: new Date().toISOString(),
-        data_expiracao: null,
+        data_inicio_plano: new Date().toISOString(),
+        data_expiracao_plano: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -120,6 +144,7 @@ export const useSupabasePlanPermissions = () => {
   // Carregar dados apenas quando necessário
   useEffect(() => {
     if (user?.id) {
+      console.log('useSupabasePlanPermissions - Carregando dados para usuário:', user.email);
       loadPlanData();
     }
   }, [user?.id]); // Removido loadPlanData das dependências para evitar loops
@@ -266,7 +291,9 @@ export const useSupabasePlanPermissions = () => {
   }, [currentPlan?.plano_ativo]);
 
   const canAccessSchool = useCallback((): boolean => {
-    return currentPlan?.plano_ativo === 'grupo_escolar' || currentPlan?.plano_ativo === 'admin';
+    const result = currentPlan?.plano_ativo === 'grupo_escolar' || currentPlan?.plano_ativo === 'admin';
+    console.log('useSupabasePlanPermissions Debug - canAccessSchool:', result, 'currentPlan:', currentPlan?.plano_ativo);
+    return result;
   }, [currentPlan?.plano_ativo]);
 
   const canAccessCreateMaterial = useCallback((): boolean => {
@@ -316,7 +343,9 @@ export const useSupabasePlanPermissions = () => {
 
   // Funções administrativas otimizadas
   const canAccessSettings = useCallback((): boolean => {
-    return currentPlan?.plano_ativo === 'admin';
+    const result = currentPlan?.plano_ativo === 'admin';
+    console.log('useSupabasePlanPermissions Debug - canAccessSettings:', result, 'currentPlan:', currentPlan?.plano_ativo);
+    return result;
   }, [currentPlan?.plano_ativo]);
 
   const shouldShowSupportModal = false;
@@ -333,7 +362,9 @@ export const useSupabasePlanPermissions = () => {
   }, []);
 
   const isAdminAuthenticated = useCallback((): boolean => {
-    return currentPlan?.plano_ativo === 'admin';
+    const result = currentPlan?.plano_ativo === 'admin';
+    console.log('useSupabasePlanPermissions Debug - isAdminAuthenticated:', result, 'currentPlan:', currentPlan?.plano_ativo);
+    return result;
   }, [currentPlan?.plano_ativo]);
 
   return {

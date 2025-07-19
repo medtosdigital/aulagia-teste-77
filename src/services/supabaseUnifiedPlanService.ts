@@ -73,6 +73,13 @@ class SupabaseUnifiedPlanService {
         }
 
         console.log('Perfil encontrado (cache):', data);
+        
+        // Log específico para usuário admin
+        if (data.email === 'medtosdigital@gmail.com') {
+          console.log('ADMIN USER DETECTED - Profile data:', data);
+          console.log('ADMIN USER DETECTED - plano_ativo:', data.plano_ativo);
+        }
+        
         return data;
       });
     } catch (error) {

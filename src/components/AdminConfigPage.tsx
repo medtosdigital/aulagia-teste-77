@@ -18,6 +18,7 @@ import AdminActivityFeed from './admin/AdminActivityFeed';
 import AdminQuickActions from './admin/AdminQuickActions';
 import AdminFinanceStats from './admin/AdminFinanceStats';
 import NotificationsSection from './admin/NotificationsSection';
+import WebhooksSection from './admin/WebhooksSection';
 
 export default function AdminConfigPage() {
   const [tab, setTab] = useState('dashboard');
@@ -174,89 +175,107 @@ export default function AdminConfigPage() {
     async function fetchDashboardData() {
       setLoading(true);
       try {
-        // Fetch basic metrics
-        const { count: userCount } = await supabase
+        console.log('Carregando dados do dashboard...');
+        
+        // Fetch basic metrics - Usuários Totais
+        const { count: userCount, error: userError } = await supabase
           .from('perfis')
-          .select('id', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true });
         
-        const { count: paidCount } = await supabase
-          .from('planos_usuarios')
-          .select('user_id', { count: 'exact', head: true })
-          .in('plano_ativo', ['professor', 'grupo_escolar']);
+        if (userError) {
+          console.error('Erro ao buscar usuários:', userError);
+        }
         
-        const { count: planosCount } = await supabase
-          .from('materiais')
-          .select('id', { count: 'exact', head: true })
-          .eq('tipo_material', 'plano-de-aula');
-        
-        const { count: atividadesCount } = await supabase
-          .from('materiais')
-          .select('id', { count: 'exact', head: true })
-          .eq('tipo_material', 'atividade');
-        
-        const { count: slidesCount } = await supabase
-          .from('materiais')
-          .select('id', { count: 'exact', head: true })
-          .eq('tipo_material', 'slides');
-        
-        const { count: avaliacoesCount } = await supabase
-          .from('materiais')
-          .select('id', { count: 'exact', head: true })
-          .eq('tipo_material', 'avaliacao');
-
-        // Calculate finance data
-        const { data: planCounts } = await supabase
-          .from('planos_usuarios')
+        // Fetch paid users - Usuários Pagos (professor, grupo_escolar, admin)
+        const { data: paidUsers, error: paidError } = await supabase
+          .from('perfis')
           .select('plano_ativo')
-          .in('plano_ativo', ['professor', 'grupo_escolar']);
+          .in('plano_ativo', ['professor', 'grupo_escolar', 'admin']);
+        
+        if (paidError) {
+          console.error('Erro ao buscar usuários pagos:', paidError);
+        }
+        
+        const paidCount = paidUsers?.length || 0;
+        
+        // Fetch materials count - Materiais Criados
+        const { count: materialsCount, error: materialsError } = await supabase
+          .from('materiais')
+          .select('*', { count: 'exact', head: true });
+        
+        if (materialsError) {
+          console.error('Erro ao buscar materiais:', materialsError);
+        }
 
+        // Calculate finance data based on user plans
         let monthlyRevenue = 0;
         let annualRevenue = 0;
 
-        if (planCounts) {
-          planCounts.forEach(plan => {
-            if (plan.plano_ativo === 'professor') {
+        if (paidUsers) {
+          paidUsers.forEach((user: any) => {
+            if (user.plano_ativo === 'professor') {
               monthlyRevenue += 29.90;
               annualRevenue += 299;
-            } else if (plan.plano_ativo === 'grupo_escolar') {
+            } else if (user.plano_ativo === 'grupo_escolar') {
               monthlyRevenue += 89.90;
               annualRevenue += 849;
+            } else if (user.plano_ativo === 'admin') {
+              // Admin não gera receita
+              monthlyRevenue += 0;
+              annualRevenue += 0;
             }
           });
         }
 
-        const averageRevenuePerUser = paidCount && paidCount > 0 ? monthlyRevenue / paidCount : 0;
+        const averageRevenuePerUser = paidCount > 0 ? monthlyRevenue / paidCount : 0;
+
+        console.log('Dados carregados:', {
+          userCount,
+          paidCount,
+          materialsCount,
+          monthlyRevenue,
+          annualRevenue
+        });
 
         setMetrics([
           { label: 'Usuários Totais', value: userCount || 0, icon: Users, color: 'from-blue-500 to-blue-600' },
-          { label: 'Usuários Pagos', value: paidCount || 0, icon: Badge, color: 'from-green-500 to-green-600' },
-          { label: 'Materiais Criados', value: (planosCount || 0) + (atividadesCount || 0) + (slidesCount || 0) + (avaliacoesCount || 0), icon: FileText, color: 'from-purple-500 to-purple-600' },
+          { label: 'Usuários Pagos', value: paidCount, icon: Badge, color: 'from-green-500 to-green-600' },
+          { label: 'Materiais Criados', value: materialsCount || 0, icon: FileText, color: 'from-purple-500 to-purple-600' },
         ]);
 
         setFinanceData({
           monthlyRevenue,
           annualRevenue,
           averageRevenuePerUser,
-          totalPaidUsers: paidCount || 0
+          totalPaidUsers: paidCount
         });
 
         // Fetch activities
-        const { data: activities } = await supabase
+        const { data: activities, error: activitiesError } = await supabase
           .from('user_activities')
           .select('id, user_id, title, type, created_at')
           .order('created_at', { ascending: false })
           .limit(10);
 
+        if (activitiesError) {
+          console.error('Erro ao buscar atividades:', activitiesError);
+        }
+
         const userMap: Record<string, string> = {};
         if (activities && activities.length > 0) {
           const userIds = Array.from(new Set(activities.map(a => a.user_id)));
-          const { data: users } = await supabase
+          const { data: users, error: usersError } = await supabase
             .from('perfis')
-            .select('id, full_name, email')
-            .in('id', userIds);
+            .select('user_id, full_name, email')
+            .in('user_id', userIds);
+          
+          if (usersError) {
+            console.error('Erro ao buscar dados dos usuários:', usersError);
+          }
+          
           if (users) {
             users.forEach(u => {
-              userMap[u.id] = u.full_name || u.email || u.id;
+              userMap[u.user_id] = u.full_name || u.email || u.user_id;
             });
           }
         }
@@ -291,7 +310,7 @@ export default function AdminConfigPage() {
         </div>
 
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-lg">
+          <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-lg">
             <TabsTrigger 
               value="dashboard" 
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
@@ -312,6 +331,13 @@ export default function AdminConfigPage() {
             >
               <Bell className="w-4 h-4 mr-2" />
               Notificações
+            </TabsTrigger>
+            <TabsTrigger 
+              value="webhooks"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
+              <Link2 className="w-4 h-4 mr-2" />
+              Webhooks
             </TabsTrigger>
           </TabsList>
 
@@ -400,6 +426,10 @@ export default function AdminConfigPage() {
 
           <TabsContent value="notificacoes" className="mt-8">
             <NotificationsSection />
+          </TabsContent>
+
+          <TabsContent value="webhooks" className="mt-8">
+            <WebhooksSection />
           </TabsContent>
         </Tabs>
 

@@ -21,11 +21,18 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { user } = useAuth();
   const { canAccessSchool, canAccessSettings, currentPlan } = useSupabasePlanPermissions();
-  const { currentProfile } = usePlanPermissions();
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Debug logs para verificar permissões
+  useEffect(() => {
+    console.log('Sidebar Debug - User:', user?.email);
+    console.log('Sidebar Debug - CurrentPlan:', currentPlan);
+    console.log('Sidebar Debug - canAccessSettings():', canAccessSettings());
+    console.log('Sidebar Debug - canAccessSchool():', canAccessSchool());
+  }, [user, currentPlan, canAccessSettings, canAccessSchool]);
 
   const [userProfile, setUserProfile] = useState({
     name: 'Professor(a)',
@@ -202,9 +209,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
   
   const getPlanDisplayName = () => {
-    if (!currentProfile) return 'Plano Gratuito';
-    if (currentProfile.plano_ativo === 'admin') return 'Plano Administrador';
-    switch (currentProfile.plano_ativo) {
+    if (!currentPlan) return 'Plano Gratuito';
+    if (currentPlan.plano_ativo === 'admin') return 'Plano Administrador';
+    switch (currentPlan.plano_ativo) {
       case 'gratuito':
         return 'Plano Gratuito';
       case 'professor':

@@ -43,16 +43,24 @@ export default function NotificationsSection() {
 
   const fetchUserProfiles = async () => {
     try {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, email');
+      console.log('Carregando perfis de usuários...');
+      
+      const { data: profiles, error } = await supabase
+        .from('perfis')
+        .select('user_id, full_name, email');
+      
+      if (error) {
+        console.error('Erro ao buscar perfis:', error);
+        return;
+      }
       
       if (profiles) {
         const profileMap: Record<string, string> = {};
         profiles.forEach((profile: any) => {
-          profileMap[profile.id] = profile.full_name || profile.email || profile.id;
+          profileMap[profile.user_id] = profile.full_name || profile.email || profile.user_id;
         });
         setUserProfiles(profileMap);
+        console.log('Perfis carregados:', profiles.length);
       }
     } catch (error) {
       console.error('Erro ao buscar perfis:', error);

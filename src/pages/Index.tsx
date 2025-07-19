@@ -51,7 +51,8 @@ const Index = () => {
     dismissSupportModal,
     currentPlan,
     getNextResetDate,
-    isAdminAuthenticated
+    isAdminAuthenticated,
+    loading: planLoading
   } = useSupabasePlanPermissions();
 
   const {
@@ -155,6 +156,18 @@ const Index = () => {
 
   // Função para proteger rotas administrativas
   const requireAdmin = (element: React.ReactNode) => {
+    // Aguardar carregamento dos dados antes de verificar permissões
+    if (planLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando permissões...</p>
+          </div>
+        </div>
+      );
+    }
+    
     if (!canAccessSettings()) {
       return (
         <PageBlockedOverlay
@@ -178,6 +191,19 @@ const Index = () => {
     if (!user) {
       return <Navigate to="/login" replace />;
     }
+    
+    // Aguardar carregamento dos dados antes de verificar permissões
+    if (planLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando permissões...</p>
+          </div>
+        </div>
+      );
+    }
+    
     if (!canAccessSchool()) {
       return <Navigate to="/assinatura" replace />;
     }

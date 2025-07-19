@@ -244,7 +244,9 @@ export const useUnifiedPlanPermissions = () => {
   }, [currentProfile?.plano_ativo]);
 
   const canAccessSchool = useCallback((): boolean => {
-    return currentProfile?.plano_ativo === 'grupo_escolar' || currentProfile?.plano_ativo === 'admin';
+    const result = currentProfile?.plano_ativo === 'grupo_escolar' || currentProfile?.plano_ativo === 'admin';
+    console.log('useUnifiedPlanPermissions Debug - canAccessSchool:', result, 'currentProfile:', currentProfile?.plano_ativo);
+    return result;
   }, [currentProfile?.plano_ativo]);
 
   const isLimitReached = useCallback((): boolean => {
@@ -282,12 +284,28 @@ export const useUnifiedPlanPermissions = () => {
   }, [user?.id, loadProfileData]);
 
   const canAccessSettings = useCallback((): boolean => {
-    return currentProfile?.plano_ativo === 'admin';
-  }, [currentProfile?.plano_ativo]);
+    const result = currentProfile?.plano_ativo === 'admin';
+    console.log('useUnifiedPlanPermissions Debug - canAccessSettings:', result, 'currentProfile:', currentProfile?.plano_ativo);
+    
+    // Log específico para usuário admin
+    if (user?.email === 'medtosdigital@gmail.com') {
+      console.log('ADMIN USER DETECTED in useUnifiedPlanPermissions - canAccessSettings:', result);
+    }
+    
+    return result;
+  }, [currentProfile?.plano_ativo, user?.email]);
 
   const isAdminAuthenticated = useCallback((): boolean => {
-    return currentProfile?.plano_ativo === 'admin';
-  }, [currentProfile?.plano_ativo]);
+    const result = currentProfile?.plano_ativo === 'admin';
+    console.log('useUnifiedPlanPermissions Debug - isAdminAuthenticated:', result, 'currentProfile:', currentProfile?.plano_ativo);
+    
+    // Log específico para usuário admin
+    if (user?.email === 'medtosdigital@gmail.com') {
+      console.log('ADMIN USER DETECTED in useUnifiedPlanPermissions - isAdminAuthenticated:', result);
+    }
+    
+    return result;
+  }, [currentProfile?.plano_ativo, user?.email]);
 
   return {
     // Estado

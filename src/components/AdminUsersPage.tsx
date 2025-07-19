@@ -45,42 +45,53 @@ export default function AdminUsersPage() {
 
   async function fetchUsers() {
     setLoading(true);
-    const { data: profiles } = await supabase
-      .from('perfis')
-      .select('id, full_name, email, created_at');
-    const { data: plans } = await supabase
-      .from('planos_usuarios')
-      .select('user_id, plano_ativo, data_expiracao, updated_at');
-    
-    const usersData = profiles?.map((p: any) => {
-      const plano = plans?.find((pl: any) => pl.user_id === p.id);
-      let paymentStatus = 'em dia';
-      let paymentBadge = 'bg-green-100 text-green-800';
-      let paymentDue = null;
-      if (plano?.data_expiracao) {
-        const exp = new Date(plano.data_expiracao);
-        paymentDue = exp.toLocaleDateString('pt-BR');
-        if (exp < new Date()) {
-          paymentStatus = 'atrasado';
-          paymentBadge = 'bg-red-100 text-red-800';
-        }
+    try {
+      console.log('Carregando dados dos usuários...');
+      
+      const { data: profiles, error: profilesError } = await supabase
+        .from('perfis')
+        .select('user_id, full_name, email, plano_ativo, created_at, updated_at');
+      
+      if (profilesError) {
+        console.error('Erro ao buscar perfis:', profilesError);
       }
-      return {
-        id: p.id,
-        name: p.full_name || '',
-        email: p.email || '',
-        plan: plano?.plano_ativo || 'gratuito',
-        createdAt: p.created_at ? p.created_at.split('T')[0] : '',
-        status: 'ativo',
-        isAdmin: p.email === 'medtosdigital@gmail.com',
-        paymentStatus,
-        paymentBadge,
-        paymentDue,
-      };
-    }) || [];
-    
-    setUsers(usersData);
-    setLoading(false);
+      
+      const usersData = profiles?.map((p: any) => {
+        let paymentStatus = 'em dia';
+        let paymentBadge = 'bg-green-100 text-green-800';
+        let paymentDue = null;
+        
+        // Verificar se o plano tem data de expiração
+        if (p.updated_at) {
+          const exp = new Date(p.updated_at);
+          paymentDue = exp.toLocaleDateString('pt-BR');
+          if (exp < new Date()) {
+            paymentStatus = 'atrasado';
+            paymentBadge = 'bg-red-100 text-red-800';
+          }
+        }
+        
+        return {
+          id: p.user_id,
+          name: p.full_name || '',
+          email: p.email || '',
+          plan: p.plano_ativo || 'gratuito',
+          createdAt: p.created_at ? p.created_at.split('T')[0] : '',
+          status: 'ativo',
+          isAdmin: p.email === 'medtosdigital@gmail.com',
+          paymentStatus,
+          paymentBadge,
+          paymentDue,
+        };
+      }) || [];
+      
+      console.log('Usuários carregados:', usersData.length);
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function fetchUserHistory(userId: string) {
@@ -97,19 +108,41 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     async function fetchFeedbacks() {
-      const { data: feedbacksData, error } = await supabase
-        .from('feedbacks')
-        .select('id, user_id, type, message, created_at')
-        .order('created_at', { ascending: false })
-        .limit(10);
-      if (feedbacksData) {
-        const userIds = feedbacksData.map(f => f.user_id);
-        const { data: profiles } = await supabase
-          .from('perfis')
-          .select('id, full_name, email')
-          .in('id', userIds);
-        const userMap = Object.fromEntries((profiles || []).map(p => [p.id, p.full_name || p.email || p.id]));
-        setFeedbacks(feedbacksData.map(f => ({ ...f, userName: userMap[f.user_id] || f.user_id })));
+      try {
+        console.log('Carregando feedbacks...');
+        
+        const { data: feedbacksData, error } = await supabase
+          .from('feedbacks')
+          .select('id, user_id, type, message, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        if (error) {
+          console.error('Erro ao buscar feedbacks:', error);
+          return;
+        }
+        
+        if (feedbacksData && feedbacksData.length > 0) {
+          const userIds = feedbacksData.map(f => f.user_id);
+          const { data: profiles, error: profilesError } = await supabase
+            .from('perfis')
+            .select('user_id, full_name, email')
+            .in('user_id', userIds);
+          
+          if (profilesError) {
+            console.error('Erro ao buscar perfis dos feedbacks:', profilesError);
+          }
+          
+          const userMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name || p.email || p.user_id]));
+          setFeedbacks(feedbacksData.map(f => ({ ...f, userName: userMap[f.user_id] || f.user_id })));
+          
+          console.log('Feedbacks carregados:', feedbacksData.length);
+        } else {
+          console.log('Nenhum feedback encontrado');
+          setFeedbacks([]);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar feedbacks:', error);
       }
     }
     fetchFeedbacks();
@@ -147,17 +180,31 @@ export default function AdminUsersPage() {
   
   async function saveEdit() {
     setSaving(true);
-    await supabase.from('perfis').update({
-      full_name: editData.name,
-      email: editData.email,
-    }).eq('id', editUser.id);
-    await supabase.from('planos_usuarios').update({
-      plano_ativo: editData.plan,
-      updated_at: new Date().toISOString(),
-    }).eq('user_id', editUser.id);
-    setSaving(false);
-    closeEditModal();
-    fetchUsers();
+    try {
+      console.log('Salvando dados do usuário:', editData);
+      
+      const { error: updateError } = await supabase
+        .from('perfis')
+        .update({
+          full_name: editData.name,
+          email: editData.email,
+          plano_ativo: editData.plan,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', editUser.id);
+      
+      if (updateError) {
+        console.error('Erro ao atualizar usuário:', updateError);
+      } else {
+        console.log('Usuário atualizado com sucesso');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar dados:', error);
+    } finally {
+      setSaving(false);
+      closeEditModal();
+      fetchUsers();
+    }
   }
 
   function openHistoryModal(user: any) {

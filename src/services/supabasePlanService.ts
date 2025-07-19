@@ -6,10 +6,17 @@ export interface PlanoUsuario {
   id: string;
   user_id: string;
   plano_ativo: TipoPlano;
-  data_inicio: string;
-  data_expiracao: string | null;
+  data_inicio_plano: string;
+  data_expiracao_plano: string | null;
   created_at: string;
   updated_at: string;
+  email?: string;
+  full_name?: string;
+  nome_preferido?: string;
+  materiais_criados_mes_atual?: number;
+  ano_atual?: number;
+  mes_atual?: number;
+  ultimo_reset_materiais?: string;
 }
 
 export interface UsoMensalMateriais {
@@ -58,7 +65,7 @@ class SupabasePlanService {
         console.log('Buscando plano para usuário (otimizado):', user.id);
 
         const { data, error } = await supabase
-          .from('planos_usuarios')
+          .from('perfis')
           .select('*')
           .eq('user_id', user.id)
           .limit(1) // Adicionar limite para otimizar
@@ -77,6 +84,13 @@ class SupabasePlanService {
         }
 
         console.log('Plano encontrado (cache):', data);
+        
+        // Log específico para usuário admin
+        if (user.email === 'medtosdigital@gmail.com') {
+          console.log('ADMIN USER DETECTED - Plan data:', data);
+          console.log('ADMIN USER DETECTED - plano_ativo:', data.plano_ativo);
+        }
+        
         return data;
       });
     } catch (error) {
@@ -89,11 +103,11 @@ class SupabasePlanService {
   private async createDefaultPlan(userId: string): Promise<PlanoUsuario | null> {
     try {
       const { data, error } = await supabase
-        .from('planos_usuarios')
+        .from('perfis')
         .insert({
           user_id: userId,
-          plano_ativo: 'gratuito' as any, // Permitir admin no futuro
-          data_inicio: new Date().toISOString()
+          plano_ativo: 'gratuito' as any,
+          data_inicio_plano: new Date().toISOString()
         })
         .select()
         .single();
@@ -198,28 +212,22 @@ class SupabasePlanService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return 0;
 
-      const currentYear = new Date().getFullYear();
-      const currentMonth = new Date().getMonth() + 1;
-      const cacheKey = `usage_${user.id}_${currentYear}_${currentMonth}`;
-
+      const cacheKey = `usage_${user.id}`;
+      
       return await this.cachedQuery(cacheKey, async () => {
         const { data, error } = await supabase
-          .from('uso_mensal_materiais')
-          .select('materiais_criados')
+          .from('perfis')
+          .select('materiais_criados_mes_atual')
           .eq('user_id', user.id)
-          .eq('ano', currentYear)
-          .eq('mes', currentMonth)
-          .limit(1) // Otimização
-          .maybeSingle();
+          .single();
 
         if (error) {
-          console.error('Erro ao buscar uso atual:', error);
+          console.error('Erro ao obter uso mensal:', error);
           return 0;
         }
 
-        const usage = data?.materiais_criados || 0;
-        console.log('Uso atual do mês (cache):', usage);
-        return usage;
+        console.log('Uso mensal atual (cache):', data.materiais_criados_mes_atual);
+        return data.materiais_criados_mes_atual || 0;
       });
     } catch (error) {
       console.error('Erro em getCurrentMonthUsage:', error);
@@ -296,11 +304,11 @@ class SupabasePlanService {
       const currentYear = new Date().getFullYear();
       const currentMonth = new Date().getMonth() + 1;
       const { error } = await supabase
-        .from('uso_mensal_materiais')
-        .update({ materiais_criados: 0, updated_at: new Date().toISOString() })
+        .from('perfis')
+        .update({ materiais_criados_mes_atual: 0, updated_at: new Date().toISOString() })
         .eq('user_id', user.id)
-        .eq('ano', currentYear)
-        .eq('mes', currentMonth);
+        .eq('ano_atual', currentYear)
+        .eq('mes_atual', currentMonth);
       if (error) {
         console.error('Erro ao resetar uso mensal de materiais:', error);
         return false;
@@ -315,14 +323,11 @@ class SupabasePlanService {
     }
   }
 
-  // Atualizar plano do usuário com limpeza de cache e reset de uso
+  // Atualizar plano do usuário
   async updateUserPlan(newPlan: TipoPlano, expirationDate?: Date): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('Usuário não autenticado para atualizar plano');
-        return false;
-      }
+      if (!user) return false;
 
       const updateData: any = {
         plano_ativo: newPlan,
@@ -330,27 +335,25 @@ class SupabasePlanService {
       };
 
       if (expirationDate) {
-        updateData.data_expiracao = expirationDate.toISOString();
+        updateData.data_expiracao_plano = expirationDate.toISOString();
       }
 
       const { error } = await supabase
-        .from('planos_usuarios')
+        .from('perfis')
         .update(updateData)
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao atualizar plano do usuário:', error);
+        console.error('Erro ao atualizar plano:', error);
         return false;
       }
 
-      // Resetar uso mensal ao trocar de plano
-      await this.resetMonthlyMaterialUsage();
+      // Limpar caches relacionados
+      queryCache.delete(`plan_${user.id}`);
+      queryCache.delete(`usage_${user.id}`);
+      queryCache.delete(`can_create_${user.id}`);
 
-      // Limpar todos os caches relacionados ao usuário
-      const keysToDelete = Array.from(queryCache.keys()).filter(key => key.includes(user.id));
-      keysToDelete.forEach(key => queryCache.delete(key));
-
-      console.log('Plano atualizado com sucesso para:', newPlan);
+      console.log('Plano atualizado com sucesso:', newPlan);
       return true;
     } catch (error) {
       console.error('Erro em updateUserPlan:', error);
@@ -362,9 +365,9 @@ class SupabasePlanService {
   async isPlanExpired(): Promise<boolean> {
     try {
       const plan = await this.getCurrentUserPlan();
-      if (!plan || !plan.data_expiracao) return false;
+      if (!plan || !plan.data_expiracao_plano) return false;
 
-      const expirationDate = new Date(plan.data_expiracao);
+      const expirationDate = new Date(plan.data_expiracao_plano);
       const isExpired = expirationDate < new Date();
       
       console.log('Verificação de expiração:', { expirationDate, isExpired });
@@ -375,30 +378,16 @@ class SupabasePlanService {
     }
   }
 
-  // Obter histórico de uso com cache
+  // Obter histórico de uso (simplificado - não há tabela de histórico)
   async getUsageHistory(months: number = 12): Promise<UsoMensalMateriais[]> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
-      const cacheKey = `history_${user.id}_${months}`;
-      
-      return await this.cachedQuery(cacheKey, async () => {
-        const { data, error } = await supabase
-          .from('uso_mensal_materiais')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('ano', { ascending: false })
-          .order('mes', { ascending: false })
-          .limit(months);
-
-        if (error) {
-          console.error('Erro ao buscar histórico de uso:', error);
-          return [];
-        }
-
-        return data || [];
-      }, 30000); // Cache mais longo para histórico
+      // Como não há tabela de histórico, retornar array vazio
+      // Em uma implementação futura, isso poderia ser baseado em logs de atividades
+      console.log('Histórico de uso não implementado - retornando array vazio');
+      return [];
     } catch (error) {
       console.error('Erro em getUsageHistory:', error);
       return [];

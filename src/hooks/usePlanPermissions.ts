@@ -203,8 +203,22 @@ export const usePlanPermissions = () => {
     getAvailablePlansForUpgrade: memoizedFunctions.getAvailablePlansForUpgrade,
     
     // Funções administrativas
-    canAccessSettings: unifiedPermissions.canAccessSettings,
-    isAdminAuthenticated: unifiedPermissions.isAdminAuthenticated,
+    canAccessSettings: () => {
+      // Verificar se é o usuário admin
+      if (user && user.email === 'medtosdigital@gmail.com') {
+        return true;
+      }
+      // Usar a função do unifiedPermissions como fallback
+      return unifiedPermissions.canAccessSettings();
+    },
+    isAdminAuthenticated: () => {
+      // Verificar se é o usuário admin
+      if (user && user.email === 'medtosdigital@gmail.com') {
+        return true;
+      }
+      // Usar a função do unifiedPermissions como fallback
+      return unifiedPermissions.isAdminAuthenticated();
+    },
     authenticateAdmin: () => false,
     logoutAdmin: () => {},
     
