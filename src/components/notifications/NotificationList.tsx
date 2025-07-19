@@ -45,7 +45,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
         <h3 className="font-semibold">Notificações</h3>
       </div>
       <ScrollArea className="max-h-80">
-        <div className="space-y-2 p-2">
+        <div className="space-y-3 p-2">
           {notifications.map((notification) => (
             <div
               key={notification.id}
@@ -56,9 +56,9 @@ export const NotificationList: React.FC<NotificationListProps> = ({
               }`}
               onClick={onNotificationClick}
             >
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-2">
                     {notification.icon && (
                       <span className="text-lg">{notification.icon}</span>
                     )}
@@ -69,17 +69,33 @@ export const NotificationList: React.FC<NotificationListProps> = ({
                       <Badge variant="secondary" className="text-xs">Nova</Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                     {notification.mensagem}
                   </p>
                   {notification.image_url && (
-                    <img 
-                      src={notification.image_url} 
-                      alt="Imagem da notificação"
-                      className="mt-2 max-w-full h-20 object-cover rounded"
-                    />
+                    <div className="relative w-full mb-2">
+                      <div className="aspect-[16/9] w-full overflow-hidden rounded-lg bg-muted">
+                        <img 
+                          src={notification.image_url} 
+                          alt="Imagem da notificação"
+                          className="w-full h-full object-cover object-center"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement?.classList.add('bg-gradient-to-br', 'from-blue-100', 'to-indigo-100');
+                            e.currentTarget.parentElement?.innerHTML = `
+                              <div class="flex items-center justify-center h-full">
+                                <div class="text-center text-muted-foreground">
+                                  <div class="text-2xl mb-1">📷</div>
+                                  <div class="text-xs">Imagem não disponível</div>
+                                </div>
+                              </div>
+                            `;
+                          }}
+                        />
+                      </div>
+                    </div>
                   )}
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(notification.data_envio || ''), {
                       addSuffix: true,
                       locale: ptBR

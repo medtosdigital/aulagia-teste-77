@@ -210,16 +210,35 @@ export default function NotificationDetailsModal({
                 </div>
               ) : (
                 <div className="space-y-6">
+                  {/* Banner Image */}
+                  {notification.image_url && (
+                    <div className="w-full">
+                      <div className="aspect-[16/9] w-full overflow-hidden rounded-lg bg-muted">
+                        <img 
+                          src={notification.image_url} 
+                          alt="Banner da notificação"
+                          className="w-full h-full object-cover object-center"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement?.classList.add('bg-gradient-to-br', 'from-blue-100', 'to-indigo-100');
+                            e.currentTarget.parentElement?.innerHTML = `
+                              <div class="flex items-center justify-center h-full">
+                                <div class="text-center text-muted-foreground">
+                                  <div class="text-2xl mb-1">📷</div>
+                                  <div class="text-xs">Imagem não disponível</div>
+                                </div>
+                              </div>
+                            `;
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Header */}
                   <div className="flex items-start gap-4">
                     {notification.icon && (
                       <div className="text-3xl">{notification.icon}</div>
-                    )}
-                    {notification.image_url && (
-                      <Avatar className="w-16 h-16">
-                        <AvatarImage src={notification.image_url} />
-                        <AvatarFallback>IMG</AvatarFallback>
-                      </Avatar>
                     )}
                     <div className="flex-1">
                       <h2 className="text-xl font-semibold mb-2">{notification.titulo}</h2>

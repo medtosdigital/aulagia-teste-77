@@ -186,17 +186,19 @@ export default function AdminConfigPage() {
           console.error('Erro ao buscar usuários:', userError);
         }
         
-        // Fetch paid users - Usuários Pagos (professor, grupo_escolar, admin)
+        // Fetch paid users - Usuários Pagos (professor, grupo_escolar, EXCLUINDO admin)
         const { data: paidUsers, error: paidError } = await supabase
           .from('perfis')
-          .select('plano_ativo')
-          .in('plano_ativo', ['professor', 'grupo_escolar', 'admin']);
+          .select('plano_ativo, email')
+          .in('plano_ativo', ['professor', 'grupo_escolar']);
         
         if (paidError) {
           console.error('Erro ao buscar usuários pagos:', paidError);
         }
         
-        const paidCount = paidUsers?.length || 0;
+        // Filtrar usuários pagos (excluindo admin)
+        const filteredPaidUsers = paidUsers?.filter(user => user.email !== 'medtosdigital@gmail.com') || [];
+        const paidCount = filteredPaidUsers.length;
         
         // Fetch materials count - Materiais Criados
         const { count: materialsCount, error: materialsError } = await supabase
@@ -211,19 +213,16 @@ export default function AdminConfigPage() {
         let monthlyRevenue = 0;
         let annualRevenue = 0;
 
-        if (paidUsers) {
-          paidUsers.forEach((user: any) => {
+        if (filteredPaidUsers) {
+          filteredPaidUsers.forEach((user: any) => {
             if (user.plano_ativo === 'professor') {
               monthlyRevenue += 29.90;
               annualRevenue += 299;
             } else if (user.plano_ativo === 'grupo_escolar') {
               monthlyRevenue += 89.90;
               annualRevenue += 849;
-            } else if (user.plano_ativo === 'admin') {
-              // Admin não gera receita
-              monthlyRevenue += 0;
-              annualRevenue += 0;
             }
+            // Admin não gera receita - já foi excluído do filteredPaidUsers
           });
         }
 

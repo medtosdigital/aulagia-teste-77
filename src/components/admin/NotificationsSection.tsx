@@ -300,8 +300,14 @@ export default function NotificationsSection() {
               onDelete={(notif) => (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600">
-                      <Trash2 className="w-4 h-4" />
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-8 px-3 hover:bg-red-100 hover:text-red-600 text-red-600 border border-red-200"
+                      title="Excluir notificação"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Excluir
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>

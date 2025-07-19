@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Pencil, Save, X, ChevronLeft, ChevronRight, UserCheck, UserX, Clock, Search, Filter, Users, TrendingUp, MessageSquare, Eye } from 'lucide-react';
+import { Pencil, Save, X, ChevronLeft, ChevronRight, UserCheck, UserX, Clock, Search, Filter, Users, TrendingUp, MessageSquare, Eye, Trash2, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const planLabels = {
   gratuito: 'Gratuito',
@@ -32,9 +33,23 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editUser, setEditUser] = useState<any | null>(null);
-  const [editData, setEditData] = useState<any>({});
+  const [editUser, setEditUser] = useState<any>(null);
+  const [editData, setEditData] = useState({
+    name: '',
+    email: '',
+    plan: '' as 'gratuito' | 'professor' | 'grupo_escolar' | 'admin',
+    celular: '',
+    escola: ''
+  });
   const [saving, setSaving] = useState(false);
+  
+  // Estados para modal de alteração de senha
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
   const [filterPlan, setFilterPlan] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [page, setPage] = useState(1);
@@ -42,6 +57,9 @@ export default function AdminUsersPage() {
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [feedbackSearch, setFeedbackSearch] = useState('');
+  const [feedbackTypeFilter, setFeedbackTypeFilter] = useState('');
+  const { toast } = useToast();
 
   async function fetchUsers() {
     setLoading(true);
@@ -76,7 +94,7 @@ export default function AdminUsersPage() {
       // Consulta principal - deve retornar todos os usuários para admin
       const { data: profiles, error: profilesError } = await supabase
         .from('perfis')
-        .select('user_id, full_name, email, plano_ativo, created_at, updated_at');
+        .select('user_id, full_name, email, plano_ativo, created_at, updated_at, data_expiracao_plano, celular, escola, avatar_url');
       
       console.log('📊 Resultado da consulta:', { 
         profiles: profiles?.length || 0, 
@@ -95,13 +113,37 @@ export default function AdminUsersPage() {
         let paymentBadge = 'bg-green-100 text-green-800';
         let paymentDue = null;
         
-        // Verificar se o plano tem data de expiração
-        if (p.updated_at) {
-          const exp = new Date(p.updated_at);
-          paymentDue = exp.toLocaleDateString('pt-BR');
-          if (exp < new Date()) {
-            paymentStatus = 'atrasado';
-            paymentBadge = 'bg-red-100 text-red-800';
+        // Lógica de pagamento baseada no tipo de plano
+        if (p.plano_ativo === 'admin') {
+          // Admin: data em cinza
+          paymentStatus = 'admin';
+          paymentBadge = 'bg-gray-100 text-gray-600';
+          paymentDue = p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : '--/--/----';
+        } else if (p.plano_ativo === 'gratuito') {
+          // Plano gratuito: data em cinza
+          paymentStatus = 'gratuito';
+          paymentBadge = 'bg-gray-100 text-gray-600';
+          paymentDue = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '--/--/----';
+        } else {
+          // Planos pagos (professor, grupo_escolar): usar data_expiracao_plano
+          if (p.data_expiracao_plano) {
+            const exp = new Date(p.data_expiracao_plano);
+            paymentDue = exp.toLocaleDateString('pt-BR');
+            
+            if (exp < new Date()) {
+              // Plano vencido
+              paymentStatus = 'atrasado';
+              paymentBadge = 'bg-red-100 text-red-800';
+            } else {
+              // Plano em dia
+              paymentStatus = 'em dia';
+              paymentBadge = 'bg-green-100 text-green-800';
+            }
+          } else {
+            // Sem data de expiração, usar data de criação
+            paymentDue = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '--/--/----';
+            paymentStatus = 'em dia';
+            paymentBadge = 'bg-green-100 text-green-800';
           }
         }
         
@@ -116,6 +158,9 @@ export default function AdminUsersPage() {
           paymentStatus,
           paymentBadge,
           paymentDue,
+          celular: p.celular || '',
+          escola: p.escola || '',
+          avatar_url: p.avatar_url || ''
         };
       }) || [];
       
@@ -202,12 +247,116 @@ export default function AdminUsersPage() {
 
   function openEditModal(user: any) {
     setEditUser(user);
-    setEditData({ ...user });
+    setEditData({ 
+      name: user.name || '',
+      email: user.email || '',
+      plan: user.plan || '',
+      celular: user.celular || '',
+      escola: user.escola || '',
+    });
   }
   
   function closeEditModal() {
     setEditUser(null);
-    setEditData({});
+    setEditData({
+      name: '',
+      email: '',
+      plan: '' as 'gratuito' | 'professor' | 'grupo_escolar' | 'admin',
+      celular: '',
+      escola: ''
+    });
+  }
+
+  // Funções para modal de alteração de senha
+  function openPasswordModal() {
+    setShowPasswordModal(true);
+    setPasswordData({
+      newPassword: '',
+      confirmPassword: ''
+    });
+  }
+
+  function closePasswordModal() {
+    setShowPasswordModal(false);
+    setPasswordData({
+      newPassword: '',
+      confirmPassword: ''
+    });
+  }
+
+  function handlePasswordChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }
+
+  async function changePassword() {
+    if (!editUser) return;
+
+    // Validações
+    if (!passwordData.newPassword.trim()) {
+      toast({
+        title: "Senha obrigatória",
+        description: "Por favor, digite uma nova senha.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: "Senha muito curta",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Senhas não coincidem",
+        description: "A confirmação de senha deve ser igual à nova senha.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      console.log('🔐 Alterando senha do usuário:', editUser.id);
+      
+      const { error } = await supabase.auth.admin.updateUserById(
+        editUser.id,
+        { password: passwordData.newPassword }
+      );
+
+      if (error) {
+        console.error('❌ Erro ao alterar senha:', error);
+        toast({
+          title: "Erro ao alterar senha",
+          description: error.message || "Não foi possível alterar a senha. Tente novamente.",
+          variant: "destructive"
+        });
+      } else {
+        console.log('✅ Senha alterada com sucesso');
+        toast({
+          title: "Senha alterada",
+          description: "A senha do usuário foi alterada com sucesso!",
+        });
+        closePasswordModal();
+      }
+    } catch (error) {
+      console.error('💥 Erro inesperado ao alterar senha:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setChangingPassword(false);
+    }
   }
   
   function handleEditChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
@@ -217,25 +366,46 @@ export default function AdminUsersPage() {
   async function saveEdit() {
     setSaving(true);
     try {
-      console.log('Salvando dados do usuário:', editData);
+      console.log('💾 Salvando dados do usuário:', editData);
       
+      // Preparar dados para atualização do perfil
+      const profileUpdateData = {
+        full_name: editData.name,
+        email: editData.email,
+        plano_ativo: editData.plan,
+        celular: editData.celular,
+        escola: editData.escola,
+        updated_at: new Date().toISOString(),
+      };
+      
+      // Atualizar perfil
       const { error: updateError } = await supabase
         .from('perfis')
-        .update({
-          full_name: editData.name,
-          email: editData.email,
-          plano_ativo: editData.plan,
-          updated_at: new Date().toISOString(),
-        })
+        .update(profileUpdateData)
         .eq('user_id', editUser.id);
       
       if (updateError) {
-        console.error('Erro ao atualizar usuário:', updateError);
-      } else {
-        console.log('Usuário atualizado com sucesso');
+        console.error('❌ Erro ao atualizar usuário:', updateError);
+        toast({
+          title: "Erro ao atualizar usuário",
+          description: "Não foi possível atualizar os dados. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
       }
+      
+      console.log('✅ Usuário atualizado com sucesso');
+      toast({
+        title: "Usuário atualizado",
+        description: "Os dados do usuário foram atualizados com sucesso!",
+      });
     } catch (error) {
-      console.error('Erro ao salvar dados:', error);
+      console.error('💥 Erro ao salvar dados:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive"
+      });
     } finally {
       setSaving(false);
       closeEditModal();
@@ -251,6 +421,90 @@ export default function AdminUsersPage() {
   function closeHistoryModal() {
     setHistoryUser(null);
     setHistory([]);
+  }
+
+  const filteredFeedbacks = feedbacks.filter(f => {
+    const matchesSearch =
+      f.userName.toLowerCase().includes(feedbackSearch.toLowerCase()) ||
+      f.message.toLowerCase().includes(feedbackSearch.toLowerCase());
+    const matchesType = feedbackTypeFilter ? f.type === feedbackTypeFilter : true;
+    return matchesSearch && matchesType;
+  });
+
+  async function handleDeleteFeedback(id: string) {
+    if (!confirm('Tem certeza que deseja excluir este feedback?')) {
+      return;
+    }
+
+    try {
+      console.log('🗑️ Excluindo feedback:', id);
+      
+      const { error } = await supabase
+        .from('feedbacks')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('❌ Erro ao excluir feedback:', error);
+        toast({
+          title: "Erro ao excluir feedback",
+          description: "Não foi possível excluir o feedback. Tente novamente.",
+          variant: "destructive"
+        });
+      } else {
+        console.log('✅ Feedback excluído com sucesso');
+        setFeedbacks(feedbacks.filter(f => f.id !== id));
+        toast({
+          title: "Feedback excluído",
+          description: "O feedback foi excluído com sucesso!",
+        });
+      }
+    } catch (error) {
+      console.error('💥 Erro inesperado ao excluir feedback:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  }
+
+  async function handleDeleteUser(userId: string) {
+    if (!confirm('Tem certeza que deseja excluir este usuário?')) {
+      return;
+    }
+
+    try {
+      console.log('🗑️ Excluindo usuário:', userId);
+      
+      const { error } = await supabase
+        .from('perfis')
+        .delete()
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('❌ Erro ao excluir usuário:', error);
+        toast({
+          title: "Erro ao excluir usuário",
+          description: "Não foi possível excluir o usuário. Tente novamente.",
+          variant: "destructive"
+        });
+      } else {
+        console.log('✅ Usuário excluído com sucesso');
+        setUsers(users.filter(u => u.id !== userId));
+        toast({
+          title: "Usuário excluído",
+          description: "O usuário foi excluído com sucesso!",
+        });
+      }
+    } catch (error) {
+      console.error('💥 Erro inesperado ao excluir usuário:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   }
 
   return (
@@ -283,33 +537,77 @@ export default function AdminUsersPage() {
             </div>
           </CardHeader>
           <CardContent className="p-6">
+            {/* Filtros de Feedback */}
+            <div className="mb-6 space-y-4">
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Buscar por nome ou e-mail do usuário..."
+                    value={feedbackSearch}
+                    onChange={e => setFeedbackSearch(e.target.value)}
+                    className="pl-10 h-10 border-2 border-gray-200 focus:border-blue-500 rounded-lg"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <select 
+                    value={feedbackTypeFilter} 
+                    onChange={e => setFeedbackTypeFilter(e.target.value)}
+                    className="px-4 h-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 bg-white min-w-[150px]"
+                  >
+                    <option value="">Todos os Tipos</option>
+                    <option value="sugestao">Sugestão</option>
+                    <option value="reclamacao">Reclamação</option>
+                    <option value="elogio">Elogio</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-4 max-h-64 overflow-y-auto">
-              {feedbacks.length === 0 ? (
+              {filteredFeedbacks.length === 0 ? (
                 <div className="text-center py-8">
                   <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Nenhum feedback enviado ainda.</p>
+                  <p className="text-gray-500">
+                    {feedbacks.length === 0 ? 'Nenhum feedback enviado ainda.' : 'Nenhum feedback encontrado com os filtros aplicados.'}
+                  </p>
                 </div>
               ) : (
-                feedbacks.map(f => (
+                filteredFeedbacks.map(f => (
                   <div key={f.id} className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-100 hover:shadow-md transition-all duration-200">
-                    <div className="flex items-start gap-3">
-                      <Badge 
-                        className={`${
-                          f.type === 'elogio' 
-                            ? 'bg-green-100 text-green-700 border-green-200' 
-                            : f.type === 'reclamacao' 
-                            ? 'bg-red-100 text-red-700 border-red-200' 
-                            : 'bg-blue-100 text-blue-700 border-blue-200'
-                        } font-semibold`}
-                      >
-                        {f.type}
-                      </Badge>
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-800 mb-1">{f.userName}</div>
-                        <div className="text-gray-600 text-sm mb-2">{f.message}</div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-20 flex items-center justify-center">
+                        <Badge 
+                          className={`w-full justify-center ${
+                            f.type === 'elogio' 
+                              ? 'bg-green-100 text-green-700 border-green-200' 
+                              : f.type === 'reclamacao' 
+                              ? 'bg-red-100 text-red-700 border-red-200' 
+                              : 'bg-blue-100 text-blue-700 border-blue-200'
+                          } font-semibold text-xs`}
+                        >
+                          {f.type === 'sugestao' ? 'Sugestão' : 
+                           f.type === 'reclamacao' ? 'Reclamação' : 
+                           f.type === 'elogio' ? 'Elogio' : f.type}
+                        </Badge>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-800 mb-1 truncate">{f.userName}</div>
+                        <div className="text-gray-600 text-sm mb-2 break-words">{f.message}</div>
                         <div className="text-xs text-gray-400">
                           {new Date(f.created_at).toLocaleString('pt-BR')}
                         </div>
+                      </div>
+                      <div className="flex-shrink-0 flex items-center">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 p-0 border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                          title="Excluir feedback"
+                          onClick={() => handleDeleteFeedback(f.id)}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -390,27 +688,42 @@ export default function AdminUsersPage() {
                 </TableRow>
               ) : (
                 paginatedUsers.map((user, idx) => (
-                  <TableRow key={user.id} className={`hover:bg-blue-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white/50' : 'bg-slate-50/30'}`}>
+                  <TableRow key={user.id} className="hover:bg-slate-50 transition-colors">
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {user.isAdmin && (
-                          <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white border-0 text-xs font-bold">
-                            Admin
-                          </Badge>
-                        )}
-                        <span className="text-gray-900">{user.name}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                          {user.avatar_url ? (
+                            <img 
+                              src={user.avatar_url} 
+                              alt={user.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-full h-full flex items-center justify-center text-blue-600 font-semibold text-sm ${user.avatar_url ? 'hidden' : ''}`}>
+                            {user.name.charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900">{user.name}</div>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-gray-600">{user.email}</TableCell>
                     <TableCell>
                       <Badge className={`font-semibold ${
-                        user.plan === 'professor' 
+                        user.isAdmin 
+                          ? 'bg-orange-100 text-orange-800 border-orange-200' 
+                          : user.plan === 'professor' 
                           ? 'bg-blue-100 text-blue-800 border-blue-200' 
                           : user.plan === 'grupo_escolar' 
                           ? 'bg-green-100 text-green-800 border-green-200' 
                           : 'bg-gray-100 text-gray-700 border-gray-200'
                       }`}>
-                        {planLabels[user.plan]}
+                        {user.isAdmin ? 'Admin' : planLabels[user.plan]}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -456,6 +769,15 @@ export default function AdminUsersPage() {
                           onClick={() => openHistoryModal(user)}
                         >
                           <Clock size={14} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 p-0 border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                          title="Excluir usuário"
+                          onClick={() => handleDeleteUser(user.id)}
+                        >
+                          <Trash2 size={14} />
                         </Button>
                       </div>
                     </TableCell>
@@ -515,7 +837,7 @@ export default function AdminUsersPage() {
 
         {/* Edit Modal */}
         <Dialog open={!!editUser} onOpenChange={closeEditModal}>
-          <DialogContent className="sm:max-w-md rounded-2xl border-0 shadow-2xl">
+          <DialogContent className="sm:max-w-2xl rounded-2xl border-0 shadow-2xl">
             <DialogHeader className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-6 -m-6 mb-6 rounded-t-2xl">
               <DialogTitle className="text-xl font-bold flex items-center gap-2">
                 <Pencil className="w-5 h-5" />
@@ -523,37 +845,78 @@ export default function AdminUsersPage() {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6 p-2">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Nome</label>
-                <Input
-                  name="name"
-                  value={editData.name || ''}
-                  onChange={handleEditChange}
-                  className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                  autoFocus
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">E-mail</label>
-                <Input
-                  name="email"
-                  value={editData.email || ''}
-                  onChange={handleEditChange}
-                  className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Plano</label>
-                <select
-                  name="plan"
-                  value={editData.plan || ''}
-                  onChange={handleEditChange}
-                  className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 bg-white px-3"
-                >
-                  {planOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
+              {/* Grid responsivo - 2 colunas no desktop, 1 no mobile */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Coluna 1 */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700">Nome</label>
+                    <Input
+                      name="name"
+                      value={editData.name || ''}
+                      onChange={handleEditChange}
+                      className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700">E-mail</label>
+                    <Input
+                      name="email"
+                      value={editData.email || ''}
+                      onChange={handleEditChange}
+                      className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700">Celular</label>
+                    <Input
+                      name="celular"
+                      value={editData.celular || ''}
+                      onChange={handleEditChange}
+                      className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                      placeholder="(11) 99999-9999"
+                    />
+                  </div>
+                </div>
+                
+                {/* Coluna 2 */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700">Escola</label>
+                    <Input
+                      name="escola"
+                      value={editData.escola || ''}
+                      onChange={handleEditChange}
+                      className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                      placeholder="Nome da escola"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700">Plano</label>
+                    <select
+                      name="plan"
+                      value={editData.plan || ''}
+                      onChange={handleEditChange}
+                      className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 bg-white px-3"
+                    >
+                      {planOptions.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700">Alterar Senha</label>
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 border-2 border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300"
+                      onClick={openPasswordModal}
+                    >
+                      <Lock size={16} className="mr-2" />
+                      Alterar Senha
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-4">
@@ -574,6 +937,62 @@ export default function AdminUsersPage() {
                   <>
                     <Save size={16} className="mr-2" />
                     Salvar
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Password Modal */}
+        <Dialog open={showPasswordModal} onOpenChange={closePasswordModal}>
+          <DialogContent className="sm:max-w-md rounded-2xl border-0 shadow-2xl">
+            <DialogHeader className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-6 -m-6 mb-6 rounded-t-2xl">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <Lock className="w-5 h-5" />
+                Alterar Senha de {editUser?.name || editUser?.email}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 p-2">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">Nova Senha</label>
+                <Input
+                  type="password"
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">Confirmar Nova Senha</label>
+                <Input
+                  type="password"
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button variant="outline" onClick={closePasswordModal} className="h-12 px-6 border-2">
+                Cancelar
+              </Button>
+              <Button
+                onClick={changePassword}
+                disabled={changingPassword}
+                className="h-12 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              >
+                {changingPassword ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Alterando...
+                  </>
+                ) : (
+                  <>
+                    <Lock size={16} className="mr-2" />
+                    Alterar Senha
                   </>
                 )}
               </Button>

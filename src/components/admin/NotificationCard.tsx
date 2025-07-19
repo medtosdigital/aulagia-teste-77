@@ -3,8 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Eye, Edit, Trash2, Users, Clock } from 'lucide-react';
+import { Trash2, Users, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -13,7 +12,7 @@ interface NotificationCardProps {
   userProfiles: Record<string, string>;
   onView: (notification: any) => void;
   onEdit: (notification: any) => void;
-  onDelete: (notification: any) => void;
+  onDelete: (notification: any) => React.ReactNode;
 }
 
 export default function NotificationCard({ 
@@ -33,7 +32,7 @@ export default function NotificationCard({
   };
 
   return (
-    <Card className="group hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/20 hover:border-l-primary">
+    <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/20 hover:border-l-primary">
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1">
@@ -41,12 +40,6 @@ export default function NotificationCard({
               <div className="flex-shrink-0 text-2xl">
                 {notification.icon}
               </div>
-            )}
-            {notification.image_url && (
-              <Avatar className="w-10 h-10 flex-shrink-0">
-                <AvatarImage src={notification.image_url} />
-                <AvatarFallback>IMG</AvatarFallback>
-              </Avatar>
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
@@ -78,31 +71,17 @@ export default function NotificationCard({
             </div>
           </div>
           
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex flex-col items-center gap-2 flex-shrink-0">
             <Button
               size="sm"
               variant="ghost"
               onClick={() => onView(notification)}
-              className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
+              className="h-8 px-3 hover:bg-primary/10 hover:text-primary text-sm"
+              title="Visualizar detalhes"
             >
-              <Eye className="w-4 h-4" />
+              Visualizar
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onEdit(notification)}
-              className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onDelete(notification)}
-              className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            {onDelete(notification)}
           </div>
         </div>
       </CardContent>

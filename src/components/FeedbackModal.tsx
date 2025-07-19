@@ -37,22 +37,54 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
       toast.error('Você precisa estar logado para enviar feedback.');
       return;
     }
+    
     setIsSubmitting(true);
+    
     try {
-      const { error } = await supabase.from('feedbacks').insert([
-        {
-          message: message.trim(),
-          type: feedbackType,
-          user_id: user.id
-        }
-      ]);
-      if (error) throw error;
+      console.log('📝 Enviando feedback...', {
+        user_id: user.id,
+        user_email: user.email,
+        type: feedbackType,
+        message: message.trim(),
+        message_length: message.trim().length
+      });
+      
+      const feedbackData = {
+        user_id: user.id,
+        type: feedbackType,
+        message: message.trim()
+      };
+      
+      console.log('📊 Dados do feedback:', feedbackData);
+      
+      const { data, error } = await supabase
+        .from('feedbacks')
+        .insert([feedbackData])
+        .select();
+      
+      if (error) {
+        console.error('❌ Erro ao enviar feedback:', error);
+        console.error('❌ Detalhes do erro:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+      
+      console.log('✅ Feedback enviado com sucesso:', data);
+      
       setIsSubmitted(true);
       toast.success('Feedback enviado com sucesso! Obrigado pela sua contribuição.');
+      
+      // Fechar modal após 2 segundos
       setTimeout(() => {
         handleClose();
       }, 2000);
+      
     } catch (error) {
+      console.error('💥 Erro ao enviar feedback:', error);
       toast.error('Erro ao enviar feedback. Tente novamente.');
     } finally {
       setIsSubmitting(false);
