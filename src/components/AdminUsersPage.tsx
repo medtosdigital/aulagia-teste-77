@@ -46,14 +46,48 @@ export default function AdminUsersPage() {
   async function fetchUsers() {
     setLoading(true);
     try {
-      console.log('Carregando dados dos usuários...');
+      console.log('🔍 Carregando dados dos usuários...');
       
+      // Verificar usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('👤 Usuário atual:', user?.email);
+      console.log('🆔 User ID:', user?.id);
+      
+      // Verificar o plano do usuário atual
+      if (user?.email) {
+        const { data: currentUserProfile, error: profileError } = await supabase
+          .from('perfis')
+          .select('plano_ativo, user_id')
+          .eq('email', user.email)
+          .single();
+        
+        console.log('📋 Plano do usuário atual:', currentUserProfile?.plano_ativo);
+        console.log('🆔 User ID do perfil:', currentUserProfile?.user_id);
+        console.log('❌ Erro ao buscar perfil atual:', profileError);
+        
+        // Verificar se o usuário tem plano admin
+        if (currentUserProfile?.plano_ativo === 'admin') {
+          console.log('✅ Usuário tem plano admin - deve ter acesso total');
+        } else {
+          console.log('⚠️ Usuário NÃO tem plano admin - acesso limitado');
+        }
+      }
+      
+      // Consulta principal - deve retornar todos os usuários para admin
       const { data: profiles, error: profilesError } = await supabase
         .from('perfis')
         .select('user_id, full_name, email, plano_ativo, created_at, updated_at');
       
+      console.log('📊 Resultado da consulta:', { 
+        profiles: profiles?.length || 0, 
+        error: profilesError,
+        profilesData: profiles 
+      });
+      
       if (profilesError) {
-        console.error('Erro ao buscar perfis:', profilesError);
+        console.error('❌ Erro ao buscar perfis:', profilesError);
+        setUsers([]);
+        return;
       }
       
       const usersData = profiles?.map((p: any) => {
@@ -85,10 +119,12 @@ export default function AdminUsersPage() {
         };
       }) || [];
       
-      console.log('Usuários carregados:', usersData.length);
+      console.log('✅ Usuários processados:', usersData.length);
+      console.log('📋 Lista de usuários:', usersData);
       setUsers(usersData);
     } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
+      console.error('💥 Erro ao carregar usuários:', error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
