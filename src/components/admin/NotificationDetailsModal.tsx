@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Save, UserCheck, UserX, MessageSquare, Calendar, Edit3, X, Upload, ToggleLeft } from 'lucide-react';
@@ -258,7 +257,8 @@ export default function NotificationDetailsModal({
                           alt="Banner da notificação"
                           className="w-full h-full object-cover object-center"
                           onError={(e) => {
-                            e.currentTarget.style.display = 'none';
+                            const target = e.currentTarget as HTMLImageElement;
+                            target.style.display = 'none';
                           }}
                         />
                       </div>
