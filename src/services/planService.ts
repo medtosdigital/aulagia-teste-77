@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { PlanData } from './planExpirationService';
 
@@ -126,12 +127,10 @@ class PlanService {
   // Incrementar contador de materiais criados
   async incrementMaterialCount(userId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('perfis')
-        .update({
-          materiais_criados_mes_atual: supabase.rpc('increment', { value: 1 })
-        })
-        .eq('user_id', userId);
+      // Use the database function instead of trying to use a non-existent RPC
+      const { error } = await supabase.rpc('increment_material_usage', {
+        p_user_id: userId
+      });
 
       if (error) {
         console.error('❌ Erro ao incrementar contador de materiais:', error);
@@ -169,4 +168,4 @@ class PlanService {
   }
 }
 
-export const planService = new PlanService(); 
+export const planService = new PlanService();

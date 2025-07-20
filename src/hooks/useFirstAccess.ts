@@ -137,11 +137,13 @@ export const useFirstAccess = () => {
         throw error;
       }
 
-      // Atualizar estado
+      // Atualizar estado com all required properties
       setState({
         isFirstAccess: false,
         showModal: false,
-        userInfo
+        userInfo,
+        loading: false,
+        saving: false
       });
 
       console.log('✅ First access completed with user info:', userInfo);

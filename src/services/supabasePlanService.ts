@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export type TipoPlano = 'gratuito' | 'professor' | 'grupo_escolar' | 'admin';
@@ -22,6 +21,7 @@ export interface PerfilUsuario {
   email?: string;
   full_name?: string;
   nome_preferido?: string;
+  billing_type?: string;
 }
 
 class SupabasePlanService {
@@ -55,7 +55,8 @@ class SupabasePlanService {
           updated_at: new Date().toISOString(),
           email: user.email,
           full_name: user.email,
-          nome_preferido: 'Admin'
+          nome_preferido: 'Admin',
+          billing_type: 'monthly'
         };
         return adminProfile;
       }
@@ -107,14 +108,58 @@ class SupabasePlanService {
           }
 
           console.log('Basic profile created:', newProfile);
-          return newProfile;
+          // Convert database response to PerfilUsuario interface
+          const convertedProfile: PerfilUsuario = {
+            id: newProfile.id,
+            user_id: newProfile.user_id,
+            plano_ativo: newProfile.plano_ativo as TipoPlano,
+            data_inicio_plano: newProfile.data_inicio_plano,
+            data_expiracao_plano: newProfile.data_expiracao_plano,
+            status_plano: (newProfile.status_plano || 'ativo') as 'ativo' | 'atrasado' | 'cancelado',
+            ultima_renovacao: newProfile.ultima_renovacao,
+            customer_id: newProfile.customer_id,
+            subscription_id: newProfile.subscription_id,
+            materiais_criados_mes_atual: newProfile.materiais_criados_mes_atual,
+            ano_atual: newProfile.ano_atual,
+            mes_atual: newProfile.mes_atual,
+            ultimo_reset_materiais: newProfile.ultimo_reset_materiais,
+            created_at: newProfile.created_at,
+            updated_at: newProfile.updated_at,
+            email: newProfile.email,
+            full_name: newProfile.full_name,
+            nome_preferido: newProfile.nome_preferido,
+            billing_type: newProfile.billing_type
+          };
+          return convertedProfile;
         }
         
         return null;
       }
 
       console.log('Perfil encontrado:', data);
-      return data;
+      // Convert database response to PerfilUsuario interface
+      const convertedProfile: PerfilUsuario = {
+        id: data.id,
+        user_id: data.user_id,
+        plano_ativo: data.plano_ativo as TipoPlano,
+        data_inicio_plano: data.data_inicio_plano,
+        data_expiracao_plano: data.data_expiracao_plano,
+        status_plano: (data.status_plano || 'ativo') as 'ativo' | 'atrasado' | 'cancelado',
+        ultima_renovacao: data.ultima_renovacao,
+        customer_id: data.customer_id,
+        subscription_id: data.subscription_id,
+        materiais_criados_mes_atual: data.materiais_criados_mes_atual,
+        ano_atual: data.ano_atual,
+        mes_atual: data.mes_atual,
+        ultimo_reset_materiais: data.ultimo_reset_materiais,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        email: data.email,
+        full_name: data.full_name,
+        nome_preferido: data.nome_preferido,
+        billing_type: data.billing_type
+      };
+      return convertedProfile;
     } catch (error) {
       console.error('Erro em getCurrentUserPlan:', error);
       return null;

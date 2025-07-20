@@ -1,3 +1,4 @@
+
 export interface ScheduleEvent {
   id: string;
   materialId: string;
@@ -38,6 +39,22 @@ class ScheduleService {
         endDate: new Date(event.recurrence.endDate)
       } : undefined
     }));
+  }
+
+  // Add the missing getUpcomingClasses method
+  getUpcomingClasses(limit: number = 5): ScheduleEvent[] {
+    const events = this.getEvents();
+    const now = new Date();
+    
+    // Filter for upcoming events
+    const upcomingEvents = events.filter(event => {
+      return event.startDate >= now;
+    });
+    
+    // Sort by start date and limit results
+    return upcomingEvents
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+      .slice(0, limit);
   }
 
   saveEvent(event: Omit<ScheduleEvent, 'id' | 'createdAt'>): ScheduleEvent {
