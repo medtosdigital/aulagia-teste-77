@@ -1,13 +1,29 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabasePlanService, TipoPlano, PlanoUsuario } from '@/services/supabasePlanService';
-import { planService } from '@/services/planService';
+import { supabasePlanService, TipoPlano } from '@/services/supabasePlanService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PerformanceOptimizer } from '@/utils/performanceOptimizations';
 
-// Cache global otimizado
-const planCache = new Map<string, { data: PlanoUsuario | null; materials: number; timestamp: number }>();
-const CACHE_DURATION = 30000; // 30 segundos para dados críticos
+// Cache global para evitar múltiplas consultas
+const planCache = new Map<string, { data: PlanoUsuario | null; timestamp: number; materials: number }>();
+const CACHE_DURATION = 60000; // 60 segundos
+
+export interface PlanoUsuario {
+  id: string;
+  user_id: string;
+  plano_ativo: TipoPlano;
+  data_inicio_plano: string;
+  data_expiracao_plano: string | null;
+  created_at: string;
+  updated_at: string;
+  email?: string;
+  full_name?: string;
+  nome_preferido?: string;
+  materiais_criados_mes_atual?: number;
+  ano_atual?: number;
+  mes_atual?: number;
+  ultimo_reset_materiais?: string;
+}
 
 export const useSupabasePlanPermissions = () => {
   const { user } = useAuth();
@@ -84,50 +100,39 @@ export const useSupabasePlanPermissions = () => {
         return;
       }
 
-      // Para usuários normais, usar o novo planService
-      console.log('Carregando dados do plano via planService...');
-      const userPlanData = await planService.getUserPlanData(user.id);
+      // Para usuários normais, carregar dados sem timeout agressivo
+      console.log('Carregando perfil do usuário...');
+      const plan = await supabasePlanService.getCurrentUserPlan();
       
-      if (userPlanData) {
-        // Converter para o formato esperado
-        const plan: PlanoUsuario = {
-          id: `plan-${userPlanData.planName}`,
-          user_id: user.id,
-          plano_ativo: userPlanData.planName as TipoPlano,
-          data_inicio_plano: new Date().toISOString(),
-          data_expiracao_plano: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          email: user.email,
-          full_name: user.email,
-          nome_preferido: user.email
-        };
+      console.log('Carregando materiais restantes...');
+      const remaining = await supabasePlanService.getRemainingMaterials();
+      
+      console.log('Plano carregado:', plan);
+      console.log('Materiais restantes:', remaining);
+      
+      // Fallback para plano não encontrado
+      const finalPlan = plan || {
+        id: 'fallback-plan',
+        user_id: user.id,
+        plano_ativo: 'gratuito' as TipoPlano,
+        data_inicio_plano: new Date().toISOString(),
+        data_expiracao_plano: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      const finalRemaining = remaining !== null ? remaining : 5;
 
-        // Cache data
-        planCache.set(cacheKey, {
-          data: plan,
-          timestamp: now,
-          materials: userPlanData.materialsRemaining
-        });
+      // Atualizar cache
+      planCache.set(cacheKey, {
+        data: finalPlan,
+        timestamp: now,
+        materials: finalRemaining
+      });
 
-        setCurrentPlan(plan);
-        setRemainingMaterials(userPlanData.materialsRemaining);
-        retryCountRef.current = 0;
-      } else {
-        // Fallback para plano gratuito
-        const fallbackPlan: PlanoUsuario = {
-          id: 'fallback-plan',
-          user_id: user.id,
-          plano_ativo: 'gratuito' as TipoPlano,
-          data_inicio_plano: new Date().toISOString(),
-          data_expiracao_plano: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        setCurrentPlan(fallbackPlan);
-        setRemainingMaterials(5);
-      }
+      setCurrentPlan(finalPlan);
+      setRemainingMaterials(finalRemaining);
+      retryCountRef.current = 0; // Reset retry count on success
 
     } catch (error) {
       console.error('Erro ao carregar dados do plano (usando fallback):', error);
@@ -139,7 +144,7 @@ export const useSupabasePlanPermissions = () => {
         setTimeout(() => {
           loadingRef.current = false;
           loadPlanData(true);
-        }, 2000 * retryCountRef.current);
+        }, 2000 * retryCountRef.current); // Aumentar delay entre tentativas
         return;
       }
       
