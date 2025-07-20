@@ -114,12 +114,9 @@ const SubscriptionPage = () => {
   const stableRefreshData = useCallback(() => {
     // Adicionar timeout para evitar travamentos
     const refreshPromise = refreshData();
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout refreshing data')), 8000)
-    );
     
-    Promise.race([refreshPromise, timeoutPromise]).catch(error => {
-      console.error('Error refreshing subscription data:', error);
+    refreshPromise.catch(error => {
+      console.error('Erro ao atualizar dados da assinatura:', error);
     });
   }, [refreshData]);
 

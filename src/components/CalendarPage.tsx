@@ -56,13 +56,8 @@ const CalendarPage: React.FC = () => {
 
   useEffect(() => {
     if (user && hasCalendarFeatures) {
-      // Adicionar timeout para evitar travamentos
-      const loadPromise = refreshEvents();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout loading calendar')), 10000)
-      );
-      
-      Promise.race([loadPromise, timeoutPromise]).catch(error => {
+      console.log('Carregando eventos do calendário...');
+      refreshEvents().catch(error => {
         console.error('Error loading calendar events:', error);
         toast.error('Erro ao carregar eventos do calendário');
       });

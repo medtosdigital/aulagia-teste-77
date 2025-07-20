@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { userDataService } from '@/services/userDataService';
+import { planExpirationService } from '@/services/planExpirationService';
 
 interface AuthContextType {
   user: User | null;
@@ -78,11 +79,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('👤 Verificando/criando perfil para usuário:', user.id);
       
-      // Usar o novo serviço para garantir dados completos
+      // Usar o novo serviço para garantir dados completos com expiração
       const userData = await userDataService.ensureUserData(user.id, user.email || '');
       
       if (userData) {
         console.log('✅ Perfil do usuário verificado/criado com sucesso:', userData);
+        
+        // Verificar se precisa renovar plano gratuito
+        if (userData.plano_ativo === 'gratuito') {
+          await planExpirationService.renewFreePlan(user.id);
+        }
       } else {
         console.error('❌ Erro ao verificar/criar perfil do usuário');
       }

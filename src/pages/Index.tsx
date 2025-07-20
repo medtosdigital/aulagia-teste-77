@@ -22,6 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSupabasePlanPermissions } from '@/hooks/useSupabasePlanPermissions';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { useFirstAccess } from '@/hooks/useFirstAccess';
+import { usePlanExpiration } from '@/hooks/usePlanExpiration';
 import { useFeedback } from '@/hooks/useFeedback';
 import { supabase } from '@/integrations/supabase/client';
 import AdminUsersPage from '@/components/AdminUsersPage';
@@ -70,6 +71,9 @@ const Index = () => {
     completeFirstAccess,
     closeModal: closeFirstAccessModal
   } = useFirstAccess();
+
+  // Hook para gerenciar expiração de planos
+  const { runManualCheck } = usePlanExpiration();
 
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const openFeedbackModal = () => setShowFeedbackModal(true);

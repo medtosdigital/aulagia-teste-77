@@ -30,48 +30,36 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('🏠 Dashboard mounted');
-
-    // Carregar estatísticas, atividades e próximas aulas em paralelo
     const loadDashboardData = async () => {
       try {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        const nextWeek = new Date(now);
-        nextWeek.setDate(now.getDate() + 7);
+        console.log('Carregando dados do dashboard...');
         
-        // Carregar dados em paralelo com timeout para evitar travamentos
-        const loadPromise = Promise.all([
-          statsService.getMaterialStats(),
-          activityService.getRecentActivities(10),
-          supabaseScheduleService.getEventsByDateRange(now, nextWeek)
-        ]);
-
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 15000)
-        );
-
-        const [stats, activities, upcoming] = await Promise.race([loadPromise, timeoutPromise]) as [any, any, any];
-        
+        // Carregar estatísticas de materiais
+        const stats = await statsService.getMaterialStats();
         setMaterialStats(stats);
+
+        // Carregar atividades recentes
+        const activities = await activityService.getRecentActivities(10);
         setRecentActivities(activities);
-        setUpcomingClasses(upcoming.slice(0, 5));
-        
-        // Buscar materiais vinculados das próximas aulas apenas se necessário
-        const allMaterialIds = Array.from(new Set(upcoming.flatMap(ev => ev.material_ids || [])));
-        if (allMaterialIds.length > 0) {
-          // Buscar apenas os materiais específicos em vez de todos
-          const materialsMap: { [id: string]: GeneratedMaterial } = {};
+
+        // Carregar próximas aulas
+        const classes = await scheduleService.getUpcomingClasses();
+        setUpcomingClasses(classes);
+
+        // Carregar materiais para o mapa
+        if (activities.length > 0) {
+          const materialsMap: { [key: string]: any } = {};
           
-          // Buscar materiais específicos por ID
-          for (const materialId of allMaterialIds.slice(0, 10)) { // Limitar a 10 para performance
-            try {
-              const material = await materialService.getMaterialById(materialId);
-              if (material) {
-                materialsMap[materialId as string] = material;
+          for (const activity of activities) {
+            if (activity.materialId) {
+              try {
+                const material = await materialService.getMaterialById(activity.materialId);
+                if (material) {
+                  materialsMap[activity.materialId] = material;
+                }
+              } catch (error) {
+                console.warn(`Erro ao buscar material ${activity.materialId}:`, error);
               }
-            } catch (error) {
-              console.warn(`Erro ao buscar material ${materialId}:`, error);
             }
           }
           

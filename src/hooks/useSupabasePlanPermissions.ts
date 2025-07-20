@@ -33,16 +33,20 @@ export const useSupabasePlanPermissions = () => {
   const [loading, setLoading] = useState(false);
   const [shouldShowUpgrade, setShouldShowUpgrade] = useState(false);
   const loadingRef = useRef(false);
+  const retryCountRef = useRef(0);
 
   // Função otimizada de carregamento com cache
   const loadPlanData = useCallback(async (forceReload = false) => {
     if (!user?.id) {
       console.log('Nenhum usuário autenticado, definindo valores padrão');
       setCurrentPlan(null);
-      setRemainingMaterials(0);
+      setRemainingMaterials(5);
       setLoading(false);
       return;
     }
+
+    // Evitar múltiplas consultas simultâneas
+    if (loadingRef.current && !forceReload) return;
 
     // Verificar cache primeiro
     const cacheKey = `plan_${user.id}`;
@@ -57,53 +61,67 @@ export const useSupabasePlanPermissions = () => {
       return;
     }
 
-    // Evitar múltiplas consultas simultâneas
-    if (loadingRef.current) return;
     loadingRef.current = true;
+    setLoading(true);
 
     try {
-      setLoading(true);
-      console.log('Carregando dados do plano para usuário (otimizado):', user.id);
+      console.log('Carregando dados do plano para usuário:', user.id);
       
-      // Carregar dados em paralelo com timeout
-      const loadPromise = Promise.all([
-        supabasePlanService.getCurrentUserPlan(),
-        supabasePlanService.getRemainingMaterials()
-      ]);
-
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 30000)
-      );
-
-      const [plan, remaining] = await Promise.race([loadPromise, timeoutPromise]) as [PlanoUsuario | null, number];
+      // Verificar se é usuário admin primeiro (sem consulta ao banco)
+      const isAdminUser = user.email === 'medtosdigital@gmail.com';
       
-      console.log('Plano carregado (otimizado):', plan);
-      console.log('Materiais restantes (otimizado):', remaining);
-      
-      // Log específico para usuário admin
-      if (user.email === 'medtosdigital@gmail.com') {
-        console.log('ADMIN USER DETECTED - Plan data:', plan);
-        console.log('ADMIN USER DETECTED - plano_ativo:', plan?.plano_ativo);
-        console.log('ADMIN USER DETECTED - remaining materials:', remaining);
-      }
-      
-      let finalPlan = plan;
-      let finalRemaining = remaining;
-
-      if (!plan) {
-        // Plano padrão mais simples
-        console.log('Usando plano gratuito como padrão (otimizado)');
-        finalPlan = {
-          id: 'default',
+      if (isAdminUser) {
+        console.log('ADMIN USER DETECTED - Using admin plan');
+        const adminPlan: PlanoUsuario = {
+          id: 'admin-plan',
           user_id: user.id,
-          plano_ativo: 'gratuito',
+          plano_ativo: 'admin' as TipoPlano,
           data_inicio_plano: new Date().toISOString(),
           data_expiracao_plano: null,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          email: user.email,
+          full_name: user.email,
+          nome_preferido: 'Admin'
         };
-        finalRemaining = 5; // Limite do plano gratuito
+        
+        // Cache admin data
+        planCache.set(cacheKey, {
+          data: adminPlan,
+          timestamp: now,
+          materials: Infinity
+        });
+        
+        setCurrentPlan(adminPlan);
+        setRemainingMaterials(Infinity);
+        setLoading(false);
+        loadingRef.current = false;
+        retryCountRef.current = 0;
+        return;
       }
+
+      // Para usuários normais, carregar dados sem timeout agressivo
+      console.log('Carregando perfil do usuário...');
+      const plan = await supabasePlanService.getCurrentUserPlan();
+      
+      console.log('Carregando materiais restantes...');
+      const remaining = await supabasePlanService.getRemainingMaterials();
+      
+      console.log('Plano carregado:', plan);
+      console.log('Materiais restantes:', remaining);
+      
+      // Fallback para plano não encontrado
+      const finalPlan = plan || {
+        id: 'fallback-plan',
+        user_id: user.id,
+        plano_ativo: 'gratuito' as TipoPlano,
+        data_inicio_plano: new Date().toISOString(),
+        data_expiracao_plano: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      const finalRemaining = remaining !== null ? remaining : 5;
 
       // Atualizar cache
       planCache.set(cacheKey, {
@@ -114,11 +132,24 @@ export const useSupabasePlanPermissions = () => {
 
       setCurrentPlan(finalPlan);
       setRemainingMaterials(finalRemaining);
+      retryCountRef.current = 0; // Reset retry count on success
 
     } catch (error) {
       console.error('Erro ao carregar dados do plano (usando fallback):', error);
       
-      // Fallback rápido
+      // Sistema de retry simplificado
+      if (retryCountRef.current < 2) {
+        retryCountRef.current++;
+        console.log(`Tentativa ${retryCountRef.current + 1} de 3`);
+        setTimeout(() => {
+          loadingRef.current = false;
+          loadPlanData(true);
+        }, 2000 * retryCountRef.current); // Aumentar delay entre tentativas
+        return;
+      }
+      
+      // Fallback final após esgotadas as tentativas
+      console.warn('Usando configurações padrão devido ao erro');
       const fallbackPlan = {
         id: 'error-fallback',
         user_id: user.id,
@@ -131,8 +162,8 @@ export const useSupabasePlanPermissions = () => {
       
       setCurrentPlan(fallbackPlan);
       setRemainingMaterials(5);
+      retryCountRef.current = 0;
       
-      console.warn('Usando configurações padrão devido ao erro');
     } finally {
       setLoading(false);
       loadingRef.current = false;

@@ -234,11 +234,8 @@ const MaterialsList: React.FC = () => {
       
       // Adicionar timeout para evitar travamentos
       const loadPromise = userMaterialsService.getMaterialsByUser();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout loading materials')), 10000)
-      );
       
-      const supabaseMaterials = await Promise.race([loadPromise, timeoutPromise]) as any[];
+      const supabaseMaterials = await loadPromise;
       console.log('Supabase materials count:', supabaseMaterials.length);
       
       // Filtrar apenas materiais que não são de apoio e limitar a 20

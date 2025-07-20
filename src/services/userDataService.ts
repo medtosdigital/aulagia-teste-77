@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { planExpirationService } from '@/services/planExpirationService';
 
 export interface UserData {
   id: string;
@@ -44,46 +45,31 @@ class UserDataService {
         return null;
       }
 
-      // Se não existe, criar perfil completo
+      // Se não existe, criar perfil completo usando o serviço de expiração
       if (!currentData) {
         console.log('📝 Criando perfil completo para usuário:', userId);
         
-        const newUserData: Partial<UserData> = {
-          user_id: userId,
-          email: userEmail,
-          full_name: userEmail?.split('@')[0] || 'Usuário',
-          nome_preferido: userEmail?.split('@')[0] || 'Usuário',
-          plano_ativo: 'gratuito',
-          billing_type: 'monthly',
-          data_inicio_plano: new Date().toISOString(),
-          data_expiracao_plano: null,
-          celular: '',
-          escola: '',
-          etapas_ensino: [],
-          anos_serie: [],
-          disciplinas: [],
-          tipo_material_favorito: [],
-          preferencia_bncc: false,
-          avatar_url: '',
-          materiais_criados_mes_atual: 0,
-          ano_atual: new Date().getFullYear(),
-          mes_atual: new Date().getMonth() + 1,
-          ultimo_reset_materiais: new Date().toISOString()
-        };
+        const success = await planExpirationService.createInitialProfile(userId, userEmail);
+        
+        if (success) {
+          // Buscar o perfil criado
+          const { data: createdData, error: createError } = await supabase
+            .from('perfis')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
 
-        const { data: createdData, error: createError } = await supabase
-          .from('perfis')
-          .insert(newUserData)
-          .select()
-          .single();
+          if (createError) {
+            console.error('❌ Erro ao buscar perfil criado:', createError);
+            return null;
+          }
 
-        if (createError) {
-          console.error('❌ Erro ao criar perfil:', createError);
+          console.log('✅ Perfil criado com sucesso:', createdData);
+          return createdData;
+        } else {
+          console.error('❌ Erro ao criar perfil via serviço de expiração');
           return null;
         }
-
-        console.log('✅ Perfil criado com sucesso:', createdData);
-        return createdData;
       }
 
       // Verificar se os dados estão completos
