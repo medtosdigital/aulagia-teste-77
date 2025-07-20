@@ -1,135 +1,192 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 
-interface FirstAccessData {
-  nome_preferido: string;
-  etapas_ensino: string[];
-  anos_serie: string[];
-  disciplinas: string[];
-  tipo_material_favorito: string[];
-  preferencia_bncc: boolean;
+interface UserInfo {
+  teachingLevel: string;
+  grades: string[];
+  subjects: string[];
+  school: string;
+  materialTypes: string[];
+  name: string;
   celular: string;
-  escola: string;
+  educationalInfo?: {
+    teachingLevel: string;
+    grades: string[];
+    subjects: string[];
+    school: string;
+    materialTypes: string[];
+  };
+}
+
+interface FirstAccessState {
+  isFirstAccess: boolean;
+  showModal: boolean;
+  userInfo: UserInfo | null;
 }
 
 export const useFirstAccess = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [isFirstAccess, setIsFirstAccess] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [saving, setSaving] = useState<boolean>(false);
+  const [state, setState] = useState<FirstAccessState>({
+    isFirstAccess: false,
+    showModal: false,
+    userInfo: null
+  });
 
-  const checkFirstAccess = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+  useEffect(() => {
+    const checkFirstAccess = async () => {
+      if (!user?.id) return;
 
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('perfis')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single();
+      try {
+        // Verificar se já existe perfil completo no Supabase
+        const { data: profile, error } = await supabase
+          .from('perfis')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
 
-      if (error) {
-        console.error('Erro ao verificar primeiro acesso:', error);
-        toast({
-          title: "Erro ao verificar acesso",
-          description: "Não foi possível verificar seu acesso. Tente novamente.",
-          variant: "destructive"
+        if (error && error.code === 'PGRST116') {
+          // Perfil não encontrado, é primeiro acesso
+          setState({
+            isFirstAccess: true,
+            showModal: true,
+            userInfo: null
+          });
+        } else if (profile) {
+          // Verificar se é realmente primeiro acesso (sem dados pessoais preenchidos)
+          const isReallyFirstAccess = !profile.nome_preferido && 
+                                     !profile.celular && 
+                                     (!profile.etapas_ensino || profile.etapas_ensino.length === 0);
+          
+          if (isReallyFirstAccess) {
+            setState({
+              isFirstAccess: true,
+              showModal: true,
+              userInfo: null
+            });
+          } else {
+            // Perfil existe e está completo, não é primeiro acesso
+            setState({
+              isFirstAccess: false,
+              showModal: false,
+              userInfo: {
+                name: profile.nome_preferido || profile.full_name || 'Professor(a)',
+                teachingLevel: profile.etapas_ensino?.[0] || '',
+                grades: profile.anos_serie || [],
+                subjects: profile.disciplinas || [],
+                school: profile.escola || '',
+                materialTypes: profile.tipo_material_favorito || [],
+                celular: profile.celular || ''
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error checking first access:', error);
+        // Em caso de erro, assumir que é primeiro acesso
+        setState({
+          isFirstAccess: true,
+          showModal: true,
+          userInfo: null
         });
-        return;
       }
+    };
 
-      setIsFirstAccess(!data);
-    } catch (error) {
-      console.error('Erro inesperado ao verificar acesso:', error);
-      toast({
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao processar suas informações.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    checkFirstAccess();
+  }, [user]);
 
-  const saveFirstAccessData = async (data: FirstAccessData): Promise<boolean> => {
-    if (!user) return false;
+  const completeFirstAccess = async (userInfo: UserInfo) => {
+    if (!user?.id) return;
 
-    setSaving(true);
     try {
-      console.log('Salvando dados do primeiro acesso:', data);
-
-      const updateData = {
+      // Salvar perfil completo no Supabase
+      const profileData = {
         user_id: user.id,
-        nome_preferido: data.nome_preferido,
-        etapas_ensino: data.etapas_ensino,
-        anos_serie: data.anos_serie,
-        disciplinas: data.disciplinas,
-        tipo_material_favorito: data.tipo_material_favorito,
-        preferencia_bncc: data.preferencia_bncc,
-        celular: data.celular,
-        escola: data.escola,
-        plano_ativo: 'gratuito' as const,
-        billing_type: 'gratuito'
+        nome_preferido: userInfo.name,
+        etapas_ensino: userInfo.teachingLevel ? [userInfo.teachingLevel] : [],
+        anos_serie: userInfo.grades,
+        disciplinas: userInfo.subjects,
+        tipo_material_favorito: userInfo.materialTypes,
+        preferencia_bncc: false,
+        celular: userInfo.celular,
+        escola: userInfo.school,
+        // Garantir que o plano seja gratuito e billing seja monthly
+        plano_ativo: 'gratuito',
+        billing_type: 'monthly'
       };
 
       const { error } = await supabase
         .from('perfis')
-        .upsert(updateData, { onConflict: 'user_id' });
+        .upsert(profileData, { onConflict: 'user_id' });
 
       if (error) {
-        console.error('Erro ao salvar dados do primeiro acesso:', error);
-        toast({
-          title: "Erro ao salvar dados",
-          description: "Não foi possível salvar suas informações. Tente novamente.",
-          variant: "destructive"
-        });
-        return false;
+        console.error('Error saving profile:', error);
+        throw error;
       }
 
-      console.log('Dados do primeiro acesso salvos com sucesso');
-      setIsFirstAccess(false);
-      
-      toast({
-        title: "Bem-vindo!",
-        description: "Seus dados foram salvos com sucesso.",
+      // Atualizar estado
+      setState({
+        isFirstAccess: false,
+        showModal: false,
+        userInfo
       });
 
-      return true;
+      console.log('✅ First access completed with user info:', userInfo);
+
+      // Disparar evento para atualizar outras partes da aplicação
+      window.dispatchEvent(new CustomEvent('profileUpdated'));
+
     } catch (error) {
-      console.error('Erro inesperado ao salvar dados:', error);
-      toast({
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao processar suas informações.",
-        variant: "destructive"
-      });
-      return false;
-    } finally {
-      setSaving(false);
+      console.error('Error completing first access:', error);
+      throw error;
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      checkFirstAccess();
+  const resetFirstAccess = async () => {
+    if (!user?.id) return;
+
+    try {
+      // Limpar dados específicos do perfil (mantendo plano e billing)
+      await supabase
+        .from('perfis')
+        .update({
+          nome_preferido: null,
+          etapas_ensino: null,
+          anos_serie: null,
+          disciplinas: null,
+          tipo_material_favorito: null,
+          celular: null,
+          escola: null
+        })
+        .eq('user_id', user.id);
+
+      setState({
+        isFirstAccess: true,
+        showModal: true,
+        userInfo: null
+      });
+    } catch (error) {
+      console.error('Error resetting first access:', error);
+      setState({
+        isFirstAccess: true,
+        showModal: true,
+        userInfo: null
+      });
     }
-  }, [user]);
+  };
+
+  const openModal = () => {
+    setState(prev => ({ ...prev, showModal: true }));
+  };
 
   return {
-    isFirstAccess,
-    loading,
-    saving,
-    saveFirstAccessData,
-    checkFirstAccess: () => {
-      if (user) {
-        checkFirstAccess();
-      }
-    }
+    isFirstAccess: state.isFirstAccess,
+    showModal: state.showModal,
+    userInfo: state.userInfo,
+    completeFirstAccess,
+    resetFirstAccess,
+    openModal,
+    closeModal: () => setState(prev => ({ ...prev, showModal: false }))
   };
 };

@@ -6,6 +6,7 @@ export interface WebhookLog {
   evento: string;
   produto?: string;
   plano_aplicado?: string;
+  billing_type?: string;
   status: string;
   created_at: string;
   ip_address?: string;
@@ -41,7 +42,7 @@ class WebhookService {
   }
 
   // Simular webhook da Kiwify
-  async simulateWebhook(simulation: WebhookSimulation): Promise<{ success: boolean; message: string; plano_aplicado?: string }> {
+  async simulateWebhook(simulation: WebhookSimulation): Promise<{ success: boolean; message: string; plano_aplicado?: string; billing_type?: string }> {
     try {
       console.log('🚀 Simulando webhook da Kiwify com dados:', simulation);
       console.log('🌐 URL do webhook:', this.WEBHOOK_URL);
@@ -55,26 +56,25 @@ class WebhookService {
         };
       }
 
-      // Verificar se o usuário existe no banco antes de simular (apenas para usuários reais)
-      if (!simulation.email.includes('@exemplo.com')) {
-        console.log('🔍 Verificando se usuário existe na tabela perfis:', simulation.email);
-        const { data: user, error: userError } = await supabase
-          .from('perfis')
-          .select('user_id, email, plano_ativo')
-          .eq('email', simulation.email)
-          .single();
+      // Verificar se o usuário existe no banco antes de simular
+      console.log('🔍 Verificando se usuário existe na tabela perfis:', simulation.email);
+      const { data: user, error: userError } = await supabase
+        .from('perfis')
+        .select('user_id, email, plano_ativo, billing_type')
+        .eq('email', simulation.email)
+        .single();
 
-        if (userError || !user) {
-          console.error('❌ Usuário não encontrado na tabela perfis:', simulation.email, userError);
-          return {
-            success: false,
-            message: `Usuário não encontrado: ${simulation.email}. Verifique se o email está correto e se o usuário existe na tabela perfis.`,
-          };
-        }
-
-        console.log('✅ Usuário encontrado na tabela perfis:', user);
-        console.log('📋 Plano atual do usuário:', user.plano_ativo);
+      if (userError || !user) {
+        console.error('❌ Usuário não encontrado na tabela perfis:', simulation.email, userError);
+        return {
+          success: false,
+          message: `Usuário não encontrado: ${simulation.email}. Verifique se o email está correto e se o usuário existe na tabela perfis.`,
+        };
       }
+
+      console.log('✅ Usuário encontrado na tabela perfis:', user);
+      console.log('📋 Plano atual do usuário:', user.plano_ativo);
+      console.log('📋 Billing type atual do usuário:', user.billing_type);
       
       // Preparar payload para o webhook (simulando dados da Kiwify)
       const payload = {
@@ -87,7 +87,7 @@ class WebhookService {
       console.log('📤 Enviando payload para webhook:', payload);
       console.log('🔗 Fazendo requisição para:', this.WEBHOOK_URL);
       
-      // Headers sem autenticação (função pública)
+      // Headers simples sem autenticação
       const headers = {
         'Content-Type': 'application/json',
       };
@@ -116,10 +116,29 @@ class WebhookService {
 
       console.log('✅ Webhook processado com sucesso');
       
+      // Verificar se o plano foi realmente atualizado
+      const { data: updatedUser, error: updateError } = await supabase
+        .from('perfis')
+        .select('user_id, email, plano_ativo, billing_type')
+        .eq('email', simulation.email)
+        .single();
+      
+      if (updateError) {
+        console.error('❌ Erro ao verificar usuário atualizado:', updateError);
+        return {
+          success: false,
+          message: 'Webhook processado mas erro ao verificar atualização',
+        };
+      }
+      
+      console.log('📋 Plano após atualização:', updatedUser.plano_ativo);
+      console.log('📋 Billing type após atualização:', updatedUser.billing_type);
+      
       return {
         success: true,
-        message: `Webhook simulado com sucesso! Plano aplicado: ${result.plano_aplicado}`,
-        plano_aplicado: result.plano_aplicado,
+        message: `Webhook simulado com sucesso! Plano aplicado: ${result.plano_aplicado || updatedUser.plano_ativo}, Billing type: ${result.billing_type || updatedUser.billing_type}`,
+        plano_aplicado: result.plano_aplicado || updatedUser.plano_ativo,
+        billing_type: result.billing_type || updatedUser.billing_type,
       };
     } catch (error) {
       console.error('💥 Erro ao simular webhook:', error);
@@ -250,7 +269,6 @@ class WebhookService {
       { value: 'assinatura renovada', label: 'Assinatura Renovada' },
       { value: 'assinatura cancelada', label: 'Assinatura Cancelada' },
       { value: 'assinatura atrasada', label: 'Assinatura Atrasada' },
-      { value: 'compra cancelada', label: 'Compra Cancelada' },
     ];
   }
 
@@ -333,7 +351,7 @@ class WebhookService {
     try {
       const { data: user, error } = await supabase
         .from('perfis')
-        .select('user_id, email, plano_ativo')
+        .select('user_id, email, plano_ativo, billing_type')
         .eq('email', email)
         .single();
 
@@ -349,4 +367,4 @@ class WebhookService {
   }
 }
 
-export const webhookService = new WebhookService();
+export const webhookService = new WebhookService(); 
