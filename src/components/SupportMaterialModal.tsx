@@ -99,6 +99,12 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
 
     setSaving(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Usuário não autenticado');
+        return;
+      }
+
       const { error } = await supabase
         .from('materiais')
         .update({
@@ -108,7 +114,8 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
           tema: editTema,
           turma: editTurma
         })
-        .eq('id', material.id);
+        .eq('id', material.id)
+        .eq('user_id', user.id); // Adicionar filtro por usuário
 
       if (error) {
         toast.error('Erro ao salvar alterações');
@@ -137,10 +144,17 @@ const SupportMaterialModal: React.FC<SupportMaterialModalProps> = ({
 
   const handleDelete = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Usuário não autenticado');
+        return;
+      }
+
       const { error } = await supabase
         .from('materiais')
         .delete()
-        .eq('id', material.id);
+        .eq('id', material.id)
+        .eq('user_id', user.id); // Adicionar filtro por usuário
 
       if (error) {
         toast.error('Erro ao excluir material de apoio');

@@ -156,8 +156,13 @@ const ProfilePage = () => {
   useEffect(() => {
     const loadMaterialStats = async () => {
       try {
-        // Carregar estatísticas dos materiais
-        const stats = await statsService.getMaterialStats();
+        // Carregar estatísticas dos materiais com timeout
+        const loadPromise = statsService.getMaterialStats();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout loading stats')), 8000)
+        );
+        
+        const stats = await Promise.race([loadPromise, timeoutPromise]) as any;
         setMaterialStats(stats);
 
       } catch (error) {
@@ -183,8 +188,19 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const loadActivities = async () => {
-      const activities = await activityService.getRecentActivities(10);
-      setRecentActivities(activities);
+      try {
+        // Carregar atividades com timeout
+        const loadPromise = activityService.getRecentActivities(10);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout loading activities')), 8000)
+        );
+        
+        const activities = await Promise.race([loadPromise, timeoutPromise]) as any;
+        setRecentActivities(activities);
+      } catch (error) {
+        console.error('Error loading activities:', error);
+        setRecentActivities([]);
+      }
     };
     loadActivities();
   }, []);

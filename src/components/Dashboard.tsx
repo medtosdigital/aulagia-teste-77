@@ -39,25 +39,62 @@ const Dashboard: React.FC = () => {
         now.setHours(0, 0, 0, 0);
         const nextWeek = new Date(now);
         nextWeek.setDate(now.getDate() + 7);
-        // Limitar para 10 atividades e 5 próximas aulas
-        const [stats, activities, upcoming] = await Promise.all([
+        
+        // Carregar dados em paralelo com timeout para evitar travamentos
+        const loadPromise = Promise.all([
           statsService.getMaterialStats(),
           activityService.getRecentActivities(10),
           supabaseScheduleService.getEventsByDateRange(now, nextWeek)
         ]);
+
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 15000)
+        );
+
+        const [stats, activities, upcoming] = await Promise.race([loadPromise, timeoutPromise]) as [any, any, any];
+        
         setMaterialStats(stats);
         setRecentActivities(activities);
         setUpcomingClasses(upcoming.slice(0, 5));
-        // Buscar materiais vinculados das próximas aulas
+        
+        // Buscar materiais vinculados das próximas aulas apenas se necessário
         const allMaterialIds = Array.from(new Set(upcoming.flatMap(ev => ev.material_ids || [])));
         if (allMaterialIds.length > 0) {
-          const allMaterials = await materialService.getMaterials();
-          const map: { [id: string]: GeneratedMaterial } = {};
-          allMaterials.forEach(mat => { map[mat.id] = mat; });
-          setMaterialsMap(map);
+          // Buscar apenas os materiais específicos em vez de todos
+          const materialsMap: { [id: string]: GeneratedMaterial } = {};
+          
+          // Buscar materiais específicos por ID
+          for (const materialId of allMaterialIds.slice(0, 10)) { // Limitar a 10 para performance
+            try {
+              const material = await materialService.getMaterialById(materialId);
+              if (material) {
+                materialsMap[materialId] = material;
+              }
+            } catch (error) {
+              console.warn(`Erro ao buscar material ${materialId}:`, error);
+            }
+          }
+          
+          setMaterialsMap(materialsMap);
         }
       } catch (error) {
         console.error('Erro ao carregar dados do dashboard:', error);
+        // Fallback para dados básicos
+        setMaterialStats({
+          totalMaterials: 0,
+          planoAula: 0,
+          slides: 0,
+          atividades: 0,
+          avaliacoes: 0,
+          weeklyGrowth: {
+            planoAula: 0,
+            slides: 0,
+            atividades: 0,
+            avaliacoes: 0
+          }
+        });
+        setRecentActivities([]);
+        setUpcomingClasses([]);
       }
     };
     loadDashboardData();

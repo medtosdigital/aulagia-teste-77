@@ -150,6 +150,7 @@ const MaterialsList: React.FC = () => {
         .from('materiais')
         .select('*')
         .eq('tipo_material', 'apoio')
+        .eq('user_id', user.id) // Adicionar filtro por usuário
         .order('created_at', { ascending: false });
       
       if (!error && data) {
@@ -214,10 +215,21 @@ const MaterialsList: React.FC = () => {
     try {
       setLoading(true);
       console.log('Loading materials for authenticated user:', user.id);
-      const supabaseMaterials = (await userMaterialsService.getMaterialsByUser()).slice(0, 20);
+      
+      // Adicionar timeout para evitar travamentos
+      const loadPromise = userMaterialsService.getMaterialsByUser();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout loading materials')), 10000)
+      );
+      
+      const supabaseMaterials = await Promise.race([loadPromise, timeoutPromise]) as any[];
       console.log('Supabase materials count:', supabaseMaterials.length);
-      // Filtrar apenas materiais que não são de apoio
-      const nonSupportMaterials = supabaseMaterials.filter(material => material.type !== 'apoio');
+      
+      // Filtrar apenas materiais que não são de apoio e limitar a 20
+      const nonSupportMaterials = supabaseMaterials
+        .filter(material => material.type !== 'apoio')
+        .slice(0, 20);
+        
       const convertedMaterials = nonSupportMaterials.map(convertUserMaterialToGenerated);
       console.log('Total materials for authenticated user:', convertedMaterials.length);
       setMaterials(convertedMaterials);
@@ -573,13 +585,14 @@ const MaterialsList: React.FC = () => {
 
   // Função para confirmar exclusão de apoio
   const confirmDeleteSupportMaterial = async () => {
-    if (!supportMaterialToDelete) return;
+    if (!supportMaterialToDelete || !user) return;
     try {
       const { error } = await supabase
         .from('materiais')
         .delete()
         .eq('id', supportMaterialToDelete.id)
-        .eq('tipo_material', 'apoio'); // Garante que só deleta apoio
+        .eq('tipo_material', 'apoio') // Garante que só deleta apoio
+        .eq('user_id', user.id); // Adicionar filtro por usuário
       if (!error) {
         toast.success('Material de apoio excluído com sucesso!');
         loadSupportMaterials();

@@ -96,6 +96,7 @@ class UnifiedMaterialsService {
       const { data, error } = await supabase
         .from('materiais')
         .select('*')
+        .eq('user_id', user.id) // Adicionar filtro por usuário
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -213,7 +214,8 @@ class UnifiedMaterialsService {
       const { error } = await supabase
         .from('materiais')
         .update(updateData)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id); // Adicionar filtro por usuário
 
       if (!error) {
         console.log('✅ Material updated successfully');
@@ -241,7 +243,8 @@ class UnifiedMaterialsService {
       const { error } = await supabase
         .from('materiais')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id); // Adicionar filtro por usuário
 
       if (error) {
         console.error('Erro ao excluir material:', error.message);
@@ -268,6 +271,7 @@ class UnifiedMaterialsService {
         .from('materiais')
         .select('*')
         .eq('id', id)
+        .eq('user_id', user.id) // Adicionar filtro por usuário
         .single();
 
       if (error || !data) {

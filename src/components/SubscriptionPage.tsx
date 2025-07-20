@@ -112,7 +112,15 @@ const SubscriptionPage = () => {
 
   // Create a stable callback for refreshData to prevent infinite loops
   const stableRefreshData = useCallback(() => {
-    refreshData();
+    // Adicionar timeout para evitar travamentos
+    const refreshPromise = refreshData();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout refreshing data')), 8000)
+    );
+    
+    Promise.race([refreshPromise, timeoutPromise]).catch(error => {
+      console.error('Error refreshing subscription data:', error);
+    });
   }, [refreshData]);
 
   // Refresh data when component mounts

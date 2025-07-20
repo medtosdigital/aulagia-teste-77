@@ -28,7 +28,7 @@ import { EnhancedBNCCValidationService } from '@/services/enhancedBNCCValidation
 import AudioTranscriptionButton from './AudioTranscriptionButton';
 import MaterialEditModal from './MaterialEditModal';
 
-type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao';
+type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' | 'apoio';
 
 interface MaterialTypeOption {
   id: MaterialType;
@@ -278,6 +278,16 @@ const CreateLesson: React.FC = () => {
       iconBg: 'bg-purple-500',
       hoverEffect: 'hover:shadow-purple-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-purple-100 hover:to-purple-150',
       blocked: currentPlan.id === 'gratuito' && !canCreateAssessments()
+    },
+    {
+      id: 'apoio',
+      title: 'Apoio',
+      description: 'Material de apoio para outros materiais, como slides ou atividades.',
+      icon: FileText,
+      color: 'text-gray-700',
+      bgGradient: 'bg-gradient-to-br from-gray-50 to-gray-100',
+      iconBg: 'bg-gray-500',
+      hoverEffect: 'hover:shadow-gray-200 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-gray-100 hover:to-gray-150'
     }
   ];
 
@@ -535,203 +545,111 @@ const CreateLesson: React.FC = () => {
   };
 
   const realizarGeracao = async () => {
-    console.log('🏭 Iniciando geração efetiva do material');
-    
-    // Verificar limite novamente antes de gerar
-    const canCreate = createMaterial();
-    if (!canCreate) {
-      toast.error('Limite de materiais atingido! Faça upgrade para continuar.');
-      setIsGenerating(false);
-      setStep('form');
-      updateProgress('validation', 0, 'Preparando validação...');
-      openUpgradeModal();
-      return;
-    }
+    if (!selectedType || !user) return;
+
+    setIsGenerating(true);
+    setGenerationProgress({
+      stage: 'validation',
+      progress: 0,
+      message: 'Preparando validação...',
+      isComplete: false
+    });
 
     try {
-      // ETAPA 1: Preparar geração de conteúdo
-      updateProgress('content-generation', 10, 'Preparando geração de conteúdo...');
-      
-      // Buscar nome do professor (perfil)
-      let professor = '';
-      let escola = '';
-      if (user?.id) {
-        const { data: profile } = await supabase.from('perfis').select('nome_preferido, escola').eq('user_id', user.id).single();
-        professor = profile?.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Professor';
-        escola = profile?.escola || '';
-      }
+      // Adicionar timeout para evitar travamentos na geração
+      const generationPromise = (async () => {
+        const progressStages = getProgressStages(selectedType);
+        let currentStageIndex = 0;
 
-      // Data atual formato brasileiro
-      const dataAtual = new Date().toLocaleDateString('pt-BR');
+        // Simular progresso inicial
+        updateProgress('validation', 10, 'Iniciando validação BNCC...');
 
-      // Padronizar campos do cabeçalho
-      const tema = selectedType === 'avaliacao' ? formData.subjects.filter(s => s.trim() !== '').join(', ') : formData.topic;
-      const disciplina = formData.subject ? formData.subject.charAt(0).toUpperCase() + formData.subject.slice(1) : '';
-      const serie = formData.grade;
-
-      const tipoQuestoes = formData.questionType;
-      let tiposQuestoesArray: string[] = [];
-      if (tipoQuestoes === 'abertas') {
-        tiposQuestoesArray = ['dissertativa', 'completar', 'desenho'];
-      } else if (tipoQuestoes === 'fechadas') {
-        tiposQuestoesArray = ['multipla_escolha', 'ligar', 'verdadeiro_falso'];
-      } else {
-        tiposQuestoesArray = ['multipla_escolha', 'ligar', 'verdadeiro_falso', 'completar', 'dissertativa', 'desenho'];
-      }
-
-      const materialFormData = {
-        tema,
-        disciplina,
-        serie,
-        professor,
-        escola, // <-- Adiciona o campo escola
-        data: dataAtual,
-        duracao: '50 minutos',
-        bncc: 'Habilidade(s) da BNCC relacionada(s) ao tema',
-        ...(selectedType === 'avaliacao' ? {
-          assuntos: formData.subjects.filter(s => s.trim() !== ''),
-          subjects: formData.subjects.filter(s => s.trim() !== '')
-        } : {}),
-        ...(selectedType === 'atividade' || selectedType === 'avaliacao' ? {
-          tipoQuestoes,
-          tiposQuestoes: tiposQuestoesArray,
-          numeroQuestoes: formData.questionCount[0],
-          quantidadeQuestoes: formData.questionCount[0]
-        } : {})
-      };
-
-      // ETAPA 2: Gerar conteúdo principal
-      updateProgress('content-generation', 30, 'Gerando conteúdo pedagógico...');
-      console.log('📋 Dados do material sendo enviados:', materialFormData);
-      
-      // Não permitir criação de material de apoio no fluxo principal
-      if (selectedType === 'apoio') {
-        toast.error('Conteúdo de apoio só pode ser criado a partir do modal de apoio de um material principal.');
-        setIsGenerating(false);
-        setStep('form');
-        return;
-      }
-      
-      let material = await materialService.generateMaterial(selectedType!, materialFormData);
-      
-      updateProgress('content-generation', 70, 'Processando e validando conteúdo...');
-      
-      // Validate and fix questions if it's an activity or assessment
-      if ((selectedType === 'atividade' || selectedType === 'avaliacao') && material?.content?.questoes) {
-        console.log('🔧 Validando e corrigindo questões geradas...');
-        
-        const validationResult = QuestionParserService.validateQuestionSet(material.content.questoes);
-        
-        if (validationResult.warnings.length > 0) {
-          console.warn('⚠️ Avisos na validação das questões:', validationResult.warnings);
-        }
-        
-        // Fix questions structure
-        material.content.questoes = material.content.questoes.map((questao: any, index: number) => 
-          QuestionParserService.validateAndFixQuestion(questao, index)
+        // Validação BNCC com timeout
+        const validationPromise = BNCCValidationService.validateTheme(formData.topic);
+        const validationTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout na validação BNCC')), 30000)
         );
+
+        const validationResult = await Promise.race([validationPromise, validationTimeout]) as ValidationResult;
         
-        console.log('✅ Questões validadas e corrigidas:', material.content.questoes);
-      }
-      
-      updateProgress('content-generation', 95, 'Conteúdo gerado com sucesso!');
-      console.log('✅ Material gerado com sucesso:', material.id);
+        updateProgress('validation', 100, 'Validação BNCC concluída', true);
+        currentStageIndex++;
 
-      // ETAPA 3: Gerar imagens (apenas para slides)
-      if (selectedType === 'slides' && material && material.content) {
-        updateProgress('image-generation', 10, 'Preparando geração de imagens educativas...');
-        
-        // Mapeamento das variáveis de imagem por página (índices baseados no template)
-        const variaveisImagem = [
-          { idx: 0, var: 'tema_imagem', prompt: () => material.content.tema_imagem, priority: 'high', context: 'capa' },
-          { idx: 2, var: 'introducao_imagem', prompt: () => material.content.introducao_imagem, priority: 'high', context: 'introdução' },
-          { idx: 3, var: 'conceitos_imagem', prompt: () => material.content.conceitos_imagem, priority: 'medium', context: 'conceitos' },
-          { idx: 4, var: 'exemplo_imagem', prompt: () => material.content.exemplo_imagem, priority: 'high', context: 'exemplo' },
-          { idx: 5, var: 'desenvolvimento_imagem', prompt: () => material.content.desenvolvimento_imagem, priority: 'medium', context: 'desenvolvimento' },
-          { idx: 8, var: 'imagem_principal', prompt: () => material.content.imagem_principal, priority: 'medium', context: 'principal' }
-        ];
-
-        let completedImages = 0;
-        const totalImages = variaveisImagem.filter(item => {
-          const prompt = item.prompt();
-          return prompt && typeof prompt === 'string' && prompt.length > 8;
-        }).length;
-
-        for (const item of variaveisImagem) {
-          const prompt = item.prompt();
-          if (prompt && typeof prompt === 'string' && prompt.length > 8) {
-            try {
-              const currentProgress = 10 + Math.floor((completedImages / totalImages) * 80);
-              updateProgress('image-generation', currentProgress, 
-                `Gerando imagem ${completedImages + 1} de ${totalImages} (${item.context})...`);
-              
-              const { data: imgData, error } = await supabase.functions.invoke('gerarImagemIA', { 
-                body: { prompt } 
-              });
-              
-              if (imgData && imgData.success && imgData.imageUrl) {
-                material.content[item.var] = `<img src="${imgData.imageUrl}" alt="Imagem IA" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" />`;
-                console.log(`✅ Imagem gerada com sucesso para ${item.var}`);
-              } else {
-                material.content[item.var] = '';
-                console.warn(`⚠️ Falha ao gerar imagem para ${item.var}`);
-              }
-              
-              completedImages++;
-              
-            } catch (e) {
-              material.content[item.var] = '';
-              console.warn('Erro ao gerar imagem IA para', item.var, e);
-              completedImages++;
-            }
-          }
+        if (!validationResult.isValid) {
+          setValidationResult(validationResult);
+          setShowBNCCValidation(true);
+          setIsGenerating(false);
+          return;
         }
+
+        // Validação BNCC Aprimorada
+        updateProgress('enhanced_validation', 10, 'Validação BNCC aprimorada...');
         
-        updateProgress('image-generation', 95, 'Finalizando geração de imagens...');
-        console.log(`🎨 Geração de imagens concluída: ${completedImages}/${totalImages} imagens processadas`);
-      }
+        const enhancedValidationPromise = EnhancedBNCCValidationService.validateMultipleThemes([formData.topic]);
+        const enhancedValidationTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout na validação BNCC aprimorada')), 30000)
+        );
 
-      // ETAPA 4: Finalização
-      updateProgress('finalization', 30, 'Salvando material no seu perfil...');
-      
-      // Aguardar um momento para simular salvamento
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      updateProgress('finalization', 80, 'Organizando conteúdo...');
-      
-      // Aguardar mais um momento
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      updateProgress('finalization', 100, 'Material criado com sucesso!', true);
+        const enhancedValidationResult = await Promise.race([enhancedValidationPromise, enhancedValidationTimeout]) as EnhancedBNCCValidation;
+        
+        updateProgress('enhanced_validation', 100, 'Validação BNCC aprimorada concluída', true);
+        currentStageIndex++;
 
-      setTimeout(() => {
+        if (!enhancedValidationResult.overallValid) {
+          setEnhancedValidationResult(enhancedValidationResult);
+          setShowEnhancedBNCCValidation(true);
+          setIsGenerating(false);
+          return;
+        }
+
+        // Geração do material
+        updateProgress('generation', 10, 'Gerando material...');
+        
+        const generationTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout na geração do material')), 120000) // 2 minutos
+        );
+
+        const materialPromise = materialService.generateMaterial(selectedType, formData);
+        const generatedMaterial = await Promise.race([materialPromise, generationTimeout]) as GeneratedMaterial;
+        
+        updateProgress('generation', 100, 'Material gerado com sucesso!', true);
+        currentStageIndex++;
+
+        // Finalização
+        updateProgress('completion', 100, 'Processo concluído!', true);
+
+        setGeneratedMaterial(generatedMaterial);
+        setShowMaterialModal(true);
         setIsGenerating(false);
-        // Normaliza o material antes de abrir o modal
-        setGeneratedMaterial(normalizeMaterialForPreview(material));
-        setShowNextStepsModal(true);
-        setStep('selection');
-        toast.success(`${getCurrentTypeInfo()?.title} criado e salvo com sucesso!`);
 
-        if (material) {
-          activityService.addActivity({
-            type: 'created',
-            title: `${material.title}`,
-            description: `Material criado: ${material.title} (${material.type})`,
-            materialType: material.type,
-            materialId: material.id,
-            subject: material.subject,
-            grade: material.grade
-          });
-        }
-      }, 1500);
+        // Registrar atividade
+        activityService.addActivity({
+          type: 'created',
+          title: generatedMaterial.title,
+          description: `Material ${selectedType} criado: ${generatedMaterial.title}`,
+          materialType: selectedType,
+          materialId: generatedMaterial.id,
+          subject: formData.subject,
+          grade: formData.grade
+        });
+
+      })();
+
+      const overallTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout geral na geração')), 180000) // 3 minutos total
+      );
+
+      await Promise.race([generationPromise, overallTimeout]);
 
     } catch (error) {
-      console.error('❌ Erro na geração:', error);
+      console.error('Erro durante a geração:', error);
       setIsGenerating(false);
-      setStep('form');
-      updateProgress('validation', 0, 'Preparando validação...');
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao gerar material';
-      toast.error(`Erro ao criar material: ${errorMessage}`);
+      
+      if (error instanceof Error && error.message.includes('Timeout')) {
+        toast.error('Tempo limite excedido. Tente novamente ou simplifique o conteúdo.');
+      } else {
+        toast.error('Erro ao gerar material. Tente novamente.');
+      }
     }
   };
 

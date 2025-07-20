@@ -66,106 +66,116 @@ export default function AdminUsersPage() {
     try {
       console.log('🔍 Carregando dados dos usuários...');
       
-      // Verificar usuário atual
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('👤 Usuário atual:', user?.email);
-      console.log('🆔 User ID:', user?.id);
-      
-      // Verificar o plano do usuário atual
-      if (user?.email) {
-        const { data: currentUserProfile, error: profileError } = await supabase
-          .from('perfis')
-          .select('plano_ativo, user_id')
-          .eq('email', user.email)
-          .single();
+      // Adicionar timeout para evitar travamentos
+      const loadPromise = (async () => {
+        // Verificar usuário atual
+        const { data: { user } } = await supabase.auth.getUser();
+        console.log('👤 Usuário atual:', user?.email);
+        console.log('🆔 User ID:', user?.id);
         
-        console.log('📋 Plano do usuário atual:', currentUserProfile?.plano_ativo);
-        console.log('🆔 User ID do perfil:', currentUserProfile?.user_id);
-        console.log('❌ Erro ao buscar perfil atual:', profileError);
-        
-        // Verificar se o usuário tem plano admin
-        if (currentUserProfile?.plano_ativo === 'admin') {
-          console.log('✅ Usuário tem plano admin - deve ter acesso total');
-        } else {
-          console.log('⚠️ Usuário NÃO tem plano admin - acesso limitado');
-        }
-      }
-      
-      // Consulta principal - deve retornar todos os usuários para admin
-      const { data: profiles, error: profilesError } = await supabase
-        .from('perfis')
-        .select('user_id, full_name, email, plano_ativo, created_at, updated_at, data_expiracao_plano, celular, escola, avatar_url');
-      
-      console.log('📊 Resultado da consulta:', { 
-        profiles: profiles?.length || 0, 
-        error: profilesError,
-        profilesData: profiles 
-      });
-      
-      if (profilesError) {
-        console.error('❌ Erro ao buscar perfis:', profilesError);
-        setUsers([]);
-        return;
-      }
-      
-      const usersData = profiles?.map((p: any) => {
-        let paymentStatus = 'em dia';
-        let paymentBadge = 'bg-green-100 text-green-800';
-        let paymentDue = null;
-        
-        // Lógica de pagamento baseada no tipo de plano
-        if (p.plano_ativo === 'admin') {
-          // Admin: data em cinza
-          paymentStatus = 'admin';
-          paymentBadge = 'bg-gray-100 text-gray-600';
-          paymentDue = p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : '--/--/----';
-        } else if (p.plano_ativo === 'gratuito') {
-          // Plano gratuito: data em cinza
-          paymentStatus = 'gratuito';
-          paymentBadge = 'bg-gray-100 text-gray-600';
-          paymentDue = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '--/--/----';
-        } else {
-          // Planos pagos (professor, grupo_escolar): usar data_expiracao_plano
-          if (p.data_expiracao_plano) {
-            const exp = new Date(p.data_expiracao_plano);
-            paymentDue = exp.toLocaleDateString('pt-BR');
-            
-            if (exp < new Date()) {
-              // Plano vencido
-              paymentStatus = 'atrasado';
-              paymentBadge = 'bg-red-100 text-red-800';
-            } else {
-              // Plano em dia
-              paymentStatus = 'em dia';
-              paymentBadge = 'bg-green-100 text-green-800';
-            }
+        // Verificar o plano do usuário atual
+        if (user?.email) {
+          const { data: currentUserProfile, error: profileError } = await supabase
+            .from('perfis')
+            .select('plano_ativo, user_id')
+            .eq('email', user.email)
+            .single();
+          
+          console.log('📋 Plano do usuário atual:', currentUserProfile?.plano_ativo);
+          console.log('🆔 User ID do perfil:', currentUserProfile?.user_id);
+          console.log('❌ Erro ao buscar perfil atual:', profileError);
+          
+          // Verificar se o usuário tem plano admin
+          if (currentUserProfile?.plano_ativo === 'admin') {
+            console.log('✅ Usuário tem plano admin - deve ter acesso total');
           } else {
-            // Sem data de expiração, usar data de criação
-            paymentDue = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '--/--/----';
-            paymentStatus = 'em dia';
-            paymentBadge = 'bg-green-100 text-green-800';
+            console.log('⚠️ Usuário NÃO tem plano admin - acesso limitado');
           }
         }
         
-        return {
-          id: p.user_id,
-          name: p.full_name || '',
-          email: p.email || '',
-          plan: p.plano_ativo || 'gratuito',
-          createdAt: p.created_at ? p.created_at.split('T')[0] : '',
-          status: 'ativo',
-          isAdmin: p.email === 'medtosdigital@gmail.com',
-          paymentStatus,
-          paymentBadge,
-          paymentDue,
-          celular: p.celular || '',
-          escola: p.escola || '',
-          avatar_url: p.avatar_url || ''
-        };
-      }) || [];
-      
-      console.log('✅ Usuários processados:', usersData.length);
-      console.log('📋 Lista de usuários:', usersData);
+        // Consulta principal - deve retornar todos os usuários para admin
+        const { data: profiles, error: profilesError } = await supabase
+          .from('perfis')
+          .select('user_id, full_name, email, plano_ativo, created_at, updated_at, data_expiracao_plano, celular, escola, avatar_url')
+          .limit(100); // Limitar a 100 usuários para performance
+        
+        console.log('📊 Resultado da consulta:', { 
+          profiles: profiles?.length || 0, 
+          error: profilesError,
+          profilesData: profiles 
+        });
+        
+        if (profilesError) {
+          console.error('❌ Erro ao buscar perfis:', profilesError);
+          return [];
+        }
+        
+        const usersData = profiles?.map((p: any) => {
+          let paymentStatus = 'em dia';
+          let paymentBadge = 'bg-green-100 text-green-800';
+          let paymentDue = null;
+          
+          // Lógica de pagamento baseada no tipo de plano
+          if (p.plano_ativo === 'admin') {
+            // Admin: data em cinza
+            paymentStatus = 'admin';
+            paymentBadge = 'bg-gray-100 text-gray-600';
+            paymentDue = p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : '--/--/----';
+          } else if (p.plano_ativo === 'gratuito') {
+            // Plano gratuito: data em cinza
+            paymentStatus = 'gratuito';
+            paymentBadge = 'bg-gray-100 text-gray-600';
+            paymentDue = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '--/--/----';
+          } else {
+            // Planos pagos (professor, grupo_escolar): usar data_expiracao_plano
+            if (p.data_expiracao_plano) {
+              const exp = new Date(p.data_expiracao_plano);
+              paymentDue = exp.toLocaleDateString('pt-BR');
+              
+              if (exp < new Date()) {
+                // Plano vencido
+                paymentStatus = 'atrasado';
+                paymentBadge = 'bg-red-100 text-red-800';
+              } else {
+                // Plano em dia
+                paymentStatus = 'em dia';
+                paymentBadge = 'bg-green-100 text-green-800';
+              }
+            } else {
+              // Sem data de expiração, usar data de criação
+              paymentDue = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '--/--/----';
+              paymentStatus = 'em dia';
+              paymentBadge = 'bg-green-100 text-green-800';
+            }
+          }
+          
+          return {
+            id: p.user_id,
+            name: p.full_name || '',
+            email: p.email || '',
+            plan: p.plano_ativo || 'gratuito',
+            createdAt: p.created_at ? p.created_at.split('T')[0] : '',
+            status: 'ativo',
+            isAdmin: p.email === 'medtosdigital@gmail.com',
+            paymentStatus,
+            paymentBadge,
+            paymentDue,
+            celular: p.celular || '',
+            escola: p.escola || '',
+            avatar_url: p.avatar_url || ''
+          };
+        }) || [];
+        
+        console.log('✅ Usuários processados:', usersData.length);
+        console.log('📋 Lista de usuários:', usersData);
+        return usersData;
+      })();
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout loading users')), 15000)
+      );
+
+      const usersData = await Promise.race([loadPromise, timeoutPromise]) as any[];
       setUsers(usersData);
     } catch (error) {
       console.error('💥 Erro ao carregar usuários:', error);

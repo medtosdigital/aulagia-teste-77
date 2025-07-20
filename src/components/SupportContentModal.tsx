@@ -392,13 +392,14 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
 
   // Função para buscar apoios vinculados ao material principal
   const fetchApoios = async () => {
-    if (!material?.id) return;
+    if (!material?.id || !user?.id) return;
     setLoadingApoios(true);
     const { data, error } = await supabase
       .from('materiais')
       .select('id, titulo, created_at, conteudo')
       .eq('material_principal_id', material.id)
       .eq('tipo_material', 'apoio')
+      .eq('user_id', user.id) // Adicionar filtro por usuário
       .order('created_at', { ascending: false })
       .limit(10);
     if (!error && data) setApoios(data);
@@ -519,8 +520,12 @@ const SupportContentModal: React.FC<SupportContentModalProps> = ({ material, ope
   };
 
   const confirmDeleteApoio = async () => {
-    if (!apoioToDelete) return;
-    const { error } = await supabase.from('materiais').delete().eq('id', apoioToDelete.id);
+    if (!apoioToDelete || !user?.id) return;
+    const { error } = await supabase
+      .from('materiais')
+      .delete()
+      .eq('id', apoioToDelete.id)
+      .eq('user_id', user.id); // Adicionar filtro por usuário
     if (error) {
       toast.error('Erro ao excluir material de apoio');
     } else {
