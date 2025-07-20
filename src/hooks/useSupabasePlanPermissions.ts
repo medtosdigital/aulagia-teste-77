@@ -352,8 +352,9 @@ export const useSupabasePlanPermissions = () => {
   const refreshData = useCallback(() => {
     if (user?.id) {
       planCache.delete(`plan_${user.id}`);
-      loadPlanData(true);
+      return loadPlanData(true);
     }
+    return Promise.resolve();
   }, [user?.id, loadPlanData]);
 
   return {

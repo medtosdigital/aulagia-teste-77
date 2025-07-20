@@ -89,6 +89,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (userData.plano_ativo === 'gratuito') {
           await planExpirationService.renewFreePlan(user.id);
         }
+        // Disparar evento global para atualizar interface
+        window.dispatchEvent(new CustomEvent('profileUpdated'));
       } else {
         console.error('❌ Erro ao verificar/criar perfil do usuário');
       }

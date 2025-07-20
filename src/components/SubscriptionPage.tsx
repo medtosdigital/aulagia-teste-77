@@ -113,11 +113,12 @@ const SubscriptionPage = () => {
   // Create a stable callback for refreshData to prevent infinite loops
   const stableRefreshData = useCallback(() => {
     // Adicionar timeout para evitar travamentos
-    const refreshPromise = refreshData();
-    
-    refreshPromise.catch(error => {
-      console.error('Erro ao atualizar dados da assinatura:', error);
-    });
+    const result = refreshData();
+    if (result && typeof result.then === 'function') {
+      result.catch(error => {
+        console.error('Erro ao atualizar dados da assinatura:', error);
+      });
+    }
   }, [refreshData]);
 
   // Refresh data when component mounts

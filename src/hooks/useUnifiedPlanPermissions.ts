@@ -17,6 +17,7 @@ export const useUnifiedPlanPermissions = () => {
   const [shouldShowUpgrade, setShouldShowUpgrade] = useState(false);
   const loadingRef = useRef(false);
   const retryCountRef = useRef(0);
+  const loadProfileDataRef = useRef<null | ((forceReload?: boolean) => Promise<void>)>(null);
 
   // Função otimizada com retry e fallback
   const loadProfileData = useCallback(async (forceReload = false) => {
@@ -91,7 +92,10 @@ export const useUnifiedPlanPermissions = () => {
       const profile = await supabaseUnifiedPlanService.getCurrentUserProfile();
       
       console.log('Carregando materiais restantes...');
-      const remaining = await supabaseUnifiedPlanService.getRemainingMaterials();
+      let remaining = await supabaseUnifiedPlanService.getRemainingMaterials();
+      if (typeof remaining !== 'number' || isNaN(remaining)) {
+        remaining = 5;
+      }
       
       console.log('Perfil unificado carregado:', profile);
       console.log('Materiais restantes:', remaining);
@@ -117,36 +121,29 @@ export const useUnifiedPlanPermissions = () => {
 
     } catch (error) {
       console.error('Erro ao carregar dados do perfil unificado:', error);
-      
-      // Sistema de retry simplificado
-      if (retryCountRef.current < 2) {
-        retryCountRef.current++;
-        console.log(`Tentativa ${retryCountRef.current + 1} de 3`);
-        setTimeout(() => {
-          loadingRef.current = false;
-          loadProfileData(true);
-        }, 2000 * retryCountRef.current); // Aumentar delay entre tentativas
-        return;
-      }
-      
-      // Fallback final após esgotadas as tentativas
-      console.warn('Usando configurações de fallback após erro');
+      // Fallback final após erro
       setCurrentProfile(null);
       setRemainingMaterials(5);
       retryCountRef.current = 0;
-      
     } finally {
       setLoading(false);
       loadingRef.current = false;
     }
   }, [user]);
 
+  // Salvar referência estável da função (corrigido: agora dentro de useEffect)
+  useEffect(() => {
+    loadProfileDataRef.current = loadProfileData;
+  }, [loadProfileData]);
+
   // Carregar dados apenas quando necessário
   useEffect(() => {
     if (user?.id) {
-      loadProfileData();
+      loadProfileDataRef.current && loadProfileDataRef.current();
     }
-  }, [user?.id, loadProfileData]);
+    // Não incluir loadProfileData na lista de dependências para evitar loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Atualizar dados em tempo real ao trocar de plano
   useEffect(() => {
@@ -154,14 +151,16 @@ export const useUnifiedPlanPermissions = () => {
       if (user?.id) {
         const cacheKey = `unified_profile_${user.id}`;
         unifiedCache.delete(cacheKey);
-        loadProfileData(true);
+        loadProfileDataRef.current && loadProfileDataRef.current(true);
       }
     };
     window.addEventListener('planChanged', handlePlanChanged);
     return () => {
       window.removeEventListener('planChanged', handlePlanChanged);
     };
-  }, [user?.id, loadProfileData]);
+    // Não incluir loadProfileData na lista de dependências para evitar loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Criar material otimizado com fallback local
   const createMaterial = useCallback(async (): Promise<boolean> => {
@@ -235,7 +234,7 @@ export const useUnifiedPlanPermissions = () => {
           const cacheKey = `unified_profile_${user.id}`;
           unifiedCache.delete(cacheKey);
         }
-        await loadProfileData(true);
+        await loadProfileDataRef.current && loadProfileDataRef.current(true);
         window.dispatchEvent(new CustomEvent('planChanged'));
         setShouldShowUpgrade(false);
         
@@ -261,7 +260,7 @@ export const useUnifiedPlanPermissions = () => {
       });
       return false;
     }
-  }, [user?.id, loadProfileData, toast]);
+  }, [user?.id, loadProfileDataRef, toast]);
 
   // Verificações de permissões otimizadas com fallback
   const canDownloadWord = useCallback((): boolean => {
@@ -324,9 +323,9 @@ export const useUnifiedPlanPermissions = () => {
     if (user?.id) {
       const cacheKey = `unified_profile_${user.id}`;
       unifiedCache.delete(cacheKey);
-      loadProfileData(true);
+      loadProfileDataRef.current && loadProfileDataRef.current(true);
     }
-  }, [user?.id, loadProfileData]);
+  }, [user?.id, loadProfileDataRef]);
 
   const canAccessSettings = useCallback((): boolean => {
     // Verificar primeiro se é usuário admin por email

@@ -136,7 +136,7 @@ export const usePlanPermissions = () => {
       changePlan: async () => false,
       dismissUpgradeModal: () => {},
       dismissSupportModal: () => {},
-      refreshData: () => {},
+      refreshData: async () => Promise.resolve(),
       
       canEditMaterials: () => false,
       canDownloadWord: () => false,
@@ -183,7 +183,12 @@ export const usePlanPermissions = () => {
     changePlan: memoizedFunctions.changePlan,
     dismissUpgradeModal: unifiedPermissions.dismissUpgradeModal,
     dismissSupportModal: () => {},
-    refreshData: unifiedPermissions.refreshData,
+    refreshData: async () => {
+      if (typeof unifiedPermissions.refreshData === 'function') {
+        return await unifiedPermissions.refreshData();
+      }
+      return Promise.resolve();
+    },
     
     // Permissões
     canEditMaterials: unifiedPermissions.canEditMaterials,
