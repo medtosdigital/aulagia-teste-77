@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -18,7 +19,6 @@ interface WebhookLog {
   evento: string;
   produto?: string;
   plano_aplicado?: string;
-  billing_type?: string;
   status: string;
   ip_address?: string;
   user_agent?: string;
@@ -31,11 +31,12 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  console.log('🚀 Webhook recebido da Kiwify');
-  console.log('📋 Headers:', Object.fromEntries(req.headers.entries()));
+  console.log('🚀 Webhook recebido da Kiwify - Método:', req.method);
+  console.log('🔗 URL:', req.url);
+  console.log('📋 Headers recebidos:', Object.fromEntries(req.headers.entries()));
 
   try {
-    // Get request details
+    // Get request details for logging
     const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
     const userAgent = req.headers.get('user-agent') || 'unknown';
     
@@ -43,14 +44,47 @@ serve(async (req) => {
     console.log('👤 User Agent:', userAgent);
     
     // Parse request body
-    const body = await req.json();
-    const payload: WebhookPayload = body;
+    const contentType = req.headers.get('content-type') || '';
+    let payload: WebhookPayload;
     
-    console.log('📥 Payload recebido da Kiwify:', payload);
+    console.log('📤 Content-Type:', contentType);
+    
+    if (contentType.includes('application/json')) {
+      const body = await req.json();
+      payload = body;
+      console.log('📥 Payload JSON recebido:', JSON.stringify(payload, null, 2));
+    } else if (contentType.includes('application/x-www-form-urlencoded')) {
+      const formData = await req.formData();
+      payload = {
+        email: formData.get('email')?.toString() || '',
+        evento: formData.get('evento')?.toString() || '',
+        produto: formData.get('produto')?.toString(),
+        token: formData.get('token')?.toString()
+      };
+      console.log('📥 Payload Form recebido:', JSON.stringify(payload, null, 2));
+    } else {
+      const text = await req.text();
+      console.log('📥 Payload Text recebido:', text);
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        // Se não conseguir fazer parse como JSON, tentar extrair dados básicos
+        payload = {
+          email: '',
+          evento: '',
+          produto: undefined,
+          token: undefined
+        };
+      }
+    }
     
     // Validate required fields
     if (!payload.email || !payload.evento) {
-      console.error('❌ Campos obrigatórios faltando:', { email: payload.email, evento: payload.evento });
+      console.error('❌ Campos obrigatórios faltando:', { 
+        email: payload.email, 
+        evento: payload.evento,
+        payload_completo: payload 
+      });
       
       const errorLog: WebhookLog = {
         email: payload.email || 'unknown',
@@ -59,13 +93,17 @@ serve(async (req) => {
         status: 'erro',
         ip_address: ipAddress,
         user_agent: userAgent,
-        payload: body
+        payload: payload
       };
       
       await logWebhookEvent(errorLog);
       
       return new Response(
-        JSON.stringify({ error: 'Email e evento são obrigatórios' }),
+        JSON.stringify({ 
+          success: false,
+          error: 'Email e evento são obrigatórios',
+          received_data: payload 
+        }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -86,11 +124,10 @@ serve(async (req) => {
       evento: payload.evento,
       produto: payload.produto,
       plano_aplicado: result.planoAplicado,
-      billing_type: result.billingType,
       status: 'sucesso',
       ip_address: ipAddress,
       user_agent: userAgent,
-      payload: body
+      payload: payload
     };
     
     await logWebhookEvent(successLog);
@@ -102,7 +139,8 @@ serve(async (req) => {
         success: true, 
         message: 'Webhook processado com sucesso',
         plano_aplicado: result.planoAplicado,
-        billing_type: result.billingType
+        evento_processado: payload.evento,
+        email_processado: payload.email
       }),
       { 
         status: 200, 
@@ -119,13 +157,14 @@ serve(async (req) => {
       status: 'erro',
       ip_address: req.headers.get('x-forwarded-for') || 'unknown',
       user_agent: req.headers.get('user-agent') || 'unknown',
-      payload: { error: 'Falha ao processar webhook' }
+      payload: { error: error.message }
     };
     
     await logWebhookEvent(errorLog);
     
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: 'Erro interno do servidor',
         details: error.message 
       }),
@@ -137,13 +176,15 @@ serve(async (req) => {
   }
 })
 
-async function processWebhookEvent(payload: WebhookPayload): Promise<{ planoAplicado: string; billingType: string }> {
+async function processWebhookEvent(payload: WebhookPayload): Promise<{ planoAplicado: string }> {
   console.log('🔧 Iniciando processamento do evento:', payload.evento);
+  console.log('📧 Email do usuário:', payload.email);
+  console.log('📦 Produto:', payload.produto);
   
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   
-  console.log('🔗 Supabase URL:', supabaseUrl);
+  console.log('🔗 Supabase URL configurada:', !!supabaseUrl);
   console.log('🔑 Service Key configurada:', !!supabaseServiceKey);
   
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -152,62 +193,17 @@ async function processWebhookEvent(payload: WebhookPayload): Promise<{ planoApli
   console.log('🔍 Buscando usuário por email na tabela perfis:', payload.email);
   const { data: user, error: userError } = await supabase
     .from('perfis')
-    .select('user_id, email, plano_ativo, billing_type')
+    .select('user_id, email, plano_ativo')
     .eq('email', payload.email)
     .single();
   
   if (userError || !user) {
-    console.error('❌ Usuário não encontrado na tabela perfis:', payload.email);
+    console.error('❌ Usuário não encontrado na tabela perfis:', payload.email, userError);
     
     // Para simulação, permitir usuário de teste
-    if (payload.email === 'teste@exemplo.com') {
-      console.log('🔧 Usuário de teste detectado, processando simulação...');
-      
-      let planoAplicado = 'gratuito';
-      let billingType = 'gratuito';
-      
-      // Determinar plano baseado no evento e produto
-      switch (payload.evento.toLowerCase()) {
-        case 'compra aprovada':
-        case 'assinatura aprovada':
-        case 'assinatura renovada':
-          if (payload.produto) {
-            const produtoLower = payload.produto.toLowerCase();
-            if (produtoLower.includes('professor')) {
-              planoAplicado = 'professor';
-            } else if (produtoLower.includes('grupo escolar')) {
-              planoAplicado = 'grupo_escolar';
-            } else {
-              planoAplicado = 'professor';
-            }
-            
-            // Determinar billing_type baseado no produto
-            if (produtoLower.includes('mensal')) {
-              billingType = 'mensal';
-            } else if (produtoLower.includes('anual')) {
-              billingType = 'anual';
-            } else {
-              billingType = 'mensal'; // Default
-            }
-          } else {
-            planoAplicado = 'professor';
-            billingType = 'mensal';
-          }
-          break;
-        case 'assinatura cancelada':
-        case 'assinatura atrasada':
-          planoAplicado = 'gratuito';
-          billingType = 'gratuito';
-          break;
-        default:
-          planoAplicado = 'gratuito';
-          billingType = 'gratuito';
-          break;
-      }
-      
-      console.log('📋 Plano determinado para simulação:', planoAplicado);
-      console.log('📋 Billing type determinado para simulação:', billingType);
-      return { planoAplicado, billingType };
+    if (payload.email === 'teste@exemplo.com' || payload.email.includes('@exemplo.com')) {
+      console.log('🧪 Usuário de teste detectado, processando simulação...');
+      return determinarPlanoSimulacao(payload);
     }
     
     throw new Error(`Usuário não encontrado: ${payload.email}. Verifique se o email está correto e se o usuário existe na tabela perfis.`);
@@ -215,88 +211,17 @@ async function processWebhookEvent(payload: WebhookPayload): Promise<{ planoApli
   
   console.log('✅ Usuário encontrado na tabela perfis:', user);
   console.log('📋 Plano atual do usuário:', user.plano_ativo);
-  console.log('📋 Billing type atual do usuário:', user.billing_type);
   
   const userId = user.user_id;
-  let planoAplicado = 'gratuito';
-  let billingType = 'gratuito';
-  
-  console.log('🎯 Processando evento da Kiwify:', payload.evento.toLowerCase());
-  
-  // Processar evento baseado no tipo - Mapeamento correto dos eventos da Kiwify
-  switch (payload.evento.toLowerCase()) {
-    case 'compra aprovada':
-    case 'assinatura aprovada':
-    case 'assinatura renovada':
-      console.log('💰 Evento de compra/assinatura aprovada/renovada');
-      
-      // Determinar plano baseado no produto
-      if (payload.produto) {
-        const produtoLower = payload.produto.toLowerCase();
-        console.log('📦 Produto da Kiwify:', payload.produto, '->', produtoLower);
-        
-        // Mapeamento correto dos produtos para planos
-        if (produtoLower.includes('professor')) {
-          planoAplicado = 'professor';
-          console.log('📋 Plano determinado: professor');
-        } else if (produtoLower.includes('grupo escolar')) {
-          planoAplicado = 'grupo_escolar';
-          console.log('📋 Plano determinado: grupo_escolar');
-        } else {
-          // Default para professor para qualquer plano pago
-          planoAplicado = 'professor';
-          console.log('📋 Plano determinado: professor (default)');
-        }
-        
-        // Determinar billing_type baseado no produto
-        if (produtoLower.includes('mensal')) {
-          billingType = 'mensal';
-          console.log('📋 Billing type determinado: mensal');
-        } else if (produtoLower.includes('anual')) {
-          billingType = 'anual';
-          console.log('📋 Billing type determinado: anual');
-        } else {
-          // Default para mensal se não especificado
-          billingType = 'mensal';
-          console.log('📋 Billing type determinado: mensal (default)');
-        }
-      } else {
-        // Default para professor se nenhum produto especificado
-        planoAplicado = 'professor';
-        billingType = 'mensal';
-        console.log('📋 Plano determinado: professor (sem produto)');
-        console.log('📋 Billing type determinado: mensal (sem produto)');
-      }
-      break;
-      
-    case 'assinatura cancelada':
-    case 'assinatura atrasada':
-      console.log('❌ Evento de cancelamento/atraso');
-      planoAplicado = 'gratuito';
-      billingType = 'gratuito';
-      console.log('📋 Plano determinado: gratuito (cancelado/atrasado)');
-      console.log('📋 Billing type determinado: gratuito (cancelado/atrasado)');
-      break;
-      
-    default:
-      console.log('❓ Evento desconhecido:', payload.evento);
-      // Para eventos desconhecidos, manter plano atual
-      planoAplicado = user.plano_ativo || 'gratuito';
-      billingType = user.billing_type || 'gratuito';
-      console.log('📋 Plano atual mantido:', planoAplicado);
-      console.log('📋 Billing type atual mantido:', billingType);
-      break;
-  }
+  const planoAplicado = determinarPlano(payload);
   
   console.log('🔄 Atualizando plano do usuário:', userId, '->', planoAplicado);
-  console.log('🔄 Atualizando billing type do usuário:', userId, '->', billingType);
   
-  // Atualizar plano e billing_type do usuário na tabela perfis
+  // Atualizar plano do usuário na tabela perfis
   const { error: updateError } = await supabase
     .from('perfis')
     .update({
       plano_ativo: planoAplicado,
-      billing_type: billingType,
       updated_at: new Date().toISOString()
     })
     .eq('user_id', userId);
@@ -306,31 +231,52 @@ async function processWebhookEvent(payload: WebhookPayload): Promise<{ planoApli
     throw new Error(`Erro ao atualizar plano: ${updateError.message}`);
   }
   
-  console.log('✅ Plano e billing_type atualizados com sucesso na tabela perfis');
+  console.log('✅ Plano atualizado com sucesso na tabela perfis');
+  console.log('🎉 Processamento concluído!');
   
-  // Também atualizar tabela planos_usuarios se existir
-  try {
-    const { error: planosUpdateError } = await supabase
-      .from('planos_usuarios')
-      .upsert({
-        user_id: userId,
-        plano_ativo: planoAplicado,
-        billing_type: billingType,
-        data_inicio: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
-    
-    if (planosUpdateError) {
-      console.warn('⚠️ Erro ao atualizar planos_usuarios (pode não existir):', planosUpdateError);
-    } else {
-      console.log('✅ Plano e billing_type atualizados com sucesso na tabela planos_usuarios');
-    }
-  } catch (error) {
-    console.warn('⚠️ Erro ao atualizar planos_usuarios:', error);
+  return { planoAplicado };
+}
+
+function determinarPlano(payload: WebhookPayload): string {
+  const evento = payload.evento.toLowerCase();
+  const produto = payload.produto?.toLowerCase() || '';
+  
+  console.log('🎯 Determinando plano para evento:', evento, 'produto:', produto);
+  
+  // Processar eventos baseados no tipo
+  switch (evento) {
+    case 'compra aprovada':
+    case 'assinatura aprovada':
+    case 'assinatura renovada':
+      console.log('💰 Evento de compra/assinatura aprovada/renovada');
+      
+      if (produto.includes('grupo escolar')) {
+        console.log('🏫 Plano Grupo Escolar detectado');
+        return 'grupo_escolar';
+      } else if (produto.includes('professor')) {
+        console.log('👨‍🏫 Plano Professor detectado');
+        return 'professor';
+      } else {
+        console.log('👨‍🏫 Plano Professor aplicado (default para compra)');
+        return 'professor';
+      }
+      
+    case 'assinatura cancelada':
+    case 'assinatura atrasada':
+    case 'compra cancelada':
+      console.log('❌ Evento de cancelamento/atraso - voltando para gratuito');
+      return 'gratuito';
+      
+    default:
+      console.log('❓ Evento desconhecido:', evento, '- mantendo gratuito');
+      return 'gratuito';
   }
-  
-  console.log('🎉 Processamento concluído com sucesso!');
-  return { planoAplicado, billingType };
+}
+
+function determinarPlanoSimulacao(payload: WebhookPayload): { planoAplicado: string } {
+  const planoAplicado = determinarPlano(payload);
+  console.log('🧪 Plano determinado para simulação:', planoAplicado);
+  return { planoAplicado };
 }
 
 async function logWebhookEvent(log: WebhookLog): Promise<void> {
@@ -340,7 +286,8 @@ async function logWebhookEvent(log: WebhookLog): Promise<void> {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
   
   try {
-    // Inserir log com todos os campos incluindo billing_type
+    console.log('📝 Registrando log do webhook:', log);
+    
     const { error } = await supabase
       .from('webhook_logs')
       .insert({
@@ -348,7 +295,6 @@ async function logWebhookEvent(log: WebhookLog): Promise<void> {
         evento: log.evento,
         produto: log.produto,
         plano_aplicado: log.plano_aplicado,
-        billing_type: log.billing_type,
         status: log.status,
         ip_address: log.ip_address,
         user_agent: log.user_agent,
@@ -357,33 +303,10 @@ async function logWebhookEvent(log: WebhookLog): Promise<void> {
     
     if (error) {
       console.error('❌ Erro ao registrar log:', error);
-      
-      // Se o erro for por causa do campo billing_type não existir, tentar sem ele
-      if (error.message.includes('billing_type') || error.message.includes('column')) {
-        console.log('🔄 Tentando inserir log sem billing_type...');
-        const { error: retryError } = await supabase
-          .from('webhook_logs')
-          .insert({
-            email: log.email,
-            evento: log.evento,
-            produto: log.produto,
-            plano_aplicado: log.plano_aplicado,
-            status: log.status,
-            ip_address: log.ip_address,
-            user_agent: log.user_agent,
-            payload: log.payload
-          });
-        
-        if (retryError) {
-          console.error('❌ Erro ao registrar log sem billing_type:', retryError);
-        } else {
-          console.log('📝 Log registrado sem billing_type');
-        }
-      }
     } else {
-      console.log('📝 Log registrado com sucesso');
+      console.log('✅ Log registrado com sucesso');
     }
   } catch (error) {
-    console.error('❌ Erro ao registrar log:', error);
+    console.error('❌ Erro inesperado ao registrar log:', error);
   }
-} 
+}
