@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -40,7 +41,7 @@ const pageTitles: Record<string, string> = {
 
 const Index = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -92,12 +93,17 @@ const Index = () => {
     const handleNavigateToSubscription = () => {
       navigate('/assinatura');
     };
+    
     // Se veio do magic link com plano, já associa ao plano
     const params = new URLSearchParams(window.location.search);
     const plan = params.get('plan');
     if (user && plan === 'grupo_escolar') {
       supabase.auth.updateUser({ data: { plano_ativo: 'grupo_escolar' } });
     }
+    
+    window.addEventListener('navigateToProfile', handleNavigateToProfile);
+    window.addEventListener('navigateToSubscription', handleNavigateToSubscription);
+    
     return () => {
       window.removeEventListener('navigateToProfile', handleNavigateToProfile);
       window.removeEventListener('navigateToSubscription', handleNavigateToSubscription);
@@ -148,6 +154,17 @@ const Index = () => {
 
   // Função para proteger rotas que exigem login
   const requireAuth = (element: React.ReactNode) => {
+    if (authLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando...</p>
+          </div>
+        </div>
+      );
+    }
+    
     if (!user) {
       return <Navigate to="/login" replace />;
     }
@@ -156,8 +173,7 @@ const Index = () => {
 
   // Função para proteger rotas administrativas
   const requireAdmin = (element: React.ReactNode) => {
-    // Aguardar carregamento dos dados antes de verificar permissões
-    if (planLoading) {
+    if (authLoading || planLoading) {
       return (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
@@ -188,11 +204,21 @@ const Index = () => {
 
   // Função para proteger rota da escola
   const requireSchool = (element: React.ReactNode) => {
+    if (authLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando...</p>
+          </div>
+        </div>
+      );
+    }
+    
     if (!user) {
       return <Navigate to="/login" replace />;
     }
     
-    // Aguardar carregamento dos dados antes de verificar permissões
     if (planLoading) {
       return (
         <div className="flex items-center justify-center min-h-screen">
@@ -240,6 +266,7 @@ const Index = () => {
         </div>
         <Footer />
       </div>
+      
       {/* Modais globais */}
       <FirstAccessModal
         isOpen={showFirstAccessModal}

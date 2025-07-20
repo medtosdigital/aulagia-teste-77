@@ -4,9 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PerformanceOptimizer } from '@/utils/performanceOptimizations';
 
-// Cache global para evitar múltiplas consultas - aumentando duração
+// Cache global para evitar múltiplas consultas
 const planCache = new Map<string, { data: PlanoUsuario | null; timestamp: number; materials: number }>();
-const CACHE_DURATION = 60000; // 60 segundos para reduzir ainda mais as consultas
+const CACHE_DURATION = 60000; // 60 segundos
 
 export interface PlanoUsuario {
   id: string;
@@ -30,7 +30,7 @@ export const useSupabasePlanPermissions = () => {
   const { toast } = useToast();
   const [currentPlan, setCurrentPlan] = useState<PlanoUsuario | null>(null);
   const [remainingMaterials, setRemainingMaterials] = useState<number>(0);
-  const [loading, setLoading] = useState(false); // Mudado para false por padrão
+  const [loading, setLoading] = useState(false);
   const [shouldShowUpgrade, setShouldShowUpgrade] = useState(false);
   const loadingRef = useRef(false);
 
@@ -71,7 +71,6 @@ export const useSupabasePlanPermissions = () => {
         supabasePlanService.getRemainingMaterials()
       ]);
 
-      // Timeout aumentado para 30 segundos para melhor estabilidade
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Timeout')), 30000)
       );
@@ -133,7 +132,6 @@ export const useSupabasePlanPermissions = () => {
       setCurrentPlan(fallbackPlan);
       setRemainingMaterials(5);
       
-      // Não mostrar toast de erro para melhorar UX
       console.warn('Usando configurações padrão devido ao erro');
     } finally {
       setLoading(false);
@@ -147,7 +145,7 @@ export const useSupabasePlanPermissions = () => {
       console.log('useSupabasePlanPermissions - Carregando dados para usuário:', user.email);
       loadPlanData();
     }
-  }, [user?.id]); // Removido loadPlanData das dependências para evitar loops
+  }, [user?.id, loadPlanData]);
 
   // Atualizar dados em tempo real ao trocar de plano
   useEffect(() => {
@@ -167,12 +165,11 @@ export const useSupabasePlanPermissions = () => {
   useEffect(() => {
     const cleanupInterval = setInterval(() => {
       PerformanceOptimizer.cleanupExpiredEntries(planCache, CACHE_DURATION);
-    }, 300000); // 5 minutos
+    }, 300000);
 
     return () => clearInterval(cleanupInterval);
   }, []);
 
-  // Criar material otimizado
   const createMaterial = useCallback(async (): Promise<boolean> => {
     if (!user) {
       toast({
@@ -194,11 +191,9 @@ export const useSupabasePlanPermissions = () => {
       const success = await supabasePlanService.incrementMaterialUsage();
       
       if (success) {
-        // Atualizar apenas materiais restantes e cache
         const newRemaining = await supabasePlanService.getRemainingMaterials();
         setRemainingMaterials(newRemaining);
         
-        // Atualizar cache
         const cacheKey = `plan_${user.id}`;
         const cached = planCache.get(cacheKey);
         if (cached) {
@@ -217,27 +212,19 @@ export const useSupabasePlanPermissions = () => {
       }
     } catch (error) {
       console.error('Erro ao criar material:', error);
-      toast({
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao tentar criar o material.",
-        variant: "destructive"
-      });
       return false;
     }
   }, [user, toast]);
 
-  // Atualizar plano otimizado
   const changePlan = useCallback(async (newPlan: TipoPlano, expirationDate?: Date): Promise<boolean> => {
     try {
       const success = await supabasePlanService.updateUserPlan(newPlan, expirationDate);
       
       if (success) {
-        // Limpar cache e recarregar
         if (user?.id) {
           planCache.delete(`plan_${user.id}`);
         }
         await loadPlanData(true);
-        // Disparar evento global para atualização em tempo real
         window.dispatchEvent(new CustomEvent('planChanged'));
         setShouldShowUpgrade(false);
         
@@ -256,16 +243,11 @@ export const useSupabasePlanPermissions = () => {
       return success;
     } catch (error) {
       console.error('Erro ao atualizar plano:', error);
-      toast({
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao alterar o plano.",
-        variant: "destructive"
-      });
       return false;
     }
   }, [user?.id, loadPlanData, toast]);
 
-  // Verificações de permissões otimizadas (sem consultas)
+  // Verificações de permissões otimizadas
   const canDownloadWord = useCallback((): boolean => {
     return currentPlan?.plano_ativo !== 'gratuito';
   }, [currentPlan?.plano_ativo]);
@@ -312,43 +294,21 @@ export const useSupabasePlanPermissions = () => {
     return remainingMaterials <= 0;
   }, [remainingMaterials]);
 
-  const getPlanDisplayName = useCallback((): string => {
-    if (loading) return 'Carregando...';
-    if (!currentPlan) return 'Plano Gratuito';
-    
-    switch (currentPlan.plano_ativo) {
-      case 'gratuito':
-        return 'Plano Gratuito';
-      case 'professor':
-        return 'Plano Professor';
-      case 'grupo_escolar':
-        return 'Grupo Escolar';
-      default:
-        return 'Plano Gratuito';
-    }
-  }, [loading, currentPlan]);
-
-  const dismissUpgradeModal = useCallback((): void => {
-    setShouldShowUpgrade(false);
-  }, []);
-
-  // Função de refresh otimizada
-  const refreshData = useCallback(() => {
-    if (user?.id) {
-      // Limpar cache e recarregar
-      planCache.delete(`plan_${user.id}`);
-      loadPlanData(true);
-    }
-  }, [user?.id, loadPlanData]);
-
-  // Funções administrativas otimizadas
   const canAccessSettings = useCallback((): boolean => {
     const result = currentPlan?.plano_ativo === 'admin';
     console.log('useSupabasePlanPermissions Debug - canAccessSettings:', result, 'currentPlan:', currentPlan?.plano_ativo);
     return result;
   }, [currentPlan?.plano_ativo]);
 
-  const shouldShowSupportModal = false;
+  const isAdminAuthenticated = useCallback((): boolean => {
+    const result = currentPlan?.plano_ativo === 'admin';
+    console.log('useSupabasePlanPermissions Debug - isAdminAuthenticated:', result, 'currentPlan:', currentPlan?.plano_ativo);
+    return result;
+  }, [currentPlan?.plano_ativo]);
+
+  const dismissUpgradeModal = useCallback((): void => {
+    setShouldShowUpgrade(false);
+  }, []);
 
   const dismissSupportModal = useCallback((): void => {
     // Função vazia por enquanto
@@ -361,11 +321,12 @@ export const useSupabasePlanPermissions = () => {
     return nextMonth;
   }, []);
 
-  const isAdminAuthenticated = useCallback((): boolean => {
-    const result = currentPlan?.plano_ativo === 'admin';
-    console.log('useSupabasePlanPermissions Debug - isAdminAuthenticated:', result, 'currentPlan:', currentPlan?.plano_ativo);
-    return result;
-  }, [currentPlan?.plano_ativo]);
+  const refreshData = useCallback(() => {
+    if (user?.id) {
+      planCache.delete(`plan_${user.id}`);
+      loadPlanData(true);
+    }
+  }, [user?.id, loadPlanData]);
 
   return {
     // Estado
@@ -373,7 +334,7 @@ export const useSupabasePlanPermissions = () => {
     remainingMaterials,
     loading,
     shouldShowUpgrade,
-    shouldShowSupportModal,
+    shouldShowSupportModal: false,
     
     // Ações
     createMaterial,
@@ -382,7 +343,7 @@ export const useSupabasePlanPermissions = () => {
     dismissSupportModal,
     refreshData,
     
-    // Verificações de permissões (todas otimizadas)
+    // Verificações de permissões
     canDownloadWord,
     canDownloadPPT,
     canEditMaterials,
@@ -394,24 +355,6 @@ export const useSupabasePlanPermissions = () => {
     canAccessMaterials,
     canAccessCalendarPage,
     isLimitReached,
-    
-    // Utilitários
-    getPlanDisplayName: useCallback((): string => {
-      if (loading) return 'Carregando...';
-      if (!currentPlan) return 'Plano Gratuito';
-      switch (currentPlan.plano_ativo) {
-        case 'gratuito':
-          return 'Plano Gratuito';
-        case 'professor':
-          return 'Plano Professor';
-        case 'grupo_escolar':
-          return 'Grupo Escolar';
-        case 'admin':
-          return 'Plano Administrador';
-        default:
-          return 'Plano Gratuito';
-      }
-    }, [loading, currentPlan]),
     canAccessSettings,
     getNextResetDate,
     isAdminAuthenticated

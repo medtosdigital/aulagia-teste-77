@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,7 +39,7 @@ export const useFirstAccess = () => {
       if (!user?.id) return;
 
       try {
-        // Verificar se já existe perfil no Supabase
+        // Verificar se já existe perfil completo no Supabase
         const { data: profile, error } = await supabase
           .from('perfis')
           .select('*')
@@ -53,20 +54,33 @@ export const useFirstAccess = () => {
             userInfo: null
           });
         } else if (profile) {
-          // Perfil existe, não é primeiro acesso
-          setState({
-            isFirstAccess: false,
-            showModal: false,
-            userInfo: {
-              name: profile.nome_preferido || 'Professor(a)',
-              teachingLevel: profile.etapas_ensino?.[0] || '',
-              grades: profile.anos_serie || [],
-              subjects: profile.disciplinas || [],
-              school: profile.escola || '',
-              materialTypes: profile.tipo_material_favorito || [],
-              celular: profile.celular || ''
-            }
-          });
+          // Verificar se é realmente primeiro acesso (sem dados pessoais preenchidos)
+          const isReallyFirstAccess = !profile.nome_preferido && 
+                                     !profile.celular && 
+                                     (!profile.etapas_ensino || profile.etapas_ensino.length === 0);
+          
+          if (isReallyFirstAccess) {
+            setState({
+              isFirstAccess: true,
+              showModal: true,
+              userInfo: null
+            });
+          } else {
+            // Perfil existe e está completo, não é primeiro acesso
+            setState({
+              isFirstAccess: false,
+              showModal: false,
+              userInfo: {
+                name: profile.nome_preferido || profile.full_name || 'Professor(a)',
+                teachingLevel: profile.etapas_ensino?.[0] || '',
+                grades: profile.anos_serie || [],
+                subjects: profile.disciplinas || [],
+                school: profile.escola || '',
+                materialTypes: profile.tipo_material_favorito || [],
+                celular: profile.celular || ''
+              }
+            });
+          }
         }
       } catch (error) {
         console.error('Error checking first access:', error);
@@ -86,7 +100,7 @@ export const useFirstAccess = () => {
     if (!user?.id) return;
 
     try {
-      // Salvar perfil no Supabase
+      // Salvar perfil completo no Supabase
       const profileData = {
         user_id: user.id,
         nome_preferido: userInfo.name,
@@ -96,7 +110,10 @@ export const useFirstAccess = () => {
         tipo_material_favorito: userInfo.materialTypes,
         preferencia_bncc: false,
         celular: userInfo.celular,
-        escola: userInfo.school
+        escola: userInfo.school,
+        // Garantir que o plano seja gratuito e billing seja monthly
+        plano_ativo: 'gratuito',
+        billing_type: 'monthly'
       };
 
       const { error } = await supabase
@@ -122,15 +139,7 @@ export const useFirstAccess = () => {
 
     } catch (error) {
       console.error('Error completing first access:', error);
-      // Fallback para localStorage em caso de erro
-      localStorage.setItem('firstAccessCompleted', 'true');
-      localStorage.setItem('userFirstAccessInfo', JSON.stringify(userInfo));
-      
-      setState({
-        isFirstAccess: false,
-        showModal: false,
-        userInfo
-      });
+      throw error;
     }
   };
 
@@ -138,10 +147,18 @@ export const useFirstAccess = () => {
     if (!user?.id) return;
 
     try {
-      // Remover perfil do Supabase
+      // Limpar dados específicos do perfil (mantendo plano e billing)
       await supabase
         .from('perfis')
-        .delete()
+        .update({
+          nome_preferido: null,
+          etapas_ensino: null,
+          anos_serie: null,
+          disciplinas: null,
+          tipo_material_favorito: null,
+          celular: null,
+          escola: null
+        })
         .eq('user_id', user.id);
 
       setState({
@@ -151,11 +168,6 @@ export const useFirstAccess = () => {
       });
     } catch (error) {
       console.error('Error resetting first access:', error);
-      // Fallback para localStorage
-      localStorage.removeItem('firstAccessCompleted');
-      localStorage.removeItem('userFirstAccessInfo');
-      localStorage.removeItem('userProfile');
-      
       setState({
         isFirstAccess: true,
         showModal: true,
