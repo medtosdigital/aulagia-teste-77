@@ -488,6 +488,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       mark_notification_as_read: {
         Args: { notification_id: string; user_id: string }
         Returns: undefined
