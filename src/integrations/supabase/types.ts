@@ -315,6 +315,7 @@ export type Database = {
           billing_type: string
           celular: string | null
           created_at: string | null
+          customer_id: string | null
           data_expiracao_plano: string | null
           data_inicio_plano: string | null
           disciplinas: string[] | null
@@ -328,7 +329,10 @@ export type Database = {
           nome_preferido: string | null
           plano_ativo: Database["public"]["Enums"]["tipo_plano"] | null
           preferencia_bncc: boolean | null
+          status_plano: string | null
+          subscription_id: string | null
           tipo_material_favorito: string[] | null
+          ultima_renovacao: string | null
           ultimo_reset_materiais: string | null
           updated_at: string | null
           user_id: string
@@ -340,6 +344,7 @@ export type Database = {
           billing_type?: string
           celular?: string | null
           created_at?: string | null
+          customer_id?: string | null
           data_expiracao_plano?: string | null
           data_inicio_plano?: string | null
           disciplinas?: string[] | null
@@ -353,7 +358,10 @@ export type Database = {
           nome_preferido?: string | null
           plano_ativo?: Database["public"]["Enums"]["tipo_plano"] | null
           preferencia_bncc?: boolean | null
+          status_plano?: string | null
+          subscription_id?: string | null
           tipo_material_favorito?: string[] | null
+          ultima_renovacao?: string | null
           ultimo_reset_materiais?: string | null
           updated_at?: string | null
           user_id: string
@@ -365,6 +373,7 @@ export type Database = {
           billing_type?: string
           celular?: string | null
           created_at?: string | null
+          customer_id?: string | null
           data_expiracao_plano?: string | null
           data_inicio_plano?: string | null
           disciplinas?: string[] | null
@@ -378,10 +387,70 @@ export type Database = {
           nome_preferido?: string | null
           plano_ativo?: Database["public"]["Enums"]["tipo_plano"] | null
           preferencia_bncc?: boolean | null
+          status_plano?: string | null
+          subscription_id?: string | null
           tipo_material_favorito?: string[] | null
+          ultima_renovacao?: string | null
           ultimo_reset_materiais?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      planos: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          id: number
+          limite_materiais_mensal: number
+          nome: string
+          pode_criar_avaliacoes: boolean | null
+          pode_criar_slides: boolean | null
+          pode_download_ppt: boolean | null
+          pode_download_word: boolean | null
+          pode_editar_materiais: boolean | null
+          preco_anual: number
+          preco_mensal: number
+          tem_calendario: boolean | null
+          tem_historico: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: number
+          limite_materiais_mensal: number
+          nome: string
+          pode_criar_avaliacoes?: boolean | null
+          pode_criar_slides?: boolean | null
+          pode_download_ppt?: boolean | null
+          pode_download_word?: boolean | null
+          pode_editar_materiais?: boolean | null
+          preco_anual: number
+          preco_mensal: number
+          tem_calendario?: boolean | null
+          tem_historico?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: number
+          limite_materiais_mensal?: number
+          nome?: string
+          pode_criar_avaliacoes?: boolean | null
+          pode_criar_slides?: boolean | null
+          pode_download_ppt?: boolean | null
+          pode_download_word?: boolean | null
+          pode_editar_materiais?: boolean | null
+          preco_anual?: number
+          preco_mensal?: number
+          tem_calendario?: boolean | null
+          tem_historico?: boolean | null
+          updated_at?: string | null
         }
         Relationships: []
       }
