@@ -367,6 +367,77 @@ class PlanExpirationService {
       return [];
     }
   }
+
+  // Resetar contador de materiais para todos os usuários (executar mensalmente)
+  async resetAllMaterialCounts(): Promise<boolean> {
+    try {
+      console.log('🔄 Iniciando reset mensal de contadores de materiais...');
+      
+      const { error } = await supabase
+        .from('perfis')
+        .update({
+          materiais_criados_mes_atual: 0,
+          ultimo_reset_materiais: new Date().toISOString()
+        })
+        .neq('user_id', ''); // Atualizar todos os usuários
+
+      if (error) {
+        console.error('❌ Erro ao resetar contadores de materiais:', error);
+        return false;
+      }
+
+      console.log('✅ Reset mensal de contadores de materiais concluído');
+      return true;
+    } catch (error) {
+      console.error('❌ Erro em resetAllMaterialCounts:', error);
+      return false;
+    }
+  }
+
+  // Verificar se precisa resetar contador de materiais para um usuário específico
+  async checkAndResetMaterialCount(userId: string): Promise<boolean> {
+    try {
+      const { data: profile, error } = await supabase
+        .from('perfis')
+        .select('ultimo_reset_materiais')
+        .eq('user_id', userId)
+        .single();
+
+      if (error || !profile) {
+        console.error('❌ Erro ao buscar perfil para reset de materiais:', error);
+        return false;
+      }
+
+      const lastReset = profile.ultimo_reset_materiais ? new Date(profile.ultimo_reset_materiais) : null;
+      const now = new Date();
+      
+      // Resetar se nunca foi resetado ou se passou mais de 30 dias
+      if (!lastReset || (now.getTime() - lastReset.getTime()) > 30 * 24 * 60 * 60 * 1000) {
+        console.log(`🔄 Resetando contador de materiais para usuário ${userId}`);
+        
+        const { error: updateError } = await supabase
+          .from('perfis')
+          .update({
+            materiais_criados_mes_atual: 0,
+            ultimo_reset_materiais: now.toISOString()
+          })
+          .eq('user_id', userId);
+
+        if (updateError) {
+          console.error('❌ Erro ao resetar contador de materiais:', updateError);
+          return false;
+        }
+
+        console.log('✅ Contador de materiais resetado com sucesso');
+        return true;
+      }
+
+      return false; // Não precisa resetar
+    } catch (error) {
+      console.error('❌ Erro em checkAndResetMaterialCount:', error);
+      return false;
+    }
+  }
 }
 
 export const planExpirationService = new PlanExpirationService(); 

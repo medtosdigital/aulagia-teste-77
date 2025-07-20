@@ -27,6 +27,7 @@ import { BNCCValidationService } from '@/services/bnccValidationService';
 import { EnhancedBNCCValidationService } from '@/services/enhancedBNCCValidationService';
 import AudioTranscriptionButton from './AudioTranscriptionButton';
 import MaterialEditModal from './MaterialEditModal';
+import { planService } from '@/services/planService';
 
 type MaterialType = 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' | 'apoio';
 
@@ -176,6 +177,7 @@ const CreateLesson: React.FC = () => {
   const [invalidSubjects, setInvalidSubjects] = useState<string[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editMaterial, setEditMaterial] = useState<GeneratedMaterial | null>(null);
+  const [shouldShowUpgrade, setShouldShowUpgrade] = useState(false);
 
   // Hooks para gerenciamento de planos e limites
   const { createMaterial, isLimitReached, getRemainingMaterials, currentPlan, canPerformAction, canEditMaterials, canCreateAssessments } = usePlanPermissions();
@@ -186,6 +188,59 @@ const CreateLesson: React.FC = () => {
     handlePlanSelection,
     availablePlans 
   } = useUpgradeModal();
+
+  // Verificar permissões antes de criar material
+  const checkPermissions = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para criar materiais.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    try {
+      const canCreate = await planService.canCreateMaterial(user.id);
+      const remainingMaterials = await planService.getRemainingMaterials(user.id);
+      
+      if (!canCreate) {
+        toast({
+          title: "Limite de materiais atingido",
+          description: `Você já criou todos os ${remainingMaterials + 1} materiais do seu plano este mês. Faça upgrade para criar mais!`,
+          variant: "destructive"
+        });
+        setShouldShowUpgrade(true);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao verificar permissões:', error);
+      toast({
+        title: "Erro ao verificar permissões",
+        description: "Não foi possível verificar suas permissões. Tente novamente.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  // Incrementar contador de materiais após criação bem-sucedida
+  const incrementMaterialCount = async () => {
+    if (!user?.id) return;
+
+    try {
+      const success = await planService.incrementMaterialCount(user.id);
+      if (success) {
+        console.log('✅ Contador de materiais incrementado com sucesso');
+      } else {
+        console.warn('⚠️ Não foi possível incrementar o contador de materiais');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao incrementar contador de materiais:', error);
+    }
+  };
 
   // Definir estágios de progresso baseados no tipo de material
   const getProgressStages = (materialType: string): ProgressStage[] => {
@@ -363,10 +418,9 @@ const CreateLesson: React.FC = () => {
   const handleFormSubmit = async () => {
     console.log('🚀 Iniciando processo de criação de material');
     
-    // Verificar se atingiu limite antes de validar
-    if (isLimitReached()) {
-      toast.error('Limite de materiais atingido! Faça upgrade para continuar.');
-      openUpgradeModal();
+    // Verificar permissões antes de começar
+    const hasPermission = await checkPermissions();
+    if (!hasPermission) {
       return;
     }
 
@@ -621,6 +675,9 @@ const CreateLesson: React.FC = () => {
         setGeneratedMaterial(generatedMaterial);
         setShowMaterialModal(true);
         setIsGenerating(false);
+
+        // Incrementar contador de materiais após sucesso
+        await incrementMaterialCount();
 
         // Registrar atividade
         activityService.addActivity({

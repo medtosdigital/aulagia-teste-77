@@ -57,10 +57,13 @@ const CalendarPage: React.FC = () => {
   useEffect(() => {
     if (user && hasCalendarFeatures) {
       console.log('Carregando eventos do calendário...');
-      refreshEvents().catch(error => {
-        console.error('Error loading calendar events:', error);
-        toast.error('Erro ao carregar eventos do calendário');
-      });
+      const result = refreshEvents && typeof refreshEvents === 'function' ? refreshEvents() : null;
+      if (result && typeof result.then === 'function') {
+        result.catch(error => {
+          console.error('Error loading calendar events:', error);
+          toast.error('Erro ao carregar eventos do calendário');
+        });
+      }
     }
   }, [currentDate, view, user, hasCalendarFeatures, refreshEvents]);
 
