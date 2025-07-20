@@ -32,8 +32,14 @@ export default function NotificationsSection() {
 
   const fetchNotifications = async () => {
     try {
-      const data = await notificationService.getActiveNotifications();
-      setNotifications(data);
+      // Para o admin, buscar todas as notificações (ativas e inativas)
+      const { data, error } = await supabase
+        .from('notificacoes')
+        .select('*')
+        .order('data_envio', { ascending: false });
+      
+      if (error) throw error;
+      setNotifications(data || []);
     } catch (error) {
       console.error('Erro ao buscar notificações:', error);
     } finally {

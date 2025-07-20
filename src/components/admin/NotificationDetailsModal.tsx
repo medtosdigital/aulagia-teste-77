@@ -7,9 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Save, Users, UserCheck, UserX, MessageSquare, Calendar, Edit3, X, Upload } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Save, UserCheck, UserX, MessageSquare, Calendar, Edit3, X, Upload, ToggleLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { notificationService } from '@/services/notificationService';
@@ -36,6 +37,7 @@ export default function NotificationDetailsModal({
   const [message, setMessage] = useState('');
   const [icon, setIcon] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [isActive, setIsActive] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   const readUsers = (notification?.lida_por || []).map((id: string) => userProfiles[id] || id);
@@ -48,6 +50,7 @@ export default function NotificationDetailsModal({
       setMessage(notification.mensagem || '');
       setIcon(notification.icon || '');
       setImageUrl(notification.image_url || '');
+      setIsActive(notification.ativa || false);
     }
   }, [notification]);
 
@@ -56,7 +59,8 @@ export default function NotificationDetailsModal({
       titulo: title,
       mensagem: message,
       icon,
-      image_url: imageUrl
+      image_url: imageUrl,
+      ativa: isActive
     });
     setEditMode(false);
   };
@@ -86,13 +90,14 @@ export default function NotificationDetailsModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="pb-4">
+        <DialogHeader className="pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <MessageSquare className="w-6 h-6 text-primary" />
+            <DialogTitle className="text-lg sm:text-2xl font-bold flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
+                <MessageSquare className="w-4 h-4 sm:w-6 sm:h-6 text-primary" />
               </div>
-              Detalhes da Notificação
+              <span className="hidden sm:inline">Detalhes da Notificação</span>
+              <span className="sm:hidden">Detalhes</span>
             </DialogTitle>
             <div className="flex items-center gap-2">
               <Badge variant={notification.ativa ? "default" : "secondary"}>
@@ -111,9 +116,9 @@ export default function NotificationDetailsModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 h-full">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {editMode ? (
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -182,6 +187,40 @@ export default function NotificationDetailsModal({
                     />
                   </div>
 
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2 text-base font-medium">
+                      <ToggleLeft className="w-4 h-4" />
+                      Status da Notificação
+                    </Label>
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="notification-status"
+                            checked={isActive}
+                            onCheckedChange={setIsActive}
+                          />
+                          <Label htmlFor="notification-status" className="text-sm font-medium">
+                            {isActive ? 'Ativa' : 'Inativa'}
+                          </Label>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {isActive 
+                            ? 'A notificação será exibida para todos os usuários'
+                            : 'A notificação não será exibida para os usuários'
+                          }
+                        </p>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        isActive 
+                          ? 'bg-green-100 text-green-700 border border-green-200'
+                          : 'bg-gray-100 text-gray-700 border border-gray-200'
+                      }`}>
+                        {isActive ? 'VISÍVEL' : 'OCULTA'}
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="outline"
@@ -209,26 +248,17 @@ export default function NotificationDetailsModal({
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Banner Image */}
                   {notification.image_url && (
                     <div className="w-full">
-                      <div className="aspect-[16/9] w-full overflow-hidden rounded-lg bg-muted">
+                      <div className="aspect-[21/9] sm:aspect-[16/9] w-full overflow-hidden rounded-lg bg-muted max-h-32 sm:max-h-40">
                         <img 
                           src={notification.image_url} 
                           alt="Banner da notificação"
                           className="w-full h-full object-cover object-center"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.parentElement?.classList.add('bg-gradient-to-br', 'from-blue-100', 'to-indigo-100');
-                            e.currentTarget.parentElement?.innerHTML = `
-                              <div class="flex items-center justify-center h-full">
-                                <div class="text-center text-muted-foreground">
-                                  <div class="text-2xl mb-1">📷</div>
-                                  <div class="text-xs">Imagem não disponível</div>
-                                </div>
-                              </div>
-                            `;
                           }}
                         />
                       </div>
@@ -236,15 +266,15 @@ export default function NotificationDetailsModal({
                   )}
 
                   {/* Header */}
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3 sm:gap-4">
                     {notification.icon && (
-                      <div className="text-3xl">{notification.icon}</div>
+                      <div className="text-2xl sm:text-3xl">{notification.icon}</div>
                     )}
                     <div className="flex-1">
-                      <h2 className="text-xl font-semibold mb-2">{notification.titulo}</h2>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <h2 className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2">{notification.titulo}</h2>
+                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
+                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                           {formatDate(notification.data_envio || notification.created_at)}
                         </div>
                       </div>
@@ -253,11 +283,11 @@ export default function NotificationDetailsModal({
 
                   {/* Message */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Mensagem</CardTitle>
+                    <CardHeader className="pb-2 sm:pb-6">
+                      <CardTitle className="text-base sm:text-lg">Mensagem</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    <CardContent className="pt-0 sm:pt-6">
+                      <p className="text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
                         {notification.mensagem}
                       </p>
                     </CardContent>
@@ -267,12 +297,12 @@ export default function NotificationDetailsModal({
             </div>
 
             {/* Sidebar - Statistics */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Statistics */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <Card className="text-center">
-                  <CardContent className="p-4">
-                    <div className="text-2xl font-bold text-green-600 mb-1">
+                  <CardContent className="p-2 sm:p-4">
+                    <div className="text-lg sm:text-2xl font-bold text-green-600 mb-1">
                       {readUsers.length}
                     </div>
                     <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
@@ -283,8 +313,8 @@ export default function NotificationDetailsModal({
                 </Card>
                 
                 <Card className="text-center">
-                  <CardContent className="p-4">
-                    <div className="text-2xl font-bold text-orange-600 mb-1">
+                  <CardContent className="p-2 sm:p-4">
+                    <div className="text-lg sm:text-2xl font-bold text-orange-600 mb-1">
                       {unreadUsers.length}
                     </div>
                     <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
@@ -296,25 +326,25 @@ export default function NotificationDetailsModal({
               </div>
 
               {/* Users Lists */}
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3 sm:gap-4">
                 <Card className="border-green-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm text-green-700 flex items-center gap-2">
-                      <UserCheck className="w-4 h-4" />
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <CardTitle className="text-xs sm:text-sm text-green-700 flex items-center gap-1 sm:gap-2">
+                      <UserCheck className="w-3 h-3 sm:w-4 sm:h-4" />
                       Usuários que leram ({readUsers.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <ScrollArea className="h-32">
+                    <ScrollArea className="h-24 sm:h-32">
                       <div className="space-y-1">
                         {readUsers.map((user, index) => (
-                          <div key={index} className="text-xs p-2 bg-green-50 rounded flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <div key={index} className="text-xs p-1.5 sm:p-2 bg-green-50 rounded flex items-center gap-1.5 sm:gap-2">
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full"></div>
                             {user}
                           </div>
                         ))}
                         {readUsers.length === 0 && (
-                          <p className="text-xs text-muted-foreground text-center py-4">
+                          <p className="text-xs text-muted-foreground text-center py-3 sm:py-4">
                             Nenhum usuário leu ainda
                           </p>
                         )}
@@ -324,23 +354,23 @@ export default function NotificationDetailsModal({
                 </Card>
 
                 <Card className="border-orange-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm text-orange-700 flex items-center gap-2">
-                      <UserX className="w-4 h-4" />
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <CardTitle className="text-xs sm:text-sm text-orange-700 flex items-center gap-1 sm:gap-2">
+                      <UserX className="w-3 h-3 sm:w-4 sm:h-4" />
                       Não leram ainda ({unreadUsers.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <ScrollArea className="h-32">
+                    <ScrollArea className="h-24 sm:h-32">
                       <div className="space-y-1">
                         {unreadUsers.map((user, index) => (
-                          <div key={index} className="text-xs p-2 bg-orange-50 rounded flex items-center gap-2">
-                            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                          <div key={index} className="text-xs p-1.5 sm:p-2 bg-orange-50 rounded flex items-center gap-1.5 sm:gap-2">
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-500 rounded-full"></div>
                             {user}
                           </div>
                         ))}
                         {unreadUsers.length === 0 && (
-                          <p className="text-xs text-muted-foreground text-center py-4">
+                          <p className="text-xs text-muted-foreground text-center py-3 sm:py-4">
                             Todos os usuários leram
                           </p>
                         )}

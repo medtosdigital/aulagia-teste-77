@@ -92,7 +92,7 @@ class NotificationService {
     return true;
   }
 
-  async updateNotification(id: string, updates: { titulo?: string; mensagem?: string; icon?: string; image_url?: string }) {
+  async updateNotification(id: string, updates: { titulo?: string; mensagem?: string; icon?: string; image_url?: string; ativa?: boolean }) {
     const { error } = await supabase.from('notificacoes').update(updates).eq('id', id);
     if (error) throw error;
     return true;

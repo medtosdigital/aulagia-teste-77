@@ -29,10 +29,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        console.log('🔐 Auth state change:', event, session?.user?.id);
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Se é um novo usuário, criar perfil automaticamente
+        if (event === 'SIGNED_IN' && session?.user) {
+          await createUserProfile(session.user);
+        }
       }
     );
 
@@ -45,6 +52,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Função para criar perfil do usuário
+  const createUserProfile = async (user: User) => {
+    try {
+      console.log('👤 Criando perfil para usuário:', user.id);
+      
+      // Verificar se o perfil já existe
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('perfis')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (existingProfile) {
+        console.log('✅ Perfil já existe para usuário:', user.id);
+        return;
+      }
+      
+      // Criar perfil básico
+      const { error: insertError } = await supabase
+        .from('perfis')
+        .insert({
+          user_id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.email,
+          plano_ativo: 'gratuito',
+          billing_type: 'gratuito'
+        });
+      
+      if (insertError) {
+        console.error('❌ Erro ao criar perfil:', insertError);
+      } else {
+        console.log('✅ Perfil criado com sucesso para usuário:', user.id);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao criar perfil:', error);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -68,6 +113,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     });
+    
+    // Se o registro foi bem-sucedido, criar perfil manualmente
+    if (!error) {
+      console.log('✅ Registro bem-sucedido, perfil será criado automaticamente');
+    }
+    
     return { error };
   };
 

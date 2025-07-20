@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Settings, User, LogOut, Crown, BookOpen, HelpCircle } from 'lucide-react';
+import { Bell, Settings, User, LogOut, Crown, BookOpen, HelpCircle, Check, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -161,25 +161,104 @@ const Header: React.FC<HeaderProps> = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
-              <div className="px-3 py-2 border-b font-semibold text-blue-700">Notificações</div>
+              <div className="px-4 py-3 border-b bg-gradient-to-r from-slate-50 to-white">
+                <h3 className="font-bold text-slate-900 text-base">Notificações</h3>
+                <p className="text-xs text-slate-500 mt-1">{notifications.length} notificação{notifications.length !== 1 ? 's' : ''}</p>
+              </div>
               {notifications.length === 0 && (
-                <div className="px-4 py-6 text-center text-gray-400">Nenhuma notificação</div>
+                <div className="p-8 text-center">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Check className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground font-medium">Nenhuma notificação</p>
+                  <p className="text-xs text-muted-foreground mt-1">Você está em dia!</p>
+                </div>
               )}
               {notifications.map(n => (
                 <DropdownMenuItem
                   key={n.id}
-                  className={`flex flex-col items-start gap-1 ${!(n.lida_por||[]).includes(user?.id) ? 'bg-blue-50' : ''}`}
+                  className={`p-0 ${!(n.lida_por||[]).includes(user?.id) ? 'bg-blue-50' : ''}`}
                   onClick={() => handleNotificationClick(n)}
                 >
-                  {n.image_url && (
-                    <Avatar className="w-20 h-20 mb-2 mx-auto"><AvatarImage src={n.image_url} /><AvatarFallback>IMG</AvatarFallback></Avatar>
-                  )}
-                  <div className="flex items-center w-full">
-                    {n.icon && <span className="text-2xl mr-2">{n.icon}</span>}
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">{n.titulo}</div>
-                      <div className="text-xs text-gray-600">{n.mensagem}</div>
-                      <div className="text-[10px] text-gray-400 mt-1">{n.data_envio ? new Date(n.data_envio).toLocaleString('pt-BR') : ''}</div>
+                  <div className={`w-full group relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-200 ${
+                    !(n.lida_por||[]).includes(user?.id) 
+                      ? 'ring-2 ring-blue-100 border-blue-200 bg-gradient-to-r from-blue-50 to-white' 
+                      : 'hover:border-slate-300'
+                  }`}>
+                    {/* Status indicator */}
+                    {!(n.lida_por||[]).includes(user?.id) && (
+                      <div className="absolute top-3 right-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                      </div>
+                    )}
+
+                    <div className="p-4">
+                      {/* Header with icon and title */}
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                          !(n.lida_por||[]).includes(user?.id) 
+                            ? 'bg-blue-100 text-blue-600' 
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {n.icon ? (
+                            <span className="text-lg">{n.icon}</span>
+                          ) : (
+                            <Check className="w-5 h-5" />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-slate-900 text-sm leading-tight mb-1">
+                            {n.titulo}
+                          </h4>
+                          <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                            {n.mensagem}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Image banner */}
+                      {n.image_url && (
+                        <div className="mb-3">
+                          <div className="aspect-[16/9] w-full overflow-hidden rounded-lg bg-slate-100 max-h-32">
+                            <img 
+                              src={n.image_url} 
+                              alt="Imagem da notificação"
+                              className="w-full h-full object-cover object-center"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Footer with metadata */}
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                        <div className="flex items-center gap-4 text-xs text-slate-500">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>
+                              {n.data_envio ? new Date(n.data_envio).toLocaleString('pt-BR') : ''}
+                            </span>
+                          </div>
+                          
+                          {n.lida_por && (
+                            <div className="flex items-center gap-1">
+                              <Users className="w-3 h-3" />
+                              <span>{n.lida_por.length} lida{n.lida_por.length !== 1 ? 's' : ''}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Status badge */}
+                        <Badge 
+                          variant={!(n.lida_por||[]).includes(user?.id) ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {!(n.lida_por||[]).includes(user?.id) ? 'Nova' : 'Lida'}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </DropdownMenuItem>

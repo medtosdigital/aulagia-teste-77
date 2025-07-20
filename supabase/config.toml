@@ -1,1 +1,4 @@
 project_id = "xmxpteviwcnrljtxvaoo"
+
+[functions.webhooks-aulagia]
+verify_jwt = false

@@ -1,0 +1,2 @@
+[functions.webhooks-aulagia]
+verify_jwt = false 
