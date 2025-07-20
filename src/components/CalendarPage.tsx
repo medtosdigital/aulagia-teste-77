@@ -124,7 +124,7 @@ const CalendarPage: React.FC = () => {
       const success = await deleteSupabaseEvent(event.id);
       if (success) {
         toast.success('Agendamento excluído com sucesso!');
-        let materialType: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' | undefined = undefined;
+        let materialType: 'plano-de-aula' | 'slides' | 'atividade' | 'avaliacao' | 'apoio' | undefined = undefined;
         let subject = '';
         let grade = '';
         if (event.material_ids && event.material_ids.length > 0) {

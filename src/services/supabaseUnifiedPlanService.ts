@@ -49,45 +49,84 @@ class SupabaseUnifiedPlanService {
         return null;
       }
 
-      const cacheKey = `profile_${user.id}`;
-      
-      return await this.cachedQuery(cacheKey, async () => {
-        console.log('Buscando perfil para usuário:', user.id);
+      console.log('Buscando perfil para usuário:', user.id);
 
-        // Timeout mais agressivo para queries específicas
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+      // Verificar se é usuário admin primeiro
+      if (user.email === 'medtosdigital@gmail.com') {
+        console.log('ADMIN USER DETECTED - Using admin profile');
+        const adminProfile: PerfilUsuario = {
+          id: 'admin-profile',
+          user_id: user.id,
+          plano_ativo: 'admin' as TipoPlano,
+          data_inicio_plano: new Date().toISOString(),
+          data_expiracao_plano: null,
+          materiais_criados_mes_atual: 0,
+          ano_atual: new Date().getFullYear(),
+          mes_atual: new Date().getMonth() + 1,
+          ultimo_reset_materiais: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          email: user.email,
+          full_name: user.email,
+          nome_preferido: 'Admin'
+        };
+        return adminProfile;
+      }
 
-        try {
-          const { data, error } = await supabase
+      // Para usuários normais, buscar na tabela perfis
+      const { data, error } = await supabase
+        .from('perfis')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Erro ao buscar perfil do usuário:', error);
+        
+        // Se o perfil não existe, criar um perfil básico
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating basic profile...');
+          const { data: newProfile, error: createError } = await supabase
             .from('perfis')
-            .select('*')
-            .eq('user_id', user.id)
-            .limit(1)
-            .abortSignal(controller.signal)
-            .maybeSingle();
+            .insert({
+              user_id: user.id,
+              email: user.email,
+              full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
+              nome_preferido: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
+              plano_ativo: 'gratuito',
+              billing_type: 'monthly',
+              data_inicio_plano: new Date().toISOString(),
+              data_expiracao_plano: null,
+              celular: '',
+              escola: '',
+              etapas_ensino: [],
+              anos_serie: [],
+              disciplinas: [],
+              tipo_material_favorito: [],
+              preferencia_bncc: false,
+              avatar_url: '',
+              materiais_criados_mes_atual: 0,
+              ano_atual: new Date().getFullYear(),
+              mes_atual: new Date().getMonth() + 1,
+              ultimo_reset_materiais: new Date().toISOString()
+            })
+            .select()
+            .single();
 
-          clearTimeout(timeoutId);
-
-          if (error) {
-            console.error('Erro ao buscar perfil do usuário:', error);
+          if (createError) {
+            console.error('Error creating profile:', createError);
             return null;
           }
 
-          console.log('Perfil encontrado:', data);
-          
-          // Log específico para usuário admin
-          if (data?.email === 'medtosdigital@gmail.com') {
-            console.log('ADMIN USER DETECTED - Profile data:', data);
-          }
-          
-          return data;
-        } catch (abortError) {
-          clearTimeout(timeoutId);
-          console.warn('Query abortada por timeout');
-          return null;
+          console.log('Basic profile created:', newProfile);
+          return newProfile;
         }
-      }, 15000); // Cache mais longo para perfis
+        
+        return null;
+      }
+
+      console.log('Perfil encontrado:', data);
+      return data;
     } catch (error) {
       console.error('Erro em getCurrentUserProfile:', error);
       return null;
@@ -109,36 +148,21 @@ class SupabaseUnifiedPlanService {
         return true;
       }
 
-      const cacheKey = `can_create_${user.id}`;
+      // Para usuários normais, verificar perfil
+      const profile = await this.getCurrentUserProfile();
+      if (!profile) {
+        console.log('No profile found, allowing creation');
+        return true; // Permitir criação se não tem perfil (será criado)
+      }
+
+      const limit = this.getPlanLimits(profile.plano_ativo);
+      const used = profile.materiais_criados_mes_atual || 0;
       
-      return await this.cachedQuery(cacheKey, async () => {
-        try {
-          // Usar timeout mais agressivo
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-          const { data, error } = await supabase
-            .rpc('can_create_material', { p_user_id: user.id })
-            .abortSignal(controller.signal);
-
-          clearTimeout(timeoutId);
-
-          if (error) {
-            console.error('Erro ao verificar permissão de criação:', error);
-            // Fallback: usar verificação local
-            return await this.fallbackCanCreate(user.id);
-          }
-
-          console.log('Pode criar material:', data);
-          return data || false;
-        } catch (abortError) {
-          console.warn('RPC timeout, usando fallback');
-          return await this.fallbackCanCreate(user.id);
-        }
-      }, 10000);
+      console.log(`User can create material: ${used} < ${limit}`);
+      return used < limit;
     } catch (error) {
       console.error('Erro em canCreateMaterial:', error);
-      return false;
+      return true; // Em caso de erro, permitir criação
     }
   }
 
@@ -163,15 +187,29 @@ class SupabaseUnifiedPlanService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      // Timeout mais agressivo
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      // Admin não precisa incrementar
+      if (user.email === 'medtosdigital@gmail.com') {
+        console.log('Admin user - no increment needed');
+        return true;
+      }
 
-      const { data, error } = await supabase
-        .rpc('increment_material_usage', { p_user_id: user.id })
-        .abortSignal(controller.signal);
+      // Buscar perfil atual
+      const profile = await this.getCurrentUserProfile();
+      if (!profile) {
+        console.log('No profile found, creating one');
+        return true;
+      }
 
-      clearTimeout(timeoutId);
+      // Incrementar localmente
+      const newCount = (profile.materiais_criados_mes_atual || 0) + 1;
+      
+      const { error } = await supabase
+        .from('perfis')
+        .update({ 
+          materiais_criados_mes_atual: newCount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Erro ao incrementar uso de material:', error);
@@ -181,8 +219,8 @@ class SupabaseUnifiedPlanService {
       // Limpar caches relacionados
       this.clearUserCache(user.id);
 
-      console.log('Uso de material incrementado:', data);
-      return data || false;
+      console.log('Uso de material incrementado para:', newCount);
+      return true;
     } catch (error) {
       console.error('Erro em incrementMaterialUsage:', error);
       return false;
@@ -210,45 +248,32 @@ class SupabaseUnifiedPlanService {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('Nenhum usuário para calcular materiais restantes');
-        return 0;
+        console.log('Nenhum usuário autenticado para calcular materiais restantes');
+        return 5; // Fallback para plano gratuito
       }
 
       // Admin tem materiais ilimitados
       if (user.email === 'medtosdigital@gmail.com') {
-        console.log('Admin user has unlimited materials');
+        console.log('Admin user - unlimited materials');
         return Infinity;
       }
 
-      const cacheKey = `remaining_${user.id}`;
+      // Buscar perfil do usuário
+      const profile = await this.getCurrentUserProfile();
+      if (!profile) {
+        console.log('No profile found, using default limit');
+        return 5; // Limite do plano gratuito
+      }
+
+      const limit = this.getPlanLimits(profile.plano_ativo);
+      const used = profile.materiais_criados_mes_atual || 0;
+      const remaining = Math.max(0, limit - used);
       
-      return await this.cachedQuery(cacheKey, async () => {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-          const { data, error } = await supabase
-            .rpc('get_remaining_materials', { p_user_id: user.id })
-            .abortSignal(controller.signal);
-
-          clearTimeout(timeoutId);
-
-          if (error) {
-            console.error('Erro ao obter materiais restantes:', error);
-            return await this.fallbackRemainingMaterials(user.id);
-          }
-
-          const remaining = data || 0;
-          console.log(`Materiais restantes: ${remaining}`);
-          return remaining;
-        } catch (abortError) {
-          console.warn('RPC timeout para materiais restantes, usando fallback');
-          return await this.fallbackRemainingMaterials(user.id);
-        }
-      }, 10000);
+      console.log(`Materiais restantes: ${remaining} (${used}/${limit})`);
+      return remaining;
     } catch (error) {
-      console.error('Erro em getRemainingMaterials:', error);
-      return 5;
+      console.error('Erro ao calcular materiais restantes:', error);
+      return 5; // Fallback para plano gratuito
     }
   }
 

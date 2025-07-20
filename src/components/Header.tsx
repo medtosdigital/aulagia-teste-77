@@ -30,24 +30,35 @@ const Header: React.FC<HeaderProps> = ({
   const loadUserData = async () => {
     if (!user?.id) return;
     try {
-      // Buscar dados do perfil do usuário
-      const {
-        data: profile
-      } = await supabase.from('perfis').select('nome_preferido').eq('user_id', user.id).single();
+      console.log('Loading user data for:', user.id);
+      
+      // Buscar dados do perfil do usuário na tabela perfis
+      const { data: profile, error } = await supabase
+        .from('perfis')
+        .select('nome_preferido, avatar_url, plano_ativo')
+        .eq('user_id', user.id)
+        .single();
 
-      // Buscar avatar do usuário
-      const {
-        data: userProfile
-      } = await supabase.from('perfis').select('avatar_url').eq('id', user.id).single();
+      if (error) {
+        console.error('Error loading user profile:', error);
+        // Fallback para dados básicos do usuário
+        const fallbackName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';
+        setUserName(fallbackName);
+        setUserPhoto('');
+        return;
+      }
+
+      console.log('User profile loaded:', profile);
 
       // Definir nome preferido
       const preferredName = profile?.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';
       setUserName(preferredName);
-      setUserPhoto(userProfile?.avatar_url || '');
+      setUserPhoto(profile?.avatar_url || '');
     } catch (error) {
       console.error('Error loading user data:', error);
       // Fallback para dados básicos do usuário
       setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário');
+      setUserPhoto('');
     }
   };
   useEffect(() => {

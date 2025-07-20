@@ -53,48 +53,57 @@ class SupabasePlanService {
   // Obter plano atual do usuário com cache e otimizações
   async getCurrentUserPlan(): Promise<PlanoUsuario | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('Nenhum usuário autenticado');
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        console.error('Error getting authenticated user:', authError);
         return null;
       }
 
-      const cacheKey = `plan_${user.id}`;
-      
-      return await this.cachedQuery(cacheKey, async () => {
-        console.log('Buscando plano para usuário (otimizado):', user.id);
+      console.log('Getting plan for user:', user.id);
 
-        const { data, error } = await supabase
-          .from('perfis')
-          .select('*')
-          .eq('user_id', user.id)
-          .limit(1) // Adicionar limite para otimizar
-          .single();
+      // Buscar plano diretamente da tabela perfis
+      const { data: profile, error: profileError } = await supabase
+        .from('perfis')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
 
-        if (error) {
-          console.error('Erro ao buscar plano do usuário:', error);
-          
-          // Se não encontrou o plano, criar um plano gratuito
-          if (error.code === 'PGRST116') {
-            console.log('Plano não encontrado, criando plano gratuito');
-            return await this.createDefaultPlan(user.id);
+      if (profileError) {
+        console.error('Error fetching user profile:', profileError);
+        
+        // Se o perfil não existe, criar um perfil básico
+        if (profileError.code === 'PGRST116') {
+          console.log('Profile not found, creating basic profile...');
+          const { data: newProfile, error: createError } = await supabase
+            .from('perfis')
+            .insert({
+              user_id: user.id,
+              email: user.email,
+              full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
+              plano_ativo: 'gratuito',
+              billing_type: 'monthly',
+              data_inicio_plano: new Date().toISOString(),
+              data_expiracao_plano: null
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            return null;
           }
-          
-          return null;
-        }
 
-        console.log('Plano encontrado (cache):', data);
-        
-        // Log específico para usuário admin
-        if (user.email === 'medtosdigital@gmail.com') {
-          console.log('ADMIN USER DETECTED - Plan data:', data);
-          console.log('ADMIN USER DETECTED - plano_ativo:', data.plano_ativo);
+          console.log('Basic profile created:', newProfile);
+          return this.mapProfileToPlanoUsuario(newProfile, user.id);
         }
         
-        return data;
-      });
+        return null;
+      }
+
+      console.log('User profile found:', profile);
+      return this.mapProfileToPlanoUsuario(profile, user.id);
     } catch (error) {
-      console.error('Erro em getCurrentUserPlan:', error);
+      console.error('Error in getCurrentUserPlan:', error);
       return null;
     }
   }
@@ -139,39 +148,33 @@ class SupabasePlanService {
         return false;
       }
 
+      // Admin sempre pode criar
+      if (user.email === 'medtosdigital@gmail.com') {
+        console.log('Admin user can always create materials');
+        return true;
+      }
+
       const cacheKey = `can_create_${user.id}`;
       
       return await this.cachedQuery(cacheKey, async () => {
-        // Usar timeout para evitar consultas longas
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 5000)
-        );
-        
-        const queryPromise = supabase.rpc('can_create_material', {
-          p_user_id: user.id
-        });
-
         try {
-          const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
-
-          if (error) {
-            console.error('Erro ao verificar permissão de criação:', error);
-            return false;
+          // Buscar perfil do usuário
+          const profile = await this.getCurrentUserPlan();
+          if (!profile) {
+            console.log('No profile found, allowing creation');
+            return true; // Permitir criação se não tem perfil (será criado)
           }
 
-          console.log('Pode criar material (cache):', data);
-          return data || false;
-        } catch (timeoutError) {
-          console.warn('Timeout na verificação de permissão, usando fallback');
-          // Fallback rápido baseado no plano atual
-          const plan = await this.getCurrentUserPlan();
-          if (!plan) return true; // Usuário sem plano = plano gratuito
-          
+          const limit = this.getPlanLimits(profile.plano_ativo);
           const usage = await this.getCurrentMonthUsage();
-          const limit = this.getPlanLimits(plan.plano_ativo);
+          
+          console.log(`User can create material: ${usage} < ${limit}`);
           return usage < limit;
+        } catch (error) {
+          console.error('Error checking material creation permission:', error);
+          return true; // Em caso de erro, permitir criação
         }
-      }, CRITICAL_CACHE_DURATION); // Cache mais longo para reduzir verificações
+      }, CRITICAL_CACHE_DURATION);
     } catch (error) {
       console.error('Erro em canCreateMaterial:', error);
       return false;
@@ -184,9 +187,29 @@ class SupabasePlanService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { data, error } = await supabase.rpc('increment_material_usage', {
-        p_user_id: user.id
-      });
+      // Admin não precisa incrementar
+      if (user.email === 'medtosdigital@gmail.com') {
+        console.log('Admin user - no increment needed');
+        return true;
+      }
+
+      // Buscar perfil atual
+      const profile = await this.getCurrentUserPlan();
+      if (!profile) {
+        console.log('No profile found, creating one');
+        return true;
+      }
+
+      // Incrementar localmente
+      const newCount = (profile.materiais_criados_mes_atual || 0) + 1;
+      
+      const { error } = await supabase
+        .from('perfis')
+        .update({ 
+          materiais_criados_mes_atual: newCount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Erro ao incrementar uso de material:', error);
@@ -194,12 +217,10 @@ class SupabasePlanService {
       }
 
       // Limpar caches relacionados
-      queryCache.delete(`usage_${user.id}`);
-      queryCache.delete(`can_create_${user.id}`);
-      queryCache.delete(`remaining_${user.id}`);
+      this.clearCache(user.id);
 
-      console.log('Uso de material incrementado:', data);
-      return data || false;
+      console.log('Uso de material incrementado para:', newCount);
+      return true;
     } catch (error) {
       console.error('Erro em incrementMaterialUsage:', error);
       return false;
@@ -403,6 +424,26 @@ class SupabasePlanService {
       queryCache.clear();
     }
     console.log('Cache limpo', userId ? `para usuário: ${userId}` : 'completamente');
+  }
+
+  // Helper para mapear o perfil da tabela perfis para o tipo PlanoUsuario
+  private mapProfileToPlanoUsuario(profile: any, userId: string): PlanoUsuario {
+    return {
+      id: profile.id,
+      user_id: userId,
+      plano_ativo: profile.plano_ativo as TipoPlano,
+      data_inicio_plano: profile.data_inicio_plano,
+      data_expiracao_plano: profile.data_expiracao_plano,
+      created_at: profile.created_at,
+      updated_at: profile.updated_at,
+      email: profile.email,
+      full_name: profile.full_name,
+      nome_preferido: profile.nome_preferido,
+      materiais_criados_mes_atual: profile.materiais_criados_mes_atual,
+      ano_atual: profile.ano_atual,
+      mes_atual: profile.mes_atual,
+      ultimo_reset_materiais: profile.ultimo_reset_materiais,
+    };
   }
 }
 

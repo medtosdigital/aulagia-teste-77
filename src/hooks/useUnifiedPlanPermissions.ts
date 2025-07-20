@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 // Cache global otimizado
-const unifiedCache = new Map<string, { data: any; timestamp: number }>();
+const unifiedCache = new Map<string, { data: { profile: PerfilUsuario | null; remaining: number }; timestamp: number }>();
 const CACHE_DURATION = 30000; // 30 segundos para dados críticos
 
 export const useUnifiedPlanPermissions = () => {
@@ -86,25 +86,18 @@ export const useUnifiedPlanPermissions = () => {
         return;
       }
 
-      // Para usuários normais, carregar com timeout otimizado
-      const timeoutMs = 8000; // Reduzido de 30s para 8s
+      // Para usuários normais, carregar dados sem timeout agressivo
+      console.log('Carregando perfil do usuário...');
+      const profile = await supabaseUnifiedPlanService.getCurrentUserProfile();
       
-      const loadPromise = Promise.all([
-        supabaseUnifiedPlanService.getCurrentUserProfile(),
-        supabaseUnifiedPlanService.getRemainingMaterials()
-      ]);
-
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), timeoutMs)
-      );
-
-      const [profile, remaining] = await Promise.race([loadPromise, timeoutPromise]) as [PerfilUsuario | null, number];
+      console.log('Carregando materiais restantes...');
+      const remaining = await supabaseUnifiedPlanService.getRemainingMaterials();
       
       console.log('Perfil unificado carregado:', profile);
       console.log('Materiais restantes:', remaining);
       
       // Fallback para perfil não encontrado
-      let finalProfile = profile;
+      const finalProfile = profile;
       let finalRemaining = remaining;
 
       if (!profile) {
@@ -125,14 +118,14 @@ export const useUnifiedPlanPermissions = () => {
     } catch (error) {
       console.error('Erro ao carregar dados do perfil unificado:', error);
       
-      // Sistema de retry
+      // Sistema de retry simplificado
       if (retryCountRef.current < 2) {
         retryCountRef.current++;
         console.log(`Tentativa ${retryCountRef.current + 1} de 3`);
         setTimeout(() => {
           loadingRef.current = false;
           loadProfileData(true);
-        }, 1000 * retryCountRef.current);
+        }, 2000 * retryCountRef.current); // Aumentar delay entre tentativas
         return;
       }
       

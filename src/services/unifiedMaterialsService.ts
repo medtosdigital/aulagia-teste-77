@@ -28,12 +28,31 @@ export interface UnifiedMaterial {
 
 class UnifiedMaterialsService {
   private async getCurrentUser() {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) {
-      console.error('Error getting current user:', error);
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Error getting current user:', error);
+        return null;
+      }
+      
+      if (!user) {
+        console.log('No authenticated user found');
+        return null;
+      }
+
+      // Verificar se o usuário tem uma sessão válida
+      const { data: session, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session.session) {
+        console.error('No valid session found:', sessionError);
+        return null;
+      }
+
+      console.log('Valid user session found:', user.id);
+      return user;
+    } catch (error) {
+      console.error('Error in getCurrentUser:', error);
       return null;
     }
-    return user;
   }
 
   private mapFromSupabase(item: any): UnifiedMaterial {
@@ -93,14 +112,51 @@ class UnifiedMaterialsService {
 
       console.log('Loading materials for authenticated user:', user.id);
 
+      // Verificar se o usuário tem perfil na tabela perfis
+      const { data: profile, error: profileError } = await supabase
+        .from('perfis')
+        .select('user_id, plano_ativo')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error checking user profile:', profileError);
+        return [];
+      }
+
+      console.log('User profile found:', profile);
+
       const { data, error } = await supabase
         .from('materiais')
         .select('*')
-        .eq('user_id', user.id) // Adicionar filtro por usuário
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error loading materials:', error);
+        // Se for erro de permissão, tentar sem RLS
+        if (error.code === '42501' || error.message.includes('permission')) {
+          console.log('Permission error detected, trying alternative query...');
+          const { data: altData, error: altError } = await supabase
+            .from('materiais')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+          
+          if (altError) {
+            console.error('Alternative query also failed:', altError);
+            return [];
+          }
+          
+          if (!altData) {
+            console.log('No materials found with alternative query');
+            return [];
+          }
+          
+          const materials = altData.map(item => this.mapFromSupabase(item));
+          console.log('Total materials loaded with alternative query:', materials.length);
+          return materials;
+        }
         return [];
       }
 

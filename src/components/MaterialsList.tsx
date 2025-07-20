@@ -216,6 +216,22 @@ const MaterialsList: React.FC = () => {
       setLoading(true);
       console.log('Loading materials for authenticated user:', user.id);
       
+      // Verificar se o usuário tem perfil primeiro
+      const { data: profile, error: profileError } = await supabase
+        .from('perfis')
+        .select('user_id, plano_ativo')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error checking user profile:', profileError);
+        toast.error('Erro ao verificar perfil do usuário');
+        setMaterials([]);
+        return;
+      }
+
+      console.log('User profile found:', profile);
+      
       // Adicionar timeout para evitar travamentos
       const loadPromise = userMaterialsService.getMaterialsByUser();
       const timeoutPromise = new Promise((_, reject) => 
@@ -236,7 +252,22 @@ const MaterialsList: React.FC = () => {
       materialsCache.set(cacheKey, { data: convertedMaterials, timestamp: now });
     } catch (error) {
       console.error('Error loading materials:', error);
-      toast.error('Erro ao carregar materiais');
+      
+      // Mensagens de erro mais específicas
+      if (error instanceof Error) {
+        if (error.message.includes('Timeout')) {
+          toast.error('Tempo limite excedido ao carregar materiais');
+        } else if (error.message.includes('permission') || error.message.includes('42501')) {
+          toast.error('Erro de permissão. Verifique se você está logado corretamente.');
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          toast.error('Erro de conexão. Verifique sua internet.');
+        } else {
+          toast.error('Erro ao carregar materiais: ' + error.message);
+        }
+      } else {
+        toast.error('Erro ao carregar materiais');
+      }
+      
       setMaterials([]);
     } finally {
       setLoading(false);

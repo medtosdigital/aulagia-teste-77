@@ -24,6 +24,8 @@ interface FirstAccessState {
   isFirstAccess: boolean;
   showModal: boolean;
   userInfo: UserInfo | null;
+  loading: boolean;
+  saving: boolean;
 }
 
 export const useFirstAccess = () => {
@@ -31,7 +33,9 @@ export const useFirstAccess = () => {
   const [state, setState] = useState<FirstAccessState>({
     isFirstAccess: false,
     showModal: false,
-    userInfo: null
+    userInfo: null,
+    loading: false,
+    saving: false
   });
 
   useEffect(() => {
@@ -51,7 +55,9 @@ export const useFirstAccess = () => {
           setState({
             isFirstAccess: true,
             showModal: true,
-            userInfo: null
+            userInfo: null,
+            loading: false,
+            saving: false
           });
         } else if (profile) {
           // Verificar se é realmente primeiro acesso (sem dados pessoais preenchidos)
@@ -63,7 +69,9 @@ export const useFirstAccess = () => {
             setState({
               isFirstAccess: true,
               showModal: true,
-              userInfo: null
+              userInfo: null,
+              loading: false,
+              saving: false
             });
           } else {
             // Perfil existe e está completo, não é primeiro acesso
@@ -78,7 +86,9 @@ export const useFirstAccess = () => {
                 school: profile.escola || '',
                 materialTypes: profile.tipo_material_favorito || [],
                 celular: profile.celular || ''
-              }
+              },
+              loading: false,
+              saving: false
             });
           }
         }
@@ -88,7 +98,9 @@ export const useFirstAccess = () => {
         setState({
           isFirstAccess: true,
           showModal: true,
-          userInfo: null
+          userInfo: null,
+          loading: false,
+          saving: false
         });
       }
     };
@@ -112,8 +124,8 @@ export const useFirstAccess = () => {
         celular: userInfo.celular,
         escola: userInfo.school,
         // Garantir que o plano seja gratuito e billing seja monthly
-        plano_ativo: 'gratuito',
-        billing_type: 'monthly'
+        plano_ativo: 'gratuito' as const,
+        billing_type: 'monthly' as const
       };
 
       const { error } = await supabase
@@ -164,14 +176,18 @@ export const useFirstAccess = () => {
       setState({
         isFirstAccess: true,
         showModal: true,
-        userInfo: null
+        userInfo: null,
+        loading: false,
+        saving: false
       });
     } catch (error) {
       console.error('Error resetting first access:', error);
       setState({
         isFirstAccess: true,
         showModal: true,
-        userInfo: null
+        userInfo: null,
+        loading: false,
+        saving: false
       });
     }
   };
@@ -182,11 +198,10 @@ export const useFirstAccess = () => {
 
   return {
     isFirstAccess: state.isFirstAccess,
+    loading: state.loading,
+    saving: state.saving,
     showModal: state.showModal,
-    userInfo: state.userInfo,
     completeFirstAccess,
-    resetFirstAccess,
-    openModal,
     closeModal: () => setState(prev => ({ ...prev, showModal: false }))
   };
 };

@@ -565,7 +565,7 @@ const CreateLesson: React.FC = () => {
         updateProgress('validation', 10, 'Iniciando validação BNCC...');
 
         // Validação BNCC com timeout
-        const validationPromise = BNCCValidationService.validateTheme(formData.topic);
+        const validationPromise = BNCCValidationService.validateTopic(formData.topic, formData.subject, formData.grade);
         const validationTimeout = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Timeout na validação BNCC')), 30000)
         );
@@ -585,7 +585,7 @@ const CreateLesson: React.FC = () => {
         // Validação BNCC Aprimorada
         updateProgress('enhanced_validation', 10, 'Validação BNCC aprimorada...');
         
-        const enhancedValidationPromise = EnhancedBNCCValidationService.validateMultipleThemes([formData.topic]);
+        const enhancedValidationPromise = EnhancedBNCCValidationService.validateMultipleTopics([formData.topic], formData.subject, formData.grade);
         const enhancedValidationTimeout = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Timeout na validação BNCC aprimorada')), 30000)
         );

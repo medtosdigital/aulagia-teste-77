@@ -2,13 +2,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { userDataService } from '@/services/userDataService';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName?: string, metadata?: any) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName?: string, metadata?: Record<string, unknown>) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -39,17 +40,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Se é um novo usuário, garantir que o perfil seja criado
         if (event === 'SIGNED_IN' && session?.user) {
+          console.log('👤 Usuário logado, verificando perfil...');
           await ensureUserProfile(session.user);
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('🔍 Verificando sessão existente:', session?.user?.id);
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Se há uma sessão, garantir que o perfil existe
+        if (session?.user) {
+          console.log('👤 Sessão encontrada, verificando perfil...');
+          await ensureUserProfile(session.user);
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('❌ Erro ao verificar sessão:', error);
+        setLoading(false);
+      }
+    };
+
+    checkSession();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -59,33 +78,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('👤 Verificando/criando perfil para usuário:', user.id);
       
-      // Verificar se o perfil já existe
-      const { data: existingProfile, error: checkError } = await supabase
-        .from('perfis')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single();
+      // Usar o novo serviço para garantir dados completos
+      const userData = await userDataService.ensureUserData(user.id, user.email || '');
       
-      if (existingProfile) {
-        console.log('✅ Perfil já existe para usuário:', user.id);
-        return;
-      }
-      
-      // Se não existe, criar perfil
-      const { error: insertError } = await supabase
-        .from('perfis')
-        .insert({
-          user_id: user.id,
-          email: user.email,
-          full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
-          plano_ativo: 'gratuito',
-          billing_type: 'monthly'
-        });
-      
-      if (insertError) {
-        console.error('❌ Erro ao criar perfil:', insertError);
+      if (userData) {
+        console.log('✅ Perfil do usuário verificado/criado com sucesso:', userData);
       } else {
-        console.log('✅ Perfil criado com sucesso para usuário:', user.id);
+        console.error('❌ Erro ao verificar/criar perfil do usuário');
       }
     } catch (error) {
       console.error('❌ Erro ao verificar/criar perfil:', error);
@@ -100,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName?: string, metadata?: any) => {
+  const signUp = async (email: string, password: string, fullName?: string, metadata?: Record<string, unknown>) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({

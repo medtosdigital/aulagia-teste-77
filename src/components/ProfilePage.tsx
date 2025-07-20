@@ -19,7 +19,16 @@ import { ptBR } from 'date-fns/locale';
 import ProfilePhotoCropModal from './ProfilePhotoCropModal';
 
 // Cache em memória para perfil do usuário
-const profileCache = new Map<string, { data: any, timestamp: number }>();
+const profileCache = new Map<string, { data: {
+  name: string;
+  photo: string;
+  teachingLevel: string;
+  grades: string[];
+  subjects: string[];
+  school: string;
+  materialTypes: string[];
+  celular: string;
+}; timestamp: number }>();
 const PROFILE_CACHE_DURATION = 60000; // 60 segundos
 
 const ProfilePage = () => {
@@ -107,47 +116,48 @@ const ProfilePage = () => {
 
     try {
       setLoading(true);
-      // Buscar perfil do usuário
+      console.log('Loading profile for user:', user.id);
+      
+      // Buscar perfil do usuário na tabela perfis
       const { data: profile, error } = await supabase
         .from('perfis')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading profile:', error);
-        toast({
-          title: "Erro ao carregar perfil",
-          description: "Não foi possível carregar os dados do perfil.",
-          variant: "destructive"
-        });
+      if (error) {
+        console.error('Error loading user profile:', error);
+        // Fallback para dados básicos do usuário
+        const fallbackName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';
+        setFormData(prev => ({ ...prev, name: fallbackName }));
+        setLoading(false);
         return;
       }
 
-      let newFormData;
-      if (profile) {
-        let avatarFromPerfis = profile.avatar_url || '';
-        newFormData = {
-          name: profile.nome_preferido || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
-          photo: avatarFromPerfis,
-          teachingLevel: profile.etapas_ensino?.[0] || '',
-          grades: profile.anos_serie || [],
-          subjects: profile.disciplinas || [],
-          school: profile.escola || '',
-          materialTypes: profile.tipo_material_favorito || [],
-          celular: profile.celular || ''
-        };
-      } else {
-        newFormData = {
-          ...formData,
-          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário'
-        };
-      }
-      // Não buscar mais em 'profiles'
+      console.log('Profile loaded:', profile);
+
+      // Mapear dados do perfil para o formulário
+      const newFormData = {
+        name: profile.nome_preferido || profile.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
+        photo: profile.avatar_url || '',
+        teachingLevel: profile.etapas_ensino?.[0] || '',
+        grades: profile.anos_serie || [],
+        subjects: profile.disciplinas || [],
+        school: profile.escola || '',
+        materialTypes: profile.tipo_material_favorito || [],
+        celular: profile.celular || ''
+      };
+
+      console.log('Form data mapped:', newFormData);
       setFormData(newFormData);
       profileCache.set(cacheKey, { data: newFormData, timestamp: now });
     } catch (error) {
       console.error('Error loading profile:', error);
+      toast({
+        title: "Erro ao carregar perfil",
+        description: "Ocorreu um erro inesperado ao carregar o perfil.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -156,13 +166,9 @@ const ProfilePage = () => {
   useEffect(() => {
     const loadMaterialStats = async () => {
       try {
-        // Carregar estatísticas dos materiais com timeout
-        const loadPromise = statsService.getMaterialStats();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout loading stats')), 8000)
-        );
-        
-        const stats = await Promise.race([loadPromise, timeoutPromise]) as any;
+        console.log('Carregando estatísticas de materiais...');
+        const stats = await statsService.getMaterialStats();
+        console.log('Estatísticas carregadas:', stats);
         setMaterialStats(stats);
 
       } catch (error) {
@@ -189,13 +195,9 @@ const ProfilePage = () => {
   useEffect(() => {
     const loadActivities = async () => {
       try {
-        // Carregar atividades com timeout
-        const loadPromise = activityService.getRecentActivities(10);
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout loading activities')), 8000)
-        );
-        
-        const activities = await Promise.race([loadPromise, timeoutPromise]) as any;
+        console.log('Carregando atividades recentes...');
+        const activities = await activityService.getRecentActivities(10);
+        console.log('Atividades carregadas:', activities);
         setRecentActivities(activities);
       } catch (error) {
         console.error('Error loading activities:', error);
@@ -276,24 +278,33 @@ const ProfilePage = () => {
 
     try {
       setSaving(true);
+      console.log('Saving profile for user:', user.id);
 
       // Preparar dados para salvar na tabela perfis
       const profileData = {
         user_id: user.id,
         nome_preferido: formData.name,
+        full_name: formData.name, // Manter compatibilidade
+        email: user.email,
         etapas_ensino: formData.teachingLevel ? [formData.teachingLevel] : [],
         anos_serie: formData.grades,
         disciplinas: formData.subjects,
         tipo_material_favorito: formData.materialTypes,
         preferencia_bncc: false, // valor padrão
         celular: formData.celular,
-        escola: formData.school
+        escola: formData.school,
+        avatar_url: formData.photo,
+        updated_at: new Date().toISOString()
       };
 
+      console.log('Profile data to save:', profileData);
+
       // Upsert na tabela perfis
-      const { error: profileError } = await supabase
+      const { data: savedProfile, error: profileError } = await supabase
         .from('perfis')
-        .upsert(profileData, { onConflict: 'user_id' });
+        .upsert(profileData, { onConflict: 'user_id' })
+        .select()
+        .single();
 
       if (profileError) {
         console.error('Error saving profile:', profileError);
@@ -305,13 +316,10 @@ const ProfilePage = () => {
         return;
       }
 
-      // Atualizar avatar apenas na tabela perfis se houver foto
-      if (formData.photo) {
-        await supabase
-          .from('perfis')
-          .update({ avatar_url: formData.photo })
-          .eq('user_id', user.id);
-      }
+      console.log('Profile saved successfully:', savedProfile);
+
+      // Limpar cache para forçar recarregamento
+      profileCache.delete(`profile_${user.id}`);
 
       // Disparar evento para atualizar header
       window.dispatchEvent(new CustomEvent('profileUpdated'));
@@ -323,6 +331,7 @@ const ProfilePage = () => {
       
       setIsEditing(false);
 
+      // Registrar atividade
       activityService.addActivity({
         type: 'updated',
         title: 'Perfil atualizado',

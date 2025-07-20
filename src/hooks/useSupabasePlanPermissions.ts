@@ -274,7 +274,6 @@ export const useSupabasePlanPermissions = () => {
 
   const canAccessSchool = useCallback((): boolean => {
     const result = currentPlan?.plano_ativo === 'grupo_escolar' || currentPlan?.plano_ativo === 'admin';
-    console.log('useSupabasePlanPermissions Debug - canAccessSchool:', result, 'currentPlan:', currentPlan?.plano_ativo);
     return result;
   }, [currentPlan?.plano_ativo]);
 
@@ -296,13 +295,11 @@ export const useSupabasePlanPermissions = () => {
 
   const canAccessSettings = useCallback((): boolean => {
     const result = currentPlan?.plano_ativo === 'admin';
-    console.log('useSupabasePlanPermissions Debug - canAccessSettings:', result, 'currentPlan:', currentPlan?.plano_ativo);
     return result;
   }, [currentPlan?.plano_ativo]);
 
   const isAdminAuthenticated = useCallback((): boolean => {
     const result = currentPlan?.plano_ativo === 'admin';
-    console.log('useSupabasePlanPermissions Debug - isAdminAuthenticated:', result, 'currentPlan:', currentPlan?.plano_ativo);
     return result;
   }, [currentPlan?.plano_ativo]);
 

@@ -68,7 +68,7 @@ const Dashboard: React.FC = () => {
             try {
               const material = await materialService.getMaterialById(materialId);
               if (material) {
-                materialsMap[materialId] = material;
+                materialsMap[materialId as string] = material;
               }
             } catch (error) {
               console.warn(`Erro ao buscar material ${materialId}:`, error);
