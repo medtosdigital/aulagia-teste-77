@@ -48,7 +48,7 @@ export const usePlanPermissions = () => {
     // Mapear dados do perfil unificado para o formato esperado
     let planId = unifiedPermissions.currentProfile?.plano_ativo || 'gratuito';
     
-    // Forçar admin para o usuário correto
+    // Verificar admin por email primeiro
     if (user && user.email === 'medtosdigital@gmail.com') {
       planId = 'admin';
     }
@@ -171,7 +171,7 @@ export const usePlanPermissions = () => {
     // Estados - usar dados unificados
     currentPlan: memoizedPlan,
     usage: memoizedUsage,
-    currentProfile: unifiedPermissions.currentProfile, // <-- ADICIONADO
+    currentProfile: unifiedPermissions.currentProfile,
     shouldShowUpgrade: unifiedPermissions.shouldShowUpgrade,
     shouldShowSupportModal: false,
     loading: unifiedPermissions.loading,
@@ -202,23 +202,9 @@ export const usePlanPermissions = () => {
     getNextResetDate: memoizedFunctions.getNextResetDate,
     getAvailablePlansForUpgrade: memoizedFunctions.getAvailablePlansForUpgrade,
     
-    // Funções administrativas
-    canAccessSettings: () => {
-      // Verificar se é o usuário admin
-      if (user && user.email === 'medtosdigital@gmail.com') {
-        return true;
-      }
-      // Usar a função do unifiedPermissions como fallback
-      return unifiedPermissions.canAccessSettings();
-    },
-    isAdminAuthenticated: () => {
-      // Verificar se é o usuário admin
-      if (user && user.email === 'medtosdigital@gmail.com') {
-        return true;
-      }
-      // Usar a função do unifiedPermissions como fallback
-      return unifiedPermissions.isAdminAuthenticated();
-    },
+    // Funções administrativas otimizadas
+    canAccessSettings: unifiedPermissions.canAccessSettings,
+    isAdminAuthenticated: unifiedPermissions.isAdminAuthenticated,
     authenticateAdmin: () => false,
     logoutAdmin: () => {},
     
