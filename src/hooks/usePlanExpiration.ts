@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from 'react';
 import { planExpirationService } from '@/services/planExpirationService';
 
@@ -65,4 +66,4 @@ export const usePlanExpiration = () => {
     updatePaidPlan,
     renewPaidPlan
   };
-}; 
+};

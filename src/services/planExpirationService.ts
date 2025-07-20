@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { planService } from './planService';
 
@@ -44,6 +45,15 @@ interface ProfileData {
 }
 
 class PlanExpirationService {
+  async runDailyPlanCheck(): Promise<void> {
+    try {
+      console.log('🔄 Executando verificação diária de planos...');
+      await this.checkAndHandleExpiredPlans();
+    } catch (error) {
+      console.error('❌ Erro na verificação diária de planos:', error);
+    }
+  }
+
   async checkAndHandleExpiredPlans(): Promise<void> {
     try {
       console.log('🔍 Verificando planos expirados...');
@@ -104,6 +114,122 @@ class PlanExpirationService {
       console.log(`✅ Usuário ${userEmail} rebaixado para plano gratuito`);
     } catch (error) {
       console.error(`❌ Erro em downgradeToFreeplan para ${userEmail}:`, error);
+    }
+  }
+
+  // Renovar plano gratuito
+  async renewFreePlan(userId: string): Promise<boolean> {
+    try {
+      console.log(`🔄 Renovando plano gratuito para usuário ${userId}`);
+
+      const { error } = await supabase
+        .from('perfis')
+        .update({
+          plano_ativo: 'gratuito',
+          data_expiracao_plano: null,
+          billing_type: 'monthly',
+          materiais_criados_mes_atual: 0,
+          ultimo_reset_materiais: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error(`❌ Erro ao renovar plano gratuito para ${userId}:`, error);
+        return false;
+      }
+
+      console.log(`✅ Plano gratuito renovado para usuário ${userId}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Erro em renewFreePlan para ${userId}:`, error);
+      return false;
+    }
+  }
+
+  // Atualizar plano pago
+  async updatePaidPlan(userId: string, planType: 'professor' | 'grupo_escolar', billingType: 'monthly' | 'yearly'): Promise<boolean> {
+    try {
+      console.log(`🔄 Atualizando plano pago para usuário ${userId}: ${planType} (${billingType})`);
+
+      // Calcular data de expiração
+      const dataExpiracao = new Date();
+      if (billingType === 'monthly') {
+        dataExpiracao.setMonth(dataExpiracao.getMonth() + 1);
+      } else {
+        dataExpiracao.setFullYear(dataExpiracao.getFullYear() + 1);
+      }
+
+      const { error } = await supabase
+        .from('perfis')
+        .update({
+          plano_ativo: planType,
+          billing_type: billingType,
+          data_expiracao_plano: dataExpiracao.toISOString(),
+          data_inicio_plano: new Date().toISOString(),
+          materiais_criados_mes_atual: 0,
+          ultimo_reset_materiais: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error(`❌ Erro ao atualizar plano pago para ${userId}:`, error);
+        return false;
+      }
+
+      console.log(`✅ Plano pago atualizado para usuário ${userId}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Erro em updatePaidPlan para ${userId}:`, error);
+      return false;
+    }
+  }
+
+  // Renovar plano pago (via webhook)
+  async renewPaidPlan(userId: string): Promise<boolean> {
+    try {
+      console.log(`🔄 Renovando plano pago para usuário ${userId}`);
+
+      // Buscar dados atuais do usuário
+      const { data: userData, error: fetchError } = await supabase
+        .from('perfis')
+        .select('plano_ativo, billing_type')
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError || !userData) {
+        console.error(`❌ Erro ao buscar dados do usuário ${userId}:`, fetchError);
+        return false;
+      }
+
+      // Calcular nova data de expiração
+      const dataExpiracao = new Date();
+      if (userData.billing_type === 'monthly') {
+        dataExpiracao.setMonth(dataExpiracao.getMonth() + 1);
+      } else {
+        dataExpiracao.setFullYear(dataExpiracao.getFullYear() + 1);
+      }
+
+      const { error } = await supabase
+        .from('perfis')
+        .update({
+          data_expiracao_plano: dataExpiracao.toISOString(),
+          ultima_renovacao: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error(`❌ Erro ao renovar plano pago para ${userId}:`, error);
+        return false;
+      }
+
+      console.log(`✅ Plano pago renovado para usuário ${userId}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Erro em renewPaidPlan para ${userId}:`, error);
+      return false;
     }
   }
 

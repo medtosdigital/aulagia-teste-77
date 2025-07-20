@@ -1,4 +1,3 @@
-
 export interface ScheduleEvent {
   id: string;
   materialId: string;

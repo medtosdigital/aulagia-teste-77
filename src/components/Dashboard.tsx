@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Crown, BookOpen, ClipboardList, FileText, CheckCircle, Download, Users, Presentation, School } from 'lucide-react';
 import { statsService, MaterialStats } from '@/services/statsService';
-import { scheduleService, ScheduleEvent } from '@/services/scheduleService';
 import { activityService, Activity } from '@/services/activityService';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { format } from 'date-fns';
@@ -42,8 +41,12 @@ const Dashboard: React.FC = () => {
         const activities = await activityService.getRecentActivities(10);
         setRecentActivities(activities);
 
-        // Carregar próximas aulas
-        const classes = await scheduleService.getUpcomingClasses();
+        // Carregar próximas aulas usando supabaseScheduleService
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 30); // Próximos 30 dias
+        
+        const classes = await supabaseScheduleService.getEventsByDateRange(startDate, endDate);
         setUpcomingClasses(classes);
 
         // Carregar materiais para o mapa
