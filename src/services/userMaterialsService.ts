@@ -43,6 +43,11 @@ class UserMaterialsService {
     return unifiedMaterials.map(mapUnifiedToUser);
   }
 
+  async getMaterialsByUserId(userId: string): Promise<UserMaterial[]> {
+    const unifiedMaterials = await unifiedMaterialsService.getMaterialsByUserId(userId);
+    return unifiedMaterials.map(mapUnifiedToUser);
+  }
+
   async getAllMaterials(): Promise<UserMaterial[]> {
     return this.getMaterialsByUser();
   }

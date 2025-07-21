@@ -70,6 +70,28 @@ class UnifiedMaterialsService {
     }
   }
 
+  // Buscar materiais de um usuário específico (para admin/grupo escolar)
+  async getMaterialsByUserId(userId: string): Promise<UnifiedMaterial[]> {
+    try {
+      const { data, error } = await supabase
+        .from('materiais')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'ativo')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar materiais do usuário:', error);
+        return [];
+      }
+
+      return (data || []).map(item => this.mapFromDatabase(item));
+    } catch (error) {
+      console.error('Erro em getMaterialsByUserId:', error);
+      return [];
+    }
+  }
+
   // Adicionar novo material
   async addMaterial(material: Omit<UnifiedMaterial, 'id' | 'createdAt' | 'status'>): Promise<UnifiedMaterial | null> {
     try {

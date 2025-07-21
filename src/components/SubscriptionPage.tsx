@@ -94,7 +94,7 @@ const SubscriptionPage = () => {
   // Detectar tipo de faturamento real do usuário
   let realBillingType: 'monthly' | 'yearly' = 'monthly';
   if (currentProfile?.billing_type === 'yearly' || currentProfile?.billing_type === 'monthly') {
-    realBillingType = currentProfile.billing_type;
+    realBillingType = currentProfile.billing_type as 'monthly' | 'yearly';
   } else if (currentProfile?.data_inicio_plano && currentProfile?.data_expiracao_plano) {
     const start = new Date(currentProfile.data_inicio_plano);
     const end = new Date(currentProfile.data_expiracao_plano);

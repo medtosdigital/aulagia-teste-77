@@ -7,6 +7,7 @@ export interface PerfilUsuario {
   id: string;
   user_id: string;
   plano_ativo: TipoPlano;
+  billing_type?: 'monthly' | 'yearly';
   data_inicio_plano: string;
   data_expiracao_plano: string | null;
   materiais_criados_mes_atual: number;
@@ -58,6 +59,7 @@ class SupabaseUnifiedPlanService {
           id: 'admin-profile',
           user_id: user.id,
           plano_ativo: 'admin' as TipoPlano,
+          billing_type: 'monthly',
           data_inicio_plano: new Date().toISOString(),
           data_expiracao_plano: null,
           materiais_criados_mes_atual: 0,
@@ -119,14 +121,14 @@ class SupabaseUnifiedPlanService {
           }
 
           console.log('Basic profile created:', newProfile);
-          return newProfile;
+          return newProfile as PerfilUsuario;
         }
         
         return null;
       }
 
       console.log('Perfil encontrado:', data);
-      return data;
+      return data as PerfilUsuario;
     } catch (error) {
       console.error('Erro em getCurrentUserProfile:', error);
       return null;

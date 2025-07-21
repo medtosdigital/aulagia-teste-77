@@ -10,7 +10,7 @@ export interface PlanPermissionsProfile {
   full_name?: string;
   nome_preferido?: string;
   plano_ativo: 'gratuito' | 'professor' | 'grupo_escolar' | 'admin';
-  billing_type?: 'monthly' | 'yearly';
+  billing_type?: string;
   data_inicio_plano: string;
   data_expiracao_plano: string | null;
   status_plano: 'ativo' | 'atrasado' | 'cancelado';

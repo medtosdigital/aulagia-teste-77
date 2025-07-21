@@ -60,6 +60,7 @@ export const useUnifiedPlanPermissions = () => {
           id: 'admin-profile',
           user_id: user.id,
           plano_ativo: 'admin' as TipoPlano,
+          billing_type: 'monthly',
           data_inicio_plano: new Date().toISOString(),
           data_expiracao_plano: null,
           materiais_criados_mes_atual: 0,

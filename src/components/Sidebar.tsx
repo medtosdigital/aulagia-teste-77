@@ -121,59 +121,30 @@ const Sidebar: React.FC<SidebarProps> = ({
   const isMobile = useIsMobile();
   const { submitFeedback, getUserFeedbacks, loading } = useFeedback();
 
-  const mobileMenuItems = [{
-    id: 'dashboard',
-    label: 'Início',
-    icon: LayoutDashboard
-  },
-  // Materiais - para todos os usuários logados
-  ...(user ? [{
-    id: 'lessons',
-    label: 'Materiais',
-    icon: BookOpen
-  }] : []),
-  // Criar - para todos os usuários logados
-  ...(user ? [{
-    id: 'create',
-    label: 'Criar',
-    icon: Plus,
-    isCenter: true
-  }] : []),
-  // Calendário - para todos os usuários logados
-  ...(user ? [{
-    id: 'calendar',
-    label: 'Agenda',
-    icon: Calendar
-  }] : []), {
-    id: 'subscription',
-    label: 'Assinatura',
-    icon: User
-  }];
-  
-  const desktopMenuItems = [{
+  // Detectar se é admin
+  const isAdmin = user?.email === 'medtosdigital@gmail.com' || currentPlan?.plano_ativo === 'admin';
+
+  // Itens do menu para desktop
+  const desktopMenuItems = isAdmin ? [] : [{
     id: 'dashboard',
     label: 'Dashboard',
     icon: LayoutDashboard
   },
-  // Criar - para todos os usuários logados
   ...(user ? [{
     id: 'create',
     label: 'Criar Material',
     icon: Plus
   }] : []),
-  // Materiais - para todos os usuários logados
   ...(user ? [{
     id: 'lessons',
     label: 'Meus Materiais',
     icon: BookOpen
   }] : []),
-  // Calendário - para todos os usuários logados
   ...(user ? [{
     id: 'calendar',
     label: 'Calendário',
     icon: Calendar
   }] : []),
-  // Escola - apenas para usuários autenticados com plano grupo escolar
   ...(canAccessSchool() ? [{
     id: 'school',
     label: 'Escola',
@@ -186,6 +157,33 @@ const Sidebar: React.FC<SidebarProps> = ({
     id: 'subscription',
     label: 'Assinatura',
     icon: Crown
+  }];
+
+  // Itens do menu para mobile
+  const mobileMenuItems = isAdmin ? [] : [{
+    id: 'dashboard',
+    label: 'Início',
+    icon: LayoutDashboard
+  },
+  ...(user ? [{
+    id: 'lessons',
+    label: 'Materiais',
+    icon: BookOpen
+  }] : []),
+  ...(user ? [{
+    id: 'create',
+    label: 'Criar',
+    icon: Plus,
+    isCenter: true
+  }] : []),
+  ...(user ? [{
+    id: 'calendar',
+    label: 'Agenda',
+    icon: Calendar
+  }] : []), {
+    id: 'subscription',
+    label: 'Assinatura',
+    icon: User
   }];
 
   // Itens administrativos só aparecem para administrador autenticado

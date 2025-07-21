@@ -14,12 +14,14 @@ const planLabels = {
   gratuito: 'Gratuito',
   professor: 'Professor',
   grupo_escolar: 'Grupo Escolar',
+  admin: 'Admin',
 };
 
 const planOptions = [
   { value: 'gratuito', label: 'Gratuito' },
   { value: 'professor', label: 'Professor' },
   { value: 'grupo_escolar', label: 'Grupo Escolar' },
+  { value: 'admin', label: 'Admin' },
 ];
 
 const statusOptions = [
@@ -39,7 +41,8 @@ export default function AdminUsersPage() {
     email: '',
     plan: '' as 'gratuito' | 'professor' | 'grupo_escolar' | 'admin',
     celular: '',
-    escola: ''
+    escola: '',
+    billing_type: '' as 'monthly' | 'yearly'
   });
   const [saving, setSaving] = useState(false);
   
@@ -69,7 +72,7 @@ export default function AdminUsersPage() {
       const usersData = await (async () => {
         const { data: profiles, error: profilesError } = await supabase
           .from('perfis')
-          .select('user_id, full_name, email, plano_ativo, status_plano, data_inicio_plano, data_expiracao_plano, celular, escola, created_at')
+          .select('user_id, full_name, email, plano_ativo, status_plano, data_inicio_plano, data_expiracao_plano, celular, escola, created_at, billing_type, avatar_url, materiais_criados_mes_atual')
           .order('created_at', { ascending: false });
 
         if (profilesError) {
@@ -82,18 +85,28 @@ export default function AdminUsersPage() {
           return [];
         }
 
-        const usersData = profiles.map(profile => ({
+              const usersData = profiles.map(profile => {
+        // Verificar se é admin por email
+        const isAdmin = profile.email === 'medtosdigital@gmail.com';
+        const plan = isAdmin ? 'admin' : (profile.plano_ativo || 'gratuito');
+        
+        return {
           id: profile.user_id,
           name: profile.full_name || profile.email || 'Usuário',
           email: profile.email || 'N/A',
-          plan: profile.plano_ativo || 'gratuito',
+          plan: plan,
           status: profile.status_plano || 'ativo',
           celular: profile.celular || '',
           escola: profile.escola || '',
           created_at: profile.created_at,
           data_inicio_plano: profile.data_inicio_plano,
-          data_expiracao_plano: profile.data_expiracao_plano
-        }));
+          data_expiracao_plano: profile.data_expiracao_plano,
+          billing_type: profile.billing_type || 'monthly',
+          avatar_url: profile.avatar_url || null,
+          materiais_criados_mes_atual: profile.materiais_criados_mes_atual || 0,
+          isAdmin: isAdmin
+        };
+      });
 
         console.log('📋 Lista de usuários:', usersData);
         return usersData;
@@ -186,6 +199,7 @@ export default function AdminUsersPage() {
       plan: user.plan || '',
       celular: user.celular || '',
       escola: user.escola || '',
+      billing_type: user.billing_type || 'monthly',
     });
   }
   
@@ -196,7 +210,8 @@ export default function AdminUsersPage() {
       email: '',
       plan: '' as 'gratuito' | 'professor' | 'grupo_escolar' | 'admin',
       celular: '',
-      escola: ''
+      escola: '',
+      billing_type: 'monthly'
     });
   }
 
@@ -308,6 +323,7 @@ export default function AdminUsersPage() {
         plano_ativo: editData.plan,
         celular: editData.celular,
         escola: editData.escola,
+        billing_type: editData.billing_type,
         updated_at: new Date().toISOString(),
       };
       
@@ -597,8 +613,8 @@ export default function AdminUsersPage() {
                 <TableHead className="font-bold text-gray-700">E-mail</TableHead>
                 <TableHead className="font-bold text-gray-700">Plano</TableHead>
                 <TableHead className="font-bold text-gray-700">Status</TableHead>
-                <TableHead className="font-bold text-gray-700">Cadastro</TableHead>
-                <TableHead className="font-bold text-gray-700">Pagamento</TableHead>
+                <TableHead className="font-bold text-gray-700">Início do Plano</TableHead>
+                <TableHead className="font-bold text-gray-700">Expiração / Tipo / Materiais</TableHead>
                 <TableHead className="font-bold text-gray-700 text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -660,28 +676,69 @@ export default function AdminUsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={`flex items-center gap-1 font-semibold ${
-                        user.status === 'ativo' 
-                          ? 'bg-green-100 text-green-800 border-green-200' 
-                          : 'bg-gray-100 text-gray-500 border-gray-200'
-                      }`}>
-                        {user.status === 'ativo' ? <UserCheck size={14} /> : <UserX size={14} />}
-                        {user.status === 'ativo' ? 'Ativo' : 'Inativo'}
-                      </Badge>
+                      {(() => {
+                        const now = new Date();
+                        const expDate = user.data_expiracao_plano ? new Date(user.data_expiracao_plano) : null;
+                        const isExpired = expDate && expDate < now;
+                        const isOverdue = expDate && expDate < now && user.status === 'ativo';
+                        const isActive = user.status === 'ativo' && !isExpired;
+                        const isInactive = user.status !== 'ativo';
+                        
+                        let statusText = 'Inativo';
+                        let statusIcon = <Clock size={14} />;
+                        let statusClass = 'bg-gray-100 text-gray-500 border-gray-200';
+                        
+                        if (isOverdue) {
+                          statusText = 'Atrasado';
+                          statusIcon = <UserX size={14} />;
+                          statusClass = 'bg-red-100 text-red-800 border-red-200';
+                        } else if (isActive) {
+                          statusText = 'Ativo';
+                          statusIcon = <UserCheck size={14} />;
+                          statusClass = 'bg-green-100 text-green-800 border-green-200';
+                        } else if (isExpired) {
+                          statusText = 'Expirado';
+                          statusIcon = <UserX size={14} />;
+                          statusClass = 'bg-orange-100 text-orange-800 border-orange-200';
+                        }
+                        
+                        return (
+                          <Badge className={`flex items-center gap-1 font-semibold ${statusClass}`}>
+                            {statusIcon}
+                            {statusText}
+                          </Badge>
+                        );
+                      })()}
                     </TableCell>
-                    <TableCell className="text-gray-600">{user.createdAt}</TableCell>
+                    <TableCell className="text-gray-600">
+                      {user.data_inicio_plano ? 
+                        new Date(user.data_inicio_plano).toLocaleDateString('pt-BR') : 
+                        'N/A'
+                      }
+                    </TableCell>
                     <TableCell>
-                      {user.paymentDue ? (
-                        <Badge className={`${user.paymentBadge} flex items-center gap-1 font-semibold`}>
-                          <Clock size={14} />
-                          <span>{user.paymentDue}</span>
-                          <span className="ml-1">({user.paymentStatus})</span>
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-gray-100 text-gray-700 border-gray-200 font-semibold">
-                          Gratuito
-                        </Badge>
-                      )}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm">
+                          <span>
+                            {user.data_expiracao_plano ? 
+                              new Date(user.data_expiracao_plano).toLocaleDateString('pt-BR') : 
+                              'N/A'
+                            }
+                          </span>
+                          <Badge className={`text-xs ${
+                            user.billing_type === 'yearly' 
+                              ? 'bg-purple-100 text-purple-800 border-purple-200' 
+                              : 'bg-blue-100 text-blue-800 border-blue-200'
+                          }`}>
+                            {user.billing_type === 'yearly' ? 'Anual' : 'Mensal'}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-1 items-center">
+                          <Badge className="text-xs bg-gray-100 text-gray-700 border-gray-200">
+                            {user.materiais_criados_mes_atual} materiais
+                          </Badge>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex gap-2 justify-center">
@@ -836,6 +893,18 @@ export default function AdminUsersPage() {
                       {planOptions.map(opt => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700">Tipo de Faturamento</label>
+                    <select
+                      name="billing_type"
+                      value={editData.billing_type || ''}
+                      onChange={handleEditChange}
+                      className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 bg-white px-3"
+                    >
+                      <option value="monthly">Mensal</option>
+                      <option value="yearly">Anual</option>
                     </select>
                   </div>
                   <div className="space-y-2">

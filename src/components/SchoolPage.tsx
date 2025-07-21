@@ -114,7 +114,7 @@ const SchoolPage: React.FC = () => {
       const teachersWithCounts = await Promise.all(
         perfis.map(async (perfil) => {
           try {
-            const materials = await userMaterialsService.getMaterialsByUser(perfil.user_id);
+            const materials = await userMaterialsService.getMaterialsByUserId(perfil.user_id);
             const materialsCount = materials ? materials.length : 0;
 
             return {
