@@ -31,7 +31,7 @@ serve(async (req) => {
     const { email, evento, produto, token } = body
 
     // Validar token de segurança
-    if (token !== 'q64w1ncxx2k') {
+    if (token !== 'i2ak29r42qk') {
       console.error('Token inválido:', token)
       await logWebhookAttempt(supabase, email, evento, produto, null, 'erro', 'Token inválido', userAgent, ipAddress, body)
       return new Response(
@@ -76,7 +76,8 @@ serve(async (req) => {
           billingType = planData.billingType
           
           // Atualizar plano do usuário
-          await updateUserPlan(supabase, user.user_id, planoAplicado, billingType)
+          const formaPagamento = body.forma_pagamento || body.pagamento || null;
+          await updateUserPlan(supabase, user.user_id, planoAplicado, billingType, formaPagamento);
           break
         
         case 'assinatura cancelada':
@@ -84,7 +85,8 @@ serve(async (req) => {
           billingType = 'gratuito'
           
           // Voltar ao plano gratuito
-          await updateUserPlan(supabase, user.user_id, 'gratuito', 'gratuito')
+          const formaPagamento = body.forma_pagamento || body.pagamento || null;
+          await updateUserPlan(supabase, user.user_id, 'gratuito', 'gratuito', formaPagamento);
           break
         
         case 'assinatura atrasada':
@@ -152,21 +154,26 @@ serve(async (req) => {
   }
 })
 
-async function updateUserPlan(supabase: any, userId: string, planoAtivo: string, billingType: string) {
-  const now = new Date()
-  let dataExpiracao: Date | null = null
-
-  // Calcular data de expiração baseada no billing type
+async function updateUserPlan(supabase: any, userId: string, planoAtivo: string, billingType: string, formaPagamento: string | null = null) {
+  // Buscar expiração atual
+  const { data: perfil } = await supabase.from('perfis').select('data_expiracao_plano').eq('user_id', userId).single();
+  const now = new Date();
+  let dataExpiracao: Date | null = null;
+  let baseDate = now;
+  if (perfil && perfil.data_expiracao_plano) {
+    const atual = new Date(perfil.data_expiracao_plano);
+    if (atual > now) baseDate = atual;
+  }
+  // Calcular nova expiração
   if (planoAtivo !== 'gratuito') {
     if (billingType === 'mensal') {
-      dataExpiracao = new Date(now)
-      dataExpiracao.setMonth(dataExpiracao.getMonth() + 1)
+      dataExpiracao = new Date(baseDate);
+      dataExpiracao.setMonth(dataExpiracao.getMonth() + 1);
     } else if (billingType === 'anual') {
-      dataExpiracao = new Date(now)
-      dataExpiracao.setFullYear(dataExpiracao.getFullYear() + 1)
+      dataExpiracao = new Date(baseDate);
+      dataExpiracao.setFullYear(dataExpiracao.getFullYear() + 1);
     }
   }
-
   const { error } = await supabase
     .from('perfis')
     .update({
@@ -178,16 +185,15 @@ async function updateUserPlan(supabase: any, userId: string, planoAtivo: string,
       materiais_criados_mes_atual: 0,
       ultimo_reset_materiais: now.toISOString(),
       ultima_renovacao: now.toISOString(),
-      updated_at: now.toISOString()
+      updated_at: now.toISOString(),
+      forma_pagamento: formaPagamento
     })
-    .eq('user_id', userId)
-
+    .eq('user_id', userId);
   if (error) {
-    console.error('Erro ao atualizar plano do usuário:', error)
-    throw error
+    console.error('Erro ao atualizar plano do usuário:', error);
+    throw error;
   }
-
-  console.log(`✅ Plano do usuário ${userId} atualizado para ${planoAtivo}`)
+  console.log(`✅ Plano do usuário ${userId} atualizado para ${planoAtivo}`);
 }
 
 function getPlanoFromProduct(produto: string): { plano: string; billingType: string } {

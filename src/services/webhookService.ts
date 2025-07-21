@@ -28,7 +28,7 @@ export interface WebhookConfig {
 
 class WebhookService {
   private readonly WEBHOOK_URL = 'https://xmxpteviwcnrljtxvaoo.supabase.co/functions/v1/webhooks-aulagia';
-  private readonly SECURITY_TOKEN = 'q64w1ncxx2k';
+  private readonly SECURITY_TOKEN = 'i2ak29r42qk';
 
   // Obter URL do webhook
   getWebhookUrl(): string {

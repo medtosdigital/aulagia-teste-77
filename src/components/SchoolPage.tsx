@@ -84,7 +84,7 @@ const SchoolPage: React.FC = () => {
         setPlanoInfo({
           nome: data.plano_ativo === 'grupo_escolar' ? 'Plano Escola Premium' : data.plano_ativo,
           status: 'Ativo',
-          dataExpiracao: data.data_expiracao_plano ? new Date(data.data_expiracao_plano).toLocaleDateString('pt-BR') : '--/--/----',
+          dataExpiracao: data.data_expiracao_plano ? new Date(data.data_expiracao_plano).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '--/--/----',
         });
       }
     };
@@ -111,37 +111,18 @@ const SchoolPage: React.FC = () => {
       }
 
       // Load material counts for each teacher
-      const teachersWithCounts = await Promise.all(
-        perfis.map(async (perfil) => {
-          try {
-            const materials = await userMaterialsService.getMaterialsByUserId(perfil.user_id);
-            const materialsCount = materials ? materials.length : 0;
-
-            return {
-              id: perfil.user_id,
-              name: perfil.full_name || perfil.email || 'Professor',
-              email: perfil.email || '',
-              avatar_url: perfil.avatar_url || '',
-              subject: 'Multidisciplinar',
-              grade: 'Todas as séries',
-              materialsCount,
-              materialLimit: 300 // Assuming a default limit of 300 materials
-            };
-          } catch (error) {
-            console.error(`Error loading materials for user ${perfil.user_id}:`, error);
-            return {
-              id: perfil.user_id,
-              name: perfil.full_name || perfil.email || 'Professor',
-              email: perfil.email || '',
-              avatar_url: perfil.avatar_url || '',
-              subject: 'Multidisciplinar',
-              grade: 'Todas as séries',
-              materialsCount: 0,
-              materialLimit: 300 // Assuming a default limit of 300 materials
-            };
-          }
-        })
-      );
+      const teachersWithCounts = perfis.map((perfil) => {
+        return {
+          id: perfil.user_id,
+          name: perfil.full_name || perfil.email || 'Professor',
+          email: perfil.email || '',
+          avatar_url: perfil.avatar_url || '',
+          subject: 'Multidisciplinar',
+          grade: 'Todas as séries',
+          materialsCount: perfil.materiais_criados_mes_atual || 0, // Usar coluna do banco
+          materialLimit: 300 // ou perfil.limite_materiais, se existir
+        };
+      });
 
       setTeachers(teachersWithCounts);
     } catch (error) {
@@ -419,11 +400,13 @@ const SchoolPage: React.FC = () => {
                     <Badge className="bg-blue-100 text-blue-700 text-xs">{teacher.subject}</Badge>
                     <span className="text-xs text-gray-400">{teacher.grade}</span>
                     <Badge className="bg-green-100 text-green-700 text-xs">Materiais: {teacher.materialsCount || 0}</Badge>
-                    <Badge className="bg-indigo-100 text-indigo-700 text-xs">Limite: {teacher.materialLimit ?? '--'}</Badge>
+                    <Badge className="bg-indigo-100 text-indigo-700 text-xs">
+                      Limite: {filteredTeachers.length > 0 ? Math.floor(300 / filteredTeachers.length) : 0}
+                    </Badge>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className={`text-xs font-bold ${teacher.materialsCount >= (teacher.materialLimit || 0) ? 'text-red-600' : 'text-green-600'}`}>{teacher.materialsCount}/{teacher.materialLimit ?? '--'}</span>
+                  <span className={`text-xs font-bold ${teacher.materialsCount >= (filteredTeachers.length > 0 ? Math.floor(300 / filteredTeachers.length) : 0) ? 'text-red-600' : 'text-green-600'}`}>{teacher.materialsCount}/{filteredTeachers.length > 0 ? Math.floor(300 / filteredTeachers.length) : 0}</span>
                   <Button variant="ghost" size="icon" onClick={() => setEditUserLimit({ teacher, value: teacher.materialLimit || 0 })}><Edit className="w-4 h-4 text-gray-400 hover:text-blue-600" /></Button>
                 </div>
               </Card>

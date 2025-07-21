@@ -40,6 +40,9 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   const [billingType, setBillingType] = useState<'monthly' | 'yearly'>('monthly');
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelFeedback, setCancelFeedback] = useState('');
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const plans: Plan[] = [
     {
@@ -104,6 +107,14 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
     if (materialType.includes('Gestão')) return Brain;
     return Brain;
   };
+
+  function getPaymentLink(planId: string, billingType: 'monthly' | 'yearly') {
+    if (planId === 'professor' && billingType === 'monthly') return 'https://pay.kiwify.com.br/kCvmgsB';
+    if (planId === 'professor' && billingType === 'yearly') return 'https://pay.kiwify.com.br/Goknl68';
+    if (planId === 'grupo-escolar' && billingType === 'monthly') return 'https://pay.kiwify.com.br/h22D4Mq';
+    if (planId === 'grupo-escolar' && billingType === 'yearly') return 'https://pay.kiwify.com.br/pn1Kzjv';
+    return '';
+  }
 
   const handlePlanSelection = async () => {
     if (!selectedPlan) return;
@@ -322,16 +333,71 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                 Continuar com plano atual
               </Button>
               <Button 
-                onClick={handlePlanSelection} 
+                onClick={() => {
+                  if (selectedPlan === 'gratuito') {
+                    setShowCancelModal(true);
+                  } else {
+                    const link = getPaymentLink(selectedPlan, billingType);
+                    if (link) window.open(link, '_blank');
+                  }
+                }}
                 disabled={!selectedPlan || isLoading}
                 className="w-full sm:w-auto h-12 rounded-xl text-base"
               >
-                {isLoading ? 'Atualizando...' : 'Fazer Upgrade'}
+                {isLoading ? 'Atualizando...' : selectedPlan === 'gratuito' ? 'Mudar para Gratuito' : 'Fazer Upgrade'}
               </Button>
             </div>
           </div>
         )}
       </DialogContent>
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">
+            <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onClick={() => setShowCancelModal(false)}>
+              <span className="sr-only">Fechar</span>
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex flex-col items-center mb-4">
+              <Crown className="w-10 h-10 text-blue-500 mb-2" />
+              <h2 className="text-xl font-bold text-center mb-2">Quer realmente cancelar seu plano?</h2>
+              <p className="text-gray-600 text-center mb-4">Você vai perder todos os benefícios do plano pago e voltar para o gratuito.</p>
+              <textarea
+                className="w-full border rounded-lg p-2 text-sm mb-3 resize-none"
+                rows={3}
+                placeholder="Deixe um feedback (opcional)"
+                value={cancelFeedback}
+                onChange={e => setCancelFeedback(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => setShowCancelModal(false)}
+                disabled={isCancelling}
+              >
+                Não quero mais cancelar
+              </Button>
+              <Button
+                className="w-full border border-red-400 text-red-600 bg-white hover:bg-red-50"
+                onClick={async () => {
+                  setIsCancelling(true);
+                  // Enviar feedback se houver
+                  if (cancelFeedback.trim()) {
+                    // Aqui você pode enviar o feedback para o backend
+                  }
+                  await onPlanSelect('gratuito');
+                  setIsCancelling(false);
+                  setShowCancelModal(false);
+                  setCancelFeedback('');
+                }}
+                disabled={isCancelling}
+              >
+                Quero mesmo cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Dialog>
   );
 };

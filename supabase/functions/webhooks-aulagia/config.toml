@@ -1,2 +1,6 @@
 [functions.webhooks-aulagia]
 verify_jwt = false 
+# Token de Segurança
+# Antes: q64w1ncxx2k
+# Agora:
+token = "i2ak29r42qk" 
