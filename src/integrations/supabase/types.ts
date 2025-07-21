@@ -328,6 +328,7 @@ export type Database = {
           mes_atual: number | null
           nome_preferido: string | null
           plano_ativo: Database["public"]["Enums"]["tipo_plano"] | null
+          plano_id: number | null
           preferencia_bncc: boolean | null
           status_plano: string | null
           subscription_id: string | null
@@ -357,6 +358,7 @@ export type Database = {
           mes_atual?: number | null
           nome_preferido?: string | null
           plano_ativo?: Database["public"]["Enums"]["tipo_plano"] | null
+          plano_id?: number | null
           preferencia_bncc?: boolean | null
           status_plano?: string | null
           subscription_id?: string | null
@@ -386,6 +388,7 @@ export type Database = {
           mes_atual?: number | null
           nome_preferido?: string | null
           plano_ativo?: Database["public"]["Enums"]["tipo_plano"] | null
+          plano_id?: number | null
           preferencia_bncc?: boolean | null
           status_plano?: string | null
           subscription_id?: string | null
@@ -395,7 +398,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "perfis_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       planos: {
         Row: {
@@ -553,6 +564,23 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: number
       }
+      get_user_plan_details: {
+        Args: { p_user_id: string }
+        Returns: {
+          plano_nome: string
+          plano_descricao: string
+          preco_mensal: number
+          preco_anual: number
+          limite_materiais_mensal: number
+          pode_download_word: boolean
+          pode_download_ppt: boolean
+          pode_editar_materiais: boolean
+          pode_criar_slides: boolean
+          pode_criar_avaliacoes: boolean
+          tem_calendario: boolean
+          tem_historico: boolean
+        }[]
+      }
       increment_material_usage: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -569,6 +597,14 @@ export type Database = {
         Args: {
           p_user_id: string
           p_new_plan: Database["public"]["Enums"]["tipo_plano"]
+          p_expiration_date?: string
+        }
+        Returns: boolean
+      }
+      update_user_plan_with_planos: {
+        Args: {
+          p_user_id: string
+          p_plano_nome: string
           p_expiration_date?: string
         }
         Returns: boolean
