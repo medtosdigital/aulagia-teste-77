@@ -128,7 +128,7 @@ class SupabasePlanService {
             email: newProfile.email,
             full_name: newProfile.full_name,
             nome_preferido: newProfile.nome_preferido,
-            billing_type: newProfile.billing_type
+            billing_type: (newProfile.billing_type === 'yearly' || newProfile.billing_type === 'monthly') ? newProfile.billing_type : 'monthly'
           };
           return convertedProfile;
         }
@@ -157,7 +157,7 @@ class SupabasePlanService {
         email: data.email,
         full_name: data.full_name,
         nome_preferido: data.nome_preferido,
-        billing_type: data.billing_type
+        billing_type: (data.billing_type === 'yearly' || data.billing_type === 'monthly') ? data.billing_type : 'monthly'
       };
       return convertedProfile;
     } catch (error) {

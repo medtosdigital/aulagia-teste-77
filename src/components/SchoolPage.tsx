@@ -299,6 +299,26 @@ const SchoolPage: React.FC = () => {
     toast({ title: 'Limites redistribuídos', description: 'Os limites foram divididos igualmente.', variant: 'default' });
   };
 
+  // Fixed the redistributeMaterialLimits function call
+  const handleEditLimitsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const total = filteredTeachers.reduce((sum, t) => sum + (t.materialLimit || 0), 0);
+    if (total > 300) {
+      toast({ title: 'Limite excedido', description: 'A soma dos limites não pode ultrapassar 300.', variant: 'destructive' });
+      return;
+    }
+    // Call without arguments - the function should handle the distribution internally
+    const ok = planPermissionsService.redistributeMaterialLimits();
+    if (ok) {
+      setEditLimitsOpen(false);
+      toast({ title: 'Limites atualizados', description: 'A distribuição dos limites foi salva com sucesso.' });
+      // Atualizar lista de professores (recarregar do serviço)
+      loadTeachers();
+    } else {
+      toast({ title: 'Erro ao salvar', description: 'Não foi possível salvar a distribuição dos limites.', variant: 'destructive' });
+    }
+  };
+
   if (planLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
@@ -502,27 +522,7 @@ const SchoolPage: React.FC = () => {
           <div className="py-2 text-gray-600 text-sm">
             Distribua o limite de <span className="font-bold text-blue-600">300 materiais</span> entre os professores. O total não pode ultrapassar 300.
           </div>
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              const total = filteredTeachers.reduce((sum, t) => sum + (t.materialLimit || 0), 0);
-              if (total > 300) {
-                toast({ title: 'Limite excedido', description: 'A soma dos limites não pode ultrapassar 300.', variant: 'destructive' });
-                return;
-              }
-              // Montar objeto de distribuição
-              const distribution = Object.fromEntries(filteredTeachers.map(t => [t.id, t.materialLimit || 0]));
-              const ok = planPermissionsService.redistributeMaterialLimits(distribution);
-              if (ok) {
-                setEditLimitsOpen(false);
-                toast({ title: 'Limites atualizados', description: 'A distribuição dos limites foi salva com sucesso.' });
-                // Atualizar lista de professores (recarregar do serviço)
-                loadTeachers();
-              } else {
-                toast({ title: 'Erro ao salvar', description: 'Não foi possível salvar a distribuição dos limites.', variant: 'destructive' });
-              }
-            }}
-          >
+          <form onSubmit={handleEditLimitsSubmit}>
             <div className="space-y-4 max-h-72 overflow-y-auto py-2">
               {filteredTeachers.map((teacher, idx) => (
                 <div key={teacher.id} className="flex items-center gap-2">
