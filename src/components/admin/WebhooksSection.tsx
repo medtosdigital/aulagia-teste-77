@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,11 +10,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Copy, 
-  Check, 
   Play, 
-  AlertCircle, 
   Info, 
-  ExternalLink, 
   RefreshCw,
   ChevronLeft,
   ChevronRight,
@@ -39,10 +37,10 @@ export default function WebhooksSection() {
     recentEvents: [] as WebhookLog[]
   });
 
-  // Simulação
+  // Simulação com email padrão exemplo
   const [simulation, setSimulation] = useState<WebhookSimulation>({
-    email: 'arthurcrasto9@gmail.com',
-    evento: 'assinatura aprovada',
+    email: 'exemplo@email.com',
+    evento: 'compra aprovada',
     produto: 'Plano Professor (Mensal)',
     token: 'q64w1ncxx2k'
   });
@@ -64,16 +62,14 @@ export default function WebhooksSection() {
   const loadLogs = async () => {
     setLoading(true);
     try {
-      console.log('Carregando logs de webhook...');
       const result = await webhookService.getWebhookLogs(currentPage, logsPerPage);
-      console.log('Logs carregados:', result);
       setLogs(result.logs);
       setTotalLogs(result.total);
     } catch (error) {
       console.error('Erro ao carregar logs:', error);
       toast({
         title: "❌ Erro ao carregar logs",
-        description: "Não foi possível carregar os logs de webhook. Verifique o console para mais detalhes.",
+        description: "Não foi possível carregar os logs de webhook.",
         variant: "destructive"
       });
       setLogs([]);
@@ -85,9 +81,7 @@ export default function WebhooksSection() {
 
   const loadStats = async () => {
     try {
-      console.log('Carregando estatísticas de webhook...');
       const statsData = await webhookService.getWebhookStats();
-      console.log('Estatísticas carregadas:', statsData);
       setStats(statsData);
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
@@ -127,19 +121,14 @@ export default function WebhooksSection() {
 
     setSimulating(true);
     try {
-      console.log('🚀 Iniciando simulação de webhook:', simulation);
-      
-      // Mostrar notificação de início
       toast({
         title: "🔄 Simulando webhook...",
-        description: "Enviando dados para o endpoint...",
+        description: "Processando solicitação...",
       });
       
       const result = await webhookService.simulateWebhook(simulation);
       
       if (result.success) {
-        console.log('✅ Simulação bem-sucedida:', result);
-        
         toast({
           title: "✅ Webhook simulado com sucesso!",
           description: result.message,
@@ -148,17 +137,7 @@ export default function WebhooksSection() {
         // Recarregar logs e estatísticas
         await loadLogs();
         await loadStats();
-        
-        // Limpar formulário após sucesso
-        setSimulation({
-          email: 'arthurcrasto9@gmail.com',
-          evento: 'assinatura aprovada',
-          produto: 'Plano Professor (Mensal)',
-          token: 'q64w1ncxx2k'
-        });
       } else {
-        console.error('❌ Erro na simulação:', result);
-        
         toast({
           title: "❌ Erro na simulação",
           description: result.message,
@@ -166,8 +145,7 @@ export default function WebhooksSection() {
         });
       }
     } catch (error) {
-      console.error('💥 Erro inesperado ao simular webhook:', error);
-      
+      console.error('Erro ao simular webhook:', error);
       toast({
         title: "💥 Erro inesperado",
         description: "Erro ao simular webhook. Verifique o console para mais detalhes.",
@@ -256,7 +234,7 @@ export default function WebhooksSection() {
                     <li>Vá em Configurações → Webhooks</li>
                     <li>Adicione a URL do webhook acima</li>
                     <li>Configure o token de segurança: <code className="bg-gray-100 px-1 rounded">{securityToken}</code></li>
-                    <li>Ative os eventos: "Assinatura Aprovada", "Assinatura Renovada", "Assinatura Cancelada", "Assinatura Atrasada"</li>
+                    <li>Ative os eventos: "Compra Aprovada", "Assinatura Aprovada", "Assinatura Renovada", "Assinatura Cancelada", "Assinatura Atrasada"</li>
                   </ol>
                 </AlertDescription>
               </Alert>
@@ -306,7 +284,7 @@ export default function WebhooksSection() {
                 Simulador de Webhooks
               </CardTitle>
               <CardDescription>
-                Teste a funcionalidade de webhook da Kiwify com dados simulados
+                Teste a funcionalidade de webhook da Kiwify simulando eventos reais
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -316,7 +294,7 @@ export default function WebhooksSection() {
                   <Input
                     value={simulation.email}
                     onChange={(e) => setSimulation({ ...simulation, email: e.target.value })}
-                    placeholder="usuario@exemplo.com"
+                    placeholder="exemplo@email.com"
                   />
                 </div>
 
@@ -346,7 +324,7 @@ export default function WebhooksSection() {
                     onValueChange={(value) => setSimulation({ ...simulation, produto: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione um produto (opcional)" />
+                      <SelectValue placeholder="Selecione um produto" />
                     </SelectTrigger>
                     <SelectContent>
                       {webhookService.getProductOptions().map((option) => (
@@ -386,31 +364,14 @@ export default function WebhooksSection() {
                 )}
               </Button>
               
-              <Button
-                onClick={async () => {
-                  const isConnected = await webhookService.testWebhookConnection();
-                  if (isConnected) {
-                    toast({
-                      title: "✅ Conectividade OK",
-                      description: "Edge Function está acessível e funcionando.",
-                    });
-                  } else {
-                    toast({
-                      title: "❌ Problema de Conectividade",
-                      description: "Não foi possível conectar com a Edge Function.",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-                variant="outline"
-                className="w-full mt-2"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Testar Conectividade
-              </Button>
-              
-              <div className="text-sm text-gray-500 mt-2">
-                💡 <strong>Dica:</strong> Use um email que existe no sistema para testar. O webhook irá atualizar o plano do usuário automaticamente.
+              <div className="text-sm text-gray-600 mt-4 p-3 bg-gray-50 rounded-lg">
+                <div className="font-medium mb-2">💡 Como funciona:</div>
+                <ul className="text-xs space-y-1">
+                  <li>• <strong>Compra/Assinatura Aprovada:</strong> Ativa o plano do usuário</li>
+                  <li>• <strong>Assinatura Renovada:</strong> Renova o plano atual do usuário</li>
+                  <li>• <strong>Assinatura Cancelada:</strong> Volta o usuário ao plano gratuito</li>
+                  <li>• <strong>Assinatura Atrasada:</strong> Marca o plano como atrasado</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
@@ -518,4 +479,4 @@ export default function WebhooksSection() {
       </Tabs>
     </div>
   );
-} 
+}

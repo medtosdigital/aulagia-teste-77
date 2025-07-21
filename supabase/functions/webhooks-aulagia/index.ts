@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -22,45 +23,125 @@ serve(async (req) => {
     const body = await req.json()
     console.log('Webhook received:', body)
 
-    // Extract relevant data from webhook
-    const { 
-      event_type, 
-      data: { 
-        customer_id, 
-        subscription_id, 
-        status,
-        plan_type,
-        billing_type 
-      } 
-    } = body
+    // Capturar informações da requisição
+    const userAgent = req.headers.get('user-agent') || null
+    const ipAddress = req.headers.get('x-forwarded-for') || null
 
-    // Handle different webhook events
-    switch (event_type) {
-      case 'subscription.created':
-      case 'subscription.updated':
-      case 'subscription.renewed':
-        await handleSubscriptionUpdate(supabase, customer_id, subscription_id, status, plan_type, billing_type)
-        break
-      
-      case 'subscription.cancelled':
-      case 'subscription.expired':
-        await handleSubscriptionCancellation(supabase, customer_id, subscription_id)
-        break
-      
-      default:
-        console.log('Unhandled webhook event type:', event_type)
+    // Extrair dados do payload da Kiwify
+    const { email, evento, produto, token } = body
+
+    // Validar token de segurança
+    if (token !== 'q64w1ncxx2k') {
+      console.error('Token inválido:', token)
+      await logWebhookAttempt(supabase, email, evento, produto, null, 'erro', 'Token inválido', userAgent, ipAddress, body)
+      return new Response(
+        JSON.stringify({ error: 'Token inválido' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401 
+        }
+      )
     }
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
+    // Verificar se o usuário existe na tabela perfis
+    const { data: user, error: userError } = await supabase
+      .from('perfis')
+      .select('user_id, email, plano_ativo, billing_type')
+      .eq('email', email)
+      .single()
+
+    if (userError || !user) {
+      console.error('Usuário não encontrado:', email)
+      await logWebhookAttempt(supabase, email, evento, produto, null, 'erro', 'Usuário não encontrado', userAgent, ipAddress, body)
+      return new Response(
+        JSON.stringify({ error: 'Usuário não encontrado' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404 
+        }
+      )
+    }
+
+    // Processar evento baseado no tipo
+    let planoAplicado = null
+    let billingType = null
+
+    try {
+      switch (evento) {
+        case 'compra aprovada':
+        case 'assinatura aprovada':
+        case 'assinatura renovada':
+          const planData = getPlanoFromProduct(produto)
+          planoAplicado = planData.plano
+          billingType = planData.billingType
+          
+          // Atualizar plano do usuário
+          await updateUserPlan(supabase, user.user_id, planoAplicado, billingType)
+          break
+        
+        case 'assinatura cancelada':
+          planoAplicado = 'gratuito'
+          billingType = 'gratuito'
+          
+          // Voltar ao plano gratuito
+          await updateUserPlan(supabase, user.user_id, 'gratuito', 'gratuito')
+          break
+        
+        case 'assinatura atrasada':
+          // Não alterar plano, apenas registrar o atraso
+          planoAplicado = user.plano_ativo
+          billingType = user.billing_type
+          
+          // Atualizar status do plano para atrasado
+          await supabase
+            .from('perfis')
+            .update({ status_plano: 'atrasado' })
+            .eq('user_id', user.user_id)
+          break
+        
+        default:
+          console.log('Evento não reconhecido:', evento)
+          await logWebhookAttempt(supabase, email, evento, produto, null, 'erro', 'Evento não reconhecido', userAgent, ipAddress, body)
+          return new Response(
+            JSON.stringify({ error: 'Evento não reconhecido' }),
+            { 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400 
+            }
+          )
       }
-    )
+
+      // Log de sucesso
+      await logWebhookAttempt(supabase, email, evento, produto, planoAplicado, 'sucesso', 'Processado com sucesso', userAgent, ipAddress, body)
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Webhook processado com sucesso',
+          plano_aplicado: planoAplicado,
+          billing_type: billingType
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      )
+
+    } catch (error) {
+      console.error('Erro ao processar webhook:', error)
+      await logWebhookAttempt(supabase, email, evento, produto, null, 'erro_processamento', error.message, userAgent, ipAddress, body)
+      
+      return new Response(
+        JSON.stringify({ error: 'Erro ao processar webhook' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      )
+    }
 
   } catch (error) {
-    console.error('Webhook error:', error)
+    console.error('Erro geral do webhook:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
@@ -71,161 +152,100 @@ serve(async (req) => {
   }
 })
 
-async function handleSubscriptionUpdate(
-  supabase: any, 
-  customerId: string, 
-  subscriptionId: string, 
-  status: string, 
-  planType: string, 
-  billingType: string
-) {
-  try {
-    console.log('Handling subscription update:', { customerId, subscriptionId, status, planType, billingType })
+async function updateUserPlan(supabase: any, userId: string, planoAtivo: string, billingType: string) {
+  const now = new Date()
+  let dataExpiracao: Date | null = null
 
-    // Map plan types to our internal plan names
-    const planMapping: { [key: string]: string } = {
-      'professor': 'professor',
-      'grupo_escolar': 'grupo_escolar',
-      'teacher': 'professor',
-      'school_group': 'grupo_escolar'
+  // Calcular data de expiração baseada no billing type
+  if (planoAtivo !== 'gratuito') {
+    if (billingType === 'mensal') {
+      dataExpiracao = new Date(now)
+      dataExpiracao.setMonth(dataExpiracao.getMonth() + 1)
+    } else if (billingType === 'anual') {
+      dataExpiracao = new Date(now)
+      dataExpiracao.setFullYear(dataExpiracao.getFullYear() + 1)
     }
-
-    const internalPlanType = planMapping[planType] || 'professor'
-    const internalBillingType = billingType === 'yearly' ? 'yearly' : 'monthly'
-
-    // Verificar se o plano existe na tabela de planos
-    const { data: planData, error: planError } = await supabase
-      .from('planos')
-      .select('*')
-      .eq('nome', internalPlanType)
-      .eq('ativo', true)
-      .single()
-
-    if (planError || !planData) {
-      console.error('Plano não encontrado ou inativo:', internalPlanType)
-      return
-    }
-
-    // Find user by customer_id
-    const { data: user, error: userError } = await supabase
-      .from('perfis')
-      .select('user_id, data_expiracao_plano')
-      .eq('customer_id', customerId)
-      .single()
-
-    if (userError) {
-      console.error('Error finding user by customer_id:', userError)
-      return
-    }
-
-    if (!user) {
-      console.error('User not found for customer_id:', customerId)
-      return
-    }
-
-    // Calcular nova data de expiração
-    const now = new Date()
-    let expirationDate: Date
-
-    if (user.data_expiracao_plano) {
-      // Se já tem data de expiração, renovar a partir dela
-      const currentExpiration = new Date(user.data_expiracao_plano)
-      expirationDate = calculateExpirationDate(currentExpiration, internalBillingType)
-    } else {
-      // Se não tem, criar nova data de expiração
-      expirationDate = calculateExpirationDate(now, internalBillingType)
-    }
-
-    // Update user's plan
-    const { error: updateError } = await supabase
-      .from('perfis')
-      .update({
-        plano_ativo: internalPlanType,
-        billing_type: internalBillingType,
-        data_inicio_plano: now.toISOString(),
-        data_expiracao_plano: expirationDate.toISOString(),
-        status_plano: 'ativo',
-        ultima_renovacao: now.toISOString(),
-        subscription_id: subscriptionId,
-        customer_id: customerId
-      })
-      .eq('user_id', user.user_id)
-
-    if (updateError) {
-      console.error('Error updating user plan:', updateError)
-      return
-    }
-
-    console.log('✅ User plan updated successfully:', user.user_id, 'Plano:', internalPlanType, 'Expiração:', expirationDate)
-
-  } catch (error) {
-    console.error('Error in handleSubscriptionUpdate:', error)
   }
+
+  const { error } = await supabase
+    .from('perfis')
+    .update({
+      plano_ativo: planoAtivo,
+      billing_type: billingType,
+      data_inicio_plano: now.toISOString(),
+      data_expiracao_plano: dataExpiracao?.toISOString() || null,
+      status_plano: 'ativo',
+      materiais_criados_mes_atual: 0,
+      ultimo_reset_materiais: now.toISOString(),
+      ultima_renovacao: now.toISOString(),
+      updated_at: now.toISOString()
+    })
+    .eq('user_id', userId)
+
+  if (error) {
+    console.error('Erro ao atualizar plano do usuário:', error)
+    throw error
+  }
+
+  console.log(`✅ Plano do usuário ${userId} atualizado para ${planoAtivo}`)
 }
 
-async function handleSubscriptionCancellation(
-  supabase: any, 
-  customerId: string, 
-  subscriptionId: string
-) {
-  try {
-    console.log('Handling subscription cancellation:', { customerId, subscriptionId })
-
-    // Find user by customer_id
-    const { data: user, error: userError } = await supabase
-      .from('perfis')
-      .select('user_id')
-      .eq('customer_id', customerId)
-      .single()
-
-    if (userError) {
-      console.error('Error finding user by customer_id:', userError)
-      return
-    }
-
-    if (!user) {
-      console.error('User not found for customer_id:', customerId)
-      return
-    }
-
-    // Revert to free plan with new expiration date
-    const now = new Date()
-    const expirationDate = calculateExpirationDate(now, 'monthly')
-
-    const { error: updateError } = await supabase
-      .from('perfis')
-      .update({
-        plano_ativo: 'gratuito',
-        billing_type: 'monthly',
-        data_inicio_plano: now.toISOString(),
-        data_expiracao_plano: expirationDate.toISOString(),
-        status_plano: 'cancelado',
-        ultima_renovacao: now.toISOString(),
-        subscription_id: null,
-        customer_id: null
-      })
-      .eq('user_id', user.user_id)
-
-    if (updateError) {
-      console.error('Error reverting user to free plan:', updateError)
-      return
-    }
-
-    console.log('✅ User reverted to free plan:', user.user_id, 'Nova expiração:', expirationDate)
-
-  } catch (error) {
-    console.error('Error in handleSubscriptionCancellation:', error)
+function getPlanoFromProduct(produto: string): { plano: string; billingType: string } {
+  if (!produto) return { plano: 'gratuito', billingType: 'gratuito' }
+  
+  const produtoLower = produto.toLowerCase()
+  
+  let plano = 'gratuito'
+  let billingType = 'gratuito'
+  
+  // Determinar plano baseado no produto
+  if (produtoLower.includes('professor')) {
+    plano = 'professor'
+  } else if (produtoLower.includes('grupo escolar')) {
+    plano = 'grupo_escolar'
   }
+  
+  // Determinar billing type baseado no produto
+  if (produtoLower.includes('mensal')) {
+    billingType = 'mensal'
+  } else if (produtoLower.includes('anual')) {
+    billingType = 'anual'
+  }
+  
+  return { plano, billingType }
 }
 
-function calculateExpirationDate(startDate: Date, billingType: 'monthly' | 'yearly'): Date {
-  const expirationDate = new Date(startDate)
-  
-  if (billingType === 'monthly') {
-    expirationDate.setMonth(expirationDate.getMonth() + 1)
-  } else {
-    expirationDate.setFullYear(expirationDate.getFullYear() + 1)
+async function logWebhookAttempt(
+  supabase: any,
+  email: string,
+  evento: string,
+  produto: string | null,
+  planoAplicado: string | null,
+  status: string,
+  mensagem: string,
+  userAgent: string | null,
+  ipAddress: string | null,
+  payload: any
+) {
+  try {
+    const { error } = await supabase
+      .from('webhook_logs')
+      .insert({
+        email,
+        evento,
+        produto,
+        plano_aplicado: planoAplicado,
+        status,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        payload,
+        created_at: new Date().toISOString()
+      })
+
+    if (error) {
+      console.error('Erro ao registrar log:', error)
+    }
+  } catch (error) {
+    console.error('Erro ao registrar log:', error)
   }
-  
-  return expirationDate
-} 
+}
