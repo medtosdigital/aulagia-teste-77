@@ -37,7 +37,6 @@ const pageTitles: Record<string, string> = {
   '/perfil': 'Perfil',
   '/assinatura': 'Assinatura',
   '/configuracoes': 'Configurações',
-  '/api-keys': 'Chaves de API',
 };
 
 const Index = () => {
@@ -263,7 +262,6 @@ const Index = () => {
             <Route path="/assinatura" element={requireAuth(<SubscriptionPage />)} />
             <Route path="/configuracoes" element={requireAdmin(<AdminConfigPage />)} />
             <Route path="/admin/usuarios" element={requireAdmin(<AdminUsersPage />)} />
-            <Route path="/api-keys" element={requireAdmin(<div className="p-4"><h2>Chaves de API - Em desenvolvimento</h2></div>)} />
             <Route path="/material/:id" element={requireAuth(<MaterialViewer />)} />
             <Route path="*" element={<Navigate to={user ? "/" : "/landing"} replace />} />
           </Routes>
