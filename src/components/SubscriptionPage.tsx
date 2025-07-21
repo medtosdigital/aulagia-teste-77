@@ -55,6 +55,9 @@ const SubscriptionPage = () => {
   const [isChangeCardModalOpen, setIsChangeCardModalOpen] = useState(false);
   const [isChangePlanModalOpen, setIsChangePlanModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelFeedback, setCancelFeedback] = useState('');
+  const [isCancelling, setIsCancelling] = useState(false);
   
   const { 
     currentPlan, 
@@ -91,15 +94,14 @@ const SubscriptionPage = () => {
   const isSubscriptionActive = currentPlanId !== 'gratuito';
   const subscriptionStatus = isSubscriptionActive ? 'Ativo' : 'Inativo';
 
-  // Detectar tipo de faturamento real do usuário
+  // Corrigir detecção do tipo de faturamento
   let realBillingType: 'mensal' | 'anual' = 'mensal';
-  if (currentProfile?.billing_type === 'yearly' || currentProfile?.billing_type === 'monthly') {
+  if (currentProfile?.billing_type) {
     realBillingType = normalizeBillingType(currentProfile.billing_type);
   } else if (currentProfile?.data_inicio_plano && currentProfile?.data_expiracao_plano) {
     const start = new Date(currentProfile.data_inicio_plano);
     const end = new Date(currentProfile.data_expiracao_plano);
     const diffMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-    // Se diferença for 11 ou 12 meses, considerar anual
     if (diffMonths >= 11) {
       realBillingType = 'anual';
     }
@@ -110,21 +112,11 @@ const SubscriptionPage = () => {
     setBillingType(realBillingType);
   }, [realBillingType]);
 
-  // Create a stable callback for refreshData to prevent infinite loops
-  const stableRefreshData = useCallback(() => {
-    // Adicionar timeout para evitar travamentos
-    const result = refreshData();
-    if (result && typeof result.then === 'function') {
-      result.catch(error => {
-        console.error('Erro ao atualizar dados da assinatura:', error);
-      });
-    }
-  }, [refreshData]);
-
-  // Refresh data when component mounts
+  // Remover qualquer chamada a stableRefreshData
   useEffect(() => {
-    stableRefreshData();
-  }, [stableRefreshData]);
+    refreshData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Só roda uma vez ao montar
 
   const plans: Plan[] = [
     {
@@ -820,7 +812,6 @@ const SubscriptionPage = () => {
                   </ul>
 
                   <Button
-                    onClick={() => handlePlanChange(plan.id)}
                     className={`w-full py-2 sm:py-3 text-sm ${
                       isCurrentPlan
                         ? 'bg-gray-400 text-white cursor-not-allowed hover:bg-gray-400'
@@ -831,6 +822,18 @@ const SubscriptionPage = () => {
                         : 'bg-gray-900 hover:bg-gray-800'
                     }`}
                     disabled={isCurrentPlan}
+                    onClick={() => {
+                      if (plan.id === 'gratuito') {
+                        if (isSubscriptionActive) {
+                          setShowCancelModal(true);
+                        } else {
+                          handlePlanChange('gratuito');
+                        }
+                      } else {
+                        const link = getPaymentLink(plan.id, billingType);
+                        if (link) window.open(link, '_blank');
+                      }
+                    }}
                   >
                     {isCurrentPlan ? 'Plano Atual' : 'Assinar Agora'}
                   </Button>
@@ -944,6 +947,60 @@ const SubscriptionPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de confirmação de cancelamento */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">
+            <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onClick={() => setShowCancelModal(false)}>
+              <span className="sr-only">Fechar</span>
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex flex-col items-center mb-4">
+              <Crown className="w-10 h-10 text-blue-500 mb-2" />
+              <h2 className="text-xl font-bold text-center mb-2">Quer realmente cancelar seu plano?</h2>
+              <p className="text-gray-600 text-center mb-4">Você vai perder todos os benefícios do plano pago e voltar para o gratuito.</p>
+              <textarea
+                className="w-full border rounded-lg p-2 text-sm mb-3 resize-none"
+                rows={3}
+                placeholder="Deixe um feedback (opcional)"
+                value={cancelFeedback}
+                onChange={e => setCancelFeedback(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => setShowCancelModal(false)}
+                disabled={isCancelling}
+              >
+                Não quero mais cancelar
+              </Button>
+              <Button
+                className="w-full border border-red-400 text-red-600 bg-white hover:bg-red-50"
+                onClick={async () => {
+                  setIsCancelling(true);
+                  // Enviar feedback se houver
+                  if (cancelFeedback.trim()) {
+                    await activityService.addActivity({
+                      type: 'feedback',
+                      title: 'Feedback de cancelamento',
+                      description: cancelFeedback.trim()
+                    });
+                  }
+                  await handlePlanChange('gratuito');
+                  setIsCancelling(false);
+                  setShowCancelModal(false);
+                  setCancelFeedback('');
+                }}
+                disabled={isCancelling}
+              >
+                Quero mesmo cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -952,6 +1009,15 @@ const SubscriptionPage = () => {
 function normalizeBillingType(tipo: any): 'mensal' | 'anual' {
   if (tipo === 'yearly' || tipo === 'anual') return 'anual';
   return 'mensal';
+}
+
+// Função para obter o link de pagamento correto
+function getPaymentLink(planId: string, billingType: 'mensal' | 'anual') {
+  if (planId === 'professor' && billingType === 'mensal') return 'https://pay.kiwify.com.br/kCvmgsB';
+  if (planId === 'professor' && billingType === 'anual') return 'https://pay.kiwify.com.br/Goknl68';
+  if (planId === 'grupo-escolar' && billingType === 'mensal') return 'https://pay.kiwify.com.br/h22D4Mq';
+  if (planId === 'grupo-escolar' && billingType === 'anual') return 'https://pay.kiwify.com.br/pn1Kzjv';
+  return '';
 }
 
 export default SubscriptionPage;

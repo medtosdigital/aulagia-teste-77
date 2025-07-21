@@ -21,8 +21,9 @@ export const useUnifiedPlanPermissions = () => {
 
   // Função otimizada com retry e fallback
   const loadProfileData = useCallback(async (forceReload = false) => {
+    console.log('[DEBUG] Início do loadProfileData', { forceReload });
     if (!user?.id) {
-      console.log('Nenhum usuário autenticado, definindo valores padrão');
+      console.log('[DEBUG] Nenhum usuário autenticado, definindo valores padrão');
       setCurrentProfile(null);
       setRemainingMaterials(5); // Fallback para plano gratuito
       setLoading(false);
@@ -30,7 +31,10 @@ export const useUnifiedPlanPermissions = () => {
     }
 
     // Evitar múltiplas consultas simultâneas
-    if (loadingRef.current && !forceReload) return;
+    if (loadingRef.current && !forceReload) {
+      console.log('[DEBUG] Já está carregando, abortando nova chamada');
+      return;
+    }
 
     // Verificar cache primeiro
     const cacheKey = `unified_profile_${user.id}`;
@@ -38,7 +42,7 @@ export const useUnifiedPlanPermissions = () => {
     const now = Date.now();
     
     if (!forceReload && cached && (now - cached.timestamp) < CACHE_DURATION) {
-      console.log('Usando dados do cache para perfil unificado');
+      console.log('[DEBUG] Usando dados do cache para perfil unificado');
       setCurrentProfile(cached.data.profile);
       setRemainingMaterials(cached.data.remaining);
       setLoading(false);
@@ -47,20 +51,21 @@ export const useUnifiedPlanPermissions = () => {
 
     loadingRef.current = true;
     setLoading(true);
+    console.log('[DEBUG] setLoading(true)');
 
     try {
-      console.log('Carregando dados unificados do perfil para usuário:', user.id);
+      console.log('[DEBUG] Carregando dados unificados do perfil para usuário:', user.id);
       
       // Verificar se é usuário admin primeiro (sem consulta ao banco)
       const isAdminUser = user.email === 'medtosdigital@gmail.com';
       
       if (isAdminUser) {
-        console.log('ADMIN USER DETECTED - Using admin profile');
+        console.log('[DEBUG] ADMIN USER DETECTED - Using admin profile');
         const adminProfile: PerfilUsuario = {
           id: 'admin-profile',
           user_id: user.id,
           plano_ativo: 'admin' as TipoPlano,
-          billing_type: 'monthly',
+          billing_type: 'mensal', // Corrigido para o tipo correto
           data_inicio_plano: new Date().toISOString(),
           data_expiracao_plano: null,
           materiais_criados_mes_atual: 0,
@@ -85,17 +90,20 @@ export const useUnifiedPlanPermissions = () => {
         setLoading(false);
         loadingRef.current = false;
         retryCountRef.current = 0;
+        console.log('[DEBUG] Fim do loading admin, setLoading(false)');
         return;
       }
 
       // Para usuários normais, carregar dados sem timeout agressivo
-      console.log('Carregando perfil do usuário...');
+      console.log('[DEBUG] Carregando perfil do usuário...');
       const profile = await supabaseUnifiedPlanService.getCurrentUserProfile();
-      
-      console.log('Carregando materiais restantes...');
+      console.log('[DEBUG] Resultado profile:', profile);
+      console.log('[DEBUG] Carregando materiais restantes...');
       let remaining = await supabaseUnifiedPlanService.getRemainingMaterials();
+      console.log('[DEBUG] Resultado remaining:', remaining);
       if (typeof remaining !== 'number' || isNaN(remaining)) {
         remaining = 5;
+        console.log('[DEBUG] Valor inválido para remaining, usando 5');
       }
       
       console.log('Perfil unificado carregado:', profile);
@@ -119,16 +127,19 @@ export const useUnifiedPlanPermissions = () => {
       setCurrentProfile(finalProfile);
       setRemainingMaterials(finalRemaining);
       retryCountRef.current = 0; // Reset retry count on success
+      console.log('[DEBUG] Fim do loading normal, setLoading(false)');
 
     } catch (error) {
-      console.error('Erro ao carregar dados do perfil unificado:', error);
+      console.error('[DEBUG] Erro ao carregar dados do perfil unificado:', error);
       // Fallback final após erro
       setCurrentProfile(null);
       setRemainingMaterials(5);
       retryCountRef.current = 0;
+      console.log('[DEBUG] Fim do loading com erro, setLoading(false)');
     } finally {
       setLoading(false);
       loadingRef.current = false;
+      console.log('[DEBUG] finally setLoading(false)');
     }
   }, [user]);
 
