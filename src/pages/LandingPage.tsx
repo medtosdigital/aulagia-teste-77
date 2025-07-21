@@ -6,6 +6,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { UserProfileMini } from '@/components/UserProfileMini';
 
 // Definir o tipo Plan igual à SubscriptionPage
 interface Plan {
@@ -54,6 +58,22 @@ const LandingPage: React.FC = () => {
     }
     return () => clearTimeout(typingTimeout);
   }, [charIndex, isDeleting, textIndex]);
+
+  const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('perfis')
+        .select('full_name, avatar_url, plano_ativo')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }) => setProfile(data));
+    } else {
+      setProfile(null);
+    }
+  }, [user]);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Substituir o bloco de definição dos planos para usar a mesma estrutura da SubscriptionPage
   const plans: Plan[] = [{
@@ -177,7 +197,7 @@ const LandingPage: React.FC = () => {
     return billingCycle === 'monthly' ? `R$ ${plan.price.monthly.toFixed(2).replace('.', ',')}` : `R$ ${plan.price.yearly.toFixed(2).replace('.', ',')}`;
   };
   const getCurrentPeriod = (plan: Plan) => {
-    return '/mês';
+    return billingCycle === 'monthly' ? '/mês' : '/ano';
   };
   const getSavings = (plan: Plan) => {
     if (plan.id === 'gratuito' || !plan.price.yearly) return null;
@@ -205,7 +225,36 @@ const LandingPage: React.FC = () => {
               </div>
             </div>
                 {/* Botão Entrar à direita */}
-                <Button onClick={() => navigate('/login')} className="ml-auto mr-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold px-5 py-2 text-sm shadow-md">Entrar</Button>
+                {isMobile ? (
+  user && profile ? (
+    <Button
+      onClick={() => navigate('/dashboard')}
+      className="ml-auto bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold px-4 py-2 text-sm shadow-md w-auto max-w-[180px] truncate"
+    >
+      Ir para plataforma
+    </Button>
+  ) : (
+    <Button
+      onClick={() => navigate('/login')}
+      className="ml-auto bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold px-4 py-2 text-sm shadow-md w-auto max-w-[180px] truncate"
+    >
+      Entrar
+    </Button>
+  )
+) : (
+  user && profile ? (
+    <div className="flex items-center gap-4 ml-auto">
+      <UserProfileMini profile={profile} email={user.email} />
+      <Button onClick={() => navigate('/dashboard')} className="ml-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold px-5 py-2 text-sm shadow-md">
+        Ir para plataforma
+      </Button>
+    </div>
+  ) : (
+    <Button onClick={() => navigate('/login')} className="ml-auto mr-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold px-5 py-2 text-sm shadow-md">
+      Entrar
+    </Button>
+  )
+)}
                 {/* Botão de menu suspenso */}
                 <div className="relative">
                   <Button variant="ghost" size="icon" className="ml-1" onClick={() => setShowMobileMenu(v => !v)}>
@@ -263,7 +312,16 @@ const LandingPage: React.FC = () => {
                   <a href="#planos" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">Preços</a>
                 </nav>
                 {/* Botão Entrar à direita */}
-                <Button onClick={() => navigate('/login')} className="ml-8 bg-gradient-to-r from-primary-500 to-secondary-500 hover:scale-105 transition-transform px-8 py-3 text-base font-semibold shadow-md">Entrar</Button>
+                {!isMobile && (
+  user && profile ? (
+    <div className="flex items-center gap-4 ml-auto">
+      <UserProfileMini profile={profile} email={user.email} />
+      <Button onClick={() => navigate('/dashboard')} className="ml-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold px-5 py-2 text-sm shadow-md">Ir para plataforma</Button>
+    </div>
+  ) : (
+    <Button onClick={() => navigate('/login')} className="ml-auto mr-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold px-5 py-2 text-sm shadow-md">Entrar</Button>
+  )
+)}
               </>}
           </div>
         </div>
@@ -596,7 +654,13 @@ const LandingPage: React.FC = () => {
                       <span className="text-gray-400 text-xs md:text-sm">{limitation}</span>
                   </li>)}
                 </ul>
-                <Button onClick={() => navigate('/login')} className={`w-full py-2 md:py-3 text-sm ${plan.name === 'Professor' ? 'bg-green-600 hover:bg-green-700' : plan.popular ? 'bg-blue-600 hover:bg-blue-700' : plan.name === 'Grupo Escolar' ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-900 hover:bg-gray-800'}`}>
+                <Button onClick={() => {
+  if (!user) {
+    setShowAuthModal(true);
+  } else {
+    navigate('/assinatura');
+  }
+}} className={`w-full py-2 md:py-3 text-sm ${plan.name === 'Professor' ? 'bg-green-600 hover:bg-green-700' : plan.popular ? 'bg-blue-600 hover:bg-blue-700' : plan.name === 'Grupo Escolar' ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-900 hover:bg-gray-800'}`}>
                   Assinar Agora
                 </Button>
               </Card>)}
@@ -721,6 +785,26 @@ const LandingPage: React.FC = () => {
           }
         }
       `}</style>
+      <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
+  <DialogContent className="max-w-md rounded-2xl border-0 shadow-2xl p-0">
+    <DialogHeader className="flex flex-col items-center justify-center pt-6 pb-1">
+      <DialogTitle className="text-2xl font-bold text-center mb-3 mt-2 w-full">Você precisa estar logado</DialogTitle>
+      <DialogDescription className="text-center text-gray-500 mb-3 text-sm w-full">
+        Para assinar um plano, primeiro entre na sua conta<br />ou crie uma nova.
+      </DialogDescription>
+    </DialogHeader>
+    <div className="flex flex-col gap-3 px-8 pb-8">
+      <Button variant="outline" className="w-full text-base font-semibold border-blue-600 text-blue-700 hover:bg-blue-50" onClick={() => { setShowAuthModal(false); navigate('/login'); }}>Entrar na minha conta</Button>
+      <Button className="w-full text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white" onClick={() => { setShowAuthModal(false); navigate('/register'); }}>Registrar uma conta</Button>
+    </div>
+    <DialogClose asChild>
+      <button className="absolute right-4 top-4 rounded-full p-2 bg-gray-100 hover:bg-gray-200">
+        <span className="sr-only">Fechar</span>
+        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </DialogClose>
+  </DialogContent>
+</Dialog>
     </div>;
 };
 export default LandingPage;
