@@ -21,7 +21,7 @@ export interface PerfilUsuario {
   email?: string;
   full_name?: string;
   nome_preferido?: string;
-  billing_type?: string;
+  billing_type?: 'monthly' | 'yearly';
 }
 
 class SupabasePlanService {

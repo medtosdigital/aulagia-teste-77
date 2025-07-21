@@ -281,7 +281,7 @@ const SchoolPage: React.FC = () => {
     const { data } = await supabase
       .from('grupos_escolares')
       .select('id')
-      .eq('owner_id', user.id)
+      .eq('owner_id', user?.id)
       .single();
     return data?.id;
   };
