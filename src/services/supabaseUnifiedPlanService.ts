@@ -7,7 +7,7 @@ export interface PerfilUsuario {
   id: string;
   user_id: string;
   plano_ativo: TipoPlano;
-  billing_type?: 'monthly' | 'yearly';
+  billing_type?: 'mensal' | 'anual';
   data_inicio_plano: string;
   data_expiracao_plano: string | null;
   materiais_criados_mes_atual: number;
@@ -19,6 +19,8 @@ export interface PerfilUsuario {
   email?: string;
   full_name?: string;
   nome_preferido?: string;
+  customer_id?: string;
+  subscription_id?: string;
 }
 
 // Cache global otimizado
@@ -59,7 +61,7 @@ class SupabaseUnifiedPlanService {
           id: 'admin-profile',
           user_id: user.id,
           plano_ativo: 'admin' as TipoPlano,
-          billing_type: 'monthly',
+          billing_type: 'mensal',
           data_inicio_plano: new Date().toISOString(),
           data_expiracao_plano: null,
           materiais_criados_mes_atual: 0,
@@ -70,7 +72,9 @@ class SupabaseUnifiedPlanService {
           updated_at: new Date().toISOString(),
           email: user.email,
           full_name: user.email,
-          nome_preferido: 'Admin'
+          nome_preferido: 'Admin',
+          customer_id: 'admin-customer-id',
+          subscription_id: 'admin-subscription-id'
         };
         return adminProfile;
       }
@@ -96,7 +100,7 @@ class SupabaseUnifiedPlanService {
               full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
               nome_preferido: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
               plano_ativo: 'gratuito',
-              billing_type: 'monthly',
+              billing_type: 'mensal',
               data_inicio_plano: new Date().toISOString(),
               data_expiracao_plano: null,
               celular: '',
@@ -361,3 +365,9 @@ class SupabaseUnifiedPlanService {
 }
 
 export const supabaseUnifiedPlanService = new SupabaseUnifiedPlanService();
+
+// Função utilitária para conversão
+function normalizeBillingType(tipo: any): 'mensal' | 'anual' {
+  if (tipo === 'yearly' || tipo === 'anual') return 'anual';
+  return 'mensal';
+}

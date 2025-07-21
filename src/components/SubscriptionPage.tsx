@@ -64,7 +64,7 @@ const SubscriptionPage = () => {
     changePlan,
     refreshData,
     loading,
-    currentProfile 
+    currentProfile // <-- ADICIONADO
   } = usePlanPermissions();
 
   // Mapear o ID do plano atual para comparação
@@ -93,8 +93,8 @@ const SubscriptionPage = () => {
 
   // Detectar tipo de faturamento real do usuário
   let realBillingType: 'mensal' | 'anual' = 'mensal';
-  if (currentProfile?.billing_type === 'anual' || currentProfile?.billing_type === 'mensal') {
-    realBillingType = currentProfile.billing_type as 'mensal' | 'anual';
+  if (currentProfile?.billing_type === 'yearly' || currentProfile?.billing_type === 'monthly') {
+    realBillingType = normalizeBillingType(currentProfile.billing_type);
   } else if (currentProfile?.data_inicio_plano && currentProfile?.data_expiracao_plano) {
     const start = new Date(currentProfile.data_inicio_plano);
     const end = new Date(currentProfile.data_expiracao_plano);
@@ -440,6 +440,7 @@ const SubscriptionPage = () => {
                     }
                   })()}
                 </p>
+                {/* Removido bloco de datas de início e expiração do plano */}
               </div>
               <div className={`rounded-full px-3 sm:px-4 py-1 flex items-center self-start ${
                 isSubscriptionActive 
@@ -947,4 +948,11 @@ const SubscriptionPage = () => {
   );
 };
 
+// Função utilitária para conversão
+function normalizeBillingType(tipo: any): 'mensal' | 'anual' {
+  if (tipo === 'yearly' || tipo === 'anual') return 'anual';
+  return 'mensal';
+}
+
 export default SubscriptionPage;
+

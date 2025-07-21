@@ -26,6 +26,13 @@ export interface PlanoUsuario {
   billing_type?: 'mensal' | 'anual';
 }
 
+// Trocar todos os tipos e valores de billing_type para 'mensal' | 'anual'
+// Função utilitária para conversão
+function normalizeBillingType(tipo: any): 'mensal' | 'anual' {
+  if (tipo === 'yearly' || tipo === 'anual') return 'anual';
+  return 'mensal';
+}
+
 export const useSupabasePlanPermissions = () => {
   const { user } = useAuth();
   const { toast } = useToast();

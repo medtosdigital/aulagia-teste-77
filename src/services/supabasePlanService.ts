@@ -21,7 +21,7 @@ export interface PerfilUsuario {
   email?: string;
   full_name?: string;
   nome_preferido?: string;
-  billing_type?: 'monthly' | 'yearly';
+  billing_type?: 'mensal' | 'anual';
 }
 
 class SupabasePlanService {
@@ -56,7 +56,7 @@ class SupabasePlanService {
           email: user.email,
           full_name: user.email,
           nome_preferido: 'Admin',
-          billing_type: 'monthly'
+          billing_type: 'mensal'
         };
         return adminProfile;
       }
@@ -81,7 +81,7 @@ class SupabasePlanService {
               full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
               nome_preferido: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
               plano_ativo: 'gratuito',
-              billing_type: 'monthly',
+              billing_type: 'mensal',
               data_inicio_plano: new Date().toISOString(),
               data_expiracao_plano: null,
               status_plano: 'ativo',
@@ -128,7 +128,7 @@ class SupabasePlanService {
             email: newProfile.email,
             full_name: newProfile.full_name,
             nome_preferido: newProfile.nome_preferido,
-            billing_type: (newProfile.billing_type === 'yearly' || newProfile.billing_type === 'monthly') ? newProfile.billing_type : 'monthly'
+            billing_type: normalizeBillingType(newProfile.billing_type)
           };
           return convertedProfile;
         }
@@ -157,7 +157,7 @@ class SupabasePlanService {
         email: data.email,
         full_name: data.full_name,
         nome_preferido: data.nome_preferido,
-        billing_type: (data.billing_type === 'yearly' || data.billing_type === 'monthly') ? data.billing_type : 'monthly'
+        billing_type: normalizeBillingType(data.billing_type)
       };
       return convertedProfile;
     } catch (error) {
@@ -294,3 +294,9 @@ class SupabasePlanService {
 }
 
 export const supabasePlanService = new SupabasePlanService();
+
+// Função utilitária para conversão
+function normalizeBillingType(tipo: any): 'mensal' | 'anual' {
+  if (tipo === 'yearly' || tipo === 'anual') return 'anual';
+  return 'mensal';
+}

@@ -42,7 +42,7 @@ export default function AdminUsersPage() {
     plan: '' as 'gratuito' | 'professor' | 'grupo_escolar' | 'admin',
     celular: '',
     escola: '',
-    billing_type: '' as 'monthly' | 'yearly'
+    billing_type: '' as 'mensal' | 'anual'
   });
   const [saving, setSaving] = useState(false);
   
@@ -101,7 +101,7 @@ export default function AdminUsersPage() {
           created_at: profile.created_at,
           data_inicio_plano: profile.data_inicio_plano,
           data_expiracao_plano: profile.data_expiracao_plano,
-          billing_type: profile.billing_type || 'monthly',
+          billing_type: normalizeBillingType(profile.billing_type),
           avatar_url: profile.avatar_url || null,
           materiais_criados_mes_atual: profile.materiais_criados_mes_atual || 0,
           isAdmin: isAdmin
@@ -199,7 +199,7 @@ export default function AdminUsersPage() {
       plan: user.plan || '',
       celular: user.celular || '',
       escola: user.escola || '',
-      billing_type: user.billing_type || 'monthly',
+      billing_type: normalizeBillingType(user.billing_type),
     });
   }
   
@@ -211,7 +211,7 @@ export default function AdminUsersPage() {
       plan: '' as 'gratuito' | 'professor' | 'grupo_escolar' | 'admin',
       celular: '',
       escola: '',
-      billing_type: 'monthly'
+      billing_type: 'mensal'
     });
   }
 
@@ -323,7 +323,7 @@ export default function AdminUsersPage() {
         plano_ativo: editData.plan,
         celular: editData.celular,
         escola: editData.escola,
-        billing_type: editData.billing_type,
+        billing_type: normalizeBillingType(editData.billing_type),
         updated_at: new Date().toISOString(),
       };
       
@@ -454,6 +454,19 @@ export default function AdminUsersPage() {
         variant: "destructive"
       });
     }
+  }
+
+  // Função utilitária para conversão
+  function normalizeBillingType(tipo: any): 'mensal' | 'anual' {
+    if (tipo === 'yearly' || tipo === 'anual') return 'anual';
+    return 'mensal';
+  }
+
+  // Função utilitária para exibir o texto correto do billing_type puro do banco
+  function displayBillingType(tipo: any): { label: string, color: string } {
+    if (tipo === 'anual' || tipo === 'yearly') return { label: 'Anual', color: 'bg-purple-100 text-purple-800 border-purple-200' };
+    if (tipo === 'mensal' || tipo === 'monthly') return { label: 'Mensal', color: 'bg-blue-100 text-blue-800 border-blue-200' };
+    return { label: 'Não informado', color: 'bg-gray-100 text-gray-700 border-gray-200' };
   }
 
   return (
@@ -725,13 +738,7 @@ export default function AdminUsersPage() {
                               'N/A'
                             }
                           </span>
-                          <Badge className={`text-xs ${
-                            user.billing_type === 'yearly' 
-                              ? 'bg-purple-100 text-purple-800 border-purple-200' 
-                              : 'bg-blue-100 text-blue-800 border-blue-200'
-                          }`}>
-                            {user.billing_type === 'yearly' ? 'Anual' : 'Mensal'}
-                          </Badge>
+                          {(() => { const b = displayBillingType(user.billing_type); return <Badge className={`text-xs ${b.color}`}>{b.label}</Badge>; })()}
                         </div>
                         <div className="flex gap-1 items-center">
                           <Badge className="text-xs bg-gray-100 text-gray-700 border-gray-200">
@@ -903,8 +910,8 @@ export default function AdminUsersPage() {
                       onChange={handleEditChange}
                       className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 bg-white px-3"
                     >
-                      <option value="monthly">Mensal</option>
-                      <option value="yearly">Anual</option>
+                      <option value="mensal">Mensal</option>
+                      <option value="anual">Anual</option>
                     </select>
                   </div>
                   <div className="space-y-2">

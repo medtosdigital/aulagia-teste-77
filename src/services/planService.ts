@@ -49,6 +49,12 @@ export interface PlanData {
   updated_at: string;
 }
 
+// Função utilitária para conversão
+function normalizeBillingType(tipo: any): 'mensal' | 'anual' {
+  if (tipo === 'yearly' || tipo === 'anual') return 'anual';
+  return 'mensal';
+}
+
 class PlanService {
   // Método para criar perfil inicial (usado no LoginPage)
   async createProfile(userId: string, userEmail: string): Promise<boolean> {
@@ -75,7 +81,10 @@ class PlanService {
         materiais_criados_mes_atual: 0,
         ano_atual: new Date().getFullYear(),
         mes_atual: new Date().getMonth() + 1,
-        ultimo_reset_materiais: new Date().toISOString()
+        ultimo_reset_materiais: new Date().toISOString(),
+        customer_id: null,
+        subscription_id: null,
+        ultima_renovacao: ''
       };
 
       const { error } = await supabase
