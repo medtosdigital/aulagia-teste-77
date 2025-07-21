@@ -1,7 +1,29 @@
-
 import { useUnifiedPlanPermissions } from './useUnifiedPlanPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMemo, useCallback } from 'react';
+
+// Updated interface to match the expected structure
+export interface PlanPermissionsProfile {
+  id: string;
+  user_id: string;
+  email?: string;
+  full_name?: string;
+  nome_preferido?: string;
+  plano_ativo: 'gratuito' | 'professor' | 'grupo_escolar' | 'admin';
+  billing_type?: 'monthly' | 'yearly';
+  data_inicio_plano: string;
+  data_expiracao_plano: string | null;
+  status_plano: 'ativo' | 'atrasado' | 'cancelado';
+  ultima_renovacao: string;
+  customer_id?: string;
+  subscription_id?: string;
+  materiais_criados_mes_atual: number;
+  ano_atual: number;
+  mes_atual: number;
+  ultimo_reset_materiais: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export const usePlanPermissions = () => {
   const { user } = useAuth();
