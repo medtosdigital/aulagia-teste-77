@@ -117,13 +117,15 @@ class PlanService {
   async updateUserPlan(userId: string, planType: 'gratuito' | 'professor' | 'grupo_escolar', billingType: 'monthly' | 'yearly'): Promise<boolean> {
     try {
       // Calcular data de expiração
-      const dataExpiracao = new Date();
+      let dataExpiracao: Date | null = null;
       if (planType === 'gratuito') {
         // Plano gratuito não tem expiração
         dataExpiracao = null;
       } else if (billingType === 'monthly') {
+        dataExpiracao = new Date();
         dataExpiracao.setMonth(dataExpiracao.getMonth() + 1);
       } else {
+        dataExpiracao = new Date();
         dataExpiracao.setFullYear(dataExpiracao.getFullYear() + 1);
       }
 

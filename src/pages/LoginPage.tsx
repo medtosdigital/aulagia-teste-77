@@ -71,12 +71,7 @@ const LoginPage = () => {
       return;
     }
 
-    // Inclui plano_ativo no metadata se for grupo_escolar
-    const metadata: any = { full_name: registerData.name };
-    if (registerData.plano === 'grupo_escolar') {
-      metadata.plano_ativo = 'grupo_escolar';
-    }
-    const { error } = await signUp(registerData.email, registerData.password, registerData.name, metadata);
+    const { error } = await signUp(registerData.email, registerData.password);
     
     if (error) {
       if (error.message.includes('User already registered')) {
