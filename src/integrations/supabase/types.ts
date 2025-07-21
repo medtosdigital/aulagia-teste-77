@@ -315,7 +315,6 @@ export type Database = {
           billing_type: string
           celular: string | null
           created_at: string | null
-          customer_id: string | null
           data_expiracao_plano: string | null
           data_inicio_plano: string | null
           disciplinas: string[] | null
@@ -331,7 +330,6 @@ export type Database = {
           plano_id: number | null
           preferencia_bncc: boolean | null
           status_plano: string | null
-          subscription_id: string | null
           tipo_material_favorito: string[] | null
           ultima_renovacao: string | null
           ultimo_reset_materiais: string | null
@@ -345,7 +343,6 @@ export type Database = {
           billing_type?: string
           celular?: string | null
           created_at?: string | null
-          customer_id?: string | null
           data_expiracao_plano?: string | null
           data_inicio_plano?: string | null
           disciplinas?: string[] | null
@@ -361,7 +358,6 @@ export type Database = {
           plano_id?: number | null
           preferencia_bncc?: boolean | null
           status_plano?: string | null
-          subscription_id?: string | null
           tipo_material_favorito?: string[] | null
           ultima_renovacao?: string | null
           ultimo_reset_materiais?: string | null
@@ -375,7 +371,6 @@ export type Database = {
           billing_type?: string
           celular?: string | null
           created_at?: string | null
-          customer_id?: string | null
           data_expiracao_plano?: string | null
           data_inicio_plano?: string | null
           disciplinas?: string[] | null
@@ -391,7 +386,6 @@ export type Database = {
           plano_id?: number | null
           preferencia_bncc?: boolean | null
           status_plano?: string | null
-          subscription_id?: string | null
           tipo_material_favorito?: string[] | null
           ultima_renovacao?: string | null
           ultimo_reset_materiais?: string | null

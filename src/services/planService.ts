@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PerfilUsuario {
@@ -6,7 +7,7 @@ export interface PerfilUsuario {
   full_name: string;
   nome_preferido: string;
   plano_ativo: 'gratuito' | 'professor' | 'grupo_escolar';
-  billing_type: 'monthly' | 'yearly';
+  billing_type: 'mensal' | 'anual';
   data_inicio_plano: string;
   data_expiracao_plano: string | null;
   celular: string;
@@ -60,7 +61,7 @@ class PlanService {
         full_name: userEmail.split('@')[0] || 'Usuário',
         nome_preferido: userEmail.split('@')[0] || 'Usuário',
         plano_ativo: 'gratuito' as const,
-        billing_type: 'monthly' as const,
+        billing_type: 'mensal' as const,
         data_inicio_plano: new Date().toISOString(),
         data_expiracao_plano: null,
         celular: '',
@@ -114,14 +115,14 @@ class PlanService {
     }
   }
 
-  async updateUserPlan(userId: string, planType: 'gratuito' | 'professor' | 'grupo_escolar', billingType: 'monthly' | 'yearly'): Promise<boolean> {
+  async updateUserPlan(userId: string, planType: 'gratuito' | 'professor' | 'grupo_escolar', billingType: 'mensal' | 'anual'): Promise<boolean> {
     try {
       // Calcular data de expiração
       let dataExpiracao: Date | null = null;
       if (planType === 'gratuito') {
         // Plano gratuito não tem expiração
         dataExpiracao = null;
-      } else if (billingType === 'monthly') {
+      } else if (billingType === 'mensal') {
         dataExpiracao = new Date();
         dataExpiracao.setMonth(dataExpiracao.getMonth() + 1);
       } else {

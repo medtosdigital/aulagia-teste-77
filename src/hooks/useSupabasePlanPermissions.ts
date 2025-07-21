@@ -23,6 +23,7 @@ export interface PlanoUsuario {
   ano_atual?: number;
   mes_atual?: number;
   ultimo_reset_materiais?: string;
+  billing_type?: 'mensal' | 'anual';
 }
 
 export const useSupabasePlanPermissions = () => {
@@ -82,7 +83,8 @@ export const useSupabasePlanPermissions = () => {
           updated_at: new Date().toISOString(),
           email: user.email,
           full_name: user.email,
-          nome_preferido: 'Admin'
+          nome_preferido: 'Admin',
+          billing_type: 'mensal'
         };
         
         // Cache admin data
@@ -118,7 +120,8 @@ export const useSupabasePlanPermissions = () => {
         data_inicio_plano: new Date().toISOString(),
         data_expiracao_plano: null,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        billing_type: 'mensal' as 'mensal' | 'anual'
       };
       
       const finalRemaining = remaining !== null ? remaining : 5;
@@ -157,7 +160,8 @@ export const useSupabasePlanPermissions = () => {
         data_inicio_plano: new Date().toISOString(),
         data_expiracao_plano: null,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        billing_type: 'mensal' as 'mensal' | 'anual'
       };
       
       setCurrentPlan(fallbackPlan);

@@ -51,7 +51,7 @@ interface Plan {
 }
 
 const SubscriptionPage = () => {
-  const [billingType, setBillingType] = useState<'monthly' | 'yearly'>('monthly');
+  const [billingType, setBillingType] = useState<'mensal' | 'anual'>('mensal');
   const [isChangeCardModalOpen, setIsChangeCardModalOpen] = useState(false);
   const [isChangePlanModalOpen, setIsChangePlanModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -64,7 +64,7 @@ const SubscriptionPage = () => {
     changePlan,
     refreshData,
     loading,
-    currentProfile // <-- ADICIONADO
+    currentProfile 
   } = usePlanPermissions();
 
   // Mapear o ID do plano atual para comparação
@@ -92,16 +92,16 @@ const SubscriptionPage = () => {
   const subscriptionStatus = isSubscriptionActive ? 'Ativo' : 'Inativo';
 
   // Detectar tipo de faturamento real do usuário
-  let realBillingType: 'monthly' | 'yearly' = 'monthly';
-  if (currentProfile?.billing_type === 'yearly' || currentProfile?.billing_type === 'monthly') {
-    realBillingType = currentProfile.billing_type as 'monthly' | 'yearly';
+  let realBillingType: 'mensal' | 'anual' = 'mensal';
+  if (currentProfile?.billing_type === 'anual' || currentProfile?.billing_type === 'mensal') {
+    realBillingType = currentProfile.billing_type as 'mensal' | 'anual';
   } else if (currentProfile?.data_inicio_plano && currentProfile?.data_expiracao_plano) {
     const start = new Date(currentProfile.data_inicio_plano);
     const end = new Date(currentProfile.data_expiracao_plano);
     const diffMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
     // Se diferença for 11 ou 12 meses, considerar anual
     if (diffMonths >= 11) {
-      realBillingType = 'yearly';
+      realBillingType = 'anual';
     }
   }
 
@@ -432,15 +432,14 @@ const SubscriptionPage = () => {
                     if (currentPlan.id === 'admin') {
                       return 'Plano Administrador - Administrador';
                     } else if (currentPlan.id === 'grupo_escolar' || currentPlan.id === 'grupo-escolar') {
-                      return `Plano Grupo Escolar - ${isSubscriptionActive ? (billingType === 'yearly' ? 'Anual' : 'Mensal') : 'Gratuito'}`;
+                      return `Plano Grupo Escolar - ${isSubscriptionActive ? (billingType === 'anual' ? 'Anual' : 'Mensal') : 'Gratuito'}`;
                     } else if (currentPlan.id === 'professor') {
-                      return `Plano Professor - ${isSubscriptionActive ? (billingType === 'yearly' ? 'Anual' : 'Mensal') : 'Gratuito'}`;
+                      return `Plano Professor - ${isSubscriptionActive ? (billingType === 'anual' ? 'Anual' : 'Mensal') : 'Gratuito'}`;
                     } else {
                       return 'Plano Gratuito';
                     }
                   })()}
                 </p>
-                {/* Removido bloco de datas de início e expiração do plano */}
               </div>
               <div className={`rounded-full px-3 sm:px-4 py-1 flex items-center self-start ${
                 isSubscriptionActive 
@@ -659,9 +658,9 @@ const SubscriptionPage = () => {
               <span className="text-sm font-medium text-gray-500">Faturamento:</span>
               <div className="inline-flex items-center bg-white rounded-full p-1 shadow-md gap-1">
                 <button
-                  onClick={() => setBillingType('monthly')}
+                  onClick={() => setBillingType('mensal')}
                   className={`px-4 sm:px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                    billingType === 'monthly'
+                    billingType === 'mensal'
                       ? 'bg-blue-500 text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
@@ -669,9 +668,9 @@ const SubscriptionPage = () => {
                   Mensal
                 </button>
                 <button
-                  onClick={() => setBillingType('yearly')}
+                  onClick={() => setBillingType('anual')}
                   className={`flex flex-row items-center gap-2 px-4 sm:px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                    billingType === 'yearly'
+                    billingType === 'anual'
                       ? 'bg-blue-500 text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
@@ -695,7 +694,7 @@ const SubscriptionPage = () => {
                 currentPlanId === plan.id &&
                 currentPlanId !== 'admin' &&
                 billingType === realBillingType;
-              const price = billingType === 'monthly' ? plan.price.monthly : plan.price.yearly;
+              const price = billingType === 'mensal' ? plan.price.monthly : plan.price.yearly;
               const yearlyDiscount = getYearlyDiscount(plan);
 
               console.log('Comparando planos:', { currentPlanId, planId: plan.id, isCurrentPlan });
@@ -739,9 +738,9 @@ const SubscriptionPage = () => {
                       {price === 0 ? 'R$ 0' : formatPrice(price)}
                     </span>
                     <span className="text-gray-500 text-sm">
-                      {billingType === 'monthly' ? '/mês' : '/ano'}
+                      {billingType === 'mensal' ? '/mês' : '/ano'}
                     </span>
-                    {price > 0 && billingType === 'yearly' && (
+                    {price > 0 && billingType === 'anual' && (
                       <div className="mt-1 flex items-center gap-2">
                         <span className="block text-xs sm:text-sm text-gray-500">
                           {(() => {
@@ -949,4 +948,3 @@ const SubscriptionPage = () => {
 };
 
 export default SubscriptionPage;
-
