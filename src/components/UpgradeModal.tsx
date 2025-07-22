@@ -27,7 +27,7 @@ interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentPlan: any;
-  onPlanSelect: (planId: string) => void;
+  onPlanSelect: (planId: string, billingType: 'mensal' | 'anual') => void;
 }
 
 export const UpgradeModal: React.FC<UpgradeModalProps> = ({ 
@@ -122,7 +122,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
     setIsLoading(true);
     
     try {
-      await onPlanSelect(selectedPlan);
+      await onPlanSelect(selectedPlan, billingType === 'yearly' ? 'anual' : 'mensal');
       onClose();
     } catch (error) {
       console.error('Error selecting plan:', error);
@@ -385,7 +385,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                   if (cancelFeedback.trim()) {
                     // Aqui você pode enviar o feedback para o backend
                   }
-                  await onPlanSelect('gratuito');
+                  await onPlanSelect('gratuito', 'mensal'); // Assuming 'gratuito' is monthly
                   setIsCancelling(false);
                   setShowCancelModal(false);
                   setCancelFeedback('');

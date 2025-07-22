@@ -397,8 +397,8 @@ class MaterialService {
     return {
       title: this.generateTitle(type, formData),
       type: type as UnifiedMaterial['type'],
-      subject: formData.disciplina || formData.subject || 'Não informado',
-      grade: formData.serie || formData.grade || 'Não informado',
+      subject: content.disciplina || content.subject || formData.disciplina || formData.subject || 'Não informado',
+      grade: content.serie || content.grade || formData.serie || formData.grade || 'Não informado',
       userId: '',
       content: JSON.stringify(content),
       ...(isApoio && formData.material_principal_id ? { mainMaterialId: formData.material_principal_id } : {})
@@ -480,6 +480,15 @@ class MaterialService {
       bncc = formData.bncc;
     }
 
+    // Garante que todos os campos do JSON original estejam presentes
+    const contentFinal = {
+      ...content,
+      recursos,
+      habilidades,
+      objetivos,
+      bncc
+    };
+
     return {
       id: unifiedMaterial.id,
       title: unifiedMaterial.title,
@@ -487,13 +496,7 @@ class MaterialService {
       subject: unifiedMaterial.subject,
       grade: unifiedMaterial.grade,
       createdAt: unifiedMaterial.createdAt,
-      content: {
-        ...content,
-        recursos,
-        habilidades,
-        objetivos,
-        bncc
-      },
+      content: contentFinal,
       formData
     };
   }

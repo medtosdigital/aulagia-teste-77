@@ -117,8 +117,6 @@ class SupabasePlanService {
             data_expiracao_plano: newProfile.data_expiracao_plano,
             status_plano: (newProfile.status_plano || 'ativo') as 'ativo' | 'atrasado' | 'cancelado',
             ultima_renovacao: newProfile.ultima_renovacao,
-            customer_id: newProfile.customer_id,
-            subscription_id: newProfile.subscription_id,
             materiais_criados_mes_atual: newProfile.materiais_criados_mes_atual,
             ano_atual: newProfile.ano_atual,
             mes_atual: newProfile.mes_atual,
@@ -128,7 +126,9 @@ class SupabasePlanService {
             email: newProfile.email,
             full_name: newProfile.full_name,
             nome_preferido: newProfile.nome_preferido,
-            billing_type: normalizeBillingType(newProfile.billing_type)
+            billing_type: normalizeBillingType(newProfile.billing_type),
+            ...('customer_id' in newProfile && typeof newProfile.customer_id === 'string' ? { customer_id: newProfile.customer_id } : {}),
+            ...('subscription_id' in newProfile && typeof newProfile.subscription_id === 'string' ? { subscription_id: newProfile.subscription_id } : {}),
           };
           return convertedProfile;
         }
@@ -146,8 +146,6 @@ class SupabasePlanService {
         data_expiracao_plano: data.data_expiracao_plano,
         status_plano: (data.status_plano || 'ativo') as 'ativo' | 'atrasado' | 'cancelado',
         ultima_renovacao: data.ultima_renovacao,
-        customer_id: data.customer_id,
-        subscription_id: data.subscription_id,
         materiais_criados_mes_atual: data.materiais_criados_mes_atual,
         ano_atual: data.ano_atual,
         mes_atual: data.mes_atual,
@@ -157,7 +155,9 @@ class SupabasePlanService {
         email: data.email,
         full_name: data.full_name,
         nome_preferido: data.nome_preferido,
-        billing_type: normalizeBillingType(data.billing_type)
+        billing_type: normalizeBillingType(data.billing_type),
+        ...('customer_id' in data && typeof data.customer_id === 'string' ? { customer_id: data.customer_id } : {}),
+        ...('subscription_id' in data && typeof data.subscription_id === 'string' ? { subscription_id: data.subscription_id } : {}),
       };
       return convertedProfile;
     } catch (error) {
@@ -271,21 +271,47 @@ class SupabasePlanService {
         console.log('Usuário não autenticado para atualizar plano');
         return false;
       }
-
-      // Usar a função do banco para atualizar plano
-      const { data, error } = await supabase.rpc('update_user_plan', {
-        p_user_id: user.id,
-        p_new_plan: newPlan,
-        p_expiration_date: expirationDate?.toISOString()
-      });
-
+      // Buscar expiração atual
+      const { data: perfil } = await supabase.from('perfis').select('data_expiracao_plano').eq('user_id', user.id).single();
+      const now = new Date();
+      let dataExpiracao: Date | null = null;
+      let baseDate = now;
+      if (perfil && perfil.data_expiracao_plano) {
+        const atual = new Date(perfil.data_expiracao_plano);
+        if (atual > now) baseDate = atual;
+      }
+      // Calcular nova expiração
+      if (newPlan !== 'gratuito') {
+        if (expirationDate) {
+          dataExpiracao = expirationDate;
+        } else if (newPlan === 'professor') {
+          dataExpiracao = new Date(baseDate);
+          dataExpiracao.setMonth(dataExpiracao.getMonth() + 1);
+        } else if (newPlan === 'grupo_escolar') {
+          dataExpiracao = new Date(baseDate);
+          dataExpiracao.setMonth(dataExpiracao.getMonth() + 1);
+        }
+      }
+      // Atualizar plano do usuário
+      const { error } = await supabase
+        .from('perfis')
+        .update({
+          plano_ativo: newPlan,
+          data_inicio_plano: now.toISOString(),
+          data_expiracao_plano: dataExpiracao?.toISOString() || null,
+          status_plano: 'ativo',
+          ultima_renovacao: now.toISOString(),
+          updated_at: now.toISOString(),
+          materiais_criados_mes_atual: 0,
+          ultimo_reset_materiais: now.toISOString()
+        })
+        .eq('user_id', user.id);
       if (error) {
         console.error('Erro ao atualizar plano do usuário:', error);
         return false;
       }
-
       console.log('Plano atualizado com sucesso para:', newPlan);
-      return data || true;
+      return true;
     } catch (error) {
       console.error('Erro em updateUserPlan:', error);
       return false;

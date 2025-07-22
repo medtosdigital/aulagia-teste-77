@@ -116,14 +116,14 @@ export const usePlanPermissions = () => {
 
   // Memoizar funções para compatibilidade
   const memoizedFunctions = useMemo(() => ({
-    changePlan: async (planId: string) => {
+    changePlan: async (planId: string, billingType: 'mensal' | 'anual') => {
       const planTypeMap: Record<string, 'gratuito' | 'professor' | 'grupo_escolar'> = {
         'gratuito': 'gratuito',
         'professor': 'professor',
         'grupo-escolar': 'grupo_escolar'
       };
       const mappedPlanType = planTypeMap[planId] || 'gratuito';
-      const result = await unifiedPermissions.changePlan(mappedPlanType);
+      const result = await unifiedPermissions.changePlan(mappedPlanType, billingType);
       window.dispatchEvent(new CustomEvent('planChanged'));
       return result;
     },

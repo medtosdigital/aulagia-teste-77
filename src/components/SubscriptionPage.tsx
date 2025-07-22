@@ -212,13 +212,13 @@ const SubscriptionPage = () => {
   };
 
   const handlePlanChange = async (planId: string) => {
-    await changePlan(planId);
+    await changePlan(planId, billingType);
     const plan = plans.find(p => p.id === planId);
     if (plan) {
       activityService.addActivity({
         type: 'updated',
         title: 'Assinatura alterada',
-        description: `Plano alterado para: ${plan.name}`
+        description: `Plano alterado para: ${plan.name} (${billingType === 'anual' ? 'Anual' : 'Mensal'})`
       });
     }
   };

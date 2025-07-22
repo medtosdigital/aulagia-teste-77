@@ -236,10 +236,9 @@ export const useUnifiedPlanPermissions = () => {
   }, [user, remainingMaterials, toast]);
 
   // Atualizar plano otimizado
-  const changePlan = useCallback(async (newPlan: TipoPlano, expirationDate?: Date): Promise<boolean> => {
+  const changePlan = useCallback(async (newPlan: TipoPlano, billingType: 'mensal' | 'anual'): Promise<boolean> => {
     try {
-      const success = await supabaseUnifiedPlanService.updateUserPlan(newPlan, expirationDate);
-      
+      const success = await supabaseUnifiedPlanService.updateUserPlan(newPlan, billingType);
       if (success) {
         // Limpar cache e recarregar
         if (user?.id) {
@@ -249,14 +248,12 @@ export const useUnifiedPlanPermissions = () => {
         await loadProfileDataRef.current && loadProfileDataRef.current(true);
         window.dispatchEvent(new CustomEvent('planChanged'));
         setShouldShowUpgrade(false);
-        
         const planNames: Record<TipoPlano, string> = {
           'gratuito': 'Gratuito',
           'professor': 'Professor',
           'grupo_escolar': 'Grupo Escolar',
           'admin': 'Administrador'
         };
-        
         toast({
           title: "Plano atualizado",
           description: `Seu plano foi alterado para ${planNames[newPlan]}.`,

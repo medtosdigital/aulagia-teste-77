@@ -299,7 +299,7 @@ class SupabaseUnifiedPlanService {
   }
 
   // Atualizar plano do usuário otimizado
-  async updateUserPlan(newPlan: TipoPlano, expirationDate?: Date): Promise<boolean> {
+  async updateUserPlan(newPlan: TipoPlano, billingType: 'mensal' | 'anual'): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -307,22 +307,55 @@ class SupabaseUnifiedPlanService {
         return false;
       }
 
-      const { data, error } = await supabase.rpc('update_user_plan', {
-        p_user_id: user.id,
-        p_new_plan: newPlan,
-        p_expiration_date: expirationDate?.toISOString()
-      });
-
+      // Buscar expiração atual
+      const { data: perfil } = await supabase
+        .from('perfis')
+        .select('data_expiracao_plano')
+        .eq('user_id', user.id)
+        .single();
+      const now = new Date();
+      let dataExpiracao: Date | null = null;
+      let baseDate = now;
+      if (perfil && perfil.data_expiracao_plano) {
+        const atual = new Date(perfil.data_expiracao_plano);
+        if (atual > now) baseDate = atual;
+      }
+      // Calcular nova expiração
+      if (newPlan !== 'gratuito') {
+        if (billingType === 'anual') {
+          dataExpiracao = new Date(baseDate);
+          dataExpiracao.setFullYear(dataExpiracao.getFullYear() + 1);
+        } else {
+          dataExpiracao = new Date(baseDate);
+          dataExpiracao.setMonth(dataExpiracao.getMonth() + 1);
+        }
+      } else {
+        // Downgrade: expiração é agora
+        dataExpiracao = now;
+      }
+      // Atualizar plano do usuário
+      const { error } = await supabase
+        .from('perfis')
+        .update({
+          plano_ativo: newPlan,
+          billing_type: billingType,
+          data_inicio_plano: now.toISOString(),
+          data_expiracao_plano: dataExpiracao?.toISOString() || null,
+          status_plano: 'ativo',
+          ultima_renovacao: now.toISOString(),
+          updated_at: now.toISOString(),
+          materiais_criados_mes_atual: 0,
+          ultimo_reset_materiais: now.toISOString()
+        })
+        .eq('user_id', user.id);
       if (error) {
         console.error('Erro ao atualizar plano do usuário:', error);
         return false;
       }
-
       // Limpar cache do usuário
       this.clearUserCache(user.id);
-
-      console.log('Plano atualizado com sucesso para:', newPlan);
-      return data || false;
+      console.log('Plano atualizado com sucesso para:', newPlan, 'billingType:', billingType);
+      return true;
     } catch (error) {
       console.error('Erro em updateUserPlan:', error);
       return false;
