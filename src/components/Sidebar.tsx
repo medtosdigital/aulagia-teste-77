@@ -380,7 +380,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {isMobile && (
         <button
           onClick={() => window.dispatchEvent(new Event('openFeedbackModal'))}
-          className={`fixed z-50 right-4 bottom-6 md:hidden flex items-center px-4 py-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold shadow-lg hover:scale-105 transition-all`}
+          className={`fixed z-50 right-4 ${canAccessSchool() ? 'bottom-[150px]' : 'bottom-[100px]'} md:hidden flex items-center px-4 py-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold shadow-lg hover:scale-105 transition-all`}
           style={{ fontSize: 16 }}
         >
           <MessageCircle size={22} className="mr-2" />
