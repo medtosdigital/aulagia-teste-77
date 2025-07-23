@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -44,6 +43,7 @@ const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const mainContentRef = useRef<HTMLDivElement>(null);
 
   const {
     canAccessSchool,
@@ -113,9 +113,21 @@ const Index = () => {
     };
   }, [user, isFirstAccess, navigate]);
 
-  // Resetar scroll do container principal ao trocar de rota
+  // Reset de scroll melhorado para o container principal
   useEffect(() => {
-    document.querySelector('.flex-1')?.scrollTo(0, 0);
+    if (mainContentRef.current) {
+      // Reset imediato
+      mainContentRef.current.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      
+      // Reset com delay para garantir que aconteça após a renderização
+      const timer = setTimeout(() => {
+        if (mainContentRef.current) {
+          mainContentRef.current.scrollTo(0, 0);
+        }
+      }, 10);
+      
+      return () => clearTimeout(timer);
+    }
   }, [location.pathname]);
 
   const mappedCurrentPlan = currentPlan ? {
@@ -249,7 +261,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50 w-full flex flex-col">
       <Sidebar />
-      <div className="md:ml-64 min-h-screen flex flex-col flex-1 h-full overflow-y-auto">
+      <div className="md:ml-64 min-h-screen flex flex-col flex-1 h-full overflow-y-auto" ref={mainContentRef}>
         <Header title={getPageTitle()} />
         <div className="flex-1">
           <Routes>
@@ -269,7 +281,6 @@ const Index = () => {
         <Footer />
       </div>
       
-      {/* Modais globais */}
       <FirstAccessModal
         isOpen={showFirstAccessModal}
         onClose={closeFirstAccessModal}
