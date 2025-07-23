@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -23,6 +23,7 @@ import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { useFirstAccess } from '@/hooks/useFirstAccess';
 import { usePlanExpiration } from '@/hooks/usePlanExpiration';
 import { useFeedback } from '@/hooks/useFeedback';
+import { useScrollReset } from '@/hooks/useScrollReset';
 import { supabase } from '@/integrations/supabase/client';
 import AdminUsersPage from '@/components/AdminUsersPage';
 import AdminConfigPage from '@/components/AdminConfigPage';
@@ -43,7 +44,9 @@ const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const mainContentRef = useRef<HTMLDivElement>(null);
+  
+  // Use the comprehensive scroll reset hook
+  const { mainContentRef } = useScrollReset();
 
   const {
     canAccessSchool,
@@ -112,23 +115,6 @@ const Index = () => {
       window.removeEventListener('navigateToSubscription', handleNavigateToSubscription);
     };
   }, [user, isFirstAccess, navigate]);
-
-  // Reset de scroll melhorado para o container principal
-  useEffect(() => {
-    if (mainContentRef.current) {
-      // Reset imediato
-      mainContentRef.current.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      
-      // Reset com delay para garantir que aconteça após a renderização
-      const timer = setTimeout(() => {
-        if (mainContentRef.current) {
-          mainContentRef.current.scrollTo(0, 0);
-        }
-      }, 10);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [location.pathname]);
 
   const mappedCurrentPlan = currentPlan ? {
     id: currentPlan.plano_ativo,
