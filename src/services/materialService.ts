@@ -31,6 +31,7 @@ export interface MaterialFormData {
   duracao?: string;
   bncc?: string;
   material_principal_id?: string; // Adicionado para materiais de apoio
+  turma?: string; // Corrige o erro de linter
 }
 
 // Updated LessonPlan interface to match what components expect
@@ -112,6 +113,10 @@ class MaterialService {
     console.log('🚀 Starting material generation with OpenAI:', { type, formData });
     
     try {
+      // Buscar usuário autenticado
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
       console.log('📞 Calling gerarMaterialIA Edge Function...');
       const { data, error } = await supabase.functions.invoke('gerarMaterialIA', {
         body: {
@@ -138,7 +143,8 @@ class MaterialService {
         generatedContent = await this.generateUltraOptimizedImagesForSlides(generatedContent, formData);
       }
       
-      const materialData = this.mapToUnifiedMaterial(type, formData, generatedContent);
+      // Passar user.id para mapToUnifiedMaterial
+      const materialData = this.mapToUnifiedMaterial(type, formData, generatedContent, user.id);
       console.log('📝 Material data mapped:', materialData);
       
       console.log('💾 Saving material to Supabase...');
@@ -392,15 +398,26 @@ class MaterialService {
     return optimizedPrompt;
   }
 
-  private mapToUnifiedMaterial(type: string, formData: MaterialFormData, content: any): Omit<UnifiedMaterial, 'id' | 'createdAt' | 'status'> {
+  // Modifique a assinatura para receber userId
+  private mapToUnifiedMaterial(type: string, formData: MaterialFormData, content: any, userId: string): Omit<UnifiedMaterial, 'id' | 'createdAt' | 'status'> {
     const isApoio = type === 'apoio';
+    // Preencher campos extras conforme o tipo de material
+    // Extrair tema, turma, etc, do conteúdo ou formData
+    const tema = content.tema || content.topic || formData.tema || formData.topic || '';
+    const turma = content.turma || formData.turma || '';
+    const disciplina = content.disciplina || content.subject || formData.disciplina || formData.subject || '';
+    const serie = content.serie || content.grade || formData.serie || formData.grade || '';
+    // Preencher todos os campos principais
     return {
       title: this.generateTitle(type, formData),
       type: type as UnifiedMaterial['type'],
-      subject: content.disciplina || content.subject || formData.disciplina || formData.subject || 'Não informado',
-      grade: content.serie || content.grade || formData.serie || formData.grade || 'Não informado',
-      userId: '',
+      subject: disciplina || 'Não informado',
+      grade: serie || 'Não informado',
+      userId,
       content: JSON.stringify(content),
+      // Campos extras para a tabela materiais
+      ...(tema ? { tema } : {}),
+      ...(turma ? { turma } : {}),
       ...(isApoio && formData.material_principal_id ? { mainMaterialId: formData.material_principal_id } : {})
     };
   }

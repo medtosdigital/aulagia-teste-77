@@ -611,7 +611,14 @@ const CreateLesson: React.FC = () => {
 
         const materialPromise = materialService.generateMaterial(selectedType, formData);
         const generatedMaterial = await Promise.race([materialPromise, generationTimeout]) as GeneratedMaterial;
-        
+        // Parse automático do campo content se vier como string
+        if (generatedMaterial && typeof generatedMaterial.content === 'string') {
+          try {
+            generatedMaterial.content = JSON.parse(generatedMaterial.content);
+          } catch (e) {
+            console.error('Erro ao fazer parse do campo content no CreateLesson:', e);
+          }
+        }
         updateProgress('generation', 100, 'Material gerado com sucesso!', true);
         currentStageIndex++;
 
@@ -647,8 +654,10 @@ const CreateLesson: React.FC = () => {
       
       if (error instanceof Error && error.message.includes('Timeout')) {
         toast.error('Tempo limite excedido. Tente novamente ou simplifique o conteúdo.');
+        setIsGenerating(false);
       } else {
         toast.error('Erro ao gerar material. Tente novamente.');
+        setIsGenerating(false);
       }
     }
   };

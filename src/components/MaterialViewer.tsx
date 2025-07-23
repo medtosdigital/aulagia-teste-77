@@ -49,6 +49,14 @@ const MaterialViewer = () => {
       console.log('Loading material with ID:', id);
       const foundMaterial = await materialService.getMaterialById(id);
       console.log('Found material:', foundMaterial);
+      // Parse automático do campo content se vier como string
+      if (foundMaterial && typeof foundMaterial.content === 'string') {
+        try {
+          foundMaterial.content = JSON.parse(foundMaterial.content);
+        } catch (e) {
+          console.error('Erro ao fazer parse do campo content:', e);
+        }
+      }
       setMaterial(foundMaterial || null);
       setLoading(false);
     }

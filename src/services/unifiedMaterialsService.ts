@@ -11,6 +11,9 @@ export interface UnifiedMaterial {
   status: 'ativo' | 'inativo';
   userId: string;
   content?: string;
+  tema?: string; // Adicionado para campos extras
+  turma?: string; // Adicionado para campos extras
+  mainMaterialId?: string; // Adicionado para campos extras
 }
 
 class UnifiedMaterialsService {
@@ -38,7 +41,11 @@ class UnifiedMaterialsService {
       serie: material.grade,
       user_id: material.userId,
       conteudo: material.content || '',
-      status: 'ativo'
+      status: 'ativo',
+      // Campos extras se existirem
+      ...(material.tema ? { tema: material.tema } : {}),
+      ...(material.turma ? { turma: material.turma } : {}),
+      ...(material.mainMaterialId ? { material_principal_id: material.mainMaterialId } : {})
     };
   }
 

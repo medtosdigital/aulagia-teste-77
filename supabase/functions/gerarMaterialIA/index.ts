@@ -52,10 +52,17 @@ serve(async (req) => {
 
   try {
     const { materialType, formData } = await req.json();
-    console.log('🚀 [INÍCIO] Iniciando geração de material:', materialType);
-    console.log('📋 [DADOS] FormData recebido:', formData);
+    console.log('🟢 [INÍCIO] Requisição recebida para geração de material.');
+    console.log(`📥 [DADOS] Tipo de material: ${materialType}`);
+    console.log(`📥 [DADOS] Tema: ${formData.tema || formData.topic || ''}`);
+    console.log(`📥 [DADOS] Disciplina: ${formData.disciplina || formData.subject || ''}`);
+    console.log(`📥 [DADOS] Série: ${formData.serie || formData.grade || ''}`);
+    if (formData.duracao) console.log(`📥 [DADOS] Duração: ${formData.duracao}`);
+    if (formData.professor) console.log(`📥 [DADOS] Professor: ${formData.professor}`);
+    if (formData.numeroQuestoes || formData.quantidadeQuestoes) console.log(`📥 [DADOS] Número de questões: ${formData.numeroQuestoes || formData.quantidadeQuestoes}`);
 
     if (!openAIApiKey) {
+      console.error('❌ [ERRO] OpenAI API key não configurada');
       throw new Error('OpenAI API key not configured');
     }
 
@@ -76,7 +83,7 @@ serve(async (req) => {
     let systemMessage = '';
 
     // ETAPA 1: DEFINIR PROMPTS PARA GERAÇÃO DE TEXTO
-    console.log('📝 [ETAPA-1] Configurando prompts para geração de texto...');
+    console.log('📝 [PROMPT] Preparando prompt e systemMessage para o tipo de material:', materialType);
 
     if (materialType === 'slides') {
       systemMessage = `Você é um especialista em criação de materiais educacionais ESPECÍFICOS para apresentações de slides.
@@ -135,34 +142,168 @@ INSTRUÇÕES CRÍTICAS:
 VALIDAÇÃO: Se o JSON gerado mencionar qualquer tema diferente de "${temaEspecifico}", refaça completamente.
 
 Retorne APENAS o JSON com conteúdo específico sobre "${temaEspecifico}".`;
+      console.log('📝 [PROMPT] Prompt e systemMessage para SLIDES prontos.');
 
     } else if (materialType === 'plano-de-aula') {
-      systemMessage = `Você é um especialista em educação brasileira. Crie um plano de aula ESPECÍFICO sobre "${temaEspecifico}".
-Retorne APENAS um JSON válido com a estrutura especificada.`;
+      systemMessage = `Você é um especialista em educação brasileira, pedagogo experiente e profundo conhecedor da BNCC. Crie um plano de aula DETALHADO e ESPECÍFICO sobre o tema "${formData.tema}" para a disciplina "${formData.disciplina}", voltado para a série/ano "${formData.serie}".`;
 
-      prompt = `Crie um plano de aula ESPECÍFICO sobre "${temaEspecifico}" para ${disciplina}, ${serie}.
+      prompt = `INSTRUÇÕES IMPORTANTES:
+- O tema "${formData.tema}" deve ser o FOCO CENTRAL de todas as seções do plano.
+- O tempo total da aula deve ser respeitado: ${formData.duracao || '50 minutos'} minutos.  
+  > Exemplo: 50 min (1 aula), 100 min (2 aulas). Distribua esse tempo nas etapas: Introdução, Desenvolvimento, Prática e Fechamento.
+- Os **objetivos devem ser exatamente 3**, claros e diretamente relacionados ao tema.
+- As **habilidades da BNCC devem variar de 1 a 5**, com códigos e descrições reais e compatíveis com o tema e disciplina.
+- Utilize **metodologias ativas e participativas**, apropriadas à faixa etária e ao conteúdo.
+- As **referências** devem estar no formato **ABNT**, podendo ser:
+  - **Livros impressos** (autor, título, edição, local, editora, ano)
+  - **Sites** (autor, título, nome do site, ano, link, data de acesso)
+- Responda apenas com um JSON válido. Nenhum texto fora do JSON.
 
-ESTRUTURA OBRIGATÓRIA:
+### ✅ Estrutura obrigatória do JSON:
+
 {
-  "titulo": "Plano de aula: ${temaEspecifico}",
+  "titulo": "Título específico e claro sobre ${formData.tema}",
   "professor": "${formData.professor || 'Professor(a)'}",
-  "disciplina": "${disciplina}", 
-  "serie": "${serie}",
-  "tema": "${temaEspecifico}",
-  "data": "${new Date().toLocaleDateString('pt-BR')}",
-  "duracao": "50 minutos",
-  "bncc": "string - código BNCC relacionado a ${temaEspecifico}",
-  "objetivos": ["objetivo 1 sobre ${temaEspecifico}", "objetivo 2 sobre ${temaEspecifico}"],
-  "habilidades": ["habilidade 1 de ${temaEspecifico}", "habilidade 2 de ${temaEspecifico}"],
-  "desenvolvimento": [
-    {"etapa": "Abertura", "atividade": "Introdução ao ${temaEspecifico}", "tempo": "10 min", "recursos": "Quadro"}
+  "data": "${formData.data || new Date().toLocaleDateString('pt-BR')}",
+  "disciplina": "${formData.disciplina}",
+  "serie": "${formData.serie}",
+  "tema": "${formData.tema}",
+  "duracao": "${formData.duracao || '50 minutos'}",
+  "bncc": [
+    "Código e descrição da habilidade da BNCC relacionada ao tema"
   ],
-  "recursos": ["recursos para ${temaEspecifico}"],
-  "conteudosProgramaticos": ["conteúdo 1 de ${temaEspecifico}", "conteúdo 2 de ${temaEspecifico}"],
-  "metodologia": "Metodologia específica para ensinar ${temaEspecifico}",
-  "avaliacao": "Avaliação focada em ${temaEspecifico}",
-  "referencias": ["referência sobre ${temaEspecifico}"]
+  "objetivos": [
+    "Objetivo 1 específico sobre o tema",
+    "Objetivo 2 específico sobre o tema",
+    "Objetivo 3 específico sobre o tema"
+  ],
+  "habilidades": [
+    {
+      "codigo específico sobre o tema": "EFxxLPxx",
+      "descricao": "Descrição do código da habilidade relacionada ao tema"
+    }
+    // até 5 itens neste array
+  ],
+  "conteudosProgramaticos": [
+    "Conteúdo programático 1 sobre ${formData.tema}",
+    "Conteúdo programático 2 sobre ${formData.tema}"
+  ],
+  "desenvolvimento": [
+    {
+      "etapa": "Introdução",
+      "tempo": "xx minutos",
+      "atividade": "Atividade inicial sobre o tema",
+      "recursos": "Recursos para introdução"
+    },
+    {
+      "etapa": "Desenvolvimento",
+      "tempo": "xx minutos",
+      "atividade": "Atividade principal sobre o tema",
+      "recursos": "Recursos principais"
+    },
+    {
+      "etapa": "Prática",
+      "tempo": "xx minutos",
+      "atividade": "Atividade prática",
+      "recursos": "Materiais práticos"
+    },
+    {
+      "etapa": "Fechamento",
+      "tempo": "xx minutos",
+      "atividade": "Revisão e encerramento",
+      "recursos": "Recursos de fechamento"
+    }
+  ],
+  "recursos": [
+    "Recurso 1 relacionado ao tema",
+    "Recurso 2 relacionado ao tema"
+  ],
+  "metodologia": "Descrever metodologia ativa aplicada ao tema",
+  "avaliacao": "Critérios de avaliação da aprendizagem sobre o tema",
+  "referencias": [
+    "SOBRENOME, Nome. Título da obra. Edição. Local: Editora, ano.",
+    "SOBRENOME, Nome. Título da página. Nome do site, ano. Disponível em: <URL>. Acesso em: 18 jul. 2025."
+  ]
 }`;
+      prompt = `INSTRUÇÕES IMPORTANTES:
+- O tema "${formData.tema}" deve ser o FOCO CENTRAL de todas as seções do plano.
+- O tempo total da aula deve ser respeitado: ${formData.duracao || '50 minutos'} minutos.  
+  > Exemplo: 50 min (1 aula), 100 min (2 aulas). Distribua esse tempo nas etapas: Introdução, Desenvolvimento, Prática e Fechamento.
+- Os **objetivos devem ser exatamente 3**, claros e diretamente relacionados ao tema.
+- As **habilidades da BNCC devem variar de 1 a 5**, com códigos e descrições reais e compatíveis com o tema e disciplina.
+- Utilize **metodologias ativas e participativas**, apropriadas à faixa etária e ao conteúdo.
+- As **referências** devem estar no formato **ABNT**, podendo ser:
+  - **Livros impressos** (autor, título, edição, local, editora, ano)
+  - **Sites** (autor, título, nome do site, ano, link, data de acesso)
+- Responda apenas com um JSON válido. Nenhum texto fora do JSON.
+
+### ✅ Estrutura obrigatória do JSON:
+
+{
+  "titulo": "Título específico e claro sobre ${formData.tema}",
+  "professor": "${formData.professor || 'Professor(a)'}",
+  "data": "${formData.data || new Date().toLocaleDateString('pt-BR')}",
+  "disciplina": "${formData.disciplina}",
+  "serie": "${formData.serie}",
+  "tema": "${formData.tema}",
+  "duracao": "${formData.duracao || '50 minutos'}",
+  "bncc": [
+    "Código e descrição da habilidade da BNCC relacionada ao tema"
+  ],
+  "objetivos": [
+    "Objetivo 1 específico sobre o tema",
+    "Objetivo 2 específico sobre o tema",
+    "Objetivo 3 específico sobre o tema"
+  ],
+  "habilidades": [
+    {
+      "codigo específico sobre o tema": "EFxxLPxx",
+      "descricao": "Descrição do código da habilidade relacionada ao tema"
+    }
+    // até 5 itens neste array
+  ],
+  "conteudosProgramaticos": [
+    "Conteúdo programático 1 sobre ${formData.tema}",
+    "Conteúdo programático 2 sobre ${formData.tema}"
+  ],
+  "desenvolvimento": [
+    {
+      "etapa": "Introdução",
+      "tempo": "xx minutos",
+      "atividade": "Atividade inicial sobre o tema",
+      "recursos": "Recursos para introdução"
+    },
+    {
+      "etapa": "Desenvolvimento",
+      "tempo": "xx minutos",
+      "atividade": "Atividade principal sobre o tema",
+      "recursos": "Recursos principais"
+    },
+    {
+      "etapa": "Prática",
+      "tempo": "xx minutos",
+      "atividade": "Atividade prática",
+      "recursos": "Materiais práticos"
+    },
+    {
+      "etapa": "Fechamento",
+      "tempo": "xx minutos",
+      "atividade": "Revisão e encerramento",
+      "recursos": "Recursos de fechamento"
+    }
+  ],
+  "recursos": [
+    "Recurso 1 relacionado ao tema",
+    "Recurso 2 relacionado ao tema"
+  ],
+  "metodologia": "Descrever metodologia ativa aplicada ao tema",
+  "avaliacao": "Critérios de avaliação da aprendizagem sobre o tema",
+  "referencias": [
+    "SOBRENOME, Nome. Título da obra. Edição. Local: Editora, ano.",
+    "SOBRENOME, Nome. Título da página. Nome do site, ano. Disponível em: <URL>. Acesso em: 18 jul. 2025."
+  ]
+}`;
+      console.log('📝 [PROMPT] Prompt e systemMessage para PLANO DE AULA prontos.');
 
     } else if (materialType === 'atividade') {
       systemMessage = `Você é um especialista em criação de atividades educacionais sobre "${temaEspecifico}".
@@ -184,6 +325,7 @@ ESTRUTURA OBRIGATÓRIA:
     }
   ]
 }`;
+      console.log('📝 [PROMPT] Prompt e systemMessage para ATIVIDADE prontos.');
 
     } else if (materialType === 'avaliacao') {
       systemMessage = `Você é um especialista em avaliações educacionais sobre "${temaEspecifico}".
@@ -207,6 +349,7 @@ ESTRUTURA OBRIGATÓRIA:
     }
   ]
 }`;
+      console.log('📝 [PROMPT] Prompt e systemMessage para AVALIAÇÃO prontos.');
 
     } else if (materialType === 'apoio') {
       systemMessage = `Você é um especialista em materiais de apoio sobre "${temaEspecifico}".
@@ -219,11 +362,12 @@ ESTRUTURA OBRIGATÓRIA:
   "titulo": "Material de Apoio: ${temaEspecifico}",
   "conteudo": "Conteúdo HTML detalhado específico sobre ${temaEspecifico}"
 }`;
+      console.log('📝 [PROMPT] Prompt e systemMessage para MATERIAL DE APOIO prontos.');
     }
 
     // ETAPA 2: GERAR TEXTO COM OPENAI
-    console.log('🤖 [ETAPA-2] Chamando OpenAI para geração de texto...');
-    console.log('📤 [OPENAI] Enviando prompt para tema:', temaEspecifico);
+    console.log('🤖 [OPENAI] Chamando OpenAI para geração do conteúdo...');
+    console.log('🤖 [OPENAI] Enviando prompt para o tema:', temaEspecifico);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -249,7 +393,7 @@ ESTRUTURA OBRIGATÓRIA:
     }
 
     const data = await response.json();
-    console.log('✅ [OPENAI] Resposta recebida com sucesso');
+    console.log('✅ [OPENAI] Resposta recebida da OpenAI com sucesso.');
 
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       console.error('❌ [OPENAI] Estrutura de resposta inválida:', data);
@@ -260,42 +404,40 @@ ESTRUTURA OBRIGATÓRIA:
     console.log('📝 [CONTEÚDO] Preview do conteúdo gerado:', generatedContent.substring(0, 200) + '...');
 
     // ETAPA 3: PROCESSAR E VALIDAR JSON
-    console.log('🔍 [ETAPA-3] Processando e validando JSON...');
+    console.log('🔍 [PARSE] Realizando parse do JSON gerado...');
 
     generatedContent = generatedContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
     
     let parsedContent;
     try {
       parsedContent = JSON.parse(generatedContent);
-      console.log('✅ [JSON] Parse realizado com sucesso');
+      console.log('✅ [PARSE] Parse do JSON realizado com sucesso.');
       
-      // Validação mais flexível para o tema
-      if (materialType === 'slides') {
-        // Verificar se o tema está presente de forma mais flexível
-        const temaPresente = parsedContent.tema && (
-          parsedContent.tema.toLowerCase().includes(temaEspecifico.toLowerCase()) ||
-          parsedContent.conceitos.toLowerCase().includes(temaEspecifico.toLowerCase()) ||
-          parsedContent.introducao.toLowerCase().includes(temaEspecifico.toLowerCase())
-        );
-        
-        if (!temaPresente) {
-          console.error('❌ [VALIDAÇÃO] Conteúdo não contém o tema solicitado:', temaEspecifico);
-          console.error('❌ [VALIDAÇÃO] Título:', parsedContent.tema);
-          console.error('❌ [VALIDAÇÃO] Conceitos:', parsedContent.conceitos);
-          throw new Error(`Conteúdo gerado não é específico para o tema: ${temaEspecifico}`);
-        }
-        console.log('✅ [VALIDAÇÃO] Conteúdo validado para o tema:', temaEspecifico);
-      }
+      // Removido: Validação do tema para slides
+      // if (materialType === 'slides') {
+      //   const temaPresente = parsedContent.tema && (
+      //     parsedContent.tema.toLowerCase().includes(temaEspecifico.toLowerCase()) ||
+      //     parsedContent.conceitos.toLowerCase().includes(temaEspecifico.toLowerCase()) ||
+      //     parsedContent.introducao.toLowerCase().includes(temaEspecifico.toLowerCase())
+      //   );
+      //   if (!temaPresente) {
+      //     console.error('❌ [VALIDAÇÃO] Conteúdo não contém o tema solicitado:', temaEspecifico);
+      //     console.error('❌ [VALIDAÇÃO] Título:', parsedContent.tema);
+      //     console.error('❌ [VALIDAÇÃO] Conceitos:', parsedContent.conceitos);
+      //     throw new Error(`Conteúdo gerado não é específico para o tema: ${temaEspecifico}`);
+      //   }
+      //   console.log('✅ [VALIDAÇÃO] Conteúdo validado para o tema:', temaEspecifico);
+      // }
       
     } catch (parseError) {
-      console.error('❌ [JSON] Falha no parse:', parseError);
-      console.error('❌ [JSON] Conteúdo raw:', generatedContent);
+      console.error('❌ [PARSE] Falha ao fazer parse do JSON:', parseError);
+      console.error('❌ [PARSE] Conteúdo raw:', generatedContent);
       throw new Error('Generated content is not valid JSON');
     }
 
     // ETAPA 4: GERAÇÃO SEQUENCIAL DE IMAGENS (APENAS PARA SLIDES)
     if (materialType === 'slides') {
-      console.log('🎨 [ETAPA-4] Iniciando geração sequencial de imagens para slides...');
+      console.log('🎨 [IMAGENS] Iniciando geração sequencial de imagens para SLIDES...');
       
       const imageFields = [
         { field: 'tema_imagem', promptField: 'tema_imagem_prompt', type: 'CAPA' },
@@ -341,7 +483,7 @@ ESTRUTURA OBRIGATÓRIA:
         }
       }
 
-      console.log('✅ [SEQUÊNCIA] Todas as imagens foram processadas com sucesso');
+      console.log('✅ [IMAGENS] Todas as imagens para SLIDES foram processadas com sucesso.');
 
       // Validar campos obrigatórios para slides
       const requiredFields = [
@@ -363,12 +505,8 @@ ESTRUTURA OBRIGATÓRIA:
     }
 
     // ETAPA 5: FINALIZAÇÃO E LOGS FINAIS
-    console.log('🏁 [ETAPA-5] Finalizando geração do material...');
-    console.log('📋 [VERIFICAÇÃO-FINAL] Tema solicitado:', temaEspecifico);
-    console.log('📋 [VERIFICAÇÃO-FINAL] Tema no material:', parsedContent.tema);
-    console.log('📋 [VERIFICAÇÃO-FINAL] Disciplina:', parsedContent.disciplina);
-    console.log('📋 [VERIFICAÇÃO-FINAL] Série:', parsedContent.serie);
-    console.log('✅ [SUCESSO] Material gerado com sucesso!');
+    console.log('🏁 [FINALIZAÇÃO] Material gerado e processado com sucesso!');
+    console.log('🏁 [FINALIZAÇÃO] Tipo:', materialType, '| Tema:', temaEspecifico, '| Disciplina:', disciplina, '| Série:', serie);
 
     return new Response(JSON.stringify({ 
       success: true, 
