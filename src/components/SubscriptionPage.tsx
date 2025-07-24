@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -92,12 +91,11 @@ const SubscriptionPage = () => {
   };
 
   const handleUpgradeClick = (planId: string) => {
-    // Track the upgrade attempt with correct function
+    // Track the upgrade attempt without materialType since this isn't about educational materials
     addActivity({
       type: 'created',
       title: `Tentativa de upgrade para ${planId}`,
       description: `Usuário tentou fazer upgrade para o plano ${planId}`,
-      materialType: 'plano',
       materialId: planId
     });
     
