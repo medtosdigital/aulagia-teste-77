@@ -86,7 +86,8 @@ function validateSlidesContent(content: any, expectedTopic: string): boolean {
 }
 
 serve(async (req) => {
-  const requestId = uuidv4.generate();
+  // Gera um ID simples e único para a requisição
+  const requestId = `req-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
   const startTime = new Date().toISOString();
   console.log(`[EDGE-START] [${startTime}] [${requestId}] Nova requisição recebida para gerarMaterialIA`);
 
