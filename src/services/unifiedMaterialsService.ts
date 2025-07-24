@@ -173,7 +173,7 @@ class UnifiedMaterialsService {
 
       const { error } = await supabase
         .from('materiais')
-        .update({ status: 'inativo' })
+        .delete() // <-- ALTERADO para deletar de verdade
         .eq('id', id)
         .eq('user_id', user.id);
 

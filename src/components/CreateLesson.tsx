@@ -555,6 +555,25 @@ const CreateLesson: React.FC = () => {
       isComplete: false
     });
 
+    // Montar formDataFinal para garantir campos corretos
+    let formDataFinal: any = {};
+    // Campos comuns
+    formDataFinal.tema = formData.topic;
+    formDataFinal.disciplina = formData.subject;
+    formDataFinal.serie = formData.grade;
+    if (formData.professor) formDataFinal.professor = formData.professor;
+    if (formData.duracao) formDataFinal.duracao = formData.duracao;
+    if (formData.data) formDataFinal.data = formData.data;
+    if (formData.bncc) formDataFinal.bncc = formData.bncc;
+    if (formData.turma) formDataFinal.turma = formData.turma;
+
+    // Atividade/avaliação: incluir questões
+    if (selectedType === 'atividade' || selectedType === 'avaliacao') {
+      if (formData.questionCount) formDataFinal.numeroQuestoes = formData.questionCount[0] || 5;
+      if (formData.tipoQuestoes) formDataFinal.tipoQuestoes = formData.tipoQuestoes;
+      if (formData.subjects) formDataFinal.assuntos = formData.subjects;
+    }
+
     try {
       const progressStages = getProgressStages(selectedType);
       let currentStageIndex = 0;
@@ -565,11 +584,12 @@ const CreateLesson: React.FC = () => {
       const validationPromise = BNCCValidationService.validateTopic(formData.topic, formData.subject, formData.grade);
       const validationTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout na validação BNCC')), 30000));
       const validationResult = await Promise.race([validationPromise, validationTimeout]);
+      const typedValidationResult = validationResult as ValidationResult;
       updateProgress('validation', 100, 'Validação BNCC concluída!', true);
       console.log('[Geração] Etapa 1: Validação BNCC concluída');
       currentStageIndex++;
-      if (!validationResult.isValid) {
-        setValidationResult(validationResult);
+      if (!typedValidationResult.isValid) {
+        setValidationResult(typedValidationResult);
         setShowBNCCValidation(true);
         setIsGenerating(false);
         return;
@@ -579,8 +599,9 @@ const CreateLesson: React.FC = () => {
       updateProgress('content-generation', 10, 'Gerando conteúdo pedagógico...');
       console.log('[Geração] Etapa 2: Geração de conteúdo iniciada');
       const generationTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout na geração do material')), 120000));
-      const materialPromise = materialService.generateMaterial(selectedType, formData);
+      const materialPromise = materialService.generateMaterial(selectedType, formDataFinal);
       const generatedMaterial = await Promise.race([materialPromise, generationTimeout]);
+      const typedGeneratedMaterial = generatedMaterial as GeneratedMaterial;
       updateProgress('content-generation', 100, 'Conteúdo gerado com sucesso!', true);
       console.log('[Geração] Etapa 2: Geração de conteúdo concluída');
       currentStageIndex++;
@@ -599,17 +620,18 @@ const CreateLesson: React.FC = () => {
       // Etapa 4: Finalização
       updateProgress('finalization', 100, 'Finalizando e salvando material...', true);
       console.log('[Geração] Etapa 4: Finalização e salvamento concluídos');
-      setGeneratedMaterial(generatedMaterial);
-      setShowMaterialModal(true);
+      setGeneratedMaterial(typedGeneratedMaterial);
+      setShowNextStepsModal(true); // Abre o modal de próximos passos
       setIsGenerating(false);
+      setStep('form'); // Garante que o modal de carregamento feche
 
       // Registrar atividade
       activityService.addActivity({
         type: 'created',
-        title: generatedMaterial.title,
-        description: `Material ${selectedType} criado: ${generatedMaterial.title}`,
+        title: typedGeneratedMaterial.title,
+        description: `Material ${selectedType} criado: ${typedGeneratedMaterial.title}`,
         materialType: selectedType,
-        materialId: generatedMaterial.id,
+        materialId: typedGeneratedMaterial.id,
         subject: formData.subject,
         grade: formData.grade
       });
@@ -663,6 +685,7 @@ const CreateLesson: React.FC = () => {
       subjects: ['']
     });
     setSelectedType(null);
+    // Remover qualquer navegação automática para "Meus Materiais"
   };
 
   // Função para abrir o modal de edição
