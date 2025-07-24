@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface Plan {
@@ -16,8 +15,6 @@ interface Subscription {
   endDate: string | null;
   status: string;
   priceId: string;
-  cancel_at_period_end?: boolean;
-  billingType?: string;
 }
 
 interface PerfilUsuario {
@@ -40,7 +37,7 @@ class PlanService {
   async getPlans(): Promise<Plan[]> {
     try {
       const { data, error } = await supabase
-        .from('planos')
+        .from('plans')
         .select('*');
 
       if (error) {
@@ -50,45 +47,14 @@ class PlanService {
 
       return data.map(plan => ({
         id: plan.id,
-        name: plan.nome,
-        price: plan.preco,
-        description: plan.descricao,
-        features: plan.recursos || []
+        name: plan.name,
+        price: plan.price,
+        description: plan.description,
+        features: plan.features
       }));
     } catch (error) {
       console.error('Erro ao buscar planos:', error);
       return [];
-    }
-  }
-
-  async createCheckoutSession(stripePriceId: string): Promise<{ url: string } | null> {
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { stripePriceId }
-      });
-
-      if (error) {
-        console.error('Erro ao criar sessão de checkout:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Erro ao criar sessão de checkout:', error);
-      return null;
-    }
-  }
-
-  async cancelSubscription(): Promise<void> {
-    try {
-      const { error } = await supabase.functions.invoke('cancel-subscription');
-
-      if (error) {
-        throw new Error(error.message);
-      }
-    } catch (error) {
-      console.error('Erro ao cancelar assinatura:', error);
-      throw error;
     }
   }
 
@@ -98,8 +64,8 @@ class PlanService {
       if (!user) return null;
 
       const { data, error } = await supabase
-        .from('perfis')
-        .select('*')
+        .from('subscriptions')
+        .select('plan_id, start_date, end_date, status, price_id')
         .eq('user_id', user.id)
         .single();
 
@@ -108,15 +74,24 @@ class PlanService {
         return null;
       }
 
+      const { data: planData, error: planError } = await supabase
+        .from('plans')
+        .select('name')
+        .eq('id', data.plan_id)
+        .single();
+
+      if (planError) {
+        console.error('Erro ao buscar nome do plano:', planError);
+        return null;
+      }
+
       return {
-        planId: data.plano_ativo,
-        planName: data.plano_ativo,
-        startDate: data.data_inicio_plano,
-        endDate: data.data_expiracao_plano,
-        status: data.status_plano,
-        priceId: '',
-        cancel_at_period_end: false,
-        billingType: data.billing_type
+        planId: data.plan_id,
+        planName: planData.name,
+        startDate: data.start_date,
+        endDate: data.end_date,
+        status: data.status,
+        priceId: data.price_id
       };
     } catch (error) {
       console.error('Erro ao buscar assinatura:', error);
