@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Check, X, Crown, Users, Calendar, Download, Edit, Slides, FileText, History, Zap } from 'lucide-react';
+import { Check, X, Crown, Users, Calendar, Download, Edit, Presentation, FileText, History, Zap } from 'lucide-react';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useActivityTracker } from '@/hooks/useActivityTracker';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +13,7 @@ import { ChangePlanModal } from '@/components/ChangePlanModal';
 const SubscriptionPage = () => {
   const [showChangePlan, setShowChangePlan] = useState(false);
   const { currentPlan, usage, loading, changePlan } = usePlanPermissions();
-  const { trackActivity } = useActivityTracker();
+  const { addActivity } = useActivityTracker();
   const { toast } = useToast();
 
   const planFeatures = {
@@ -91,9 +92,9 @@ const SubscriptionPage = () => {
   };
 
   const handleUpgradeClick = (planId: string) => {
-    // Track the upgrade attempt with correct type
-    trackActivity({
-      type: 'created', // Fixed: changed from 'feedback' to 'created'
+    // Track the upgrade attempt with correct function
+    addActivity({
+      type: 'created',
       title: `Tentativa de upgrade para ${planId}`,
       description: `Usuário tentou fazer upgrade para o plano ${planId}`,
       material_type: 'plano',
@@ -158,7 +159,7 @@ const SubscriptionPage = () => {
         <ChangePlanModal
           isOpen={showChangePlan}
           onClose={() => setShowChangePlan(false)}
-          onSelectPlan={changePlan}
+          onPlanSelect={changePlan}
         />
       </div>
     </div>
