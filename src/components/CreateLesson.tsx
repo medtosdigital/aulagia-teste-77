@@ -551,103 +551,68 @@ const CreateLesson: React.FC = () => {
     setGenerationProgress({
       stage: 'validation',
       progress: 0,
-      message: 'Preparando validação...',
+      message: 'Preparando validação BNCC...',
       isComplete: false
     });
 
     try {
-      // Adicionar timeout para evitar travamentos na geração
-      const generationPromise = (async () => {
-        const progressStages = getProgressStages(selectedType);
-        let currentStageIndex = 0;
+      const progressStages = getProgressStages(selectedType);
+      let currentStageIndex = 0;
 
-        // Simular progresso inicial
-        updateProgress('validation', 10, 'Iniciando validação BNCC...');
-
-        // Validação BNCC com timeout
-        const validationPromise = BNCCValidationService.validateTopic(formData.topic, formData.subject, formData.grade);
-        const validationTimeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout na validação BNCC')), 30000)
-        );
-
-        const validationResult = await Promise.race([validationPromise, validationTimeout]) as ValidationResult;
-        
-        updateProgress('validation', 100, 'Validação BNCC concluída', true);
-        currentStageIndex++;
-
-        if (!validationResult.isValid) {
-          setValidationResult(validationResult);
-          setShowBNCCValidation(true);
-          setIsGenerating(false);
-          return;
-        }
-
-        // Validação BNCC Aprimorada
-        updateProgress('enhanced_validation', 10, 'Validação BNCC aprimorada...');
-        
-        const enhancedValidationPromise = EnhancedBNCCValidationService.validateMultipleTopics([formData.topic], formData.subject, formData.grade);
-        const enhancedValidationTimeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout na validação BNCC aprimorada')), 30000)
-        );
-
-        const enhancedValidationResult = await Promise.race([enhancedValidationPromise, enhancedValidationTimeout]) as EnhancedBNCCValidation;
-        
-        updateProgress('enhanced_validation', 100, 'Validação BNCC aprimorada concluída', true);
-        currentStageIndex++;
-
-        if (!enhancedValidationResult.overallValid) {
-          setEnhancedValidationResult(enhancedValidationResult);
-          setShowEnhancedBNCCValidation(true);
-          setIsGenerating(false);
-          return;
-        }
-
-        // Geração do material
-        updateProgress('generation', 10, 'Gerando material...');
-        
-        const generationTimeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout na geração do material')), 120000) // 2 minutos
-        );
-
-        const materialPromise = materialService.generateMaterial(selectedType, formData);
-        const generatedMaterial = await Promise.race([materialPromise, generationTimeout]) as GeneratedMaterial;
-        // Parse automático do campo content se vier como string
-        if (generatedMaterial && typeof generatedMaterial.content === 'string') {
-          try {
-            generatedMaterial.content = JSON.parse(generatedMaterial.content);
-          } catch (e) {
-            console.error('Erro ao fazer parse do campo content no CreateLesson:', e);
-          }
-        }
-        updateProgress('generation', 100, 'Material gerado com sucesso!', true);
-        currentStageIndex++;
-
-        // Finalização
-        updateProgress('completion', 100, 'Processo concluído!', true);
-
-        setGeneratedMaterial(generatedMaterial);
-        setShowMaterialModal(true);
+      // Etapa 1: Validação BNCC
+      updateProgress('validation', 10, 'Validando tema na BNCC...');
+      console.log('[Geração] Etapa 1: Validação BNCC iniciada');
+      const validationPromise = BNCCValidationService.validateTopic(formData.topic, formData.subject, formData.grade);
+      const validationTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout na validação BNCC')), 30000));
+      const validationResult = await Promise.race([validationPromise, validationTimeout]);
+      updateProgress('validation', 100, 'Validação BNCC concluída!', true);
+      console.log('[Geração] Etapa 1: Validação BNCC concluída');
+      currentStageIndex++;
+      if (!validationResult.isValid) {
+        setValidationResult(validationResult);
+        setShowBNCCValidation(true);
         setIsGenerating(false);
+        return;
+      }
 
-        // Registrar atividade
-        activityService.addActivity({
-          type: 'created',
-          title: generatedMaterial.title,
-          description: `Material ${selectedType} criado: ${generatedMaterial.title}`,
-          materialType: selectedType,
-          materialId: generatedMaterial.id,
-          subject: formData.subject,
-          grade: formData.grade
-        });
+      // Etapa 2: Geração de Conteúdo
+      updateProgress('content-generation', 10, 'Gerando conteúdo pedagógico...');
+      console.log('[Geração] Etapa 2: Geração de conteúdo iniciada');
+      const generationTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout na geração do material')), 120000));
+      const materialPromise = materialService.generateMaterial(selectedType, formData);
+      const generatedMaterial = await Promise.race([materialPromise, generationTimeout]);
+      updateProgress('content-generation', 100, 'Conteúdo gerado com sucesso!', true);
+      console.log('[Geração] Etapa 2: Geração de conteúdo concluída');
+      currentStageIndex++;
 
-      })();
+      // Etapa 3: Geração de Imagens (apenas para slides)
+      if (selectedType === 'slides') {
+        updateProgress('image-generation', 10, 'Gerando imagens dos slides...');
+        console.log('[Geração] Etapa 3: Geração de imagens iniciada');
+        // O materialService já chama a geração de imagens internamente, mas podemos simular progresso aqui
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Simula tempo de geração de imagens
+        updateProgress('image-generation', 100, 'Imagens geradas com sucesso!', true);
+        console.log('[Geração] Etapa 3: Geração de imagens concluída');
+        currentStageIndex++;
+      }
 
-      const overallTimeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout geral na geração')), 180000) // 3 minutos total
-      );
+      // Etapa 4: Finalização
+      updateProgress('finalization', 100, 'Finalizando e salvando material...', true);
+      console.log('[Geração] Etapa 4: Finalização e salvamento concluídos');
+      setGeneratedMaterial(generatedMaterial);
+      setShowMaterialModal(true);
+      setIsGenerating(false);
 
-      await Promise.race([generationPromise, overallTimeout]);
-
+      // Registrar atividade
+      activityService.addActivity({
+        type: 'created',
+        title: generatedMaterial.title,
+        description: `Material ${selectedType} criado: ${generatedMaterial.title}`,
+        materialType: selectedType,
+        materialId: generatedMaterial.id,
+        subject: formData.subject,
+        grade: formData.grade
+      });
     } catch (error) {
       console.error('Erro durante a geração:', error);
       setIsGenerating(false);
@@ -1314,7 +1279,6 @@ const CreateLesson: React.FC = () => {
     const currentStageIndex = stages.findIndex(stage => stage.id === generationProgress.stage);
     const currentStage = stages[currentStageIndex];
     const StageIcon = currentStage?.icon || BookOpen;
-
     return (
       <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-2 sm:p-4">
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
@@ -1329,7 +1293,6 @@ const CreateLesson: React.FC = () => {
                   <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
                 </div>
               </div>
-              
               {/* Content section */}
               <div className="space-y-4 sm:space-y-6">
                 <div>
@@ -1343,7 +1306,6 @@ const CreateLesson: React.FC = () => {
                     {generationProgress.message}
                   </p>
                 </div>
-                
                 {/* Progress section */}
                 <div className="space-y-3">
                   <Progress value={generationProgress.progress} className="h-3 bg-gray-200" />
@@ -1356,35 +1318,31 @@ const CreateLesson: React.FC = () => {
                     </span>
                   </div>
                 </div>
-
                 {/* Stages indicator */}
                 <div className="flex justify-center space-x-2">
                   {stages.map((stage, index) => {
+                    // Todas as bolinhas animam enquanto não finaliza
                     const isCompleted = index < currentStageIndex;
                     const isCurrent = index === currentStageIndex;
-                    
+                    const isFinal = generationProgress.isComplete && index === stages.length - 1;
                     return (
                       <div
                         key={stage.id}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          isCompleted 
-                            ? 'bg-green-500' 
-                            : isCurrent 
-                              ? 'bg-blue-500 animate-pulse' 
-                              : 'bg-gray-300'
-                        }`}
+                        className={`w-2 h-2 rounded-full transition-all duration-300
+                          ${isCompleted ? 'bg-green-500 animate-pulse' :
+                            isCurrent ? 'bg-blue-500 animate-pulse' :
+                            isFinal ? 'bg-green-700 animate-pulse' :
+                            'bg-gray-300 animate-pulse'}`}
                       />
                     );
                   })}
                 </div>
-
                 {/* Friendly reassurance message */}
                 <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                   <p className="text-xs sm:text-sm text-blue-700">
                     {selectedType === 'slides' 
                        ? '✨ Estamos criando um material incrível com imagens personalizadas! Isso pode levar alguns minutos.'
-                       : '🎯 Estamos trabalhando para criar o melhor material possível para você!'
-                    }
+                       : '🎯 Estamos trabalhando para criar o melhor material possível para você!'}
                   </p>
                 </div>
               </div>
