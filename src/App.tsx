@@ -1,7 +1,8 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -23,16 +24,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
-
-function ScrollToTop() {
-  const location = useLocation();
-  useEffect(() => {
-    // Tenta scrollar para o topo de forma suave, mas garante o reset mesmo em navegação rápida
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    setTimeout(() => window.scrollTo(0, 0), 10); // fallback para garantir
-  }, [location.pathname]);
-  return null;
-}
 
 function PresentationPortal() {
   const { open, material, close } = usePresentation();
@@ -86,7 +77,6 @@ function App() {
             <Toaster />
             <PresentationPortal />
             <Router>
-              <ScrollToTop />
               <ErrorBoundary>
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />

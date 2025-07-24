@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
@@ -45,6 +44,46 @@ async function generateImage(prompt: string, imageType: string): Promise<string>
   }
 }
 
+// Função para validar rigorosamente o conteúdo gerado
+function validateSlidesContent(content: any, expectedTopic: string): boolean {
+  console.log('🔍 [VALIDAÇÃO] Iniciando validação rigorosa do conteúdo...');
+  
+  const requiredFields = [
+    'tema', 'disciplina', 'serie', 'professor', 'objetivos', 'introducao', 
+    'conceitos', 'desenvolvimento_1', 'desenvolvimento_2', 'desenvolvimento_3', 
+    'desenvolvimento_4', 'exemplo', 'atividade', 'resumo', 'conclusao'
+  ];
+
+  // Verificar se todos os campos obrigatórios existem
+  for (const field of requiredFields) {
+    if (!content[field] || content[field].toString().trim() === '') {
+      console.error(`❌ [VALIDAÇÃO] Campo obrigatório ausente ou vazio: ${field}`);
+      return false;
+    }
+  }
+
+  // Verificar se o tema está presente em múltiplos campos (validação rigorosa)
+  const topicLower = expectedTopic.toLowerCase();
+  const fieldsToCheck = ['tema', 'introducao', 'conceitos', 'desenvolvimento_1'];
+  
+  let topicMatchCount = 0;
+  for (const field of fieldsToCheck) {
+    if (content[field] && content[field].toString().toLowerCase().includes(topicLower)) {
+      topicMatchCount++;
+    }
+  }
+
+  if (topicMatchCount < 2) {
+    console.error(`❌ [VALIDAÇÃO] Tema "${expectedTopic}" não encontrado suficientemente no conteúdo. Matches: ${topicMatchCount}`);
+    console.error(`❌ [VALIDAÇÃO] Conteúdo tema:`, content.tema);
+    console.error(`❌ [VALIDAÇÃO] Conteúdo introdução:`, content.introducao?.substring(0, 100));
+    return false;
+  }
+
+  console.log(`✅ [VALIDAÇÃO] Conteúdo validado com sucesso. Tema encontrado ${topicMatchCount} vezes`);
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -82,35 +121,49 @@ serve(async (req) => {
     let prompt = '';
     let systemMessage = '';
 
+<<<<<<< HEAD
     // ETAPA 1: DEFINIR PROMPTS PARA GERAÇÃO DE TEXTO
     console.log('📝 [PROMPT] Preparando prompt e systemMessage para o tipo de material:', materialType);
+=======
+    // ETAPA 1: DEFINIR PROMPTS ULTRA-ESPECÍFICOS PARA GERAÇÃO DE TEXTO
+    console.log('📝 [ETAPA-1] Configurando prompts ultra-específicos para geração de texto...');
+>>>>>>> 2741079aa0db1fd80e6f749cd64ba92d7a53799b
 
     if (materialType === 'slides') {
-      systemMessage = `Você é um especialista em criação de materiais educacionais ESPECÍFICOS para apresentações de slides.
+      systemMessage = `Você é um especialista em criação de materiais educacionais ULTRA-ESPECÍFICOS para apresentações de slides sobre "${temaEspecifico}".
 
-REGRAS OBRIGATÓRIAS:
-1. TODO o conteúdo DEVE ser especificamente sobre "${temaEspecifico}"
-2. NUNCA mencione temas diferentes de "${temaEspecifico}"
-3. Todas as variáveis devem conter informações EXCLUSIVAMENTE sobre "${temaEspecifico}"
-4. Os prompts de imagem devem ilustrar APENAS conceitos de "${temaEspecifico}"
+REGRAS CRÍTICAS E OBRIGATÓRIAS:
+1. TODO o conteúdo DEVE ser EXCLUSIVAMENTE sobre "${temaEspecifico}" - NUNCA sobre outros temas
+2. JAMAIS mencione qualquer tema diferente de "${temaEspecifico}"
+3. TODAS as variáveis devem conter informações SOMENTE sobre "${temaEspecifico}"
+4. Se o tema for "Geometria", NÃO fale sobre multiplicação, divisão ou operações matemáticas
+5. Se o tema for "Multiplicação", NÃO fale sobre geometria, formas ou figuras
+6. Cada campo do JSON deve ter conteúdo educativo específico e detalhado sobre "${temaEspecifico}"
 
-ESTRUTURA JSON OBRIGATÓRIA:
+VALIDAÇÃO OBRIGATÓRIA:
+- O título deve conter "${temaEspecifico}"
+- A introdução deve explicar especificamente "${temaEspecifico}"
+- Os conceitos devem ser APENAS de "${temaEspecifico}"
+- Todos os desenvolvimentos devem abordar aspectos diferentes de "${temaEspecifico}"
+- O exemplo deve ser um caso prático de "${temaEspecifico}"
+
+ESTRUTURA JSON RIGOROSAMENTE OBRIGATÓRIA:
 {
-  "tema": "string - DEVE conter '${temaEspecifico}' no título",
+  "tema": "DEVE conter '${temaEspecifico}' no título principal",
   "disciplina": "${disciplina}",
   "serie": "${serie}",
   "professor": "${formData.professor || 'Professor(a)'}",
-  "objetivos": ["objetivo 1 sobre ${temaEspecifico}", "objetivo 2 sobre ${temaEspecifico}", "objetivo 3 sobre ${temaEspecifico}"],
-  "introducao": "string - introdução específica sobre ${temaEspecifico}",
-  "conceitos": "string - conceitos principais de ${temaEspecifico}",
-  "desenvolvimento_1": "string - primeiro aspecto de ${temaEspecifico}",
-  "desenvolvimento_2": "string - segundo aspecto de ${temaEspecifico}",
-  "desenvolvimento_3": "string - terceiro aspecto de ${temaEspecifico}",
-  "desenvolvimento_4": "string - quarto aspecto de ${temaEspecifico}",
-  "exemplo": "string - exemplo prático de ${temaEspecifico}",
-  "atividade": "string - atividade sobre ${temaEspecifico}",
-  "resumo": "string - resumo de ${temaEspecifico}",
-  "conclusao": "string - conclusão sobre ${temaEspecifico}",
+  "objetivos": ["objetivo específico sobre ${temaEspecifico}", "segundo objetivo sobre ${temaEspecifico}", "terceiro objetivo sobre ${temaEspecifico}"],
+  "introducao": "Introdução detalhada e específica sobre ${temaEspecifico}",
+  "conceitos": "Conceitos fundamentais e específicos de ${temaEspecifico}",
+  "desenvolvimento_1": "Primeiro aspecto importante de ${temaEspecifico}",
+  "desenvolvimento_2": "Segundo aspecto importante de ${temaEspecifico}",
+  "desenvolvimento_3": "Terceiro aspecto importante de ${temaEspecifico}",
+  "desenvolvimento_4": "Quarto aspecto importante de ${temaEspecifico}",
+  "exemplo": "Exemplo prático e específico de ${temaEspecifico}",
+  "atividade": "Atividade pedagógica específica sobre ${temaEspecifico}",
+  "resumo": "Resumo dos pontos principais de ${temaEspecifico}",
+  "conclusao": "Conclusão específica sobre a importância de ${temaEspecifico}",
   "tema_imagem_prompt": "Ilustração educativa brasileira sobre ${temaEspecifico} para ${disciplina}, série ${serie}, capa atraente",
   "introducao_imagem_prompt": "Introdução visual educativa sobre ${temaEspecifico}, conceitos básicos para ${disciplina} ${serie}",
   "conceitos_imagem_prompt": "Diagrama educativo dos conceitos principais de ${temaEspecifico} para ${disciplina} ${serie}",
@@ -121,28 +174,39 @@ ESTRUTURA JSON OBRIGATÓRIA:
   "exemplo_imagem_prompt": "Exemplo visual prático de ${temaEspecifico} aplicado em ${disciplina} para ${serie}"
 }
 
-Retorne APENAS o JSON válido, sem markdown ou explicações.`;
+IMPORTANTE: Retorne APENAS o JSON válido, sem markdown ou explicações.`;
 
-      prompt = `Crie uma apresentação educacional COMPLETA e ESPECÍFICA sobre "${temaEspecifico}".
+      prompt = `Crie uma apresentação educacional ULTRA-ESPECÍFICA e DETALHADA sobre "${temaEspecifico}".
 
-DADOS DO MATERIAL:
-- Tema: ${temaEspecifico}
+DADOS OBRIGATÓRIOS:
+- Tema EXCLUSIVO: ${temaEspecifico}
 - Disciplina: ${disciplina}
 - Série: ${serie}
 - Professor: ${formData.professor || 'Professor(a)'}
 
-INSTRUÇÕES CRÍTICAS:
-1. TODOS os textos devem ser sobre "${temaEspecifico}" EXCLUSIVAMENTE
-2. NÃO mencione outros temas além de "${temaEspecifico}"
-3. Use linguagem adequada para ${serie}
-4. Foque em conceitos, exemplos e aplicações específicas de "${temaEspecifico}"
-5. Cada campo do JSON deve conter conteúdo educativo específico sobre "${temaEspecifico}"
-6. Os prompts de imagem devem ser MUITO específicos sobre "${temaEspecifico}"
+INSTRUÇÕES CRÍTICAS PARA "${temaEspecifico}":
+1. TODOS os textos devem ser EXCLUSIVAMENTE sobre "${temaEspecifico}"
+2. NUNCA mencione outros temas matemáticos além de "${temaEspecifico}"
+3. Use linguagem adequada para ${serie} mas específica sobre "${temaEspecifico}"
+4. Foque em conceitos, definições, exemplos e aplicações SOMENTE de "${temaEspecifico}"
+5. Cada campo deve ter pelo menos 2-3 frases específicas sobre "${temaEspecifico}"
+6. Os prompts de imagem devem ser ULTRA-ESPECÍFICOS sobre "${temaEspecifico}"
 
-VALIDAÇÃO: Se o JSON gerado mencionar qualquer tema diferente de "${temaEspecifico}", refaça completamente.
+VALIDAÇÃO CRÍTICA: 
+- Se você mencionar qualquer tema diferente de "${temaEspecifico}", o JSON será rejeitado
+- Cada campo deve conter a palavra "${temaEspecifico}" ou seus conceitos relacionados
+- O conteúdo deve ser educativo, detalhado e específico
 
+<<<<<<< HEAD
 Retorne APENAS o JSON com conteúdo específico sobre "${temaEspecifico}".`;
       console.log('📝 [PROMPT] Prompt e systemMessage para SLIDES prontos.');
+=======
+EXEMPLO DE ESPECIFICIDADE EXIGIDA:
+Se o tema for "Geometria": fale sobre formas, figuras, ângulos, perímetros, áreas
+Se o tema for "Multiplicação": fale sobre tabuada, operações, fatores, produtos
+
+Retorne APENAS o JSON com conteúdo ultra-específico sobre "${temaEspecifico}".`;
+>>>>>>> 2741079aa0db1fd80e6f749cd64ba92d7a53799b
 
     } else if (materialType === 'plano-de-aula') {
       systemMessage = `Você é um especialista em educação brasileira, pedagogo experiente e profundo conhecedor da BNCC. Crie um plano de aula DETALHADO e ESPECÍFICO sobre o tema "${formData.tema}" para a disciplina "${formData.disciplina}", voltado para a série/ano "${formData.serie}".`;
@@ -365,33 +429,25 @@ ESTRUTURA OBRIGATÓRIA:
       console.log('📝 [PROMPT] Prompt e systemMessage para MATERIAL DE APOIO prontos.');
     }
 
+<<<<<<< HEAD
     // ETAPA 2: GERAR TEXTO COM OPENAI
     console.log('🤖 [OPENAI] Chamando OpenAI para geração do conteúdo...');
     console.log('🤖 [OPENAI] Enviando prompt para o tema:', temaEspecifico);
+=======
+    // ETAPA 2: GERAR TEXTO COM OPENAI COM VALIDAÇÃO RIGOROSA
+    console.log('🤖 [ETAPA-2] Chamando OpenAI para geração de texto ultra-específico...');
+    console.log('📤 [OPENAI] Enviando prompt ultra-específico para tema:', temaEspecifico);
+>>>>>>> 2741079aa0db1fd80e6f749cd64ba92d7a53799b
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemMessage },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.1,
-        max_tokens: 4000,
-      }),
-    });
+    let attempts = 0;
+    let parsedContent = null;
+    const maxAttempts = 3;
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('❌ [OPENAI] Erro na API:', errorData);
-      throw new Error(`OpenAI API error: ${response.status} ${errorData}`);
-    }
+    while (attempts < maxAttempts && !parsedContent) {
+      attempts++;
+      console.log(`🔄 [TENTATIVA-${attempts}] Gerando conteúdo para "${temaEspecifico}"...`);
 
+<<<<<<< HEAD
     const data = await response.json();
     console.log('✅ [OPENAI] Resposta recebida da OpenAI com sucesso.');
 
@@ -433,6 +489,82 @@ ESTRUTURA OBRIGATÓRIA:
       console.error('❌ [PARSE] Falha ao fazer parse do JSON:', parseError);
       console.error('❌ [PARSE] Conteúdo raw:', generatedContent);
       throw new Error('Generated content is not valid JSON');
+=======
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemMessage },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.1,
+          max_tokens: 4000,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('❌ [OPENAI] Erro na API:', errorData);
+        throw new Error(`OpenAI API error: ${response.status} ${errorData}`);
+      }
+
+      const data = await response.json();
+      console.log(`✅ [OPENAI] Resposta recebida para tentativa ${attempts}`);
+
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        console.error('❌ [OPENAI] Estrutura de resposta inválida:', data);
+        continue;
+      }
+
+      let generatedContent = data.choices[0].message.content.trim();
+      console.log('📝 [CONTEÚDO] Preview do conteúdo gerado:', generatedContent.substring(0, 200) + '...');
+
+      // ETAPA 3: PROCESSAR E VALIDAR JSON RIGOROSAMENTE
+      console.log(`🔍 [ETAPA-3] Processando e validando JSON (tentativa ${attempts})...`);
+
+      generatedContent = generatedContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      
+      try {
+        const tempParsedContent = JSON.parse(generatedContent);
+        console.log(`✅ [JSON] Parse realizado com sucesso na tentativa ${attempts}`);
+        
+        // Validação ultra-rigorosa para slides
+        if (materialType === 'slides') {
+          if (validateSlidesContent(tempParsedContent, temaEspecifico)) {
+            parsedContent = tempParsedContent;
+            console.log(`✅ [VALIDAÇÃO] Conteúdo aprovado na tentativa ${attempts} para tema: ${temaEspecifico}`);
+            break;
+          } else {
+            console.warn(`⚠️ [VALIDAÇÃO] Tentativa ${attempts} rejeitada. Conteúdo não específico para: ${temaEspecifico}`);
+            if (attempts < maxAttempts) {
+              console.log(`🔄 [RETRY] Tentando novamente... (${attempts + 1}/${maxAttempts})`);
+              continue;
+            }
+          }
+        } else {
+          // Para outros tipos de material, usar validação mais simples
+          parsedContent = tempParsedContent;
+          break;
+        }
+        
+      } catch (parseError) {
+        console.error(`❌ [JSON] Falha no parse da tentativa ${attempts}:`, parseError);
+        if (attempts < maxAttempts) {
+          console.log(`🔄 [RETRY] Tentando novamente devido a erro de parse... (${attempts + 1}/${maxAttempts})`);
+          continue;
+        }
+      }
+    }
+
+    if (!parsedContent) {
+      console.error('❌ [CRÍTICO] Falha em todas as tentativas de geração de conteúdo específico');
+      throw new Error(`Não foi possível gerar conteúdo específico para "${temaEspecifico}" após ${maxAttempts} tentativas`);
+>>>>>>> 2741079aa0db1fd80e6f749cd64ba92d7a53799b
     }
 
     // ETAPA 4: GERAÇÃO SEQUENCIAL DE IMAGENS (APENAS PARA SLIDES)
@@ -505,12 +637,26 @@ ESTRUTURA OBRIGATÓRIA:
     }
 
     // ETAPA 5: FINALIZAÇÃO E LOGS FINAIS
+<<<<<<< HEAD
     console.log('🏁 [FINALIZAÇÃO] Material gerado e processado com sucesso!');
     console.log('🏁 [FINALIZAÇÃO] Tipo:', materialType, '| Tema:', temaEspecifico, '| Disciplina:', disciplina, '| Série:', serie);
+=======
+    console.log('🏁 [ETAPA-5] Finalizando geração do material...');
+    console.log('📋 [VERIFICAÇÃO-FINAL] Tema solicitado:', temaEspecifico);
+    console.log('📋 [VERIFICAÇÃO-FINAL] Tema no material:', parsedContent.tema);
+    console.log('📋 [VERIFICAÇÃO-FINAL] Disciplina:', parsedContent.disciplina);
+    console.log('📋 [VERIFICAÇÃO-FINAL] Série:', parsedContent.serie);
+    console.log('✅ [SUCESSO] Material ultra-específico gerado com sucesso!');
+>>>>>>> 2741079aa0db1fd80e6f749cd64ba92d7a53799b
 
     return new Response(JSON.stringify({ 
       success: true, 
-      content: parsedContent 
+      content: parsedContent,
+      validation: {
+        topic: temaEspecifico,
+        attempts: attempts,
+        validated: true
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

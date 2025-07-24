@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -24,6 +23,7 @@ import { useUpgradeModal } from '@/hooks/useUpgradeModal';
 import { useFirstAccess } from '@/hooks/useFirstAccess';
 import { usePlanExpiration } from '@/hooks/usePlanExpiration';
 import { useFeedback } from '@/hooks/useFeedback';
+import { useScrollReset } from '@/hooks/useScrollReset';
 import { supabase } from '@/integrations/supabase/client';
 import AdminUsersPage from '@/components/AdminUsersPage';
 import AdminConfigPage from '@/components/AdminConfigPage';
@@ -44,6 +44,9 @@ const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Use the comprehensive scroll reset hook
+  const { mainContentRef } = useScrollReset();
 
   const {
     canAccessSchool,
@@ -112,11 +115,6 @@ const Index = () => {
       window.removeEventListener('navigateToSubscription', handleNavigateToSubscription);
     };
   }, [user, isFirstAccess, navigate]);
-
-  // Resetar scroll do container principal ao trocar de rota
-  useEffect(() => {
-    document.querySelector('.flex-1')?.scrollTo(0, 0);
-  }, [location.pathname]);
 
   const mappedCurrentPlan = currentPlan ? {
     id: currentPlan.plano_ativo,
@@ -249,7 +247,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50 w-full flex flex-col">
       <Sidebar />
-      <div className="md:ml-64 min-h-screen flex flex-col flex-1 h-full overflow-y-auto">
+      <div className="md:ml-64 min-h-screen flex flex-col flex-1 h-full overflow-y-auto" ref={mainContentRef}>
         <Header title={getPageTitle()} />
         <div className="flex-1">
           <Routes>
@@ -269,7 +267,6 @@ const Index = () => {
         <Footer />
       </div>
       
-      {/* Modais globais */}
       <FirstAccessModal
         isOpen={showFirstAccessModal}
         onClose={closeFirstAccessModal}
