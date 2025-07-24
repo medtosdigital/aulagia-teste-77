@@ -97,7 +97,8 @@ serve(async (req) => {
 
   try {
     const { materialType, formData } = await req.json();
-    console.log(`[EDGE-INFO] [${requestId}] Dados recebidos | Tipo: ${materialType} | Tema: ${formData.tema || formData.topic || ''}`);
+    const temaRecebido = formData.tema || formData.topic || '';
+    console.log(`[EDGE-INFO] [${requestId}] [ETAPA: RECEBIDO] Tipo: ${materialType} | Tema recebido: ${temaRecebido}`);
     console.log('🟢 [INÍCIO] Requisição recebida para geração de material.');
     console.log(`📥 [DADOS] Tipo de material: ${materialType}`);
     console.log(`📥 [DADOS] Tema: ${formData.tema || formData.topic || ''}`);
@@ -514,18 +515,19 @@ ESTRUTURA OBRIGATÓRIA:
     // ETAPA 5: FINALIZAÇÃO E LOGS FINAIS
     // Garantir que o campo tema seja sempre exatamente igual ao enviado pelo usuário
     if (parsedContent && typeof parsedContent === 'object') {
-      parsedContent.tema = temaEspecifico;
+      parsedContent.tema = temaRecebido;
     }
     
     console.log('🏁 [ETAPA-5] Finalizando geração do material...');
-    console.log('📋 [VERIFICAÇÃO-FINAL] Tema solicitado:', temaEspecifico);
-    console.log('📋 [VERIFICAÇÃO-FINAL] Tema no material:', parsedContent.tema);
-    console.log('📋 [VERIFICAÇÃO-FINAL] Disciplina:', parsedContent.disciplina);
-    console.log('📋 [VERIFICAÇÃO-FINAL] Série:', parsedContent.serie);
+    const temaIA = parsedContent && parsedContent.tema ? parsedContent.tema : '[SEM TEMA]';
+    console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Tema solicitado: ${temaRecebido}`);
+    console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Tema no material: ${temaIA}`);
+    console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Disciplina: ${parsedContent.disciplina}`);
+    console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Série: ${parsedContent.serie}`);
     console.log('✅ [SUCESSO] Material ultra-específico gerado com sucesso!');
 
     const endTime = new Date().toISOString();
-    console.log(`[EDGE-END] [${endTime}] [${requestId}] Material gerado para tema: ${formData.tema || formData.topic || ''} | Tipo: ${materialType}`);
+    console.log(`[EDGE-END] [${endTime}] [${requestId}] Material gerado e salvo para tema: ${parsedContent.tema} | Tipo: ${materialType}`);
 
     return new Response(JSON.stringify({ 
       success: true, 
