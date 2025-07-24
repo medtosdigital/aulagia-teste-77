@@ -97,8 +97,8 @@ const SubscriptionPage = () => {
       type: 'created',
       title: `Tentativa de upgrade para ${planId}`,
       description: `Usuário tentou fazer upgrade para o plano ${planId}`,
-      material_type: 'plano',
-      material_id: planId
+      materialType: 'plano',
+      materialId: planId
     });
     
     setShowChangePlan(true);
@@ -159,7 +159,8 @@ const SubscriptionPage = () => {
         <ChangePlanModal
           isOpen={showChangePlan}
           onClose={() => setShowChangePlan(false)}
-          onPlanSelect={changePlan}
+          currentPlan={currentPlan}
+          onPlanChange={changePlan}
         />
       </div>
     </div>
