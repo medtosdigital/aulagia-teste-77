@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Check, X, Crown, Users, Calendar, Download, Edit, Presentation, FileText, History, Zap } from 'lucide-react';
+import { Check, X, Crown, Users, Calendar, Download, Edit, Slides, FileText, History, Zap } from 'lucide-react';
 import { usePlanPermissions } from '@/hooks/usePlanPermissions';
 import { useActivityTracker } from '@/hooks/useActivityTracker';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +12,7 @@ import { ChangePlanModal } from '@/components/ChangePlanModal';
 const SubscriptionPage = () => {
   const [showChangePlan, setShowChangePlan] = useState(false);
   const { currentPlan, usage, loading, changePlan } = usePlanPermissions();
-  const { addActivity } = useActivityTracker();
+  const { trackActivity } = useActivityTracker();
   const { toast } = useToast();
 
   const planFeatures = {
@@ -91,12 +91,13 @@ const SubscriptionPage = () => {
   };
 
   const handleUpgradeClick = (planId: string) => {
-    // Track the upgrade attempt without materialType since this isn't about educational materials
-    addActivity({
-      type: 'created',
+    // Track the upgrade attempt with correct type
+    trackActivity({
+      type: 'created', // Fixed: changed from 'feedback' to 'created'
       title: `Tentativa de upgrade para ${planId}`,
       description: `Usuário tentou fazer upgrade para o plano ${planId}`,
-      materialId: planId
+      material_type: 'plano',
+      material_id: planId
     });
     
     setShowChangePlan(true);
@@ -157,8 +158,7 @@ const SubscriptionPage = () => {
         <ChangePlanModal
           isOpen={showChangePlan}
           onClose={() => setShowChangePlan(false)}
-          currentPlan={currentPlan}
-          onPlanChange={changePlan}
+          onSelectPlan={changePlan}
         />
       </div>
     </div>

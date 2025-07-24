@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PerfilUsuario {
@@ -58,7 +59,7 @@ class PlanService {
         return null;
       }
 
-      // Fixed: Map the data to match PerfilUsuario interface with proper type handling
+      // Fixed: Map the data to match PerfilUsuario interface
       return {
         id: data.id,
         user_id: data.user_id,
@@ -69,10 +70,10 @@ class PlanService {
         billing_type: data.billing_type,
         data_inicio_plano: data.data_inicio_plano,
         data_expiracao_plano: data.data_expiracao_plano,
-        status_plano: (data.status_plano as 'ativo' | 'atrasado' | 'cancelado') || 'ativo',
+        status_plano: data.status_plano || 'ativo',
         ultima_renovacao: data.ultima_renovacao,
-        customer_id: (data as any).customer_id || undefined,
-        subscription_id: (data as any).subscription_id || undefined,
+        customer_id: data.customer_id || undefined,
+        subscription_id: data.subscription_id || undefined,
         materiais_criados_mes_atual: data.materiais_criados_mes_atual,
         ano_atual: data.ano_atual,
         mes_atual: data.mes_atual,
