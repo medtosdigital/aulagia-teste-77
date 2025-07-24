@@ -86,10 +86,9 @@ function validateSlidesContent(content: any, expectedTopic: string): boolean {
 }
 
 serve(async (req) => {
-  // Gera um ID simples e único para a requisição
   const requestId = `req-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
   const startTime = new Date().toISOString();
-  console.log(`[EDGE-START] [${startTime}] [${requestId}] Nova requisição recebida para gerarMaterialIA`);
+  console.log(`[MATERIAL-LOG] [${startTime}] [${requestId}] INICIO | Tipo: gerarMaterialIA`);
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -98,7 +97,7 @@ serve(async (req) => {
   try {
     const { materialType, formData } = await req.json();
     const temaRecebido = formData.tema || formData.topic || '';
-    console.log(`[EDGE-INFO] [${requestId}] [ETAPA: RECEBIDO] Tipo: ${materialType} | Tema recebido: ${temaRecebido}`);
+    console.log(`[MATERIAL-LOG] [${requestId}] RECEBIDO | Tipo: ${materialType} | Tema: "${temaRecebido}"`);
     console.log('🟢 [INÍCIO] Requisição recebida para geração de material.');
     console.log(`📥 [DADOS] Tipo de material: ${materialType}`);
     console.log(`📥 [DADOS] Tema: ${formData.tema || formData.topic || ''}`);
@@ -514,12 +513,18 @@ ESTRUTURA OBRIGATÓRIA:
 
     // ETAPA 5: FINALIZAÇÃO E LOGS FINAIS
     // Garantir que o campo tema seja sempre exatamente igual ao enviado pelo usuário
+    let temaIA = '[SEM TEMA]';
+    if (parsedContent && typeof parsedContent === 'object' && parsedContent.tema) {
+      temaIA = parsedContent.tema;
+    }
+    console.log(`[MATERIAL-LOG] [${requestId}] IA | Tipo: ${materialType} | Tema retornado pela IA: "${temaIA}"`);
+
     if (parsedContent && typeof parsedContent === 'object') {
       parsedContent.tema = temaRecebido;
     }
+    console.log(`[MATERIAL-LOG] [${requestId}] PRONTO_PARA_SALVAR | Tipo: ${materialType} | Tema a ser salvo: "${parsedContent.tema}"`);
     
     console.log('🏁 [ETAPA-5] Finalizando geração do material...');
-    const temaIA = parsedContent && parsedContent.tema ? parsedContent.tema : '[SEM TEMA]';
     console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Tema solicitado: ${temaRecebido}`);
     console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Tema no material: ${temaIA}`);
     console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Disciplina: ${parsedContent.disciplina}`);
@@ -527,7 +532,7 @@ ESTRUTURA OBRIGATÓRIA:
     console.log('✅ [SUCESSO] Material ultra-específico gerado com sucesso!');
 
     const endTime = new Date().toISOString();
-    console.log(`[EDGE-END] [${endTime}] [${requestId}] Material gerado e salvo para tema: ${parsedContent.tema} | Tipo: ${materialType}`);
+    console.log(`[MATERIAL-LOG] [${endTime}] [${requestId}] FIM | Tipo: ${materialType} | Tema: "${parsedContent.tema}"`);
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -543,7 +548,7 @@ ESTRUTURA OBRIGATÓRIA:
 
   } catch (error) {
     const errorTime = new Date().toISOString();
-    console.error(`[EDGE-ERROR] [${errorTime}] [${requestId}] Erro ao gerar material:`, error);
+    console.error(`[MATERIAL-LOG] [${errorTime}] [${requestId}] ERRO | Tipo: gerarMaterialIA | Mensagem: ${error.message}`);
     return new Response(JSON.stringify({ 
       success: false, 
       error: error.message 
