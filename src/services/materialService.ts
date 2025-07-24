@@ -1,3 +1,4 @@
+
 import { unifiedMaterialsService, UnifiedMaterial } from './unifiedMaterialsService';
 import { supabase } from '@/integrations/supabase/client';
 import { QuestionParserService } from './questionParserService';
@@ -30,11 +31,10 @@ export interface MaterialFormData {
   data?: string;
   duracao?: string;
   bncc?: string;
-  material_principal_id?: string; // Adicionado para materiais de apoio
-  turma?: string; // Corrige o erro de linter
+  material_principal_id?: string;
+  turma?: string;
 }
 
-// Updated LessonPlan interface to match what components expect
 export interface LessonPlan {
   titulo?: string;
   professor: string;
@@ -110,14 +110,44 @@ export interface Assessment {
 
 class MaterialService {
   async generateMaterial(type: string, formData: MaterialFormData): Promise<GeneratedMaterial> {
-    console.log('🚀 Starting material generation with OpenAI:', { type, formData });
+    console.log('🚀 [MATERIALSERVICE] Iniciando geração de material:', { type, formData });
     
     try {
-      // Buscar usuário autenticado
+      // Verificar se o usuário pode criar material
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
 
-      console.log('📞 Calling gerarMaterialIA Edge Function...');
+      // Verificar limite de criação
+      const { data: canCreate, error: canCreateError } = await supabase
+        .rpc('can_create_material', { p_user_id: user.id });
+      
+      if (canCreateError) {
+        console.error('❌ [LIMITE] Erro ao verificar limite:', canCreateError);
+        throw new Error('Erro ao verificar limite de criação');
+      }
+
+      if (!canCreate) {
+        console.error('❌ [LIMITE] Usuário atingiu limite de criação');
+        throw new Error('Limite de criação de materiais atingido');
+      }
+
+      console.log('✅ [LIMITE] Usuário pode criar material');
+      
+      // Incrementar contador antes de gerar
+      const { error: incrementError } = await supabase
+        .rpc('increment_material_usage', { p_user_id: user.id });
+      
+      if (incrementError) {
+        console.error('❌ [CONTADOR] Erro ao incrementar contador:', incrementError);
+        throw new Error('Erro ao incrementar contador de uso');
+      }
+
+      console.log('✅ [CONTADOR] Contador incrementado com sucesso');
+
+      // Chamar edge function para gerar conteúdo
+      console.log('📞 [EDGE-FUNCTION] Chamando gerarMaterialIA...');
       const { data, error } = await supabase.functions.invoke('gerarMaterialIA', {
         body: {
           materialType: type,
@@ -126,93 +156,93 @@ class MaterialService {
       });
 
       if (error) {
-        console.error('❌ Edge Function error:', error);
+        console.error('❌ [EDGE-FUNCTION] Erro na edge function:', error);
         throw new Error(`Erro ao gerar conteúdo: ${error.message}`);
       }
 
       if (!data || !data.success) {
-        console.error('❌ Invalid response from Edge Function:', data);
+        console.error('❌ [EDGE-FUNCTION] Resposta inválida:', data);
         throw new Error('Resposta inválida do serviço de geração');
       }
 
-      console.log('✅ Content generated successfully with OpenAI');
+      console.log('✅ [EDGE-FUNCTION] Conteúdo gerado com sucesso');
       let generatedContent = data.content;
       
-      if (type === 'slides' && generatedContent) {
-        console.log('🎨 Starting ULTRA-OPTIMIZED image generation for slides...');
-        generatedContent = await this.generateUltraOptimizedImagesForSlides(generatedContent, formData);
-      }
-      
-      // Passar user.id para mapToUnifiedMaterial
+      // Mapear dados para a tabela unificada
       const materialData = this.mapToUnifiedMaterial(type, formData, generatedContent, user.id);
-      console.log('📝 Material data mapped:', materialData);
+      console.log('📝 [MAPEAMENTO] Material mapeado:', materialData);
       
-      console.log('💾 Saving material to Supabase...');
+      // Salvar no banco
+      console.log('💾 [SAVE] Salvando material no banco...');
       const savedMaterial = await unifiedMaterialsService.addMaterial(materialData);
       
       if (!savedMaterial) {
-        console.error('❌ Failed to save material to Supabase');
+        console.error('❌ [SAVE] Falha ao salvar material');
         throw new Error('Falha ao salvar material no banco de dados');
       }
       
-      console.log('✅ Material saved successfully to Supabase:', savedMaterial.id);
+      console.log('✅ [SAVE] Material salvo com sucesso:', savedMaterial.id);
+      
+      // Converter para formato esperado
       const result = this.convertToGeneratedMaterial(savedMaterial, generatedContent, formData);
+      console.log('🏁 [FINAL] Material convertido e retornado');
+      
       return result;
     } catch (error) {
-      console.error('❌ Error in generateMaterial:', error);
+      console.error('❌ [ERRO] Erro em generateMaterial:', error);
       throw error;
     }
   }
 
   async getMaterials(): Promise<GeneratedMaterial[]> {
-    console.log('📋 Getting all materials from Supabase...');
+    console.log('📋 [GET-MATERIALS] Buscando materiais...');
     try {
       const unifiedMaterials = await unifiedMaterialsService.getMaterialsByUser();
-      console.log('✅ Loaded materials from Supabase:', unifiedMaterials.length);
+      console.log('✅ [GET-MATERIALS] Materiais carregados:', unifiedMaterials.length);
       
       return unifiedMaterials.map(material => this.convertUnifiedToGenerated(material));
     } catch (error) {
-      console.error('❌ Error getting materials:', error);
+      console.error('❌ [GET-MATERIALS] Erro ao buscar materiais:', error);
       return [];
     }
   }
 
   async getMaterialById(id: string): Promise<GeneratedMaterial | null> {
-    console.log('🔍 Getting material by ID:', id);
+    console.log('🔍 [GET-BY-ID] Buscando material por ID:', id);
     try {
       const material = await unifiedMaterialsService.getMaterialById(id);
       
       if (!material) {
-        console.log('❌ Material not found:', id);
+        console.log('❌ [GET-BY-ID] Material não encontrado:', id);
         return null;
       }
       
-      console.log('✅ Material found:', material.title);
+      console.log('✅ [GET-BY-ID] Material encontrado:', material.title);
       return this.convertUnifiedToGenerated(material);
     } catch (error) {
-      console.error('❌ Error getting material by ID:', error);
+      console.error('❌ [GET-BY-ID] Erro ao buscar material:', error);
       return null;
     }
   }
 
   async deleteMaterial(id: string): Promise<boolean> {
-    console.log('🗑️ Deleting material:', id);
+    console.log('🗑️ [DELETE] Deletando material:', id);
     try {
       const success = await unifiedMaterialsService.deleteMaterial(id);
       if (success) {
-        console.log('✅ Material deleted successfully');
+        console.log('✅ [DELETE] Material deletado com sucesso');
       } else {
-        console.log('❌ Failed to delete material');
+        console.log('❌ [DELETE] Falha ao deletar material');
       }
       return success;
     } catch (error) {
-      console.error('❌ Error deleting material:', error);
+      console.error('❌ [DELETE] Erro ao deletar material:', error);
       return false;
     }
   }
 
   async updateMaterial(id: string, updates: Partial<GeneratedMaterial>): Promise<boolean> {
-    console.log('📝 MaterialService.updateMaterial: Starting update process');
+    console.log('📝 [UPDATE] Atualizando material:', id);
     
     try {
       const unifiedUpdates: Partial<UnifiedMaterial> = {};
@@ -230,7 +260,7 @@ class MaterialService {
           try {
             contentToStore = JSON.parse(contentToStore);
           } catch (e) {
-            console.warn('⚠️ Content string is not valid JSON, using as-is');
+            console.warn('⚠️ [UPDATE] Content string não é JSON válido');
           }
         }
         unifiedUpdates.content = JSON.stringify(contentToStore);
@@ -239,175 +269,27 @@ class MaterialService {
       const success = await unifiedMaterialsService.updateMaterial(id, unifiedUpdates);
       
       if (success) {
-        console.log('✅ MaterialService: Update completed successfully');
+        console.log('✅ [UPDATE] Material atualizado com sucesso');
       } else {
-        console.error('❌ MaterialService: Update failed');
+        console.error('❌ [UPDATE] Falha na atualização');
       }
       
       return success;
     } catch (error) {
-      console.error('❌ MaterialService: Error in updateMaterial:', error);
+      console.error('❌ [UPDATE] Erro ao atualizar material:', error);
       return false;
     }
   }
 
-  private async generateUltraOptimizedImagesForSlides(slidesContent: any, formData: MaterialFormData): Promise<any> {
-    console.log('🎨 Starting ULTRA-OPTIMIZED image generation for slides v2.0...');
-    
-    // Campos de imagem otimizados por prioridade educacional
-    const prioritizedImageFields = [
-      { field: 'tema_imagem', priority: 'high', context: 'capa' },
-      { field: 'introducao_imagem', priority: 'high', context: 'introdução' },
-      { field: 'conceitos_imagem', priority: 'medium', context: 'conceitos' },
-      { field: 'exemplo_imagem', priority: 'high', context: 'exemplo' },
-      { field: 'desenvolvimento_1_imagem', priority: 'medium', context: 'desenvolvimento' },
-      { field: 'desenvolvimento_2_imagem', priority: 'low', context: 'desenvolvimento' },
-      { field: 'desenvolvimento_3_imagem', priority: 'low', context: 'desenvolvimento' },
-      { field: 'desenvolvimento_4_imagem', priority: 'low', context: 'desenvolvimento' }
-    ];
-
-    const updatedContent = { ...slidesContent };
-    let successfulGenerations = 0;
-    let totalAttempts = 0;
-    let highPrioritySuccess = 0;
-    let highPriorityTotal = 0;
-
-    // Processar campos por prioridade
-    const sortedFields = prioritizedImageFields.sort((a, b) => {
-      const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
-      return priorityOrder[a.priority as keyof typeof priorityOrder] - priorityOrder[b.priority as keyof typeof priorityOrder];
-    });
-
-    for (const fieldInfo of sortedFields) {
-      const { field, priority, context } = fieldInfo;
-      const prompt = slidesContent[field];
-      
-      if (prompt && typeof prompt === 'string' && prompt.trim() !== '') {
-        totalAttempts++;
-        if (priority === 'high') highPriorityTotal++;
-        
-        try {
-          console.log(`🎨 Generating ULTRA-OPTIMIZED ${priority} priority image for ${field} (${context})...`);
-          console.log(`📝 Ultra-optimizing prompt: ${prompt.substring(0, 80)}...`);
-          
-          // Sistema de otimização contextual por disciplina
-          const contextualPrompt = this.optimizePromptByContext(prompt, formData, context);
-          
-          console.log(`🧠 Contextually optimized prompt: ${contextualPrompt.substring(0, 100)}...`);
-
-          const { data, error } = await supabase.functions.invoke('gerarImagemIA', {
-            body: { prompt: contextualPrompt }
-          });
-
-          if (error) {
-            console.error(`❌ Error generating ultra-optimized image for ${field}:`, error);
-            continue;
-          }
-
-          if (data?.success && data?.imageUrl) {
-            // Salvar dados da imagem ultra-otimizada
-            updatedContent[field + '_url'] = data.imageUrl;
-            updatedContent[field + '_data'] = data.imageData;
-            
-            // Salvar sugestão de posicionamento de texto se disponível
-            if (data.textPlacementSuggestion) {
-              updatedContent[field + '_text_placement'] = data.textPlacementSuggestion;
-            }
-            
-            successfulGenerations++;
-            if (priority === 'high') highPrioritySuccess++;
-            
-            console.log(`✅ ULTRA-OPTIMIZED image generated successfully for ${field} (${priority} priority)`);
-            if (data.stats) {
-              console.log(`📊 Ultra-optimized stats - Size: ${data.stats.sizeKB}KB, Format: ${data.stats.mimeType}`);
-            }
-          } else {
-            console.warn(`⚠️ No ultra-optimized image URL returned for ${field}`);
-          }
-
-          // Delay inteligente baseado na prioridade
-          const delay = priority === 'high' ? 2000 : priority === 'medium' ? 1500 : 1000;
-          await new Promise(resolve => setTimeout(resolve, delay));
-          
-        } catch (error) {
-          console.error(`❌ Exception in ultra-optimized generation for ${field}:`, error);
-          continue;
-        }
-      }
-    }
-
-    console.log(`🎨 ULTRA-OPTIMIZED image generation completed for slides v2.0`);
-    console.log(`📊 Ultra-optimization summary:`);
-    console.log(`  ✓ Total: ${successfulGenerations}/${totalAttempts} images generated`);
-    console.log(`  ✓ High Priority: ${highPrioritySuccess}/${highPriorityTotal} critical images`);
-    console.log(`  ✓ Success Rate: ${Math.round((successfulGenerations/totalAttempts) * 100)}%`);
-    console.log(`  ✓ Critical Success Rate: ${Math.round((highPrioritySuccess/highPriorityTotal) * 100)}%`);
-    
-    // Verificar se pelo menos as imagens de alta prioridade foram geradas
-    if (highPrioritySuccess === 0 && highPriorityTotal > 0) {
-      console.warn('⚠️ CRITICAL: No high-priority images were generated successfully');
-    } else if (highPrioritySuccess >= Math.ceil(highPriorityTotal * 0.7)) {
-      console.log('✅ SUCCESS: Majority of critical images generated successfully');
-    }
-    
-    return updatedContent;
-  }
-
-  private optimizePromptByContext(originalPrompt: string, formData: MaterialFormData, slideContext: string): string {
-    console.log('🧠 Applying contextual prompt optimization...');
-    
-    // Análise da disciplina
-    const subject = (formData.disciplina || formData.subject || '').toLowerCase();
-    const grade = (formData.serie || formData.grade || '').toLowerCase();
-    
-    // Contexto educacional brasileiro
-    let optimizedPrompt = originalPrompt;
-    
-    // Otimizações por disciplina
-    if (subject.includes('matemática') || subject.includes('math')) {
-      optimizedPrompt += ', mathematical concept illustration, geometric shapes, Brazilian educational context';
-    } else if (subject.includes('ciência') || subject.includes('science')) {
-      optimizedPrompt += ', scientific illustration, natural phenomena, Brazilian educational context';
-    } else if (subject.includes('história') || subject.includes('history')) {
-      optimizedPrompt += ', Brazilian historical illustration, cultural elements';
-    } else if (subject.includes('geografia') || subject.includes('geography')) {
-      optimizedPrompt += ', Brazilian geographical illustration, landscape elements';
-    } else if (subject.includes('português') || subject.includes('language')) {
-      optimizedPrompt += ', Brazilian language arts illustration, communication concept';
-    }
-    
-    // Otimizações por contexto do slide
-    if (slideContext === 'capa') {
-      optimizedPrompt += ', attractive cover illustration, engaging title design';
-    } else if (slideContext === 'conceitos') {
-      optimizedPrompt += ', clear concept visualization, explanatory illustration';
-    } else if (slideContext === 'exemplo') {
-      optimizedPrompt += ', practical example illustration, real-world application';
-    }
-    
-    // Otimizações por série
-    if (grade.includes('fundamental') || grade.includes('elementary')) {
-      optimizedPrompt += ', child-friendly illustration, colorful and engaging';
-    } else if (grade.includes('médio') || grade.includes('high')) {
-      optimizedPrompt += ', sophisticated illustration, mature educational design';
-    }
-    
-    // Estratégia anti-texto ultra-robusta contextual
-    optimizedPrompt += ', Brazilian educational illustration, high quality, clean design, ABSOLUTELY NO TEXT, NO WORDS, NO LETTERS, NO NUMBERS, visual elements only';
-    
-    return optimizedPrompt;
-  }
-
-  // Modifique a assinatura para receber userId
   private mapToUnifiedMaterial(type: string, formData: MaterialFormData, content: any, userId: string): Omit<UnifiedMaterial, 'id' | 'createdAt' | 'status'> {
     const isApoio = type === 'apoio';
-    // Preencher campos extras conforme o tipo de material
-    // Extrair tema, turma, etc, do conteúdo ou formData
+    
+    // Extrair campos extras do conteúdo ou formData
     const tema = content.tema || content.topic || formData.tema || formData.topic || '';
     const turma = content.turma || formData.turma || '';
     const disciplina = content.disciplina || content.subject || formData.disciplina || formData.subject || '';
     const serie = content.serie || content.grade || formData.serie || formData.grade || '';
-    // Preencher todos os campos principais
+    
     return {
       title: this.generateTitle(type, formData),
       type: type as UnifiedMaterial['type'],
@@ -415,7 +297,7 @@ class MaterialService {
       grade: serie || 'Não informado',
       userId,
       content: JSON.stringify(content),
-      // Campos extras para a tabela materiais
+      // Campos extras conforme necessário
       ...(tema ? { tema } : {}),
       ...(turma ? { turma } : {}),
       ...(isApoio && formData.material_principal_id ? { mainMaterialId: formData.material_principal_id } : {})
@@ -427,14 +309,14 @@ class MaterialService {
     try {
       content = unifiedMaterial.content ? JSON.parse(unifiedMaterial.content) : {};
     } catch (error) {
-      console.error('Error parsing content:', error);
+      console.error('❌ [CONVERT] Erro ao fazer parse do conteúdo:', error);
       content = {};
     }
 
     return {
       id: unifiedMaterial.id,
       title: unifiedMaterial.title,
-      type: unifiedMaterial.type === 'plano-de-aula' ? 'plano-de-aula' : unifiedMaterial.type,
+      type: unifiedMaterial.type,
       subject: unifiedMaterial.subject,
       grade: unifiedMaterial.grade,
       createdAt: unifiedMaterial.createdAt,
@@ -443,7 +325,7 @@ class MaterialService {
   }
 
   private convertToGeneratedMaterial(unifiedMaterial: UnifiedMaterial, content: any, formData: MaterialFormData): GeneratedMaterial {
-    // Ajuste de recursos didáticos
+    // Processar recursos e habilidades para planos de aula
     let recursos: string[] = [];
     if (content.desenvolvimento && Array.isArray(content.desenvolvimento)) {
       const recursosSet = new Set<string>();
@@ -460,7 +342,7 @@ class MaterialService {
       recursos = Array.from(recursosSet);
     }
 
-    // Ajuste de habilidades
+    // Processar habilidades BNCC
     let habilidades: string[] = [];
     let objetivos: string[] = [];
     const bnccCodigos: string[] = [];
@@ -497,7 +379,7 @@ class MaterialService {
       bncc = formData.bncc;
     }
 
-    // Garante que todos os campos do JSON original estejam presentes
+    // Conteúdo final processado
     const contentFinal = {
       ...content,
       recursos,
@@ -509,7 +391,7 @@ class MaterialService {
     return {
       id: unifiedMaterial.id,
       title: unifiedMaterial.title,
-      type: unifiedMaterial.type === 'plano-de-aula' ? 'plano-de-aula' : unifiedMaterial.type,
+      type: unifiedMaterial.type,
       subject: unifiedMaterial.subject,
       grade: unifiedMaterial.grade,
       createdAt: unifiedMaterial.createdAt,
