@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { usePlanPermissions } from './usePlanPermissions';
 import { useToast } from './use-toast';
@@ -23,9 +22,9 @@ export const useUpgradeModal = () => {
     dismissUpgradeModal();
   };
 
-  const handlePlanSelection = async (planId: string, billingType: 'mensal' | 'anual' = 'mensal') => {
+  const handlePlanSelection = async (planId: string) => {
     try {
-      const success = await changePlan(planId, billingType); // Fixed: added billingType parameter
+      const success = await changePlan(planId);
       
       if (success) {
         const planNames: Record<string, string> = {
