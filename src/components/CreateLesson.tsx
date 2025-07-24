@@ -1207,7 +1207,7 @@ const CreateLesson: React.FC = () => {
 
                     <Button 
                       onClick={handleFormSubmit} 
-                      disabled={!formData.subject || !formData.grade || (selectedType !== 'avaliacao' && !formData.topic) || (selectedType === 'avaliacao' && formData.subjects.filter(s => s.trim() !== '').length === 0)} 
+                      disabled={!formData.subject || !formData.grade || (selectedType !== 'avaliacao' && !formData.topic) || (selectedType === 'avaliacao' && formData.subjects.filter(s => s.trim() !== '').length === 0) || isGenerating} 
                       className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex items-center justify-center space-x-2 h-10 sm:h-12 px-4 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />

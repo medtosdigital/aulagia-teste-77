@@ -401,9 +401,8 @@ class MaterialService {
   // Modifique a assinatura para receber userId
   private mapToUnifiedMaterial(type: string, formData: MaterialFormData, content: any, userId: string): Omit<UnifiedMaterial, 'id' | 'createdAt' | 'status'> {
     const isApoio = type === 'apoio';
-    // Preencher campos extras conforme o tipo de material
-    // Extrair tema, turma, etc, do conteúdo ou formData
-    const tema = content.tema || content.topic || formData.tema || formData.topic || '';
+    // Sempre priorizar o tema do formulário do usuário
+    const tema = formData.tema || formData.topic || '';
     const turma = content.turma || formData.turma || '';
     const disciplina = content.disciplina || content.subject || formData.disciplina || formData.subject || '';
     const serie = content.serie || content.grade || formData.serie || formData.grade || '';
@@ -491,13 +490,16 @@ class MaterialService {
     }
 
     let bncc = '';
-    if (bnccCodigos.length > 0) {
+    if (Array.isArray(content.bncc)) {
+      bncc = content.bncc.join(', ');
+    } else if (typeof content.bncc === 'string') {
+      bncc = content.bncc;
+    } else if (bnccCodigos.length > 0) {
       bncc = bnccCodigos.join(', ');
     } else if (formData && formData.bncc) {
       bncc = formData.bncc;
     }
-
-    // Garante que todos os campos do JSON original estejam presentes
+    // Garante que o campo bncc está presente no content final
     const contentFinal = {
       ...content,
       recursos,
@@ -519,11 +521,7 @@ class MaterialService {
   }
 
   private generateTitle(type: string, formData: MaterialFormData): string {
-    if (type === 'avaliacao' && formData.assuntos && formData.assuntos.length > 0) {
-      const topics = formData.assuntos.filter(s => s.trim() !== '').slice(0, 2);
-      const topicText = topics.length > 1 ? `${topics[0]} e mais` : topics[0];
-      return topicText;
-    }
+    // Sempre priorizar o tema do formulário do usuário para o título
     const topic = formData.tema || formData.topic || 'Conteúdo Personalizado';
     return topic;
   }
