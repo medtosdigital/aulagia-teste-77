@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
 import {
@@ -20,18 +21,20 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { UpgradeModal } from './UpgradeModal';
 import { useUpgradeModal } from '@/hooks/useUpgradeModal';
-import { activityTracker } from '@/lib/activityTracker';
 
 const SubscriptionPage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { hasActivePlan, currentPlan, profile } = usePlanPermissions();
+  const { currentPlan, currentProfile } = usePlanPermissions();
   const { showUpgradeModal, triggerUpgradeModal, closeUpgradeModal } = useUpgradeModal();
 
   const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Check if has active plan based on currentPlan
+  const hasActivePlan = currentPlan.id !== 'gratuito';
 
   useEffect(() => {
     if (user) {
@@ -59,17 +62,15 @@ const SubscriptionPage: React.FC = () => {
 
   const trackActivity = (action: string, details: any) => {
     try {
-      activityTracker.track("subscription", `Página de assinatura: ${action}`, {
-        action,
-        ...details
-      });
+      // Simple console log for now since activityTracker is missing
+      console.log('Activity tracked:', action, details);
     } catch (error) {
       console.error('Error tracking activity:', error);
     }
   };
 
   const renderPlanDetails = () => {
-    if (!profile) {
+    if (!currentProfile) {
       return <p>Carregando informações do plano...</p>;
     }
 
@@ -78,27 +79,29 @@ const SubscriptionPage: React.FC = () => {
         <div className="grid gap-2">
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">Plano Atual</h4>
-            <p className="text-sm text-muted-foreground">{profile.plano_ativo}</p>
+            <p className="text-sm text-muted-foreground">{currentProfile.plano_ativo}</p>
           </div>
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">Status do Plano</h4>
-            <p className="text-sm text-muted-foreground">{profile.status_plano}</p>
+            <p className="text-sm text-muted-foreground">{currentProfile.status_plano || 'ativo'}</p>
           </div>
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">Tipo de Cobrança</h4>
-            <p className="text-sm text-muted-foreground">{profile.billing_type}</p>
+            <p className="text-sm text-muted-foreground">{currentProfile.billing_type}</p>
           </div>
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">Data de Início do Plano</h4>
-            <p className="text-sm text-muted-foreground">{new Date(profile.data_inicio_plano).toLocaleDateString()}</p>
+            <p className="text-sm text-muted-foreground">{new Date(currentProfile.data_inicio_plano).toLocaleDateString()}</p>
           </div>
-          <div className="space-y-1">
-            <h4 className="text-sm font-semibold">Data de Expiração do Plano</h4>
-            <p className="text-sm text-muted-foreground">{new Date(profile.data_expiracao_plano).toLocaleDateString()}</p>
-          </div>
+          {currentProfile.data_expiracao_plano && (
+            <div className="space-y-1">
+              <h4 className="text-sm font-semibold">Data de Expiração do Plano</h4>
+              <p className="text-sm text-muted-foreground">{new Date(currentProfile.data_expiracao_plano).toLocaleDateString()}</p>
+            </div>
+          )}
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">Materiais Criados Este Mês</h4>
-            <p className="text-sm text-muted-foreground">{profile.materiais_criados_mes_atual}</p>
+            <p className="text-sm text-muted-foreground">{currentProfile.materiais_criados_mes_atual || 0}</p>
           </div>
         </div>
         <Separator className="my-4" />
@@ -156,7 +159,12 @@ const SubscriptionPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-      <UpgradeModal showUpgradeModal={showUpgradeModal} closeUpgradeModal={closeUpgradeModal} />
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={closeUpgradeModal}
+        onPlanSelect={() => {}}
+        currentPlan={currentPlan}
+      />
     </div>
   );
 };

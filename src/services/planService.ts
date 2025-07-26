@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PerfilUsuario {
@@ -8,9 +9,9 @@ export interface PerfilUsuario {
   plano_ativo: string;
   plano_id: number;
   billing_type: string;
-  status_plano: string;
+  status_plano?: string;
   data_inicio_plano: string;
-  data_expiracao_plano: string;
+  data_expiracao_plano: string | null;
   materiais_criados_mes_atual: number;
   ano_atual: number;
   mes_atual: number;
@@ -94,11 +95,13 @@ class PlanService {
         return null;
       }
 
-      // Mapear os dados do perfil para incluir customer_id e subscription_id opcionais
+      // Mapear os dados do perfil para incluir propriedades opcionais com valores padrão
       const mappedProfile: PerfilUsuario = {
         ...profile,
         customer_id: profile.customer_id || undefined,
-        subscription_id: profile.subscription_id || undefined
+        subscription_id: profile.subscription_id || undefined,
+        forma_pagamento: profile.forma_pagamento || '', // Provide default value
+        status_plano: profile.status_plano || 'ativo' // Provide default value
       };
 
       console.log('✅ [PERFIL] Perfil carregado:', mappedProfile.email);
@@ -118,9 +121,16 @@ class PlanService {
         return false;
       }
 
+      // Filter out properties that don't exist in the database schema
+      const validUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([key]) => 
+          !['customer_id', 'subscription_id'].includes(key)
+        )
+      );
+
       const { error } = await supabase
         .from('perfis')
-        .update(updates)
+        .update(validUpdates)
         .eq('user_id', user.id);
 
       if (error) {
