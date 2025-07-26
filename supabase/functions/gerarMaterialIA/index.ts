@@ -153,7 +153,7 @@ VALIDAÇÃO OBRIGATÓRIA:
 
 ESTRUTURA JSON RIGOROSAMENTE OBRIGATÓRIA:
 {
-  "tema": "DEVE conter '${temaEspecifico}' no título principal",
+  "tema": "${temaEspecifico}",
   "disciplina": "${disciplina}",
   "serie": "${serie}",
   "professor": "${formData.professor || 'Professor(a)'}",
@@ -302,6 +302,7 @@ Número de questões: ${formData.numeroQuestoes || formData.quantidadeQuestoes |
 ESTRUTURA OBRIGATÓRIA:
 {
   "titulo": "Atividade: ${temaEspecifico}",
+  "tema": "${temaEspecifico}",
   "instrucoes": "Instruções para atividade sobre ${temaEspecifico}",
   "questoes": [
     {
@@ -325,6 +326,7 @@ Número de questões: ${formData.numeroQuestoes || formData.quantidadeQuestoes |
 ESTRUTURA OBRIGATÓRIA:
 {
   "titulo": "Avaliação: ${temaEspecifico}",
+  "tema": "${temaEspecifico}",
   "instrucoes": "Instruções para avaliação sobre ${temaEspecifico}", 
   "tempoLimite": "60 minutos",
   "questoes": [
@@ -349,6 +351,7 @@ Retorne APENAS um JSON válido com a estrutura especificada.`;
 ESTRUTURA OBRIGATÓRIA:
 {
   "titulo": "Material de Apoio: ${temaEspecifico}",
+  "tema": "${temaEspecifico}",
   "conteudo": "Conteúdo HTML detalhado específico sobre ${temaEspecifico}"
 }`;
       console.log('📝 [PROMPT] Prompt e systemMessage para MATERIAL DE APOIO prontos.');
@@ -408,6 +411,12 @@ ESTRUTURA OBRIGATÓRIA:
       try {
         const tempParsedContent = JSON.parse(generatedContent);
         console.log(`✅ [JSON] Parse realizado com sucesso na tentativa ${attempts}`);
+        
+        // GARANTIR QUE O TEMA SEJA SEMPRE O ORIGINAL DO USUÁRIO
+        tempParsedContent.tema = temaEspecifico;
+        if (tempParsedContent.titulo) {
+          tempParsedContent.titulo = temaEspecifico;
+        }
         
         // Validação ultra-rigorosa para slides
         if (materialType === 'slides') {
@@ -513,20 +522,12 @@ ESTRUTURA OBRIGATÓRIA:
 
     // ETAPA 5: FINALIZAÇÃO E LOGS FINAIS
     // Garantir que o campo tema seja sempre exatamente igual ao enviado pelo usuário
-    let temaIA = '[SEM TEMA]';
-    if (parsedContent && typeof parsedContent === 'object' && parsedContent.tema) {
-      temaIA = parsedContent.tema;
-    }
-    console.log(`[MATERIAL-LOG] [${requestId}] IA | Tipo: ${materialType} | Tema retornado pela IA: "${temaIA}"`);
-
-    if (parsedContent && typeof parsedContent === 'object') {
-      parsedContent.tema = temaRecebido;
-    }
+    console.log(`[MATERIAL-LOG] [${requestId}] IA | Tipo: ${materialType} | Tema final: "${parsedContent.tema}"`);
     console.log(`[MATERIAL-LOG] [${requestId}] PRONTO_PARA_SALVAR | Tipo: ${materialType} | Tema a ser salvo: "${parsedContent.tema}"`);
     
     console.log('🏁 [ETAPA-5] Finalizando geração do material...');
     console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Tema solicitado: ${temaRecebido}`);
-    console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Tema no material: ${temaIA}`);
+    console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Tema no material: ${parsedContent.tema}`);
     console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Disciplina: ${parsedContent.disciplina}`);
     console.log(`[EDGE-INFO] [${requestId}] [ETAPA: FINALIZAÇÃO] Série: ${parsedContent.serie}`);
     console.log('✅ [SUCESSO] Material ultra-específico gerado com sucesso!');

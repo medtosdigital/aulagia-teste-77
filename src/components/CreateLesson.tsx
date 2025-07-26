@@ -518,6 +518,12 @@ const CreateLesson: React.FC = () => {
     setShowBNCCValidation(false);
     setShowEnhancedBNCCValidation(false);
     
+    // Proteção contra múltiplas chamadas
+    if (isGenerating) {
+      console.log('⚠️ [PROTEÇÃO] Geração já em andamento, ignorando chamada duplicada');
+      return;
+    }
+    
     // Voltar para modal de carregamento
     setStep('generating');
     setIsGenerating(true);
@@ -546,6 +552,12 @@ const CreateLesson: React.FC = () => {
 
   const realizarGeracao = async () => {
     if (!selectedType || !user) return;
+
+    // Proteção contra múltiplas chamadas simultâneas
+    if (isGenerating) {
+      console.log('⚠️ [PROTEÇÃO] Geração já em andamento, ignorando chamada duplicada');
+      return;
+    }
 
     setIsGenerating(true);
     setGenerationProgress({

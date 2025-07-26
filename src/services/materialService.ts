@@ -406,9 +406,15 @@ class MaterialService {
     const turma = content.turma || formData.turma || '';
     const disciplina = content.disciplina || content.subject || formData.disciplina || formData.subject || '';
     const serie = content.serie || content.grade || formData.serie || formData.grade || '';
+    
+    // Garantir que o título seja sempre o tema original do usuário
+    const title = this.generateTitle(type, formData);
+    console.log('🎯 [MAPEAMENTO] Título gerado:', title);
+    console.log('🎯 [MAPEAMENTO] Tema original:', tema);
+    
     // Preencher todos os campos principais
     return {
-      title: this.generateTitle(type, formData),
+      title: title,
       type: type as UnifiedMaterial['type'],
       subject: disciplina || 'Não informado',
       grade: serie || 'Não informado',
@@ -508,9 +514,14 @@ class MaterialService {
       bncc
     };
 
+    // Garantir que o título seja sempre o tema original do usuário
+    const finalTitle = formData.tema || formData.topic || unifiedMaterial.title;
+    console.log('🎯 [CONVERSÃO] Título final:', finalTitle);
+    console.log('🎯 [CONVERSÃO] Tema original:', formData.tema || formData.topic);
+    
     return {
       id: unifiedMaterial.id,
-      title: unifiedMaterial.title,
+      title: finalTitle,
       type: unifiedMaterial.type === 'plano-de-aula' ? 'plano-de-aula' : unifiedMaterial.type,
       subject: unifiedMaterial.subject,
       grade: unifiedMaterial.grade,
@@ -521,8 +532,9 @@ class MaterialService {
   }
 
   private generateTitle(type: string, formData: MaterialFormData): string {
-    // Sempre priorizar o tema do formulário do usuário para o título
+    // Sempre usar exatamente o tema fornecido pelo usuário
     const topic = formData.tema || formData.topic || 'Conteúdo Personalizado';
+    console.log('🎯 [TÍTULO] Gerando título baseado no tema do usuário:', topic);
     return topic;
   }
 }
