@@ -1,31 +1,66 @@
-
 import { useState } from 'react';
+import { usePlanPermissions } from './usePlanPermissions';
+import { useToast } from './use-toast';
 
-interface UseUpgradeModalReturn {
-  isUpgradeModalOpen: boolean;
-  openUpgradeModal: (requiredPlan?: string) => void;
-  closeUpgradeModal: () => void;
-  requiredPlan: string | null;
-}
+export const useUpgradeModal = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { 
+    shouldShowUpgrade, 
+    currentPlan, 
+    getAvailablePlansForUpgrade,
+    changePlan,
+    dismissUpgradeModal 
+  } = usePlanPermissions();
+  const { toast } = useToast();
 
-export const useUpgradeModal = (): UseUpgradeModalReturn => {
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-  const [requiredPlan, setRequiredPlan] = useState<string | null>(null);
-
-  const openUpgradeModal = (requiredPlan?: string) => {
-    setRequiredPlan(requiredPlan || null);
-    setIsUpgradeModalOpen(true);
+  const openModal = () => {
+    setIsOpen(true);
   };
 
-  const closeUpgradeModal = () => {
-    setIsUpgradeModalOpen(false);
-    setRequiredPlan(null);
+  const closeModal = () => {
+    setIsOpen(false);
+    dismissUpgradeModal();
+  };
+
+  const handlePlanSelection = async (planId: string) => {
+    try {
+      const success = await changePlan(planId);
+      
+      if (success) {
+        const planNames: Record<string, string> = {
+          'professor': 'Professor',
+          'grupo-escolar': 'Grupo Escolar'
+        };
+        
+        toast({
+          title: 'Plano atualizado com sucesso!',
+          description: `Você agora tem o plano ${planNames[planId]}. Aproveite todos os recursos!`,
+        });
+        
+        setIsOpen(false);
+      } else {
+        toast({
+          title: 'Erro ao atualizar plano',
+          description: 'Não foi possível alterar seu plano. Tente novamente.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error changing plan:', error);
+      toast({
+        title: 'Erro inesperado',
+        description: 'Ocorreu um erro ao alterar o plano.',
+        variant: 'destructive'
+      });
+    }
   };
 
   return {
-    isUpgradeModalOpen,
-    openUpgradeModal,
-    closeUpgradeModal,
-    requiredPlan
+    isOpen: isOpen || shouldShowUpgrade,
+    openModal,
+    closeModal,
+    handlePlanSelection,
+    currentPlan,
+    availablePlans: getAvailablePlansForUpgrade()
   };
 };

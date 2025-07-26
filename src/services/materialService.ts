@@ -30,8 +30,8 @@ export interface MaterialFormData {
   data?: string;
   duracao?: string;
   bncc?: string;
-  material_principal_id?: string;
-  turma?: string;
+  material_principal_id?: string; // Adicionado para materiais de apoio
+  turma?: string; // Corrige o erro de linter
 }
 
 // Updated LessonPlan interface to match what components expect
@@ -110,95 +110,56 @@ export interface Assessment {
 
 class MaterialService {
   async generateMaterial(type: string, formData: MaterialFormData): Promise<GeneratedMaterial> {
-    console.log('🚀 [MATERIAL-SERVICE] Starting material generation:', { type, formData });
+    console.log('🚀 Starting material generation with OpenAI:', { type, formData });
     
-    // PONTO CRÍTICO: Preservar tema original desde o início
-    const temaOriginalUsuario = formData.tema || formData.topic || '';
-    console.log('🎯 [MATERIAL-SERVICE] Tema original do usuário:', temaOriginalUsuario);
-    
-    if (!temaOriginalUsuario.trim()) {
-      throw new Error('Tema é obrigatório para gerar material');
-    }
-
     try {
       // Buscar usuário autenticado
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      console.log('📞 [MATERIAL-SERVICE] Calling gerarMaterialIA Edge Function...');
+      console.log('📞 Calling gerarMaterialIA Edge Function...');
       const { data, error } = await supabase.functions.invoke('gerarMaterialIA', {
         body: {
           materialType: type,
-          formData: {
-            ...formData,
-            tema: temaOriginalUsuario,  // Garantir que o tema original seja enviado
-            topic: temaOriginalUsuario
-          }
+          formData
         }
       });
 
       if (error) {
-        console.error('❌ [MATERIAL-SERVICE] Edge Function error:', error);
+        console.error('❌ Edge Function error:', error);
         throw new Error(`Erro ao gerar conteúdo: ${error.message}`);
       }
 
       if (!data || !data.success) {
-        console.error('❌ [MATERIAL-SERVICE] Invalid response from Edge Function:', data);
+        console.error('❌ Invalid response from Edge Function:', data);
         throw new Error('Resposta inválida do serviço de geração');
       }
 
-      console.log('✅ [MATERIAL-SERVICE] Content generated successfully with OpenAI');
+      console.log('✅ Content generated successfully with OpenAI');
       let generatedContent = data.content;
       
-      // GARANTIR QUE O TEMA ESTEJA CORRETO NO CONTEÚDO
-      if (generatedContent && typeof generatedContent === 'object') {
-        console.log('🔒 [MATERIAL-SERVICE] Forçando tema original no conteúdo...');
-        
-        // Forçar o tema original em todos os campos relevantes
-        if (generatedContent.tema) {
-          generatedContent.tema = temaOriginalUsuario;
-        }
-        if (generatedContent.titulo) {
-          // Manter prefixos específicos mas usar o tema original
-          if (generatedContent.titulo.includes('Atividade:')) {
-            generatedContent.titulo = `Atividade: ${temaOriginalUsuario}`;
-          } else if (generatedContent.titulo.includes('Avaliação:')) {
-            generatedContent.titulo = `Avaliação: ${temaOriginalUsuario}`;
-          } else if (generatedContent.titulo.includes('Material de Apoio:')) {
-            generatedContent.titulo = `Material de Apoio: ${temaOriginalUsuario}`;
-          } else {
-            generatedContent.titulo = temaOriginalUsuario;
-          }
-        }
-        
-        console.log('✅ [MATERIAL-SERVICE] Tema corrigido no conteúdo:', generatedContent.tema || generatedContent.titulo);
-      }
-      
       if (type === 'slides' && generatedContent) {
-        console.log('🎨 [MATERIAL-SERVICE] Starting image generation for slides...');
+        console.log('🎨 Starting ULTRA-OPTIMIZED image generation for slides...');
         generatedContent = await this.generateUltraOptimizedImagesForSlides(generatedContent, formData);
       }
       
-      // Mapear para formato unificado usando o tema original
-      const materialData = this.mapToUnifiedMaterial(type, formData, generatedContent, user.id, temaOriginalUsuario);
-      console.log('📝 [MATERIAL-SERVICE] Material data mapped:', materialData);
+      // Passar user.id para mapToUnifiedMaterial
+      const materialData = this.mapToUnifiedMaterial(type, formData, generatedContent, user.id);
+      console.log('📝 Material data mapped:', materialData);
       
-      console.log('💾 [MATERIAL-SERVICE] Saving material to Supabase...');
+      console.log('💾 Saving material to Supabase...');
       const savedMaterial = await unifiedMaterialsService.addMaterial(materialData);
       
       if (!savedMaterial) {
-        console.error('❌ [MATERIAL-SERVICE] Failed to save material to Supabase');
+        console.error('❌ Failed to save material to Supabase');
         throw new Error('Falha ao salvar material no banco de dados');
       }
       
-      console.log('✅ [MATERIAL-SERVICE] Material saved successfully:', savedMaterial.id);
-      console.log('🎯 [MATERIAL-SERVICE] Final saved title:', savedMaterial.title);
-      
+      console.log('✅ Material saved successfully to Supabase:', savedMaterial.id);
       const result = this.convertToGeneratedMaterial(savedMaterial, generatedContent, formData);
       return result;
-      
     } catch (error) {
-      console.error('❌ [MATERIAL-SERVICE] Error in generateMaterial:', error);
+      console.error('❌ Error in generateMaterial:', error);
       throw error;
     }
   }
@@ -438,45 +399,26 @@ class MaterialService {
   }
 
   // Modifique a assinatura para receber userId
-  private mapToUnifiedMaterial(
-    type: string, 
-    formData: MaterialFormData, 
-    content: any, 
-    userId: string,
-    temaOriginal: string
-  ): Omit<UnifiedMaterial, 'id' | 'createdAt' | 'status'> {
-    console.log('🗂️ [MAP-TO-UNIFIED] Mapping with original theme:', temaOriginal);
-    
+  private mapToUnifiedMaterial(type: string, formData: MaterialFormData, content: any, userId: string): Omit<UnifiedMaterial, 'id' | 'createdAt' | 'status'> {
     const isApoio = type === 'apoio';
+    // Sempre priorizar o tema do formulário do usuário
+    const tema = formData.tema || formData.topic || '';
+    const turma = content.turma || formData.turma || '';
     const disciplina = content.disciplina || content.subject || formData.disciplina || formData.subject || '';
     const serie = content.serie || content.grade || formData.serie || formData.grade || '';
-    const turma = content.turma || formData.turma || '';
-    
-    // Usar sempre o tema original fornecido pelo usuário
-    const title = this.generateTitleFromOriginalTheme(type, temaOriginal);
-    
-    console.log('📋 [MAP-TO-UNIFIED] Generated title:', title);
-    
+    // Preencher todos os campos principais
     return {
-      title,
+      title: this.generateTitle(type, formData),
       type: type as UnifiedMaterial['type'],
       subject: disciplina || 'Não informado',
       grade: serie || 'Não informado',
       userId,
       content: JSON.stringify(content),
       // Campos extras para a tabela materiais
-      ...(temaOriginal ? { tema: temaOriginal } : {}),
+      ...(tema ? { tema } : {}),
       ...(turma ? { turma } : {}),
       ...(isApoio && formData.material_principal_id ? { mainMaterialId: formData.material_principal_id } : {})
     };
-  }
-
-  private generateTitleFromOriginalTheme(type: string, temaOriginal: string): string {
-    console.log('🏷️ [GENERATE-TITLE] Creating title for type:', type, 'with theme:', temaOriginal);
-    
-    // Para todos os tipos, usar o tema original exato
-    // Não adicionar prefixos desnecessários que podem confundir
-    return temaOriginal;
   }
 
   private convertUnifiedToGenerated(unifiedMaterial: UnifiedMaterial): GeneratedMaterial {
