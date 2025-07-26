@@ -1,237 +1,201 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PerfilUsuario {
+  id: string;
   user_id: string;
   email: string;
   full_name: string;
-  nome_preferido: string;
   plano_ativo: 'gratuito' | 'professor' | 'grupo_escolar';
-  billing_type: 'mensal' | 'anual';
+  billing_type: string;
+  status_plano: string;
   data_inicio_plano: string;
-  data_expiracao_plano: string | null;
-  celular: string;
-  escola: string;
-  etapas_ensino: string[];
-  anos_serie: string[];
-  disciplinas: string[];
-  tipo_material_favorito: string[];
-  preferencia_bncc: boolean;
-  avatar_url: string;
+  data_expiracao_plano: string;
   materiais_criados_mes_atual: number;
   ano_atual: number;
   mes_atual: number;
   ultimo_reset_materiais: string;
   created_at: string;
   updated_at: string;
-  status_plano: string;
-  customer_id: string | null;
-  subscription_id: string | null;
-  ultima_renovacao: string;
+  // Campos opcionais que podem não estar presentes
+  customer_id?: string;
+  subscription_id?: string;
+  avatar_url?: string;
+  nome_preferido?: string;
+  etapas_ensino?: string[];
+  disciplinas?: string[];
+  anos_serie?: string[];
+  tipo_material_favorito?: string[];
+  preferencia_bncc?: boolean;
+  forma_pagamento?: string;
+  ultima_renovacao?: string;
+  plano_id?: number;
+  celular?: string;
+  escola?: string;
 }
 
-export interface PlanData {
+export interface Usage {
   id: number;
-  nome: string;
-  descricao: string | null;
-  preco_mensal: number;
-  preco_anual: number;
-  limite_materiais_mensal: number;
-  pode_download_word: boolean;
-  pode_download_ppt: boolean;
-  pode_editar_materiais: boolean;
-  pode_criar_slides: boolean;
-  pode_criar_avaliacoes: boolean;
-  tem_calendario: boolean;
-  tem_historico: boolean;
-  ativo: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-// Função utilitária para conversão
-function normalizeBillingType(tipo: any): 'mensal' | 'anual' {
-  if (tipo === 'yearly' || tipo === 'anual') return 'anual';
-  return 'mensal';
+  user_id: string;
+  data: string;
+  materiais_criados: number;
 }
 
 class PlanService {
-  // Método para criar perfil inicial (usado no LoginPage)
-  async createProfile(userId: string, userEmail: string): Promise<boolean> {
+  async getUsage(): Promise<Usage | null> {
     try {
-      console.log(`📝 Criando perfil para ${userEmail}`);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
 
-      const profileData = {
-        user_id: userId,
-        email: userEmail,
-        full_name: userEmail.split('@')[0] || 'Usuário',
-        nome_preferido: userEmail.split('@')[0] || 'Usuário',
-        plano_ativo: 'gratuito' as const,
-        billing_type: 'mensal' as const,
-        data_inicio_plano: new Date().toISOString(),
-        data_expiracao_plano: null,
-        celular: '',
-        escola: '',
-        etapas_ensino: [],
-        anos_serie: [],
-        disciplinas: [],
-        tipo_material_favorito: [],
-        preferencia_bncc: false,
-        avatar_url: '',
-        materiais_criados_mes_atual: 0,
-        ano_atual: new Date().getFullYear(),
-        mes_atual: new Date().getMonth() + 1,
-        ultimo_reset_materiais: new Date().toISOString(),
-        customer_id: null,
-        subscription_id: null,
-        ultima_renovacao: ''
-      };
+      // Obter a data de hoje no formato 'YYYY-MM-DD'
+      const today = new Date().toISOString().slice(0, 10);
 
-      const { error } = await supabase
-        .from('perfis')
-        .insert(profileData);
+      const { data, error } = await supabase
+        .from('uso_materiais')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('data', today)
+        .single();
 
       if (error) {
-        console.error(`❌ Erro ao criar perfil para ${userEmail}:`, error);
-        return false;
+        console.error('Erro ao buscar uso:', error);
+        return null;
       }
 
-      console.log(`✅ Perfil criado para ${userEmail}`);
+      return data as Usage;
+    } catch (error) {
+      console.error('Erro em getUsage:', error);
+      return null;
+    }
+  }
+
+  async incrementMaterialCount(): Promise<boolean> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Obter a data de hoje no formato 'YYYY-MM-DD'
+      const today = new Date().toISOString().slice(0, 10);
+
+      // Verificar se já existe um registro para o dia atual
+      const existingUsage = await this.getUsage();
+
+      if (existingUsage) {
+        // Se existir, atualizar o número de materiais criados
+        const { error } = await supabase
+          .from('uso_materiais')
+          .update({ materiais_criados: existingUsage.materiais_criados + 1 })
+          .eq('id', existingUsage.id);
+
+        if (error) {
+          console.error('Erro ao atualizar uso:', error);
+          return false;
+        }
+      } else {
+        // Se não existir, criar um novo registro
+        const { error } = await supabase
+          .from('uso_materiais')
+          .insert([{ user_id: user.id, data: today, materiais_criados: 1 }]);
+
+        if (error) {
+          console.error('Erro ao inserir uso:', error);
+          return false;
+        }
+      }
+
       return true;
     } catch (error) {
-      console.error(`❌ Erro em createProfile para ${userEmail}:`, error);
+      console.error('Erro em incrementMaterialCount:', error);
       return false;
     }
   }
 
-  async getUserProfile(userId: string): Promise<PerfilUsuario | null> {
+  async getUserProfile(): Promise<PerfilUsuario | null> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
       const { data, error } = await supabase
         .from('perfis')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .single();
 
       if (error) {
-        console.error('Erro ao buscar perfil do usuário:', error);
+        console.error('Erro ao buscar perfil:', error);
         return null;
       }
 
-      return data as PerfilUsuario;
+      // Mapear os dados recebidos para o tipo PerfilUsuario
+      const perfil: PerfilUsuario = {
+        id: data.id,
+        user_id: data.user_id,
+        email: data.email || '',
+        full_name: data.full_name || '',
+        plano_ativo: data.plano_ativo || 'gratuito',
+        billing_type: data.billing_type || '',
+        status_plano: data.status_plano || 'ativo',
+        data_inicio_plano: data.data_inicio_plano || '',
+        data_expiracao_plano: data.data_expiracao_plano || '',
+        materiais_criados_mes_atual: data.materiais_criados_mes_atual || 0,
+        ano_atual: data.ano_atual || new Date().getFullYear(),
+        mes_atual: data.mes_atual || new Date().getMonth() + 1,
+        ultimo_reset_materiais: data.ultimo_reset_materiais || '',
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || '',
+        // Campos opcionais
+        customer_id: data.customer_id,
+        subscription_id: data.subscription_id,
+        avatar_url: data.avatar_url,
+        nome_preferido: data.nome_preferido,
+        etapas_ensino: data.etapas_ensino,
+        disciplinas: data.disciplinas,
+        anos_serie: data.anos_serie,
+        tipo_material_favorito: data.tipo_material_favorito,
+        preferencia_bncc: data.preferencia_bncc,
+        forma_pagamento: data.forma_pagamento,
+        ultima_renovacao: data.ultima_renovacao,
+        plano_id: data.plano_id,
+        celular: data.celular,
+        escola: data.escola
+      };
+
+      return perfil;
     } catch (error) {
       console.error('Erro em getUserProfile:', error);
       return null;
     }
   }
 
-  async updateUserPlan(userId: string, planType: 'gratuito' | 'professor' | 'grupo_escolar', billingType: 'mensal' | 'anual'): Promise<boolean> {
+  async updateProfile(updates: Partial<PerfilUsuario>): Promise<boolean> {
     try {
-      // Calcular data de expiração
-      let dataExpiracao: Date | null = null;
-      if (planType === 'gratuito') {
-        // Plano gratuito não tem expiração
-        dataExpiracao = null;
-      } else if (billingType === 'mensal') {
-        dataExpiracao = new Date();
-        dataExpiracao.setMonth(dataExpiracao.getMonth() + 1);
-      } else {
-        dataExpiracao = new Date();
-        dataExpiracao.setFullYear(dataExpiracao.getFullYear() + 1);
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Mapear os campos que podem ser atualizados
+      const dbUpdates: any = {};
+      if (updates.full_name) dbUpdates.full_name = updates.full_name;
+      if (updates.nome_preferido) dbUpdates.nome_preferido = updates.nome_preferido;
+      if (updates.avatar_url) dbUpdates.avatar_url = updates.avatar_url;
+      if (updates.etapas_ensino) dbUpdates.etapas_ensino = updates.etapas_ensino;
+      if (updates.disciplinas) dbUpdates.disciplinas = updates.disciplinas;
+      if (updates.anos_serie) dbUpdates.anos_serie = updates.anos_serie;
+       if (updates.celular) dbUpdates.celular = updates.celular;
+       if (updates.escola) dbUpdates.escola = updates.escola;
 
       const { error } = await supabase
         .from('perfis')
-        .update({
-          plano_ativo: planType,
-          billing_type: billingType,
-          data_expiracao_plano: dataExpiracao?.toISOString() || null,
-          data_inicio_plano: new Date().toISOString(),
-          materiais_criados_mes_atual: 0,
-          ultimo_reset_materiais: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId);
+        .update(dbUpdates)
+        .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao atualizar plano do usuário:', error);
+        console.error('Erro ao atualizar perfil:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Erro em updateUserPlan:', error);
+      console.error('Erro em updateProfile:', error);
       return false;
-    }
-  }
-
-  async getPlans(): Promise<PlanData[]> {
-    try {
-      const { data, error } = await supabase
-        .from('planos')
-        .select('*')
-        .eq('ativo', true)
-        .order('preco_mensal', { ascending: true });
-
-      if (error) {
-        console.error('Erro ao buscar planos:', error);
-        return [];
-      }
-
-      return data as PlanData[];
-    } catch (error) {
-      console.error('Erro em getPlans:', error);
-      return [];
-    }
-  }
-
-  async canCreateMaterial(userId: string): Promise<boolean> {
-    try {
-      const { data, error } = await supabase
-        .rpc('can_create_material', { p_user_id: userId });
-
-      if (error) {
-        console.error('Erro ao verificar limite de materiais:', error);
-        return false;
-      }
-
-      return data || false;
-    } catch (error) {
-      console.error('Erro em canCreateMaterial:', error);
-      return false;
-    }
-  }
-
-  async incrementMaterialUsage(userId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .rpc('increment_material_usage', { p_user_id: userId });
-
-      if (error) {
-        console.error('Erro ao incrementar uso de materiais:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Erro em incrementMaterialUsage:', error);
-      return false;
-    }
-  }
-
-  async getRemainingMaterials(userId: string): Promise<number> {
-    try {
-      const { data, error } = await supabase
-        .rpc('get_remaining_materials', { p_user_id: userId });
-
-      if (error) {
-        console.error('Erro ao obter materiais restantes:', error);
-        return 0;
-      }
-
-      return data || 0;
-    } catch (error) {
-      console.error('Erro em getRemainingMaterials:', error);
-      return 0;
     }
   }
 }

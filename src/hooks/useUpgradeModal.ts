@@ -1,66 +1,35 @@
+
 import { useState } from 'react';
-import { usePlanPermissions } from './usePlanPermissions';
-import { useToast } from './use-toast';
+import { useActivityTracker } from './useActivityTracker';
 
 export const useUpgradeModal = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { 
-    shouldShowUpgrade, 
-    currentPlan, 
-    getAvailablePlansForUpgrade,
-    changePlan,
-    dismissUpgradeModal 
-  } = usePlanPermissions();
-  const { toast } = useToast();
+  const [reason, setReason] = useState<string>('');
+  const { trackActivity } = useActivityTracker();
 
-  const openModal = () => {
+  const openModal = (upgradeReason: string) => {
+    setReason(upgradeReason);
     setIsOpen(true);
+    
+    // Track modal opening with proper parameters
+    trackActivity('created', { // Primeiro parâmetro: tipo da atividade
+      type: 'upgrade_modal', // Segundo parâmetro: objeto com detalhes
+      title: 'Modal de upgrade aberto',
+      description: `Motivo: ${upgradeReason}`,
+      grade: '',
+      subject: ''
+    });
   };
 
   const closeModal = () => {
     setIsOpen(false);
-    dismissUpgradeModal();
-  };
-
-  const handlePlanSelection = async (planId: string) => {
-    try {
-      const success = await changePlan(planId);
-      
-      if (success) {
-        const planNames: Record<string, string> = {
-          'professor': 'Professor',
-          'grupo-escolar': 'Grupo Escolar'
-        };
-        
-        toast({
-          title: 'Plano atualizado com sucesso!',
-          description: `Você agora tem o plano ${planNames[planId]}. Aproveite todos os recursos!`,
-        });
-        
-        setIsOpen(false);
-      } else {
-        toast({
-          title: 'Erro ao atualizar plano',
-          description: 'Não foi possível alterar seu plano. Tente novamente.',
-          variant: 'destructive'
-        });
-      }
-    } catch (error) {
-      console.error('Error changing plan:', error);
-      toast({
-        title: 'Erro inesperado',
-        description: 'Ocorreu um erro ao alterar o plano.',
-        variant: 'destructive'
-      });
-    }
+    setReason('');
   };
 
   return {
-    isOpen: isOpen || shouldShowUpgrade,
+    isOpen,
+    reason,
     openModal,
-    closeModal,
-    handlePlanSelection,
-    currentPlan,
-    availablePlans: getAvailablePlansForUpgrade()
+    closeModal
   };
 };
